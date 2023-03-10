@@ -22,75 +22,7 @@
 namespace Ingester {
 namespace bufr {
 
-    class SeqCounts : public std::vector<std::vector<int>>
-    {
-     public:
-        SeqCounts() = default;
-        SeqCounts(const std::vector<std::vector<int>> &counts)
-            : std::vector<std::vector<int>>(counts)
-        {}
-
-        std::vector<size_t> idxsForFilter(const std::vector<std::vector<size_t>> &filter) const
-        {
-            size_t row = 0;
-            size_t offset = 0;
-
-            std::vector<size_t> idxs;
-            _idxsForFilter(filter, row, offset, idxs);
-
-            return idxs;
-        }
-
-     private:
-        void _idxsForFilter(const std::vector<std::vector<size_t>> &filter,
-                            size_t row,
-                            size_t offset,
-                            std::vector<size_t>& idxs) const
-        {
-            if (row == size())
-            {
-                for (size_t idx: idxsAtOffset(offset))
-                {
-                    idxs.push_back(idx);
-                }
-
-                return;
-            }
-
-            if (!filter[row].empty())
-            {
-                for (size_t idx: filter[row])
-                {
-                    _idxsForFilter(filter, row + 1, idx, idxs);
-                }
-            }
-            else
-            {
-                for (size_t newOffset = 0; newOffset < at(row).size(); ++newOffset)
-                {
-                    _idxsForFilter(filter, row + 1, newOffset, idxs);
-                }
-            }
-        }
-
-        std::vector<size_t> idxsAtOffset(size_t offset) const
-        {
-            auto idxs = std::vector<size_t>(back()[offset]);
-
-            size_t result = 1;
-            for (size_t idx = 0; idx < offset; idx++)
-            {
-                result *= back()[idx];
-            }
-
-            for (size_t idx = 0; idx < back()[offset]; idx++)
-            {
-                idxs[idx] = result + idx;
-            }
-
-            return idxs;
-        }
-    };
+    typedef std::vector<std::vector<int>> SeqCounts;
 
     /// \brief Represents a single BUFR data element (a element from one message subset). It
     /// contains both the data value(s) and the associated metadata that is used to construct the

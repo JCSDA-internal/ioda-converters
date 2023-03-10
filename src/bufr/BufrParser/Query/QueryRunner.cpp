@@ -331,37 +331,40 @@ namespace bufr
                 }
                 else
                 {
-                    auto idxs = computeDataIdxs(counts, filters);
-                    dataField.data = slice(dataTable[targ->nodeIdx].values, idxs);
+                    dataField.data = computeDataFromFilter(dataTable[targ->nodeIdx].values,
+                                                           counts,
+                                                           filters);
                 }
             }
         }
     }
 
-    std::vector<size_t> QueryRunner::computeDataIdxs(const SeqCounts& counts,
-                                                     const std::vector<std::vector<size_t>>& filters
-                                                     ) const
+    std::vector<double> QueryRunner::computeDataFromFilter(
+                                            const std::vector<double>& srcData,
+                                            const SeqCounts& counts,
+                                            const std::vector<std::vector<size_t>>& filters) const
     {
-        auto idxs = std::vector<size_t>();
-        idxs.reserve(sum(counts.back()));
+        auto data = std::vector<double>();
+        data.reserve(sum(counts.back()));
 
         size_t offset = 0;  // -1 to compensate for 1 based indexing in the filter
-        _computeDataIdxs(counts, filters, idxs, offset, 0);
+        _computeDataFromFilter(srcData, counts, filters, data, offset, 0);
 
-        return idxs;
+        return data;
     }
 
-    void QueryRunner::_computeDataIdxs(const SeqCounts& counts,
-                                       const std::vector<std::vector<size_t>> &filters,
-                                       std::vector<size_t>& idxs,
-                                       size_t& offset,
-                                       size_t depth,
-                                       bool skipResult) const
+    void QueryRunner::_computeDataFromFilter(const std::vector<double>& srcData,
+                                             const SeqCounts& counts,
+                                             const std::vector<std::vector<size_t>> &filters,
+                                             std::vector<double>& data,
+                                             size_t& offset,
+                                             size_t depth,
+                                             bool skipResult) const
     {
 
         if (depth > counts.size() - 1)
         {
-            if (!skipResult) idxs.push_back(offset);
+            if (!skipResult) data.push_back(srcData[offset]);
             offset++;
 
             return;
@@ -374,7 +377,8 @@ namespace bufr
         {
             for (size_t countIdx = 0; countIdx < layerCounts.size(); countIdx++)
             {
-                _computeDataIdxs(counts, filters, idxs, offset, depth + 1, skipResult);
+                _computeDataFromFilter(srcData, counts, filters, data,
+                                       offset, depth + 1, skipResult);
             }
         }
         else
@@ -392,7 +396,7 @@ namespace bufr
                                          count) == layerFilter.end();
                     }
 
-                    _computeDataIdxs(counts, filters, idxs, offset, depth + 1, skip);
+                    _computeDataFromFilter(srcData, counts, filters, data, offset, depth + 1, skip);
                 }
             }
         }
