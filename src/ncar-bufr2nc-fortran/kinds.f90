@@ -8,7 +8,7 @@ module kinds
 ! abstract:  Module to hold specification kinds for variable declaration.
 !            This module is based on (copied from) Paul vanDelst's
 !            type_kinds module found in the community radiative transfer
-!            model. Modifed to take
+!            model. Modifed to use iso_fortran_env to define types
 !
 ! module history log:
 !   2004-08-15  treadon
