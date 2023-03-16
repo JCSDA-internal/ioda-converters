@@ -15,7 +15,6 @@
 #include <sstream>
 
 #include "eckit/exception/Exceptions.h"
-#include "bufr_interface.h"
 
 #include "../../../src/bufr/BufrParser/Query/DataProvider/WmoDataProvider.h"
 #include "../../../src/bufr/BufrParser/Query/SubsetTable.h"

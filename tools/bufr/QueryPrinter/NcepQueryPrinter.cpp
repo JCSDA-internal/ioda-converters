@@ -14,8 +14,6 @@
 #include "eckit/exception/Exceptions.h"
 
 #include "QueryPrinter.h"
-#include "../../../src/bufr/BufrParser/Query/DataProvider/NcepDataProvider.h"
-#include "../../../src/bufr/BufrParser/Query/SubsetTable.h"
 
 namespace Ingester {
 namespace bufr {

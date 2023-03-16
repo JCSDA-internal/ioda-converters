@@ -36,7 +36,7 @@ namespace bufr {
     {
         std::vector<double> data;
         std::vector<int> dims;
-        std::vector<std::string> dimPaths;
+        std::vector<Query> dimPaths;
         TypeInfo info;
 
         getRawValues(fieldName,
@@ -46,25 +46,13 @@ namespace bufr {
                      dimPaths,
                      info);
 
-        // Add dim path strings
-        const char* ws = " \t\n\r\f\v";
-        std::vector<std::string> paths(dims.size());
-        for (size_t dimIdx = 0; dimIdx < dims.size(); dimIdx++)
-        {
-            auto path_str = dimPaths[dimIdx];
-
-            // Trim extra chars from the path str
-            path_str.erase(path_str.find_last_not_of(ws) + 1);
-            paths[dimIdx] = path_str;
-        }
-
         std::shared_ptr<Ingester::DataObjectBase> object = makeDataObject(fieldName,
                                                                           groupByFieldName,
                                                                           info,
                                                                           overrideType,
                                                                           data,
                                                                           dims,
-                                                                          paths);
+                                                                          dimPaths);
 
         return object;
     }
@@ -80,7 +68,7 @@ namespace bufr {
                                  const std::string& groupByField,
                                  std::vector<double>& data,
                                  std::vector<int>& dims,
-                                 std::vector<std::string>& dimPaths,
+                                 std::vector<Query>& dimPaths,
                                  TypeInfo& info) const
     {
         // Find the dims based on the largest sequence counts in the fields
@@ -104,7 +92,6 @@ namespace bufr {
 
             auto& targetField = dataFrames_[0].fieldAtIdx(targetFieldIdx);
             dimPaths = targetField.target->dimPaths;
-
             exportDims = targetField.target->exportDimIdxs;
         }
 
@@ -389,13 +376,13 @@ namespace bufr {
     }
 
     std::shared_ptr<DataObjectBase> ResultSet::makeDataObject(
-                                                    const std::string& fieldName,
-                                                    const std::string& groupByFieldName,
-                                                    TypeInfo& info,
-                                                    const std::string& overrideType,
-                                                    const std::vector<double> data,
-                                                    const std::vector<int> dims,
-                                                    const std::vector<std::string> dimPaths) const
+                                const std::string& fieldName,
+                                const std::string& groupByFieldName,
+                                TypeInfo& info,
+                                const std::string& overrideType,
+                                const std::vector<double> data,
+                                const std::vector<int> dims,
+                                const std::vector<Query> dimPaths) const
     {
         std::shared_ptr<DataObjectBase> object;
         if (overrideType.empty())

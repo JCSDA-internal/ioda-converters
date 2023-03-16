@@ -19,6 +19,7 @@
 #include "ioda/defs.h"
 
 #include "BufrParser/Query/Constants.h"
+#include "BufrParser/Query/QueryParser.h"
 
 namespace Ingester
 {
@@ -72,7 +73,7 @@ namespace Ingester
                                 const std::string& groupByFieldName,
                                 const Dimensions& dims,
                                 const std::string& query,
-                                const std::vector<std::string>& dimPaths) :
+                                const std::vector<bufr::Query>& dimPaths):
 
             fieldName_(fieldName),
             groupByFieldName_(groupByFieldName),
@@ -89,7 +90,8 @@ namespace Ingester
         void setGroupByFieldName(const std::string& fieldName) { groupByFieldName_ = fieldName; }
         void setDims(const std::vector<int> dims) { dims_ = dims; }
         void setQuery(const std::string& query) { query_ = query; }
-        void setDimPaths(const std::vector<std::string>& dimPaths) { dimPaths_ = dimPaths; }
+        void setDimPaths(const std::vector<bufr::Query>& dimPaths)
+            { dimPaths_ = dimPaths; }
         virtual void setData(const std::vector<double>& data, double dataMissingValue) = 0;
 
         // Getters
@@ -97,7 +99,7 @@ namespace Ingester
         std::string getGroupByFieldName() const { return groupByFieldName_; }
         Dimensions getDims() const { return dims_; }
         std::string getPath() const { return query_; }
-        std::vector<std::string> getDimPaths() const { return dimPaths_; }
+        std::vector<bufr::Query> getDimPaths() const { return dimPaths_; }
 
         bool hasSamePath(const std::shared_ptr<DataObjectBase>& dataObject);
 
@@ -182,7 +184,7 @@ namespace Ingester
         std::string groupByFieldName_;
         Dimensions dims_;
         std::string query_;
-        std::vector<std::string> dimPaths_;
+        std::vector<bufr::Query> dimPaths_;
     };
 
 
@@ -202,7 +204,7 @@ namespace Ingester
                    const std::string& group_by_field_name,
                    const Dimensions& dimensions,
                    const std::string& query,
-                   const std::vector<std::string>& dimPaths) :
+                   const std::vector<bufr::Query>& dimPaths) :
             DataObjectBase(field_name, group_by_field_name, dimensions, query, dimPaths),
             data_(data)
         {};

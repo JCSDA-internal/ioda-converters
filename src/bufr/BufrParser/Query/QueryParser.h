@@ -21,11 +21,19 @@ namespace bufr {
         std::string name;
         size_t index = 0;
         std::vector<size_t> filter;
+
+        virtual ~QueryComponent() = default;
     };
 
     struct SubsetComponent : public QueryComponent
     {
         bool isAnySubset = false;
+
+        SubsetComponent()
+        {
+            name = "*";
+            isAnySubset = true;
+        }
 
         static auto parse(std::vector<std::shared_ptr<Token>> tokens)
         {
@@ -50,6 +58,11 @@ namespace bufr {
             return component;
         }
     };
+
+    inline bool operator==(const SubsetComponent& lhs, const SubsetComponent& rhs)
+    {
+        return lhs.name == rhs.name && lhs.isAnySubset == rhs.isAnySubset;
+    }
 
     struct PathComponent : public QueryComponent
     {
@@ -89,15 +102,92 @@ namespace bufr {
         }
     };
 
+    inline bool operator==(const PathComponent& lhs, const PathComponent& rhs)
+    {
+        return lhs.name == rhs.name && lhs.index == rhs.index && lhs.filter == rhs.filter;
+    }
 
     struct Query
     {
-        std::string queryStr;
+
         std::shared_ptr<SubsetComponent> subset;
         std::vector<std::shared_ptr<PathComponent>> path;
+
+        Query() : subset(std::make_shared<SubsetComponent>()) {}
+
+        explicit Query(std::vector<std::shared_ptr<QueryComponent>> components)
+        {
+            std::stringstream pathStr;
+            if (auto subsetComponent = std::dynamic_pointer_cast<SubsetComponent>(components[0]))
+            {
+                subset = subsetComponent;
+                pathStr << subset->name;
+            }
+            else
+            {
+                throw eckit::BadParameter(
+                    "QueryParser::parseQueryToken: Invalid query string: " + queryStr_);
+            }
+
+            for (size_t i = 1; i < components.size(); ++i)
+            {
+                if (auto pathComponent = std::dynamic_pointer_cast<PathComponent>(components[i]))
+                {
+                    path.push_back(pathComponent);
+                    pathStr << "/" << pathComponent->name;
+
+                    // Add index string
+                    if (pathComponent->index > 0)
+                    {
+                        pathStr << "[" << pathComponent->index << "]";
+                    }
+
+                    // Add filter string
+                    if (!pathComponent->filter.empty())
+                    {
+                        pathStr << "{";
+                        for (const auto filterIdx : pathComponent->filter)
+                        {
+                            pathStr << "" << filterIdx;
+                            if (filterIdx != pathComponent->filter.back()) pathStr << ",";
+                        }
+                        pathStr << "}";
+                    }
+
+                }
+                else
+                {
+                    throw eckit::BadParameter(
+                        "QueryParser::parseQueryToken: Invalid query string: " + queryStr_);
+                }
+            }
+
+            queryStr_ = pathStr.str();
+        }
+
+        std::string str() const
+        {
+            return queryStr_;
+        }
+
+     private:
+        std::string queryStr_;
     };
 
-//    typedef std::vector<std::shared_ptr<QueryComponent>> Query;
+    inline bool operator==(const Query& lhs, const Query& rhs)
+    {
+        return lhs.str() == rhs.str();
+    }
+
+    inline bool operator!=(const Query& lhs, const Query& rhs)
+    {
+        return !(lhs == rhs);
+    }
+
+    inline bool operator<(const Query& lhs, const Query& rhs)
+    {
+        return lhs.str() < rhs.str();
+    }
 
     /// \brief Parses a user supplied query string into its component parts.
     /// \note Will be refactored to properly tokenize the query string.

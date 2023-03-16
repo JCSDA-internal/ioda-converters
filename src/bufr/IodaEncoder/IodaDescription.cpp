@@ -99,15 +99,20 @@ namespace Ingester
 
                 if (dimConf.has(ConfKeys::Dimension::Paths))
                 {
-                    dim.paths = dimConf.getStringVector(ConfKeys::Dimension::Paths);
+                    for (const auto& path : dimConf.getStringVector(ConfKeys::Dimension::Paths))
+                    {
+                        dim.paths.push_back(bufr::QueryParser::parse(path)[0]);
+                    }
                 }
                 else if (dimConf.has(ConfKeys::Dimension::Path))
                 {
-                    dim.paths = {dimConf.getString(ConfKeys::Dimension::Path)};
+                    dim.paths =
+                        bufr::QueryParser::parse(dimConf.getString(ConfKeys::Dimension::Path));
                 }
                 else
                 {
-                    throw eckit::BadParameter(R"(ioda::dimensions section must have either "path" or "paths".)");
+                    throw eckit::BadParameter(
+                        R"(ioda::dimensions section must have either "path" or "paths".)");
                 }
 
                 if (dimConf.has(ConfKeys::Dimension::Source))

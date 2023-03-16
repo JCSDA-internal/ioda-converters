@@ -15,6 +15,8 @@
 #include "ioda/Engines/EngineUtils.h"
 #include "ioda/Group.h"
 
+#include "../BufrParser/Query/QueryParser.h"
+
 namespace Ingester
 {
     struct Range
@@ -26,7 +28,7 @@ namespace Ingester
     struct DimensionDescription
     {
         std::string name;
-        std::vector<std::string> paths;
+        std::vector<bufr::Query> paths;
         std::string source;
     };
 

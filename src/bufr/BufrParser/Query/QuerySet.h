@@ -17,6 +17,8 @@
 namespace Ingester {
 namespace bufr
 {
+    class Query;
+
     typedef std::set<std::string> Subsets;
 
     /// \brief Manages a collection of queries.
@@ -42,7 +44,10 @@ namespace bufr
         /// \return A vector of the names of all the queries.
         bool includesSubset(const std::string& subset) const;
 
-        std::vector<Query> queriesFor(const std::string& name) const { return queryMap_.at(name); }
+        /// \brief Get list of queries for query with name
+        /// \param[in] name The name of the query.
+        /// \return A vector of queries.
+        std::vector<Query> queriesFor(const std::string& name) const;
 
      private:
         std::unordered_map<std::string, std::vector<Query>> queryMap_;

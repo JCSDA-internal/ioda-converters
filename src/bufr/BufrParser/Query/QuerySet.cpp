@@ -8,7 +8,7 @@
 #include "QuerySet.h"
 
 #include <algorithm>
-#include <iostream>
+
 
 namespace Ingester {
 namespace bufr {
@@ -98,5 +98,11 @@ namespace bufr {
 
         return names;
     }
+
+    std::vector<Query> QuerySet::queriesFor(const std::string& name) const
+    {
+        return queryMap_.at(name);
+    }
+
 }  // namespace bufr
 }  // namespace Ingester

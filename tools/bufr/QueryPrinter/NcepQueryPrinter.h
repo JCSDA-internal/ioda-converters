@@ -16,8 +16,6 @@
 namespace Ingester {
 namespace bufr {
 
-    class QueryData;
-
     class NcepQueryPrinter : public QueryPrinter
     {
      public:

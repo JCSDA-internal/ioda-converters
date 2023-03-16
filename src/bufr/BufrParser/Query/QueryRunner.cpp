@@ -92,15 +92,15 @@ namespace bufr
                 // Create empty target
                 target->name = name;
                 target->nodeIdx = 0;
-                target->queryStr = querySet_.queriesFor(name)[0].queryStr;
-                target->dimPaths = {"*"};
+                target->queryStr = querySet_.queriesFor(name)[0].str();
+                target->dimPaths.push_back({Query()});
                 target->exportDimIdxs = {0};
                 target->typeInfo = TypeInfo();
                 targets.push_back(target);
 
                 // Print message to inform the user of the missing target
                 oops::Log::warning() << "Warning: Query String ";
-                oops::Log::warning() << querySet_.queriesFor(name)[0].queryStr;
+                oops::Log::warning() << querySet_.queriesFor(name)[0].str();
                 oops::Log::warning() << " didn't apply to subset ";
                 oops::Log::warning() << dataProvider_->getSubsetVariant().str();
                 oops::Log::warning() << std::endl;
@@ -110,7 +110,7 @@ namespace bufr
 
             // Create the target
             target->name = name;
-            target->queryStr = foundQuery.queryStr;
+            target->queryStr = foundQuery.str();
 
             // Create the target components
             std::vector<TargetComponent> path(foundQuery.path.size() + 1);
@@ -133,7 +133,6 @@ namespace bufr
             target->setPath(path);
             target->typeInfo = tableNode->typeInfo;
             target->nodeIdx = tableNode->nodeIdx;
-            target->dimPaths = tableNode->getDimPaths();
             target->exportDimIdxs = tableNode->getDimIdxs();
 
             targets.push_back(target);
@@ -347,7 +346,7 @@ namespace bufr
         auto data = std::vector<double>();
         data.reserve(sum(origCounts.back()));
 
-        size_t offset = 0;  // -1 to compensate for 1 based indexing in the filter
+        size_t offset = 0;
         _makeFilteredData(srcData, origCounts, filter, data, offset, 0);
 
         return data;
@@ -361,7 +360,6 @@ namespace bufr
                                         size_t depth,
                                         bool skipResult) const
     {
-
         if (depth > origCounts.size() - 1)
         {
             if (!skipResult) data.push_back(srcData[offset]);

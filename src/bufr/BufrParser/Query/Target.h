@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <iostream>
 
 #include "DataProvider/DataProvider.h"
 #include "Tokenizer.h"
@@ -34,7 +35,8 @@ namespace bufr {
 
         bool addsDimension() const
         {
-            return type != Type::Binary;
+            return (type == Type::Subset || type == Type::Repeat) &&
+                   (queryComponent->filter.empty() || queryComponent->filter.size() > 1);
         }
 
         void setType(const Typ& bufrTyp)
@@ -70,7 +72,7 @@ namespace bufr {
         TargetComponents path;
         size_t numDimensions = 0;
 
-        std::vector<std::string> dimPaths;
+        std::vector<Query> dimPaths;
         std::vector<int> exportDimIdxs;
         std::vector<int> seqPath;
 
@@ -80,15 +82,15 @@ namespace bufr {
         {
             seqPath.reserve(components.size());
             std::string currentPath;
+            std::vector<std::shared_ptr<QueryComponent>> queryComponents;
             for (const auto& component : components)
             {
-                if (!currentPath.empty()) currentPath.append("/");
-                currentPath.append(component.queryComponent->name);
-                dimPaths.push_back(currentPath);
+                queryComponents.push_back(component.queryComponent);
 
-                if (component.addsDimension() || component.queryComponent->filter.size() > 1)
+                if (component.addsDimension())
                 {
                     numDimensions++;
+                    dimPaths.emplace_back(queryComponents);
                 }
 
                 if (component.type == TargetComponent::Type::Repeat ||

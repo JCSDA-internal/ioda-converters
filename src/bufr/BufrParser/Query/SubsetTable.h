@@ -12,12 +12,14 @@
 #include <unordered_map>
 #include <set>
 #include <iostream>
+#include <sstream>
 
 #include "DataProvider/DataProvider.h"
-#include "QueryParser.h"
 
 namespace Ingester {
 namespace bufr {
+
+    class PathComponent;
 
     struct BufrNode : public std::enable_shared_from_this<BufrNode>
     {

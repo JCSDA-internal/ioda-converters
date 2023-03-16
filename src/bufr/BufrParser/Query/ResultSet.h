@@ -130,7 +130,7 @@ namespace bufr {
                           const std::string& groupByField,
                           std::vector<double>& data,
                           std::vector<int>& dims,
-                          std::vector<std::string>& dimPaths,
+                          std::vector<Query>& dimPaths,
                           TypeInfo& info) const;
 
         /// \brief Retrieves the data for the specified target field, one row per message subset.
@@ -166,7 +166,7 @@ namespace bufr {
                                 const std::string& overrideType,
                                 const std::vector<double> data,
                                 const std::vector<int> dims,
-                                const std::vector<std::string> dimPaths) const;
+                                const std::vector<Query> dimPaths) const;
 
         /// \brief Make an appropriate DataObject for data with the TypeInfo
         /// \param info The meta data for the element.

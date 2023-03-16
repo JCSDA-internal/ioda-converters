@@ -36,18 +36,23 @@ namespace bufr {
         {
             auto componentTokens = queryToken->split();
 
-            Query query;
-            query.queryStr = queryStr;
-            query.subset = SubsetComponent::parse(componentTokens.front());
+            std::vector<std::shared_ptr<QueryComponent>> path;
 
-            for (auto compIt = componentTokens.begin() + 1;
+            for (auto compIt = componentTokens.begin();
                  compIt != componentTokens.end();
                  ++compIt)
             {
-                query.path.push_back(PathComponent::parse(*compIt));
+                if (compIt == componentTokens.begin())
+                {
+                    path.push_back(SubsetComponent::parse(*compIt));
+                }
+                else
+                {
+                    path.push_back(PathComponent::parse(*compIt));
+                }
             }
 
-            queries.push_back(query);
+            queries.emplace_back(path);
         }
 
         return queries;
