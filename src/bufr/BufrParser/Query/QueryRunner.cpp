@@ -94,7 +94,6 @@ namespace bufr
                 target->nodeIdx = 0;
                 target->queryStr = querySet_.queriesFor(name)[0].str();
                 target->dimPaths.push_back({Query()});
-                target->exportDimIdxs = {0};
                 target->typeInfo = TypeInfo();
                 targets.push_back(target);
 
@@ -133,7 +132,6 @@ namespace bufr
             target->setPath(path);
             target->typeInfo = tableNode->typeInfo;
             target->nodeIdx = tableNode->nodeIdx;
-            target->exportDimIdxs = tableNode->getDimIdxs();
 
             targets.push_back(target);
 

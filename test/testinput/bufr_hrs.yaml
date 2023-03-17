@@ -23,21 +23,41 @@ observations:
 #            query: "*/CLON"
 #          latitude:
 #            query: "*/CLAT"
-          channel:
-            query: "[*/BRITCSTC/CHNM, */BRIT{1-2}/CHNM]"
-          brightnessTemp:
-            query: "[*/BRITCSTC/TMBR, */BRIT{1-2}/TMBR]"
+#          channel:
+#            query: "[*/BRITCSTC/CHNM, */BRIT{1-2}/CHNM]"
+#          brightnessTemp:
+#            query: "[*/BRITCSTC/TMBR, */BRIT{1-2}/TMBR]"
+#
+#          channel2:
+#            query: "[*/BRITCSTC/CHNM, */BRIT{3-5}/CHNM]"
+#          brightnessTemp2:
+#            query: "[*/BRITCSTC/TMBR, */BRIT{3-5}/TMBR]"
+
+#          channel:
+#            query: "[*/BRITCSTC/CHNM, */BRIT{1}/CHNM]"
+          brightnessTemp1:
+            query: "[*/BRITCSTC/TMBR, */BRIT{1}/TMBR]"
 
     ioda:
       backend: netcdf
       obsdataout: "./testrun/gdas.t00z.1bhrs4.tm00.nc"
 
-      dimensions:
-        - name: Channel
-          paths:
-            - "*/BRIT{1-2}"
-            - "*/BRITCSTC"
-          source: variables/channel
+#      dimensions:
+#        - name: Channel
+#          paths:
+#            - "*/BRIT{1}"
+#            - "*/BRITCSTC"
+#          source: variables/channel
+
+#        - name: Channel_2
+#          paths:
+#            - "*/BRIT{3-5}"
+#          source: variables/channel2
+
+#        - name: Channel_1d
+#          paths:
+#            - "*/BRIT{1}"
+#          source: variables/channel1
 
       variables:
 #        - name: "MetaData/dateTime"
@@ -57,9 +77,23 @@ observations:
 #          units: "degrees_east"
 #          range: [-180, 180]
 
-        - name: "ObsValue/brightnessTemperature"
-          coordinates: "longitude latitude Channel"
-          source: variables/brightnessTemp
+#        - name: "ObsValue/brightnessTemperature"
+#          coordinates: "longitude latitude Channel"
+#          source: variables/brightnessTemp
+#          longName: "Brightness temperature"
+#          units: "K"
+#          range: [120, 500]
+#
+#        - name: "ObsValue/brightnessTemperature2"
+#          coordinates: "longitude latitude Channel"
+#          source: variables/brightnessTemp2
+#          longName: "Brightness temperature"
+#          units: "K"
+#          range: [ 120, 500 ]
+
+        - name: "ObsValue/brightnessTemperature1"
+          coordinates: "longitude latitude"
+          source: variables/brightnessTemp1
           longName: "Brightness temperature"
           units: "K"
-          range: [120, 500]
+          range: [ 120, 500 ]

@@ -81,8 +81,11 @@ namespace bufr {
         void setPath(const TargetComponents& components)
         {
             seqPath.reserve(components.size());
+            exportDimIdxs.reserve(components.size());
+
             std::string currentPath;
             std::vector<std::shared_ptr<QueryComponent>> queryComponents;
+            size_t componentIdx = 0;
             for (const auto& component : components)
             {
                 queryComponents.push_back(component.queryComponent);
@@ -91,6 +94,7 @@ namespace bufr {
                 {
                     numDimensions++;
                     dimPaths.emplace_back(queryComponents);
+                    exportDimIdxs.push_back(componentIdx);
                 }
 
                 if (component.type == TargetComponent::Type::Repeat ||
@@ -98,6 +102,8 @@ namespace bufr {
                 {
                     seqPath.push_back(component.branch);
                 }
+
+                componentIdx++;
             }
 
             path = components;
