@@ -52,7 +52,10 @@ observations:
       dimensions:
         - name: "Confidence"
           paths:
-            - "*/QCPRMS"
+            - "*/QCPRMS[1]"
+            - "*/QCPRMS[2]"
+            - "*/QCPRMS[3]"
+            - "*/QCPRMS[4]"
 
       variables:
         - name: "MetaData/latitude"

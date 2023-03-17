@@ -109,11 +109,12 @@ namespace bufr {
 
     struct Query
     {
-
         std::shared_ptr<SubsetComponent> subset;
         std::vector<std::shared_ptr<PathComponent>> path;
 
-        Query() : subset(std::make_shared<SubsetComponent>()) {}
+        Query() : subset(std::make_shared<SubsetComponent>()),
+                  path({}),
+                  queryStr_(subset->name) {}
 
         explicit Query(std::vector<std::shared_ptr<QueryComponent>> components)
         {

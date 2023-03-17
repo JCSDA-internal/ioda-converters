@@ -77,7 +77,8 @@ observations:
       dimensions:
         - name: Confidence
           paths:
-            - "*/GQCPRMS"
+            - "*/GQCPRMS[1]"
+            - "*/GQCPRMS[2]"
 
       variables:
         - name: "MetaData/satelliteIdentifier"

@@ -95,9 +95,10 @@ namespace bufr
                 target->queryStr = querySet_.queriesFor(name)[0].str();
                 target->dimPaths.push_back({Query()});
                 target->typeInfo = TypeInfo();
+                target->exportDimIdxs = {0};
                 targets.push_back(target);
 
-                // Print message to inform the user of the missing target
+                // Print message to inform the user of the missing targetz
                 oops::Log::warning() << "Warning: Query String ";
                 oops::Log::warning() << querySet_.queriesFor(name)[0].str();
                 oops::Log::warning() << " didn't apply to subset ";

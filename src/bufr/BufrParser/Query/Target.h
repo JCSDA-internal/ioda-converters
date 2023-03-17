@@ -80,6 +80,7 @@ namespace bufr {
 
         void setPath(const TargetComponents& components)
         {
+            exportDimIdxs = {};
             seqPath.reserve(components.size());
             exportDimIdxs.reserve(components.size());
 
@@ -94,7 +95,7 @@ namespace bufr {
                 {
                     numDimensions++;
                     dimPaths.emplace_back(queryComponents);
-                    exportDimIdxs.push_back(componentIdx);
+                    exportDimIdxs.emplace_back(componentIdx);
                 }
 
                 if (component.type == TargetComponent::Type::Repeat ||
