@@ -94,7 +94,15 @@ namespace bufr {
                 if (component.addsDimension())
                 {
                     numDimensions++;
-                    dimPaths.emplace_back(queryComponents);
+                    if (component.type == TargetComponent::Type::Subset)
+                    {
+                        dimPaths.push_back(Query());
+                    }
+                    else
+                    {
+                        dimPaths.emplace_back(queryComponents);
+                    }
+
                     exportDimIdxs.emplace_back(componentIdx);
                 }
 
