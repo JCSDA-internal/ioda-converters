@@ -291,11 +291,10 @@ namespace bufr
             {
                 dataField.seqCounts.resize(targ->seqPath.size() + 1);
                 dataField.seqCounts[0] = {1};
-                auto counts =
-                    SeqCounts(std::vector<std::vector<int>>(targ->seqPath.size() + 1, {1}));
+                SeqCounts counts;
 
                 bool hasFilter = false;
-                auto filters = std::vector<std::vector<size_t>>(targ->seqPath.size() + 1);
+                std::vector<std::vector<size_t>> filters;
                 for (size_t pathIdx = 0; pathIdx < targ->seqPath.size(); pathIdx++)
                 {
                     auto& pathComponent = targ->path[pathIdx + 1];
@@ -307,6 +306,14 @@ namespace bufr
                     }
                     else
                     {
+                        // Delay the creation of the counts and filters until we know we need them
+                        // in order to avoid unnecessary allocations
+                        if (counts.empty())
+                            counts = SeqCounts(std::vector<std::vector<int>>(targ->seqPath.size() + 1, {1}));
+
+                        if (filters.empty())
+                            filters = std::vector<std::vector<size_t>>(targ->seqPath.size() + 1);
+
                         filters[pathIdx + 1] = filter;
                         hasFilter = true;
 
