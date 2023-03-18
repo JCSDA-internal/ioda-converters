@@ -38,8 +38,7 @@ namespace bufr {
             return type == Typ::DelayedRep ||
                    type == Typ::FixedRep ||
                    type == Typ::DelayedRepStacked ||
-                   type == Typ::DelayedBinary ||
-                   type == Typ::StackedRepeat;
+                   type == Typ::DelayedBinary;
         }
 
         bool isQueryPathNode()
