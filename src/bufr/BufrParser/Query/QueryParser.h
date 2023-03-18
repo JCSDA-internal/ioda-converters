@@ -16,6 +16,7 @@
 namespace Ingester {
 namespace bufr {
 
+    /// \brief A component of a query string. Abstract base class.
     struct QueryComponent
     {
         std::string name;
@@ -25,6 +26,7 @@ namespace bufr {
         virtual ~QueryComponent() = default;
     };
 
+    /// \brief A component of a query string that represents a subset.
     struct SubsetComponent : public QueryComponent
     {
         bool isAnySubset = false;
@@ -59,11 +61,13 @@ namespace bufr {
         }
     };
 
+    /// \brief == operator for SubsetComponent.
     inline bool operator==(const SubsetComponent& lhs, const SubsetComponent& rhs)
     {
         return lhs.name == rhs.name && lhs.isAnySubset == rhs.isAnySubset;
     }
 
+    /// \brief A component of a query string that represents a part of a path.
     struct PathComponent : public QueryComponent
     {
         static auto parse(const std::vector<std::shared_ptr<Token>> tokens)
@@ -102,20 +106,27 @@ namespace bufr {
         }
     };
 
+    /// \brief == operator for PathComponent.
+    /// \param lhs The left hand side of the operator.
+    /// \param rhs The right hand side of the operator.
     inline bool operator==(const PathComponent& lhs, const PathComponent& rhs)
     {
         return lhs.name == rhs.name && lhs.index == rhs.index && lhs.filter == rhs.filter;
     }
 
+    /// \brief A query. Contains the components that make up a query.
     struct Query
     {
         std::shared_ptr<SubsetComponent> subset;
         std::vector<std::shared_ptr<PathComponent>> path;
 
+        /// \brief Constructor.
         Query() : subset(std::make_shared<SubsetComponent>()),
                   path({}),
                   queryStr_(subset->name) {}
 
+        /// \brief Constructor.
+        /// \param components The components that make up the query.
         explicit Query(std::vector<std::shared_ptr<QueryComponent>> components)
         {
             std::stringstream pathStr;
@@ -165,6 +176,8 @@ namespace bufr {
             queryStr_ = pathStr.str();
         }
 
+        /// \brief Returns the query string.
+        /// \return The query string.
         std::string str() const
         {
             return queryStr_;
@@ -174,26 +187,29 @@ namespace bufr {
         std::string queryStr_;
     };
 
+    /// \brief == Implements operator for Query.
     inline bool operator==(const Query& lhs, const Query& rhs)
     {
         return lhs.str() == rhs.str();
     }
 
+    /// \brief != Implements operator for Query.
     inline bool operator!=(const Query& lhs, const Query& rhs)
     {
         return !(lhs == rhs);
     }
 
+    /// \brief < Implements operator for Query.
     inline bool operator<(const Query& lhs, const Query& rhs)
     {
         return lhs.str() < rhs.str();
     }
 
     /// \brief Parses a user supplied query string into its component parts.
-    /// \note Will be refactored to properly tokenize the query string.
     class QueryParser
     {
      public:
+        /// \brief Parses a query string into its component parts.
         static std::vector<Query> parse(const std::string& queryStr);
 
      private:

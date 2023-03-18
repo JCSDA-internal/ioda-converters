@@ -18,6 +18,7 @@
 
 namespace Ingester {
 namespace bufr {
+    /// \brief Compoenent information for the query path that leads to the target.
     struct TargetComponent
     {
         enum class Type
@@ -33,12 +34,16 @@ namespace bufr {
         size_t branch;
         Type type;
 
+
+        /// \brief Check if this component adds a dimension to the data.
         bool addsDimension() const
         {
             return (type == Type::Subset || type == Type::Repeat) &&
                    (queryComponent->filter.empty() || queryComponent->filter.size() > 1);
         }
 
+        /// \brief Sets the TargetComponent type based on the type of the BUFR query node TYP.
+        /// \param bufrTyp The TYP of the BUFR query node.
         void setType(const Typ& bufrTyp)
         {
             static std::unordered_map<Typ, Type> typMap = {
@@ -78,6 +83,10 @@ namespace bufr {
 
         Target() = default;
 
+        /// \brief Sets metadata for a target given the TargetComponents in the path to the target.
+        ///        It not only sets the path but also sets the dimensioning paths, the sequence paths
+        ///        and the idxs for the exported components (the ones that add dimensions).
+        /// \param components The TargetComponents in the path to the target.
         void setPath(const TargetComponents& components)
         {
             exportDimIdxs = {};

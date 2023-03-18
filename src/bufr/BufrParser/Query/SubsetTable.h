@@ -21,6 +21,7 @@ namespace bufr {
 
     class PathComponent;
 
+    /// \brief A node in the bufr data tree (metadata). This is a recursive data structure.
     struct BufrNode : public std::enable_shared_from_this<BufrNode>
     {
         std::weak_ptr<BufrNode> parent;
@@ -32,7 +33,8 @@ namespace bufr {
         bool hasDuplicates;
         TypeInfo typeInfo;
 
-        // \brief Do this nodes child sequences appear as parts of the query string?
+        /// \brief Do this nodes child sequences appear as parts of the query string?
+        /// \return True if this node is a parent of a query path node.
         bool isQueryPathParentNode()
         {
             return type == Typ::DelayedRep ||
@@ -41,6 +43,8 @@ namespace bufr {
                    type == Typ::DelayedBinary;
         }
 
+        /// \brief Does this node appear as part of the query string?
+        /// \return True if this node is a query path node.
         bool isQueryPathNode()
         {
             bool isQueryPath = true;
@@ -52,7 +56,8 @@ namespace bufr {
             return isQueryPath;
         }
 
-        // \brief Does this node add dimension to the resulting data? (i.e. is it a repeat node)
+        /// \brief Does this node add dimension to the resulting data? (i.e. is it a repeat node)
+        /// \return True if this node is a dimensioning node.
         bool isDimensioningNode()
         {
             return type == Typ::DelayedRep ||
@@ -61,14 +66,16 @@ namespace bufr {
                    type == Typ::Subset;
         }
 
-        // \brief Is this node a leaf node (i.e. a data node)
+        /// \brief Is this node a leaf node (i.e. a data node)
+        /// \return True if this node is a leaf node.
         bool isLeaf() const
         {
             return type == Typ::Number ||
                    type == Typ::Character;
         }
 
-        // \brief Does this type of node contain children?
+        /// \brief Does this type of node contain children?
+        /// \return True if this node is a container node.
         bool isContainer() const
         {
             return type == Typ::DelayedRep ||
@@ -81,12 +88,17 @@ namespace bufr {
                    type == Typ::Subset;
         }
 
+        /// \brief Recursively get the path to this node as a vector of strings.
+        /// \return The path to this node as a vector of strings.
         std::vector<std::string> getPath()
         {
             std::vector<std::string> components;
             return getPath(components);
         }
 
+        /// \brief Recursively get the path to this node as a vector of strings.
+        /// \param components The path to this node as a vector of strings.
+        /// \return The path to this node as a vector of strings.
         std::vector<std::string> getPath(std::vector<std::string>& components)
         {
             if (!parent.expired())
@@ -102,12 +114,17 @@ namespace bufr {
             return components;
         }
 
+        /// \brief Recursively get the path to this node as a vector of BufrNodes.
+        /// \return The path to this node as a vector of BufrNodes.
         std::vector<std::shared_ptr<BufrNode>> getPathNodes()
         {
             std::vector<std::shared_ptr<BufrNode>> components;
             return getPathNodes(components);
         }
 
+        /// \brief Recursively get the path to this node as a vector of BufrNodes.
+        /// \param components The path to this node as a vector of BufrNodes.
+        /// \return The path to this node as a vector of BufrNodes.
         std::vector<std::shared_ptr<BufrNode>>
             getPathNodes(std::vector<std::shared_ptr<BufrNode>>& components)
         {
@@ -128,6 +145,8 @@ namespace bufr {
             return components;
         }
 
+        /// \brief Get the sub paths of this node that map to a dimension.
+        /// \return The sub paths of this node that map to a dimension.
         std::vector<std::string> getDimPaths()
         {
             std::vector<std::string> components;
@@ -135,6 +154,8 @@ namespace bufr {
             return components;
         }
 
+        /// \brief Recursively get the sub paths of this node that map to a dimension.
+        /// \param components The sub paths of this node that map to a dimension.
         void getDimPaths(std::vector<std::string>& components)
         {
             if (!parent.expired())
@@ -166,6 +187,8 @@ namespace bufr {
             }
         }
 
+        /// \brief Get the nodes that are the leaves of the tree.
+        /// \return The nodes that are the leaves of the tree.
         std::vector<std::shared_ptr<BufrNode>> getLeaves()
         {
             std::vector<std::shared_ptr<BufrNode>> leaves;
@@ -173,6 +196,8 @@ namespace bufr {
             return leaves;
         }
 
+        /// \brief Recursively get the nodes that are the leaves of the tree.
+        /// \param leaves The nodes that are the leaves of the tree.
         void getLeaves(std::vector<std::shared_ptr<BufrNode>>& leaves)
         {
             if (isLeaf())
@@ -188,7 +213,8 @@ namespace bufr {
             }
         }
 
-
+        /// \brief Get the indices of the nodes that add dimensions to the data.
+        /// \return The indices of the nodes that add dimensions to the data.
         std::vector<int> getDimIdxs()
         {
             std::vector<int> idxs;
@@ -196,6 +222,9 @@ namespace bufr {
             return getDimIdxs(idxs, depth);
         }
 
+        /// \brief Recursively get the indices of the nodes that add dimensions to the data.
+        /// \param idxs The indices of the nodes that add dimensions to the data.
+        /// \param depth The depth of this node in the tree.
         std::vector<int> getDimIdxs(std::vector<int>& idxs, int& depth)
         {
             if (!parent.expired())
@@ -216,6 +245,8 @@ namespace bufr {
             return idxs;
         }
 
+        /// \brief Get the children of this node.
+        /// \return The children of this node.
         std::shared_ptr<BufrNode> getChild(const std::string& mnemonic, size_t index)
         {
             size_t currentIdx = 0;

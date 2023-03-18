@@ -27,15 +27,19 @@ namespace bufr {
     class QueryToken;
     typedef std::vector<std::shared_ptr<Token>> Tokens;
 
-    // Token abstract base class
+    /// \brief Token abstract base class
     class Token {
      public:
         Token() = default;
         virtual ~Token() = default;
 
+        /// \brief Get the string representation of the token
         std::string str() const  { return str_; }
-        Tokens tokens() const { return subTokens_; }
+
+        /// \brief Get the debug string for the token.
         virtual std::string debugStr() const = 0;
+
+        /// \brief Get the subtokens for this token.
         virtual std::vector<std::shared_ptr<QueryToken>> queryTokens() const
         {
             throw eckit::BadParameter("Token::queryTokens: called on wrong token type"
@@ -46,10 +50,11 @@ namespace bufr {
         Tokens subTokens_;
         std::string str_;
 
+        /// \brief Tokenize the str_ into tokens.
         virtual void tokenize() {}
     };
 
-    // template base class for tokens
+    /// \brief Template base class for tokens
     template <class T>
     class TokenBase : public Token {
      public:
@@ -78,23 +83,27 @@ namespace bufr {
         std::string debugStr() const override { return T::DebugStr; }
     };
 
+    /// \brief Token for the seperator between query components (i.e. '/')
     class SeparatorToken : public TokenBase<SeparatorToken> {
      public:
         constexpr static const char* Pattern = "\\/";
         constexpr static const char* DebugStr = "<sep>";
     };
 
+    /// \brief Token for the wildcard subset
     class AnySubset : public TokenBase<AnySubset> {
      public:
         constexpr static const char* Pattern = "\\*";
         constexpr static const char* DebugStr = "<anySubset>";
     };
 
+    /// \brief Token for the index part of a query (i.e. '[2]')
     class IndexToken : public TokenBase<IndexToken> {
      public:
         constexpr static const char* Pattern = "\\[[0-9]+\\]";
         constexpr static const char* DebugStr = "<index>";
 
+        // \brief Get the debug string for the token.
         std::string debugStr() const override
         {
             std::ostringstream debugStr;
@@ -108,11 +117,13 @@ namespace bufr {
         }
     };
 
+    /// \brief Token for the mnemonic parts of a query (i.e. 'TMBR')
     class MnemonicToken : public TokenBase<MnemonicToken> {
      public:
         constexpr static const char* Pattern = "([A-Z0-9_]+)";
         constexpr static const char* DebugStr = "<mnemonic>";
 
+        // \brief Get the debug string for the token.
         std::string debugStr() const override
         {
             std::ostringstream debugStr;
@@ -121,6 +132,7 @@ namespace bufr {
         }
     };
 
+    /// \brief Token for the filter parts of a query (i.e. '{1-3,5}')
     class FilterToken : public TokenBase<FilterToken> {
      public:
         constexpr static const char* Pattern = "\\{\\d+(\\-\\d+)?(\\,\\d+(\\-\\d+)?)*\\}";
@@ -128,6 +140,7 @@ namespace bufr {
 
         std::vector<size_t> indices() { return indices_; }
 
+        /// \brief Tokenize the str_ into tokens.
         void tokenize() final
         {
             static const auto filterRegex =
@@ -174,6 +187,7 @@ namespace bufr {
             indices_ = std::vector<size_t>(indices.begin(), indices.end());
         }
 
+        /// \brief Get the debug string for the token.
         std::string debugStr() const override
         {
             std::ostringstream debugStr;
@@ -193,6 +207,8 @@ namespace bufr {
         std::vector<size_t> indices_;
     };
 
+    /// \brief Token for a query (i.e. '*/BRIT{2-4}/PCCF[2]'). This token contains tokens for all
+    ///        the elements of the query string.
     class QueryToken : public TokenBase<QueryToken> {
      public:
         constexpr static const char* Pattern =
@@ -200,6 +216,7 @@ namespace bufr {
         constexpr static const char* DebugStr = "<query>";
         constexpr static const char* SubPattern = "[^,]+";
 
+        // \brief Get the debug string for the token.
         std::string debugStr() const override
         {
             std::ostringstream debugStr;
@@ -214,6 +231,7 @@ namespace bufr {
             return debugStr.str();
         }
 
+        /// \brief Tokenize the str_ into tokens.
         void tokenize() final
         {
             const std::string iterStr = str_;
@@ -242,6 +260,8 @@ namespace bufr {
             return { std::make_shared<QueryToken>(*this) };
         }
 
+        /// \brief Split the query by its seperators (i.e. '*/BRIT{2-4}/PCCF[2]' -> [*, BRIT{2-4},
+        ///        PCCF[2]].
         std::vector<Tokens> split() const
         {
             std::vector<Tokens> splitTokens;
@@ -263,12 +283,14 @@ namespace bufr {
         }
     };
 
+    /// \brief Token for a multi-query (i.e. '[*/BRIT/TMBR,*/BRITCSTC/TMBR]') This token will have
+    ///        sub-tokens for each query.
     class MultiQueryToken : public TokenBase<MultiQueryToken> {
      public:
         constexpr static const char* Pattern = "^\\[(.*)\\]$";
-
         constexpr static const char* DebugStr = "<multi>";
 
+        /// \brief Get the debug string for the token.
         std::string debugStr() const override
         {
             std::ostringstream debugStr;
@@ -283,6 +305,7 @@ namespace bufr {
             return debugStr.str();
         }
 
+        /// \brief Tokenize the str_ into tokens.
         void tokenize() final
         {
             static const auto multiPattern = "\\[" + std::string(QueryToken::Pattern) +
@@ -316,11 +339,13 @@ namespace bufr {
             }
         }
 
+        /// \brief Return the Querys (tokens) contained in the multi-query.
         std::vector<std::shared_ptr<QueryToken>> queryTokens() const final
         {
             return queries_;
         }
 
+        /// \brief Split the multi-query into a vector of Query (tokens).
         Tokens split() const
         {
             Tokens queryTokens;
@@ -343,14 +368,15 @@ namespace bufr {
         std::vector<std::shared_ptr<QueryToken>> queries_;
     };
 
+    /// \brief Static class to tokenize a query string
     class Tokenizer
     {
      public:
         Tokenizer() = default;
         ~Tokenizer() = default;
 
-        // tokenize a query string
-        // return a vector of tokens
+        /// \brief Tokenize a query string
+        /// \return A vector of tokens
         static Tokens tokenize(const std::string &query);
     };
 

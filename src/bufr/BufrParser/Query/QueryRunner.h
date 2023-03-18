@@ -111,11 +111,27 @@ namespace bufr {
                          ResultSet& resultSet) const;
 
 
+        /// \brief Given data counts and a filter specification this function creates the resulting
+        ///        data vector.
+        /// \param[in] srcData The source data vector.
+        /// \param[in] origCounts The original data counts.
+        /// \param[in] filter The filter specification.
+        /// \return The resulting data vector after the filter is applied.
         std::vector<double> makeFilteredData(const std::vector<double>& srcData,
                                              const SeqCounts &origCounts,
                                              const std::vector<std::vector<size_t>> &filter)
                                                   const;
 
+        /// \brief Recursive function that does the actual work of creating the filtered data
+        ///        vector.
+        /// \param[in] srcData The source data vector.
+        /// \param[in] origCounts The original data counts.
+        /// \param[in] filters The filter specification.
+        /// \param[in, out] data The resulting data vector.
+        /// \param[in, out] offset The current offset into the resulting data vector.
+        /// \param[in] depth The current depth of the recursion.
+        /// \param[in] skipResult If true, the result of the current recursion is not stored in the
+        ///                       resulting data vector. This data is being filtered out.
         void _makeFilteredData(const std::vector<double>& srcData,
                                const SeqCounts& origCounts,
                                const std::vector<std::vector<size_t>>& filters,
