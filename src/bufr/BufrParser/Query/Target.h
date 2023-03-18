@@ -84,8 +84,8 @@ namespace bufr {
         Target() = default;
 
         /// \brief Sets metadata for a target given the TargetComponents in the path to the target.
-        ///        It not only sets the path but also sets the dimensioning paths, the sequence paths
-        ///        and the idxs for the exported components (the ones that add dimensions).
+        ///        It not only sets the path but also sets the dimensioning paths, the sequence
+        ///        paths and the idxs for the exported components (the ones that add dimensions).
         /// \param components The TargetComponents in the path to the target.
         void setPath(const TargetComponents& components)
         {
