@@ -309,7 +309,8 @@ namespace bufr
                         // Delay the creation of the counts and filters until we know we need them
                         // in order to avoid unnecessary allocations
                         if (counts.empty())
-                            counts = SeqCounts(std::vector<std::vector<int>>(targ->seqPath.size() + 1, {1}));
+                            counts = SeqCounts(
+                                std::vector<std::vector<int>>(targ->seqPath.size() + 1, {1}));
 
                         if (filters.empty())
                             filters = std::vector<std::vector<size_t>>(targ->seqPath.size() + 1);
@@ -318,7 +319,8 @@ namespace bufr
                         hasFilter = true;
 
                         auto filteredCounts =
-                            std::vector<int>(dataTable[targ->seqPath[pathIdx] + 1].counts.size(), 1);
+                          std::vector<int>(dataTable[targ->seqPath[pathIdx] + 1].counts.size(), 1);
+
                         for (size_t countIdx = 0; countIdx < filteredCounts.size(); countIdx++)
                         {
                             filteredCounts[countIdx] =

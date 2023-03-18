@@ -154,7 +154,6 @@ namespace bufr {
                         }
                         pathStr << "}";
                     }
-
                 }
                 else
                 {

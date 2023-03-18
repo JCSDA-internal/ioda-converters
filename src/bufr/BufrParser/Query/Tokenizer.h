@@ -150,7 +150,7 @@ namespace bufr {
                      ++it)
                 {
                     // check which capture group matched
-                    if ((*it)[1].matched && (*it)[2].matched) // range match
+                    if ((*it)[1].matched && (*it)[2].matched)  // range match
                     {
                         int start = std::stoi((*it)[1].str());
                         int end = std::stoi((*it)[2].str());
@@ -159,7 +159,7 @@ namespace bufr {
                             indices.insert(i);
                         }
                     }
-                    else // standalone number match
+                    else  // standalone number match
                     {
                         int number = std::stoi((*it)[3].str());
                         indices.insert(number);
