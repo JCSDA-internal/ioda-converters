@@ -37,6 +37,7 @@ namespace bufr {
             isAnySubset = true;
         }
 
+        /// \brief Parse a subset component from a token.
         static auto parse(std::vector<std::shared_ptr<Token>> tokens)
         {
             const auto& token = tokens[0];
@@ -210,6 +211,8 @@ namespace bufr {
     {
      public:
         /// \brief Parses a query string into its component parts.
+        /// \param queryStr The query string to parse.
+        /// \return The components of the query string as Query objects.
         static std::vector<Query> parse(const std::string& queryStr);
 
      private:
