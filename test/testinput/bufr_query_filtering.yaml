@@ -27,6 +27,8 @@ observations:
             query: "*/BRIT{3-5}/CHNM"
           brightnessTemp:
             query: "*/BRIT{3-5}/TMBR"
+          brightnessTemp_1d:
+            query: "*/BRIT{4}/TMBR"
 
     ioda:
       backend: netcdf
@@ -62,3 +64,10 @@ observations:
           longName: "Brightness temperature"
           units: "K"
           range: [120, 500]
+
+        - name: "ObsValue/brightnessTemperature_1d"
+          coordinates: "longitude latitude"
+          source: variables/brightnessTemp_1d
+          longName: "Brightness temperature"
+          units: "K"
+          range: [ 120, 500 ]
