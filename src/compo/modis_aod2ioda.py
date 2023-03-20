@@ -10,6 +10,7 @@
 import argparse
 import netCDF4 as nc
 import numpy as np
+from datetime import datetime, timedelta
 import os
 from pyhdf.SD import SD, SDC
 
@@ -35,7 +36,8 @@ AttrData = {
 DimDict = {}
 
 # A dictionary of variable names and their dimensions.
-VarDims = {'aerosolOpticalDepth': ['Location']}
+VarDims = {'aerosolOpticalDepth': ['Location', 'Channel']}
+channels = [4]
 
 # Get the group names we use the most.
 metaDataName = iconv.MetaDataName()
@@ -121,9 +123,7 @@ class AOD(object):
             sen_zen = sen_zen[pos_index]
             unc_land = unc_land[pos_index] * 1E-3  # see scale factor
             modis_time = modis_time[pos_index]
-            obs_time = np.full(len(modis_time), long_missing_value, dtype=np.int64)
-            for n, t in enumerate(modis_time):
-                obs_time[n] = round(t)
+            obs_time = np.full(len(modis_time), np.around(modis_time), dtype=np.int64)
 
             # uncertainty estimates:
             # From MODIS file (over ocean) and Levy, 2010 (over land)
@@ -143,6 +143,7 @@ class AOD(object):
                 self.outdata[self.varDict[iodavar]['qcKey']] = np.append(self.outdata[self.varDict[iodavar]['qcKey']], np.array(QC_flag, dtype=np.int32))
 
         DimDict['Location'] = len(self.outdata[('dateTime', metaDataName)])
+        DimDict['Channel'] = np.array(channels)
 
 
 def main():

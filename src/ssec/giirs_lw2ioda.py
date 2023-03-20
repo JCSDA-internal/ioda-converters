@@ -13,7 +13,7 @@ import numpy as np
 from datetime import datetime, timedelta
 import netCDF4 as nc
 
-import lib_python.ioda_conv_ncio as iconv
+import lib_python.ioda_conv_ncio as iconio
 from lib_python.orddicts import DefaultOrderedDict
 
 
@@ -174,7 +174,7 @@ def main():
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
 
-    writer = iconv.NcWriter(args.output, [], locationKeyList)
+    writer = iconio.NcWriter(args.output, [], locationKeyList)
 
     # Read in the giirs lw radiance
     lwrad = LwRadiance(args.input, writer)

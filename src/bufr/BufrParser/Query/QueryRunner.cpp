@@ -263,8 +263,8 @@ namespace bufr
                             for (int pathIdx = currentPath.size() - 1; pathIdx >= 0; --pathIdx)
                             {
                                 returnNodeIdx = dataProvider_->getLink(
-                                    dataProvider_->getJmpb(currentPath[pathIdx]));
-                                lastNonZeroReturnIdx = currentPathReturns.size() - pathIdx;
+                                        dataProvider_->getJmpb(currentPath[pathIdx]));
+                                lastNonZeroReturnIdx = (currentPathReturns.size() - 1) - pathIdx;
 
                                 if (returnNodeIdx != 0) break;
                             }
