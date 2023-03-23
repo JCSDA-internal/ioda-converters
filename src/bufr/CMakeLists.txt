@@ -156,10 +156,8 @@ list (APPEND _query_srcs
 	BufrParser/Query/Tokenizer.cpp
 	BufrParser/Query/SubsetTable.h
 	BufrParser/Query/SubsetTable.cpp
-	BufrParser/Query/pybind11/python_bindings.cpp
+	BufrParser/Query/python_bindings.cpp
 )
-
-pybind11_add_module(my_module BufrParser/Query/pybind11/my_module.cpp)
 
 pybind11_add_module(bufr ${_query_srcs})
 target_link_libraries(bufr PUBLIC ${_query_libs})
@@ -171,21 +169,3 @@ target_include_directories(bufr PUBLIC
 
 target_compile_definitions(bufr PRIVATE BUILD_PYTHON_BINDING=1)
 
-
-
-#pybind11_add_module(bufr ${_query_srcs})
-#
-#target_link_libraries(bufr PUBLIC ${_query_libs})
-#target_link_libraries(bufr PUBLIC Python3::Module)
-#
-#target_compile_features(bufr PUBLIC cxx_std_14)
-#
-#target_include_directories(bufr PUBLIC
-#						   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-#						   $<INSTALL_INTERFACE:bufr>  # <prefix>/bufr
-#						   )
-
-#ecbuild_add_executable( TARGET  test.x
-#						SOURCES BufrParser/Query/pybind11/python_bindings.cpp)
-#
-#target_link_libraries(test.x PUBLIC Python3::Module)

@@ -26,7 +26,6 @@ namespace Ingester {
     BufrParser::BufrParser(const BufrDescription &description) :
             description_(description),
             file_(bufr::File(description_.filepath(),
-                             description_.isWmoFormat(),
                              description_.tablepath()))
     {
         // print message
@@ -36,7 +35,6 @@ namespace Ingester {
     BufrParser::BufrParser(const eckit::LocalConfiguration &conf) :
             description_(BufrDescription(conf)),
             file_(bufr::File(description_.filepath(),
-                             description_.isWmoFormat(),
                              description_.tablepath()))
     {
         // print message
