@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 """
-Python code to ingest netCDF4 or HDF5 ATMS data
+Python code to ingest netCDF4 TROPICS data
 """
 
 import argparse
@@ -15,6 +15,7 @@ import numpy as np
 import lib_python.ioda_conv_engines as iconv
 from lib_python.orddicts import DefaultOrderedDict
 from hdf5.atms_netcdf_hdf5_2ioda import set_metadata_attributes, set_obspace_attributes
+from hdf5.cowvr_hdf5_2ioda import compute_scan_angle
 from gnssro.gnssro_bufr2ioda import ioda_int_type, ioda_float_type
 from lib_python.def_jedi_utils import concat_obs_dict
 
@@ -149,8 +150,15 @@ def get_data(f, obs_data):
     obs_data[(k, metaDataName)] = np.array(f['losZen_deg'][iband, :, :].flatten(), dtype='float32')
     k = 'sensorAzimuthAngle'
     obs_data[(k, metaDataName)] = np.array(f['losAzi_deg'][iband, :, :].flatten(), dtype='float32')
-    k = 'sensorViewAngle'
-    obs_data[(k, metaDataName)] = np.array(f['losScan_deg'][iband, :, :].flatten(), dtype='float32')
+    instr_scan_ang = np.array(f['losScan_deg'][iband, :, :].flatten(), dtype='float32')
+    # compute view angle
+    sat_altitude = np.empty_like(instr_scan_ang)
+    sat_altitude[:] = 550.
+    obs_data[('sensorViewAngle', metaDataName)] = compute_scan_angle(
+        instr_scan_ang,
+        sat_altitude,
+        instr_scan_ang)
+#       obs_data[('sensorZenithAngle', metaDataName)])
 
     nlocs = len(obs_data[('latitude', metaDataName)])
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
@@ -212,9 +220,9 @@ def set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data):
         (obs_data[(tb_key, obsValName)][:, 11] != float_missing_value)
     for k in obs_data:
         if metaDataName in k[1] and 'sensorChannelNumber' not in k[0]:
-            obs_data[k] = obs_data[k][good]   # [::33] -- add as skip
+            obs_data[k] = obs_data[k][good]     ## [::24] ## add as skip
         elif tb_key in k[0]:
-            obs_data[k] = obs_data[k][good, :]  #  [::33]  -- add as skip
+            obs_data[k] = obs_data[k][good, :]  ## [::24]  ## add as skip
 
     return obs_data
 
