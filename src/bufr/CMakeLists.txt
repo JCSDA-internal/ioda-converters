@@ -124,6 +124,7 @@ ecbuild_add_test( TARGET  ${PROJECT_NAME}_bufr_coding_norms
                   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
 
 
+# Make the python bindings
 
 list(APPEND _query_libs
 			Eigen3::Eigen
@@ -161,11 +162,16 @@ list (APPEND _query_srcs
 
 pybind11_add_module(bufr ${_query_srcs})
 target_link_libraries(bufr PUBLIC ${_query_libs})
-
+target_compile_definitions(bufr PRIVATE BUILD_PYTHON_BINDING=1)
 target_include_directories(bufr PUBLIC
 						   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 						   $<INSTALL_INTERFACE:bufr>  # <prefix>/bufr
 						   )
 
-target_compile_definitions(bufr PRIVATE BUILD_PYTHON_BINDING=1)
+set_target_properties( bufr
+					   PROPERTIES
+					     ARCHIVE_OUTPUT_DIRECTORY "${PYIODACONV_BUILD_LIBDIR}"
+					     LIBRARY_OUTPUT_DIRECTORY "${PYIODACONV_BUILD_LIBDIR}"
+					   )
 
+install (TARGETS bufr DESTINATION ${PYIODACONV_INSTALL_LIBDIR})
