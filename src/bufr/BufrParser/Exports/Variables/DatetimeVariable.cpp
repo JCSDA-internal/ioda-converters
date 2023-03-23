@@ -15,7 +15,10 @@
 #include <vector>
 
 #include "eckit/exception/Exceptions.h"
-#include "oops/util/Logger.h"
+
+#ifndef BUILD_PYTHON_BINDING
+    #include "oops/util/Logger.h"
+#endif
 
 #include "DataObject.h"
 #include "DatetimeVariable.h"
@@ -143,10 +146,19 @@ namespace Ingester
                 auto thisTime = std::mktime(&tm);
                 if (thisTime < 0)
                 {
+#ifndef BUILD_PYTHON_BINDING
                      oops::Log::warning() << "Caution, date suspicious date (year, month, day): "
                                           << year << ", "
                                           << month << ", "
                                           << day << std::endl;
+#endif
+
+#ifdef BUILD_PYTHON_BINDING
+                    std::cout << "Caution, date suspicious date (year, month, day): "
+                              << year << ", "
+                              << month << ", "
+                              << day << std::endl;
+#endif
                 }
 
                 diff_time = static_cast<int64_t>(difftime(thisTime, epochDt)

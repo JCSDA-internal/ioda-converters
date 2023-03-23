@@ -2,6 +2,9 @@
 // Created by Ronald McLaren on 3/20/23.
 //
 
+
+#include "eckit/exception/Exceptions.h"
+
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
@@ -23,6 +26,9 @@ namespace bufr {
     PYBIND11_MODULE(bufr, m)
     {
         m.doc() = "Provides BUFR querying abilities to python.";
+
+        py::register_exception<eckit::BadParameter>(m, "Exception");
+        py::register_exception<eckit::BadValue>(m, "Exception");
 
         py::class_<QuerySet>(m, "QuerySet")
             .def(py::init<>())
