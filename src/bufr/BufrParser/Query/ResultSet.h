@@ -117,8 +117,7 @@ namespace bufr {
 
 #ifdef BUILD_PYTHON_BINDING
         py::array getNumpyArray(const std::string& fieldName,
-                                const std::string& groupByFieldName = "",
-                                const std::string& overrideType = "") const;
+                                const std::string& groupByFieldName = "") const;
 #endif
 
         /// \brief Adds a new DataFrame to the ResultSet and returns a reference to it.

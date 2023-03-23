@@ -60,8 +60,7 @@ namespace bufr {
 
 #ifdef BUILD_PYTHON_BINDING
         py::array ResultSet::getNumpyArray(const std::string& fieldName,
-                                           const std::string& groupByFieldName,
-                                           const std::string& overrideType) const
+                                           const std::string& groupByFieldName) const
         {
             std::vector<double> data;
             std::vector<int> dims;
@@ -75,26 +74,30 @@ namespace bufr {
                          dimPaths,
                          info);
 
-            // Create the numpy array
-            py::array_t<double> array(dims);
-            auto buf = array.request();
-            double* ptr = (double*) buf.ptr;
+            py::array result;
+            if (info.isString())
+            {
+                py::array_t<unsigned char> array(dims);
+                std::copy(data.begin(), data.end(), static_cast<unsigned char*>(array.request().ptr));
 
-            // Copy the data into the numpy array
-            std::copy(data.begin(), data.end(), ptr);
+                result = array;
+            }
+            else if (info.isInteger())
+            {
+                py::array_t<int> array(dims);
+                std::copy(data.begin(), data.end(), static_cast<int*>(array.request().ptr));
 
-            return array;
+                result = array;
+            }
+            else
+            {
+                py::array_t<double> array(dims);
+                std::copy(data.begin(), data.end(), static_cast<double*>(array.request().ptr));
 
-//            auto strides = std::vector<size_t>(dims_.size());
-//            auto dims = std::vector<size_t>(dims_.size());
-//
-//            strides[0] = 1;
-//            dims[0] = static_cast<size_t>(dims_[0]);
-//            for (size_t i = 1; i < dims_.size(); ++i)
-//            {
-//                strides[i] = strides[i - 1] * dims_[i];
-//                dims[i] = static_cast<size_t>(dims_[i]);
-//            }
+                result = array;
+            }
+
+            return result;
         }
 #endif
 
