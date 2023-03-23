@@ -11,6 +11,7 @@
 #include <vector>
 #include <set>
 #include <string>
+#include <map>
 
 #include "QueryParser.h"
 
@@ -25,6 +26,7 @@ namespace bufr
     class QuerySet
     {
      public:
+        QuerySet() = default;
         explicit QuerySet(const std::vector<std::string>& subsets);
         ~QuerySet() = default;
 
@@ -32,6 +34,13 @@ namespace bufr
         /// \param[in] name The name of the query.
         /// \param[in] query The query string.
         void add(const std::string& name, const std::string& query);
+
+
+        /// \brief Add a new query to the collection.
+        /// \param[in] name The name of the query.
+        /// \param[in] query The query string.
+        void add(const std::map<std::string, std::string>& queries);
+
 
         /// \brief Returns the size of the collection.
         size_t size() const { return queryMap_.size(); }

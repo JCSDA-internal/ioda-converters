@@ -13,10 +13,15 @@
 #include <type_traits>
 #include <iostream>
 #include <numeric>
+#include <limits>
+#include <math.h>
 
 #include "eckit/exception/Exceptions.h"
-#include "ioda/ObsGroup.h"
-#include "ioda/defs.h"
+
+#ifndef BUILD_PYTHON_BINDING
+    #include "ioda/ObsGroup.h"
+    #include "ioda/defs.h"
+#endif
 
 #include "BufrParser/Query/Constants.h"
 #include "BufrParser/Query/QueryParser.h"
@@ -26,6 +31,7 @@ namespace Ingester
     typedef std::vector<int> Dimensions;
     typedef Dimensions Location;
 
+#ifndef BUILD_PYTHON_BINDING
     struct DimensionDataBase
     {
         std::shared_ptr<ioda::NewDimensionScale_Base> dimScale;
@@ -63,6 +69,7 @@ namespace Ingester
             return std::string("");
         }
     };
+#endif
 
     /// \brief Abstract base class for intermediate data object that bridges the Parsers with the
     /// IodaEncoder.
@@ -138,6 +145,7 @@ namespace Ingester
         /// \return Data size.
         virtual size_t size() const = 0;
 
+#ifndef BUILD_PYTHON_BINDING
         /// \brief Makes an ioda::Variable and adds it to the given ioda::ObsGroup
         /// \param obsGroup Obsgroup where to add the variable
         /// \param name The name to associate with the variable (ex "latitude@MetaData")
@@ -164,7 +172,7 @@ namespace Ingester
         virtual std::shared_ptr<DimensionDataBase> createEmptyDimension(
                                                                   const std::string& name,
                                                                   std::size_t dimIdx) const = 0;
-
+#endif
         /// \brief Slice the data object given a vector of row indices.
         /// \param slice The indices to slice.
         /// \return Slice of the data object.
@@ -223,6 +231,7 @@ namespace Ingester
             _setData(data, dataMissingValue);
         }
 
+#ifndef BUILD_PYTHON_BINDING
         /// \brief Makes an ioda::Variable and adds it to the given ioda::ObsGroup
         /// \param obsGroup Obsgroup were to add the variable
         /// \param name The name to associate with the variable (ex "latitude@MetaData")
@@ -282,6 +291,7 @@ namespace Ingester
             dimData->dimScale = ioda::NewDimensionScale<int>(name, getDims()[dimIdx]);
             return dimData;
         }
+#endif
 
         /// \brief Print the data object to a output stream.
         void print(std::ostream &out) const final
@@ -418,6 +428,7 @@ namespace Ingester
      private:
         std::vector<T> data_;
 
+#ifndef BUILD_PYTHON_BINDING
         /// \brief Make the variable creation parameters.
         /// \param chunks The chunk sizes
         /// \param compressionLevel The compression level
@@ -449,6 +460,7 @@ namespace Ingester
             return params;
         }
 
+
         /// \brief Make the variable creation parameters for string data.
         /// \param chunks The chunk sizes
         /// \param compressionLevel The compression level
@@ -467,6 +479,7 @@ namespace Ingester
 
             return params;
         }
+#endif
 
         /// \brief Get the data at the location as a float for numeric data.
         /// \return Float data.

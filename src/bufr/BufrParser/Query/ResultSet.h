@@ -14,6 +14,15 @@
 #include <utility>
 #include <vector>
 
+#ifdef BUILD_PYTHON_BINDING
+    #include <pybind11/pybind11.h>
+    #include <pybind11/numpy.h>
+    #include <pybind11/stl.h>
+    #include <pybind11/stl_bind.h>
+
+    namespace py = pybind11;
+#endif
+
 #include "DataProvider/DataProvider.h"
 #include "DataObject.h"
 #include "Target.h"
@@ -105,6 +114,12 @@ namespace bufr {
         get(const std::string& fieldName,
             const std::string& groupByFieldName = "",
             const std::string& overrideType = "") const;
+
+#ifdef BUILD_PYTHON_BINDING
+        py::array getNumpyArray(const std::string& fieldName,
+                                const std::string& groupByFieldName = "",
+                                const std::string& overrideType = "") const;
+#endif
 
         /// \brief Adds a new DataFrame to the ResultSet and returns a reference to it.
         /// \return A reference to the new DataFrame.

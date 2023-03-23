@@ -122,3 +122,70 @@ ecbuild_add_test( TARGET  ${PROJECT_NAME}_bufr_coding_norms
                   COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_cpplint.py
                   ARGS    --quiet --recursive ${CMAKE_CURRENT_SOURCE_DIR}
                   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
+
+
+
+list(APPEND _query_libs
+			Eigen3::Eigen
+			eckit
+			bufr::bufr_d
+			)
+
+list (APPEND _query_srcs
+	DataObject.h
+	DataObject.cpp
+	BufrParser/Query/DataProvider/DataProvider.h
+	BufrParser/Query/DataProvider/DataProvider.cpp
+	BufrParser/Query/DataProvider/NcepDataProvider.h
+	BufrParser/Query/DataProvider/NcepDataProvider.cpp
+	BufrParser/Query/DataProvider/WmoDataProvider.h
+	BufrParser/Query/DataProvider/WmoDataProvider.cpp
+	BufrParser/Query/File.h
+	BufrParser/Query/File.cpp
+	BufrParser/Query/VectorMath.h
+	BufrParser/Query/QuerySet.h
+	BufrParser/Query/QuerySet.cpp
+	BufrParser/Query/QueryRunner.h
+	BufrParser/Query/QueryRunner.cpp
+	BufrParser/Query/QueryParser.h
+	BufrParser/Query/QueryParser.cpp
+	BufrParser/Query/ResultSet.h
+	BufrParser/Query/ResultSet.cpp
+	BufrParser/Query/Target.h
+	BufrParser/Query/Tokenizer.h
+	BufrParser/Query/Tokenizer.cpp
+	BufrParser/Query/SubsetTable.h
+	BufrParser/Query/SubsetTable.cpp
+	BufrParser/Query/pybind11/python_bindings.cpp
+)
+
+pybind11_add_module(my_module BufrParser/Query/pybind11/my_module.cpp)
+
+pybind11_add_module(bufr ${_query_srcs})
+target_link_libraries(bufr PUBLIC ${_query_libs})
+
+target_include_directories(bufr PUBLIC
+						   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+						   $<INSTALL_INTERFACE:bufr>  # <prefix>/bufr
+						   )
+
+target_compile_definitions(bufr PRIVATE BUILD_PYTHON_BINDING=1)
+
+
+
+#pybind11_add_module(bufr ${_query_srcs})
+#
+#target_link_libraries(bufr PUBLIC ${_query_libs})
+#target_link_libraries(bufr PUBLIC Python3::Module)
+#
+#target_compile_features(bufr PUBLIC cxx_std_14)
+#
+#target_include_directories(bufr PUBLIC
+#						   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+#						   $<INSTALL_INTERFACE:bufr>  # <prefix>/bufr
+#						   )
+
+#ecbuild_add_executable( TARGET  test.x
+#						SOURCES BufrParser/Query/pybind11/python_bindings.cpp)
+#
+#target_link_libraries(test.x PUBLIC Python3::Module)
