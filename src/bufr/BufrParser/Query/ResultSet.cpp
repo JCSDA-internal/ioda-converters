@@ -117,7 +117,7 @@ namespace bufr {
     {
         if (dataFrames_.empty())
         {
-            throw eckit::BadValue("This subset is empty (doesn't contain any data).");
+            throw eckit::BadValue("This ResultSet is empty (doesn't contain any data).");
         }
 
         // Find the dims based on the largest sequence counts in the fields
@@ -127,43 +127,39 @@ namespace bufr {
         int groupbyIdx = 0;
         int totalGroupbyElements = 0;
 
-        int targetFieldIdx = 0;
         int groupByFieldIdx = 0;
-        if (dataFrames_.size() > 0)
+        int targetFieldIdx = dataFrames_[0].fieldIndexForNodeNamed(fieldName);
+
+        if (groupByField != "")
         {
-            targetFieldIdx = dataFrames_[0].fieldIndexForNodeNamed(fieldName);
+            groupByFieldIdx = dataFrames_[0].fieldIndexForNodeNamed(groupByField);
 
-            if (groupByField != "")
+            // Validate that the groupByField and the targetField share a common path
+            auto &groupByFieldElement = dataFrames_[0].fieldAtIdx(groupByFieldIdx);
+            auto &groupByPath = groupByFieldElement.target->dimPaths.back();
+            auto &targetPath =
+                dataFrames_[0].fieldAtIdx(targetFieldIdx).target->dimPaths.back();
+            auto groupByPathComps = splitPath(groupByPath.str());
+            auto targetPathComps = splitPath(targetPath.str());
+
+            for (size_t i = 1;
+                 i < std::min(groupByPathComps.size(), targetPathComps.size());
+                 i++)
             {
-                groupByFieldIdx = dataFrames_[0].fieldIndexForNodeNamed(groupByField);
-
-                // Validate that the groupByField and the targetField share a common path
-                auto& groupByFieldElement = dataFrames_[0].fieldAtIdx(groupByFieldIdx);
-                auto& groupByPath = groupByFieldElement.target->dimPaths.back();
-                auto& targetPath =
-                    dataFrames_[0].fieldAtIdx(targetFieldIdx).target->dimPaths.back();
-                auto groupByPathComps = splitPath(groupByPath.str());
-                auto targetPathComps = splitPath(targetPath.str());
-
-                for (size_t i = 1;
-                     i < std::min(groupByPathComps.size(), targetPathComps.size());
-                     i++)
+                if (targetPathComps[i] != groupByPathComps[i])
                 {
-                    if (targetPathComps[i] != groupByPathComps[i])
-                    {
-                        std::ostringstream errStr;
-                        errStr << "The GroupBy and Target Fields do not share a common path.\n";
-                        errStr << "GroupByField path: " << groupByPath.str()<< std::endl;
-                        errStr << "TargetField path: " << targetPath.str() << std::endl;
-                        throw eckit::BadParameter(errStr.str());
-                    }
+                    std::ostringstream errStr;
+                    errStr << "The GroupBy and Target Fields do not share a common path.\n";
+                    errStr << "GroupByField path: " << groupByPath.str() << std::endl;
+                    errStr << "TargetField path: " << targetPath.str() << std::endl;
+                    throw eckit::BadParameter(errStr.str());
                 }
             }
-
-            auto& targetField = dataFrames_[0].fieldAtIdx(targetFieldIdx);
-            dimPaths = targetField.target->dimPaths;
-            exportDims = targetField.target->exportDimIdxs;
         }
+
+        auto& targetField = dataFrames_[0].fieldAtIdx(targetFieldIdx);
+        dimPaths = targetField.target->dimPaths;
+        exportDims = targetField.target->exportDimIdxs;
 
         for (auto& dataFrame : dataFrames_)
         {
@@ -331,10 +327,7 @@ namespace bufr {
 
         // Convert dims per data frame to dims for all the collected data.
         dims[0] = totalRows;
-        if (dataFrames_.size() > 0)
-        {
-            dims = slice(dims, exportDims);
-        }
+        dims = slice(dims, exportDims);
     }
 
 //    subroutine result_set__get_rows_for_field(self, target_field, data_rows, dims, groupby_idx)
