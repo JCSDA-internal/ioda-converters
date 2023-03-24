@@ -7,39 +7,33 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 #
 
-import sys
 import argparse
+from datetime import datetime
 import netCDF4 as nc
 import numpy as np
-from datetime import datetime, date, timedelta
 import os
-from pathlib import Path
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_engines as iconv
+import lib_python.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
-from orddicts import DefaultOrderedDict
+from lib_python.orddicts import DefaultOrderedDict
 
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("dateTime", "integer")
+    ("dateTime", "long")
 ]
 
 obsvars = ["aerosolOpticalDepth"]
-
+channels = [4]
 # A dictionary of global attributes.  More filled in further down.
 AttrData = {}
-AttrData['ioda_object_type'] = 'AOD at 550nm'
+AttrData['ioda_object_type'] = 'AOD'
 
 # A dictionary of variable dimensions.
 DimDict = {}
 
 # A dictionary of variable names and their dimensions.
-VarDims = {'aerosolOpticalDepth': ['Location']}
+VarDims = {'aerosolOpticalDepth': ['Location', 'Channel']}
 
 # Get the group names we use the most.
 metaDataName = iconv.MetaDataName()
@@ -77,13 +71,13 @@ class AOD(object):
             self.varAttrs[iodavar, obsErrName]['units'] = '1'
 
         # Make empty lists for the output vars
-        self.outdata[('latitude', metaDataName)] = []
-        self.outdata[('longitude', metaDataName)] = []
+        self.outdata[('latitude', metaDataName)] = np.array([], dtype=np.float32)
+        self.outdata[('longitude', metaDataName)] = np.array([], dtype=np.float32)
         self.outdata[('dateTime', metaDataName)] = np.array([], dtype=object)
         for iodavar in obsvars:
-            self.outdata[self.varDict[iodavar]['valKey']] = []
-            self.outdata[self.varDict[iodavar]['errKey']] = []
-            self.outdata[self.varDict[iodavar]['qcKey']] = []
+            self.outdata[self.varDict[iodavar]['valKey']] = np.array([], dtype=np.float32)
+            self.outdata[self.varDict[iodavar]['errKey']] = np.array([], dtype=np.float32)
+            self.outdata[self.varDict[iodavar]['qcKey']] = np.array([], dtype=np.int32)
 
         # loop through input filenamess
         for f in self.filenames:
@@ -106,9 +100,7 @@ class AOD(object):
             errs = ncd.variables['Residual'][:].ravel()
             qcpath = ncd.variables['QCPath'][:].ravel()
             qcall = ncd.variables['QCAll'][:].ravel().astype('int32')
-            obs_time = np.empty_like(qcall, dtype=object)
-            for t in range(len(obs_time)):
-                obs_time[t] = base_datetime
+            obs_time = np.full(np.shape(qcall), base_datetime, dtype=object)
             if self.mask == "maskout":
                 mask = np.logical_not(vals.mask)
                 vals = vals[mask]
@@ -152,6 +144,7 @@ class AOD(object):
                     self.outdata[self.varDict[iodavar]['qcKey']], np.array(qcall, dtype=np.int32))
 
         DimDict['Location'] = len(self.outdata[('latitude', metaDataName)])
+        DimDict['Channel'] = np.array(channels)
 
 
 def main():
