@@ -164,8 +164,9 @@ def get_tempest_data(afile, obs_data, add_qc=True):
     # instr_scan_angle = np.array(f['Geolocation']['instr_scan_ang'], dtype='float32')
     obs_data[('sensorViewAngle', metaDataName)] = compute_scan_angle(
         np.array(f['Geolocation']['instr_scan_ang'], dtype='float32'),
-        sensor_altitude, sat_alt_flag,
-        np.array(f['Geolocation']['earth_inc_ang'], dtype='float32'))
+        sensor_altitude,
+        np.array(f['Geolocation']['earth_inc_ang'], dtype='float32'),
+        qc_flag=sat_alt_flag)
 
     nlocs = len(obs_data[('latitude', metaDataName)])
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
@@ -235,8 +236,9 @@ def get_cowvr_data(afile, obs_data, add_qc=True):
     obs_data[('sensorAzimuthAngle', metaDataName)] = np.array(f['GeolocationAndFlags']['earth_az_ang'], dtype='float32')
     obs_data[('sensorViewAngle', metaDataName)] = compute_scan_angle(
         np.array(f['GeolocationAndFlags']['instr_scan_ang'], dtype='float32'),
-        sensor_altitude, sat_alt_flag,
-        np.array(f['GeolocationAndFlags']['earth_inc_ang'], dtype='float32'))
+        sensor_altitude,
+        np.array(f['GeolocationAndFlags']['earth_inc_ang'], dtype='float32'),
+        qc_flag=sat_alt_flag)
 
     nlocs = len(obs_data[('latitude', metaDataName)])
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
@@ -281,17 +283,24 @@ def cowvr_gross_quality_control(obs_data, qc_flag, solar_array_flag, support_arm
     return obs_data
 
 
-def compute_scan_angle(instr_scan_ang, sensor_altitude, sat_alt_flag, sensor_zenith):
+def compute_scan_angle(instr_scan_ang, sensor_altitude, sensor_zenith, qc_flag=None):
 
+    # should come from standard table
     earth_mean_radius_km = 6378.1370  # WGS84
-    iss_altitude_km = 408.
+
+    # example values sensor_altitude
+    # iss_altitude_km = 408.
+    # tropics_altitude_km = 550.
+    # sensor_altitude_km = tropics_altitude_km
+
     d2r = np.pi/180.
     r2d = 180./np.pi
-    # compute default scan angle
+
+    # do we need a missing here
     ratio = np.empty_like(sensor_altitude)
-    ratio[:] = earth_mean_radius_km/(earth_mean_radius_km + iss_altitude_km)      # used a fixed value if not present in data
+
     # compute scan angle
-    good = sat_alt_flag[:] == 0
+    good = qc_flag[:] == 0
     if sum(good) > 0:
         ratio[good] = earth_mean_radius_km/(earth_mean_radius_km + sensor_altitude[good]/1000.)
 
