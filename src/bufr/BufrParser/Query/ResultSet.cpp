@@ -115,8 +115,12 @@ namespace bufr {
                                  std::vector<Query>& dimPaths,
                                  TypeInfo& info) const
     {
-        // Find the dims based on the largest sequence counts in the fields
+        if (dataFrames_.empty())
+        {
+            throw eckit::BadValue("This subset is empty (doesn't contain any data).");
+        }
 
+        // Find the dims based on the largest sequence counts in the fields
         // Compute Dims
         std::vector<int> dimsList;
         std::vector<int> exportDims;

@@ -52,8 +52,8 @@ namespace bufr {
 
         py::class_<ResultSet>(m, "ResultSet")
             .def("get", &ResultSet::getNumpyArray,
-                        py::arg("fieldName"),
-                        py::arg("groupByFieldName") = std::string(""));
+                        py::arg("field_name"),
+                        py::arg("group_by") = std::string(""));
     }
 }  // namespace bufr
 }  // namespace Ingester

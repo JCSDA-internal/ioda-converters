@@ -4,14 +4,16 @@ import numpy as np
 DATA_PATH = './testinput/gdas.t00z.1bhrs4.tm00.bufr_d'
 
 def test_basic_query():
-    # Query the BUFR file for the latitude, longitude, and radiance
-    with bufr.File(DATA_PATH) as f:
-        q = bufr.QuerySet()
-        q.add('latitude', '*/CLON')
-        q.add('longitude', '*/CLAT')
-        q.add('radiance', '*/BRIT{1}/TMBR')
-        q.add('radiance_all', '*/BRIT/TMBR')
 
+    # Make the QuerySet for all the data we want
+    q = bufr.QuerySet()
+    q.add('latitude', '*/CLON')
+    q.add('longitude', '*/CLAT')
+    q.add('radiance', '*/BRIT{1}/TMBR')
+    q.add('radiance_all', '*/BRIT/TMBR')
+
+    # Open the BUFR file and execute the QuerySet
+    with bufr.File(DATA_PATH) as f:
         r = f.execute(q)
 
     # Use the ResultSet returned to get numpy arrays of the data

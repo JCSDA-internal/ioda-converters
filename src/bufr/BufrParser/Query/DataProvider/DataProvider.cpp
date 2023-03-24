@@ -36,8 +36,12 @@ namespace bufr {
         int bufrLoc;
         int il, im;  // throw away
 
+        bool foundBufrMsg = false;
+        bool foundBufrSubset = false;
+
         while (ireadmg_f(FileUnit, subsetChars, &iddate, SubsetLen) == 0)
         {
+            foundBufrMsg = true;
             subset_ = std::string(subsetChars);
             subset_.erase(std::remove_if(subset_.begin(), subset_.end(), isspace), subset_.end());
 
@@ -45,6 +49,7 @@ namespace bufr {
             {
                 while (ireadsb_f(FileUnit) == 0)
                 {
+                    foundBufrSubset = true;
                     status_f(FileUnit, &bufrLoc, &il, &im);
                     updateData(bufrLoc);
 
@@ -58,6 +63,24 @@ namespace bufr {
         }
 
         deleteData();
+
+        if (!foundBufrMsg)
+        {
+            std::ostringstream errStr;
+            errStr << "No BUFR messages were found! ";
+            errStr << "Please make sure that " << filePath_ << " exists and is a valid BUFR file.";
+            throw eckit::BadValue(errStr.str());
+        }
+
+        if (!foundBufrSubset)
+        {
+            std::ostringstream errStr;
+            errStr << "No valid BUFR subsets were found from your queries! ";
+            errStr << "Please make sure you are querying for valid subsets that exist in ";
+            errStr << filePath_ << ". ";
+            errStr << "Otherwise there might be a problem with the BUFR file (no subsets).";
+            throw eckit::BadValue(errStr.str());
+        }
     }
 
     void DataProvider::updateData(int bufrLoc)
