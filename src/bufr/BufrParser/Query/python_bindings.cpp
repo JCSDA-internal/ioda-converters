@@ -36,8 +36,6 @@ namespace bufr {
             .def("size", &QuerySet::size)
             .def("add",
                  (void (QuerySet::*)(const std::string&, const std::string&)) &QuerySet::add);
-//            .def("add",
-//                 (void (QuerySet::*)(const std::map<std::string, std::string>&)) &QuerySet::add);
 
         py::class_<File>(m, "File")
             .def(py::init<const std::string&, const std::string&>(),

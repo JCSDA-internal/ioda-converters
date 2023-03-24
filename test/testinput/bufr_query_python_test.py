@@ -1,8 +1,11 @@
 import bufr
+import numpy as np
 
-if __name__ == '__main__':
-    path = './testinput/gdas.t00z.1bhrs4.tm00.bufr_d'
-    with bufr.File(path) as f:
+DATA_PATH = './testinput/gdas.t00z.1bhrs4.tm00.bufr_d'
+
+def test_basic_query():
+    # Query the BUFR file for the latitude, longitude, and radiance
+    with bufr.File(DATA_PATH) as f:
         q = bufr.QuerySet()
         q.add('latitude', '*/CLON')
         q.add('longitude', '*/CLAT')
@@ -11,7 +14,30 @@ if __name__ == '__main__':
 
         r = f.execute(q)
 
+    # Use the ResultSet returned to get numpy arrays of the data
     lat = r.get('latitude')
-    lon = r.get('longitude')
-    radiance = r.get('radiance')
+    rad = r.get('radiance')
+    rad_all = r.get('radiance_all')
+
+    # Validate the values that were returned
+    assert np.allclose(lat[0:3], np.array([166.7977, 166.4078, 165.992]))
+    assert np.allclose(rad[0:3], np.array([198.69, 254.06, 233.85]))
+    assert len(rad_all.shape) == 2
+
+
+def test_invalid_query():
+    with bufr.File(DATA_PATH) as f:
+        q = bufr.QuerySet()
+
+        try:
+            q.add('latitude', '!!! */CLON')
+        except Exception as e:
+            return
+
+    assert False, "Didn't throw exception for invalid query."
+
+
+if __name__ == '__main__':
+    test_basic_query()
+    test_invalid_query()
 
