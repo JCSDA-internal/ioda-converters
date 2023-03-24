@@ -78,7 +78,9 @@ namespace bufr {
             if (info.isString())
             {
                 py::array_t<unsigned char> array(dims);
-                std::copy(data.begin(), data.end(), static_cast<unsigned char*>(array.request().ptr));
+                std::copy(data.begin(),
+                          data.end(),
+                          static_cast<unsigned char*>(array.request().ptr));
 
                 result = array;
             }
