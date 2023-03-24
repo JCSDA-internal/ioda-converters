@@ -6,15 +6,13 @@
  */
 #include "QueryRunner.h"
 
-#include "eckit/exception/Exceptions.h"
-
-#ifndef BUILD_PYTHON_BINDING
-    #include "oops/util/Logger.h"
-#endif
-
 #include <string>
 #include <iostream>
 #include <memory>
+
+#ifdef BUILD_IODA_BINDING
+    #include "oops/util/Logger.h"
+#endif
 
 #include "Constants.h"
 #include "SubsetTable.h"
@@ -101,7 +99,7 @@ namespace bufr
                 target->exportDimIdxs = {0};
                 targets.push_back(target);
 
-#ifndef BUILD_PYTHON_BINDING
+#ifdef BUILD_IODA_BINDING
                 // Print message to inform the user of the missing targetz
                 oops::Log::warning() << "Warning: Query String ";
                 oops::Log::warning() << querySet_.queriesFor(name)[0].str();
@@ -110,7 +108,7 @@ namespace bufr
                 oops::Log::warning() << std::endl;
 #endif
 
-#ifdef BUILD_PYTHON_BINDING
+#ifndef BUILD_IODA_BINDING
                 std::cout << "Warning: Query String ";
                 std::cout << querySet_.queriesFor(name)[0].str();
                 std::cout << " didn't apply to subset ";

@@ -111,6 +111,8 @@ target_include_directories(ingester PUBLIC
   $<INSTALL_INTERFACE:bufr>  # <prefix>/bufr
 )
 
+target_compile_definitions(ingester PRIVATE BUILD_IODA_BINDING=1)
+
 add_library( ${PROJECT_NAME}::ingester ALIAS ingester)
 
 ecbuild_add_executable( TARGET  bufr2ioda.x

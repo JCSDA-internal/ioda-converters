@@ -18,7 +18,7 @@
 
 #include "eckit/exception/Exceptions.h"
 
-#ifndef BUILD_PYTHON_BINDING
+#ifdef BUILD_IODA_BINDING
     #include "ioda/ObsGroup.h"
     #include "ioda/defs.h"
 #endif
@@ -31,7 +31,7 @@ namespace Ingester
     typedef std::vector<int> Dimensions;
     typedef Dimensions Location;
 
-#ifndef BUILD_PYTHON_BINDING
+#ifdef BUILD_IODA_BINDING
     struct DimensionDataBase
     {
         std::shared_ptr<ioda::NewDimensionScale_Base> dimScale;
@@ -145,7 +145,7 @@ namespace Ingester
         /// \return Data size.
         virtual size_t size() const = 0;
 
-#ifndef BUILD_PYTHON_BINDING
+#ifdef BUILD_IODA_BINDING
         /// \brief Makes an ioda::Variable and adds it to the given ioda::ObsGroup
         /// \param obsGroup Obsgroup where to add the variable
         /// \param name The name to associate with the variable (ex "latitude@MetaData")
@@ -173,6 +173,7 @@ namespace Ingester
                                                                   const std::string& name,
                                                                   std::size_t dimIdx) const = 0;
 #endif
+
         /// \brief Slice the data object given a vector of row indices.
         /// \param slice The indices to slice.
         /// \return Slice of the data object.
@@ -231,7 +232,7 @@ namespace Ingester
             _setData(data, dataMissingValue);
         }
 
-#ifndef BUILD_PYTHON_BINDING
+#ifdef BUILD_IODA_BINDING
         /// \brief Makes an ioda::Variable and adds it to the given ioda::ObsGroup
         /// \param obsGroup Obsgroup were to add the variable
         /// \param name The name to associate with the variable (ex "latitude@MetaData")
@@ -428,7 +429,7 @@ namespace Ingester
      private:
         std::vector<T> data_;
 
-#ifndef BUILD_PYTHON_BINDING
+#ifdef BUILD_IODA_BINDING
         /// \brief Make the variable creation parameters.
         /// \param chunks The chunk sizes
         /// \param compressionLevel The compression level

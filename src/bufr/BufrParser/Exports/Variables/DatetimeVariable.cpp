@@ -16,7 +16,7 @@
 
 #include "eckit/exception/Exceptions.h"
 
-#ifndef BUILD_PYTHON_BINDING
+#ifdef BUILD_IODA_BINDING
     #include "oops/util/Logger.h"
 #endif
 
@@ -146,14 +146,14 @@ namespace Ingester
                 auto thisTime = std::mktime(&tm);
                 if (thisTime < 0)
                 {
-#ifndef BUILD_PYTHON_BINDING
+#ifdef BUILD_IODA_BINDING
                      oops::Log::warning() << "Caution, date suspicious date (year, month, day): "
                                           << year << ", "
                                           << month << ", "
                                           << day << std::endl;
 #endif
 
-#ifdef BUILD_PYTHON_BINDING
+#ifndef BUILD_IODA_BINDING
                     std::cout << "Caution, date suspicious date (year, month, day): "
                               << year << ", "
                               << month << ", "
