@@ -27,9 +27,6 @@ namespace bufr {
     {
         m.doc() = "Provides BUFR querying abilities to python.";
 
-        py::register_exception<eckit::BadParameter>(m, "Exception");
-        py::register_exception<eckit::BadValue>(m, "Exception");
-
         py::class_<QuerySet>(m, "QuerySet")
             .def(py::init<>())
             .def(py::init<const std::vector<std::string>&>())
