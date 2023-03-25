@@ -32,7 +32,7 @@ set( PYIODACONV_INSTALL_LIBDIR ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/p
 ## Dependencies
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
-find_package( pybind11 REQUIRED)
+find_package( pybind11 QUIET)
 
 find_package( Eigen3 QUIET NO_MODULE HINTS
     $ENV{Eigen3_ROOT} $ENV{EIGEN3_ROOT} $ENV{Eigen_ROOT} $ENV{EIGEN_ROOT}
@@ -101,8 +101,18 @@ if( eckit_FOUND AND oops_FOUND AND ioda_FOUND AND bufr_FOUND )
     message(STATUS "Found: ioda")
     message(STATUS "Found: bufr")
     message(STATUS "Enabled Component: bufr")
+
+    if (pybind11_FOUND)
+        set(iodaconv_bufr_python_ENABLED True)
+        message(STATUS "Found: pybind11")
+        message(STATUS "Enabled Component: bufr python")
+    else()
+        set(iodaconv_bufr_python_ENABLED False)
+        message(STATUS "NOT-Found: pybind11 - BUFR query python bindings disabled")
+    endif()
 else()
     set(iodaconv_bufr_ENABLED False)
+    set(iodaconv_bufr_python_ENABLED False)
     if(NOT eckit_FOUND)
         message(STATUS "NOT-Found: eckit - BUFR converter disabled")
     endif()
@@ -116,6 +126,7 @@ else()
         message(STATUS "NOT-Found: bufr - BUFR converter disabled")
     endif()
     message(STATUS "Disabled Component: bufr")
+    message(STATUS "Disabled Component: bufr python")
 endif()
 
 if( eckit_FOUND AND oops_FOUND AND ioda_FOUND )

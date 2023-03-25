@@ -1506,12 +1506,6 @@ if(iodaconv_bufr_ENABLED)
                     rrfs.t06z.adpsfc.prepbufr.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
-  ecbuild_add_test( TARGET  test_iodaconv_bufr_query_python_test
-                    TYPE    SCRIPT
-                    ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}/../lib/pyiodaconv"
-                    COMMAND "${Python3_EXECUTABLE}"
-                    ARGS "${CMAKE_CURRENT_BINARY_DIR}/testinput/bufr_query_python_test.py" )
-
 #  FIXME: Greg Thompson
 #  ecbuild_add_test( TARGET  test_iodaconv_bufr_aircar
 #                    TYPE    SCRIPT
@@ -1632,6 +1626,16 @@ if(iodaconv_bufr_ENABLED)
 #                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/vadwinds_wmoBUFR2ioda.yaml"
 #                    vadwinds_wmo_multi.nc ${IODA_CONV_COMP_TOL_ZERO}
 #                    DEPENDS bufr2ioda.x )
+endif()
+
+if ( iodaconv_bufr_python_ENABLED )
+
+    ecbuild_add_test( TARGET  test_iodaconv_bufr_query_python_test
+            TYPE    SCRIPT
+            ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}/../lib/pyiodaconv"
+            COMMAND "${Python3_EXECUTABLE}"
+            ARGS "${CMAKE_CURRENT_BINARY_DIR}/testinput/bufr_query_python_test.py" )
+
 endif()
 
 

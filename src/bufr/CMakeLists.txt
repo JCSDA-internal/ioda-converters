@@ -127,53 +127,56 @@ ecbuild_add_test( TARGET  ${PROJECT_NAME}_bufr_coding_norms
 
 
 # Make the python bindings
+if ( iodaconv_bufr_python_ENABLED )
 
-list(APPEND _query_libs
-			Eigen3::Eigen
-			eckit
-			bufr::bufr_d
-			)
+	list(APPEND _query_libs
+				Eigen3::Eigen
+				eckit
+				bufr::bufr_d
+				)
 
-list (APPEND _query_srcs
-	DataObject.h
-	DataObject.cpp
-	BufrParser/Query/DataProvider/DataProvider.h
-	BufrParser/Query/DataProvider/DataProvider.cpp
-	BufrParser/Query/DataProvider/NcepDataProvider.h
-	BufrParser/Query/DataProvider/NcepDataProvider.cpp
-	BufrParser/Query/DataProvider/WmoDataProvider.h
-	BufrParser/Query/DataProvider/WmoDataProvider.cpp
-	BufrParser/Query/File.h
-	BufrParser/Query/File.cpp
-	BufrParser/Query/VectorMath.h
-	BufrParser/Query/QuerySet.h
-	BufrParser/Query/QuerySet.cpp
-	BufrParser/Query/QueryRunner.h
-	BufrParser/Query/QueryRunner.cpp
-	BufrParser/Query/QueryParser.h
-	BufrParser/Query/QueryParser.cpp
-	BufrParser/Query/ResultSet.h
-	BufrParser/Query/ResultSet.cpp
-	BufrParser/Query/Target.h
-	BufrParser/Query/Tokenizer.h
-	BufrParser/Query/Tokenizer.cpp
-	BufrParser/Query/SubsetTable.h
-	BufrParser/Query/SubsetTable.cpp
-	BufrParser/Query/python_bindings.cpp
-)
+	list (APPEND _query_srcs
+		DataObject.h
+		DataObject.cpp
+		BufrParser/Query/DataProvider/DataProvider.h
+		BufrParser/Query/DataProvider/DataProvider.cpp
+		BufrParser/Query/DataProvider/NcepDataProvider.h
+		BufrParser/Query/DataProvider/NcepDataProvider.cpp
+		BufrParser/Query/DataProvider/WmoDataProvider.h
+		BufrParser/Query/DataProvider/WmoDataProvider.cpp
+		BufrParser/Query/File.h
+		BufrParser/Query/File.cpp
+		BufrParser/Query/VectorMath.h
+		BufrParser/Query/QuerySet.h
+		BufrParser/Query/QuerySet.cpp
+		BufrParser/Query/QueryRunner.h
+		BufrParser/Query/QueryRunner.cpp
+		BufrParser/Query/QueryParser.h
+		BufrParser/Query/QueryParser.cpp
+		BufrParser/Query/ResultSet.h
+		BufrParser/Query/ResultSet.cpp
+		BufrParser/Query/Target.h
+		BufrParser/Query/Tokenizer.h
+		BufrParser/Query/Tokenizer.cpp
+		BufrParser/Query/SubsetTable.h
+		BufrParser/Query/SubsetTable.cpp
+		BufrParser/Query/python_bindings.cpp
+	)
 
-pybind11_add_module(bufr ${_query_srcs})
-target_link_libraries(bufr PUBLIC ${_query_libs})
-target_compile_definitions(bufr PRIVATE BUILD_PYTHON_BINDING=1)
-target_include_directories(bufr PUBLIC
-						   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-						   $<INSTALL_INTERFACE:bufr>  # <prefix>/bufr
+	pybind11_add_module(bufr ${_query_srcs})
+	target_link_libraries(bufr PUBLIC ${_query_libs})
+	target_compile_definitions(bufr PRIVATE BUILD_PYTHON_BINDING=1)
+	target_include_directories(bufr PUBLIC
+							   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+							   $<INSTALL_INTERFACE:bufr>  # <prefix>/bufr
+							   )
+
+	set_target_properties( bufr
+						   PROPERTIES
+							 ARCHIVE_OUTPUT_DIRECTORY "${PYIODACONV_BUILD_LIBDIR}"
+							 LIBRARY_OUTPUT_DIRECTORY "${PYIODACONV_BUILD_LIBDIR}"
 						   )
 
-set_target_properties( bufr
-					   PROPERTIES
-					     ARCHIVE_OUTPUT_DIRECTORY "${PYIODACONV_BUILD_LIBDIR}"
-					     LIBRARY_OUTPUT_DIRECTORY "${PYIODACONV_BUILD_LIBDIR}"
-					   )
+	install (TARGETS bufr DESTINATION ${PYIODACONV_INSTALL_LIBDIR})
 
-install (TARGETS bufr DESTINATION ${PYIODACONV_INSTALL_LIBDIR})
+endif()
