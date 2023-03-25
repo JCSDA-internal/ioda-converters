@@ -26,7 +26,7 @@ namespace bufr
     class QuerySet
     {
      public:
-        QuerySet() = default;
+        QuerySet();
         explicit QuerySet(const std::vector<std::string>& subsets);
         ~QuerySet() = default;
 
