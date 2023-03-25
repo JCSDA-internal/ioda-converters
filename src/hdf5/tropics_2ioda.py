@@ -129,7 +129,7 @@ def get_data_from_files(afile):
 
 def get_data(f, obs_data):
 
-    WMO_sat_ID = get_WMO_satellite_ID(f.filename)
+    WMO_sat_ID = get_WMO_satellite_ID(f.attrs['ShortName'].decode("utf-8"))
 
     nscans = len(f['scans'])
     nbeam_pos = len(f['spots'])
@@ -158,7 +158,6 @@ def get_data(f, obs_data):
         instr_scan_ang,
         sat_altitude,
         instr_scan_ang)
-#       obs_data[('sensorZenithAngle', metaDataName)])
 
     nlocs = len(obs_data[('latitude', metaDataName)])
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
@@ -240,18 +239,17 @@ def assign_values(data):
         return np.array(data, dtype=ioda_int_type)
 
 
-def get_WMO_satellite_ID(filename):
+def get_WMO_satellite_ID(attrs_shortname):
 
-    afile = os.path.basename(filename)
-    if 'TROPICS01' in afile:
+    if 'TROPICS01' in attrs_shortname:
         WMO_sat_ID = TROPICS01_WMO_sat_ID
-    elif 'TROPICS02' in afile:
+    elif 'TROPICS02' in attrs_shortname:
         WMO_sat_ID = TROPICS02_WMO_sat_ID
-    elif 'TROPICS03' in afile:
+    elif 'TROPICS03' in attrs_shortname:
         WMO_sat_ID = TROPICS03_WMO_sat_ID
-    elif 'TROPICS04' in afile:
+    elif 'TROPICS04' in attrs_shortname:
         WMO_sat_ID = TROPICS04_WMO_sat_ID
-    elif 'TROPICS05' in afile:
+    elif 'TROPICS05' in attrs_shortname:
         WMO_sat_ID = TROPICS05_WMO_sat_ID
     else:
         WMO_sat_ID = -1
