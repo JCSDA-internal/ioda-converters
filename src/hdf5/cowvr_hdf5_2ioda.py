@@ -135,19 +135,24 @@ def get_data_from_files(zfiles):
 
     # for afile in zfiles:
     afile = zfiles
-    if 'cowvr' in afile.lower():
-        obs_data = get_cowvr_data(afile, obs_data)
-    elif 'tempest' in afile.lower():
-        obs_data = get_tempest_data(afile, obs_data)
+    f = h5py.File(afile, 'r')
+    sensor_name = f['Metadata']['InstrumentShortName'][0].decode("utf-8")
+    if 'COWVR' in sensor_name:
+        obs_data = get_cowvr_data(f, obs_data)
+    elif 'TEMPEST' in sensor_name:
+        obs_data = get_tempest_data(f, obs_data)
+    else:
+        print(f" unrecognized sensor nothing to write for file: {afile}")
+    f.close()
+
 
     return obs_data
 
 
-def get_tempest_data(afile, obs_data, add_qc=True):
+def get_tempest_data(f, obs_data, add_qc=True):
 
-    f = h5py.File(afile, 'r')
 
-    WMO_sat_ID = get_WMO_satellite_ID(f.filename)
+    WMO_sat_ID = get_WMO_satellite_ID(f['Metadata']['InstrumentShortName'][0].decode("utf-8"))
 
     # "Geolocation and flags"
     sensor_altitude = np.array(f['Geolocation']['sat_alt'], dtype='float32')
@@ -187,8 +192,6 @@ def get_tempest_data(afile, obs_data, add_qc=True):
     if add_qc:
         obs_data = tempest_gross_quality_control(obs_data, qc_flag, solar_array_flag)
 
-    f.close()
-
     return obs_data
 
 
@@ -215,11 +218,10 @@ def tempest_gross_quality_control(obs_data, qc_flag, solar_array_flag):
     return obs_data
 
 
-def get_cowvr_data(afile, obs_data, add_qc=True):
+def get_cowvr_data(f, obs_data, add_qc=True):
 
-    f = h5py.File(afile, 'r')
 
-    WMO_sat_ID = get_WMO_satellite_ID(f.filename)
+    WMO_sat_ID = get_WMO_satellite_ID(f['Metadata']['InstrumentShortName'][0].decode("utf-8"))
 
     # "Geolocation and flags"
     # fore: instr_scan_ang < 180 and aft: instr_scan_ang > 180
@@ -258,8 +260,6 @@ def get_cowvr_data(afile, obs_data, add_qc=True):
     if add_qc:
         obs_data = cowvr_gross_quality_control(obs_data, qc_flag, solar_array_flag, support_arm_flag)
 
-    f.close()
-
     return obs_data
 
 
@@ -283,7 +283,7 @@ def cowvr_gross_quality_control(obs_data, qc_flag, solar_array_flag, support_arm
     return obs_data
 
 
-def compute_scan_angle(instr_scan_ang, sensor_altitude, sensor_zenith, qc_flag=None):
+def compute_scan_angle(instr_scan_ang, sensor_altitude, sensor_zenith, qc_flag=[None]):
 
     # should come from standard table
     earth_mean_radius_km = 6378.1370  # WGS84
@@ -300,6 +300,8 @@ def compute_scan_angle(instr_scan_ang, sensor_altitude, sensor_zenith, qc_flag=N
     ratio = np.empty_like(sensor_altitude)
 
     # compute scan angle
+    if not qc_flag[0]:
+        qc_flag = np.zeros_like(sensor_altitude)
     good = qc_flag[:] == 0
     if sum(good) > 0:
         ratio[good] = earth_mean_radius_km/(earth_mean_radius_km + sensor_altitude[good]/1000.)
@@ -310,12 +312,11 @@ def compute_scan_angle(instr_scan_ang, sensor_altitude, sensor_zenith, qc_flag=N
     return scanang
 
 
-def get_WMO_satellite_ID(filename):
+def get_WMO_satellite_ID(sensor_name):
 
-    afile = os.path.basename(filename)
-    if 'cowvr' in afile.lower():
+    if 'COWVR' in sensor_name:
         WMO_sat_ID = ISS_COWVR_WMO_sat_ID
-    elif 'tempest' in afile.lower():
+    elif 'TEMPEST' in sensor_name:
         WMO_sat_ID = ISS_TEMPEST_WMO_sat_ID
 
     return WMO_sat_ID
