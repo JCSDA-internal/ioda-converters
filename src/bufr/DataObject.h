@@ -266,22 +266,17 @@ namespace Ingester
         py::array _getNumpyArray(
             typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr) const
         {
-            // Map the string data to a char array where the elements are all 8 bytes long.
-            std::shared_ptr<char>
-                fixed_data(new char[data_.size() * 8], std::default_delete<char[]>());
+            // Create a char array to hold the data and fill it with nulls
+            auto array = py::array(py::dtype("S8"), dims_, {8});
+            auto array_ptr = static_cast<char*> (array.request(true).ptr);
+            std::fill(array_ptr, array_ptr + (data_.size() * 8), 0);
 
-            // Fill the char array with 0's
-            std::fill(fixed_data.get(), fixed_data.get() + (data_.size() * 8), 0);
-
-            // Copy the data_ into the char array
+            // Copy the std::vector<std::string> into the char array
             for (size_t i = 0; i < data_.size(); ++i)
             {
-                std::copy(data_[i].begin(), data_[i].end(), fixed_data.get() + (i * 8));
+                std::copy(data_[i].begin(), data_[i].end(), array_ptr + (i * 8));
             }
 
-            // Create the numpy array
-            auto array = py::array(py::dtype("S8"), dims_, {8});
-            std::memcpy(array.mutable_data(), fixed_data.get(), data_.size() * 8);
             return array;
         }
 #endif
