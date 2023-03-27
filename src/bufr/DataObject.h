@@ -279,6 +279,7 @@ namespace Ingester
                 std::copy(data_[i].begin(), data_[i].end(), fixed_data.get() + (i * 8));
             }
 
+            // Create the numpy array
             auto array = py::array(py::dtype("S8"), dims_, {8});
             std::memcpy(array.mutable_data(), fixed_data.get(), data_.size() * 8);
             return array;
