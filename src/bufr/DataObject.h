@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <set>
 #include <string>
 #include <memory>
@@ -258,7 +259,21 @@ namespace Ingester
             typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr) const
         {
             py::array_t<T> array(dims_);
-            std::copy(data_.begin(), data_.end(), static_cast<T*>(array.request().ptr));
+            T* arrayPtr = static_cast<T*>(array.mutable_data());
+            std::copy(data_.begin(), data_.end(), arrayPtr);
+
+            if (std::numeric_limits<T>::has_quiet_NaN)
+            {
+                // Replace the missing value with NaN
+                for (size_t i = 0; i < data_.size(); ++i)
+                {
+                    if (data_[i] == missingValue())
+                    {
+                        arrayPtr[i] = std::numeric_limits<T>::quiet_NaN();
+                    }
+                }
+            }
+
             return array;
         }
 
