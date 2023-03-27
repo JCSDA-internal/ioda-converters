@@ -268,13 +268,13 @@ namespace Ingester
         {
             // Create a char array to hold the data and fill it with nulls
             auto array = py::array(py::dtype("S8"), dims_, {8});
-            auto array_ptr = static_cast<char*> (array.request(true).ptr);
-            std::fill(array_ptr, array_ptr + (data_.size() * 8), 0);
+            auto arrayPtr = static_cast<char*>(array.request(true).ptr);
+            std::fill(arrayPtr, arrayPtr + (data_.size() * 8), 0);
 
             // Copy the std::vector<std::string> into the char array
             for (size_t i = 0; i < data_.size(); ++i)
             {
-                std::copy(data_[i].begin(), data_[i].end(), array_ptr + (i * 8));
+                std::copy(data_[i].begin(), data_[i].end(), arrayPtr + (i * 8));
             }
 
             return array;
