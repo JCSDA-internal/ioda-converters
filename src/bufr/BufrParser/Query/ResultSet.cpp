@@ -62,44 +62,8 @@ namespace bufr {
         py::array ResultSet::getNumpyArray(const std::string& fieldName,
                                            const std::string& groupByFieldName) const
         {
-            std::vector<double> data;
-            std::vector<int> dims;
-            std::vector<Query> dimPaths;
-            TypeInfo info;
-
-            getRawValues(fieldName,
-                         groupByFieldName,
-                         data,
-                         dims,
-                         dimPaths,
-                         info);
-
-            py::array result;
-            if (info.isString())
-            {
-                py::array_t<unsigned char> array(dims);
-                std::copy(data.begin(),
-                          data.end(),
-                          static_cast<unsigned char*>(array.request().ptr));
-
-                result = array;
-            }
-            else if (info.isInteger())
-            {
-                py::array_t<int> array(dims);
-                std::copy(data.begin(), data.end(), static_cast<int*>(array.request().ptr));
-
-                result = array;
-            }
-            else
-            {
-                py::array_t<double> array(dims);
-                std::copy(data.begin(), data.end(), static_cast<double*>(array.request().ptr));
-
-                result = array;
-            }
-
-            return result;
+            auto dataObj = get(fieldName, groupByFieldName);
+            return dataObj->getNumpyArray();
         }
 #endif
 

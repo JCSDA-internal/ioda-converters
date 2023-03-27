@@ -23,6 +23,15 @@
     #include "ioda/defs.h"
 #endif
 
+#ifdef BUILD_PYTHON_BINDING
+    #include <pybind11/pybind11.h>
+    #include <pybind11/numpy.h>
+    #include <pybind11/stl.h>
+
+    namespace py = pybind11;
+#endif
+
+
 #include "BufrParser/Query/Constants.h"
 #include "BufrParser/Query/QueryParser.h"
 
@@ -107,6 +116,11 @@ namespace Ingester
         Dimensions getDims() const { return dims_; }
         std::string getPath() const { return query_; }
         std::vector<bufr::Query> getDimPaths() const { return dimPaths_; }
+
+#ifdef BUILD_PYTHON_BINDING
+       /// \brief Return a numpy array of the data.
+       virtual py::array getNumpyArray() const = 0;
+#endif
 
         bool hasSamePath(const std::shared_ptr<DataObjectBase>& dataObject);
 
@@ -231,6 +245,45 @@ namespace Ingester
         {
             _setData(data, dataMissingValue);
         }
+
+#ifdef BUILD_PYTHON_BINDING
+        /// \brief Return a numpy array of the data.
+        py::array getNumpyArray() const final
+        {
+            return _getNumpyArray();
+        }
+
+        template<typename U = void>
+        py::array _getNumpyArray(
+            typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr) const
+        {
+            py::array_t<T> array(dims_);
+            std::copy(data_.begin(), data_.end(), static_cast<T*>(array.request().ptr));
+            return array;
+        }
+
+        template<typename U = void>
+        py::array _getNumpyArray(
+            typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr) const
+        {
+            // Map the string data to a char array where the elements are all 8 bytes long.
+            std::shared_ptr<char>
+                fixed_data(new char[data_.size() * 8], std::default_delete<char[]>());
+
+            // Fill the char array with 0's
+            std::fill(fixed_data.get(), fixed_data.get() + (data_.size() * 8), 0);
+
+            // Copy the data_ into the char array
+            for (size_t i = 0; i < data_.size(); ++i)
+            {
+                std::copy(data_[i].begin(), data_[i].end(), fixed_data.get() + (i * 8));
+            }
+
+            auto array = py::array(py::dtype("S8"), dims_, {8});
+            std::memcpy(array.mutable_data(), fixed_data.get(), data_.size() * 8);
+            return array;
+        }
+#endif
 
 #ifdef BUILD_IODA_BINDING
         /// \brief Makes an ioda::Variable and adds it to the given ioda::ObsGroup
