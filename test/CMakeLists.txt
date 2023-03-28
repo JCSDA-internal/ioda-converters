@@ -1632,7 +1632,7 @@ if ( iodaconv_bufr_python_ENABLED )
 
     ecbuild_add_test( TARGET  test_iodaconv_bufr_query_python_test
             TYPE    SCRIPT
-            ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}/../lib/pyiodaconv"
+            ENVIRONMENT "PYTHONPATH=${CMAKE_BINARY_DIR}/lib/pyiodaconv"
             COMMAND "${Python3_EXECUTABLE}"
             ARGS "${CMAKE_CURRENT_BINARY_DIR}/testinput/bufr_query_python_test.py" )
 
