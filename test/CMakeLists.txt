@@ -1631,10 +1631,10 @@ endif()
 if ( iodaconv_bufr_python_ENABLED )
 
     ecbuild_add_test( TARGET  test_iodaconv_bufr_query_python_test
-            TYPE    SCRIPT
-            ENVIRONMENT "PYTHONPATH=${CMAKE_BINARY_DIR}/lib/pyiodaconv"
-            COMMAND "${Python3_EXECUTABLE}"
-            ARGS "${CMAKE_CURRENT_BINARY_DIR}/testinput/bufr_query_python_test.py" )
+                      TYPE    SCRIPT
+                      ENVIRONMENT "PYTHONPATH=${CMAKE_BINARY_DIR}/lib/pyiodaconv:${PYTHONPATH}"
+                      COMMAND "${Python3_EXECUTABLE}"
+                      ARGS "${CMAKE_CURRENT_BINARY_DIR}/testinput/bufr_query_pytgit stathon_test.py" )
 
 endif()
 
