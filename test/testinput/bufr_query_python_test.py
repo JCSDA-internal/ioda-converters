@@ -13,6 +13,12 @@ def test_basic_query():
 
     # Make the QuerySet for all the data we want
     q = bufr.QuerySet()
+    q.add('year', '*/YEAR')
+    q.add('month', '*/MNTH')
+    q.add('day', '*/DAYS')
+    q.add('hour', '*/HOUR')
+    q.add('minute', '*/MINU')
+    q.add('second', '*/SECO')
     q.add('latitude', '*/CLON')
     q.add('longitude', '*/CLAT')
     q.add('radiance', '*/BRIT{1}/TMBR')
@@ -32,6 +38,8 @@ def test_basic_query():
     assert np.allclose(rad[0:3], np.array([198.69, 254.06, 233.85]))
     assert len(rad_all.shape) == 2
 
+    datetimes = r.get_datetime('year', 'month', 'day', 'hour', 'minute', 'second')
+    assert datetimes[5] == np.datetime64('2020-10-26T21:00:00')
 
 def test_invalid_query():
     with bufr.File(DATA_PATH) as f:
