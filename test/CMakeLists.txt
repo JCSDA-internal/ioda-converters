@@ -430,7 +430,15 @@ set(IODA_CONV_COMP_TOL "0.5e-4")
 #        )
 #  Dom's fix to get right path
 #set(IODACONV_PYTHONPATH "$<TARGET_FILE_DIR:_ioda_python>/../:$ENV{PYTHONPATH}")
-set(IODACONV_PYTHONPATH "${CMAKE_CURRENT_SOURCE_DIR}/../src:$<TARGET_FILE_DIR:_ioda_python>/../:$ENV{PYTHONPATH}")
+
+list(APPEND python_path
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src"
+  "${CMAKE_BINARY_DIR}/lib/pyiodaconv"
+  "$<TARGET_FILE_DIR:_ioda_python>/../"
+  "$ENV{PYTHONPATH}")
+
+string(REPLACE ";" ":" python_path_str "${python_path}")
+set(IODACONV_PYTHONPATH "${python_path_str}")
 
 #===============================================================================
 # Marine converters
@@ -1634,7 +1642,7 @@ if ( iodaconv_bufr_python_ENABLED )
                       TYPE    SCRIPT
                       ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                       COMMAND "${Python3_EXECUTABLE}"
-                      ARGS "${CMAKE_CURRENT_BINARY_DIR}/testinput/bufr_query_python_test.py" )
+                      ARGS "${PROJECT_SOURCE_DIR}/test/testinput/bufr_query_python_test.py" )
 
 endif()
 
