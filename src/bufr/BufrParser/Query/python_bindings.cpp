@@ -32,10 +32,9 @@ namespace bufr {
             .def(py::init<const std::string&, const std::string&>(),
                  py::arg("filename"),
                  py::arg("wmoTablePath") = std::string(""))
-            .def("execute",
-                 &File::execute,
-                 py::arg("query_set"),
-                 py::arg("next") = static_cast<int>(0))
+            .def("execute", &File::execute,
+                             py::arg("query_set"),
+                             py::arg("next") = static_cast<int>(0))
             .def("rewind", &File::rewind)
             .def("close", &File::close)
             .def("__enter__", [](File &f) { return &f; })
@@ -44,6 +43,14 @@ namespace bufr {
         py::class_<ResultSet>(m, "ResultSet")
             .def("get", &ResultSet::getNumpyArray,
                         py::arg("field_name"),
+                        py::arg("group_by") = std::string(""))
+            .def("get_datetime", &ResultSet::getNumpyDatetimeArray,
+                        py::arg("year"),
+                        py::arg("month"),
+                        py::arg("day"),
+                        py::arg("hour"),
+                        py::arg("minute") = std::string(""),
+                        py::arg("second") = std::string(""),
                         py::arg("group_by") = std::string(""));
     }
 }  // namespace bufr

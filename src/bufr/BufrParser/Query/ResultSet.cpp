@@ -13,6 +13,10 @@
 #include <string>
 #include <iostream>
 
+#ifdef BUILD_PYTHON_BINDING
+    #include <time.h>
+#endif
+
 #include "Constants.h"
 #include "VectorMath.h"
 
@@ -64,6 +68,60 @@ namespace bufr {
         {
             auto dataObj = get(fieldName, groupByFieldName);
             return dataObj->getNumpyArray();
+        }
+
+        py::array ResultSet::getNumpyDatetimeArray(const std::string& year,
+                                                   const std::string& month,
+                                                   const std::string& day,
+                                                   const std::string& hour,
+                                                   const std::string& minute,
+                                                   const std::string& second,
+                                                   const std::string& groupBy) const
+        {
+            std::shared_ptr<DataObjectBase> yearObj = get(year, groupBy);
+            std::shared_ptr<DataObjectBase> monthObj = get(month, groupBy);
+            std::shared_ptr<DataObjectBase> dayObj = get(day, groupBy);
+            std::shared_ptr<DataObjectBase> hourObj = get(hour, groupBy);
+
+            std::shared_ptr<DataObjectBase> minuteObj = nullptr;
+            std::shared_ptr<DataObjectBase> secondObj = nullptr;
+
+            if (!minute.empty())
+            {
+                std::shared_ptr<DataObjectBase> minuteObj = get(minute, groupBy);
+            }
+
+            if (!second.empty())
+            {
+                std::shared_ptr<DataObjectBase> secondObj = get(second, groupBy);
+            }
+
+            // make strides array
+            std::vector<ssize_t> strides(yearObj->getDims().size());
+            strides[0] = sizeof(int64_t);
+            for (size_t i = 1; i < yearObj->getDims().size(); ++i)
+            {
+                strides[i] = sizeof(int64_t) * yearObj->getDims()[i];
+            }
+
+            auto array = py::array(py::dtype("datetime64[s]"), yearObj->getDims(), strides);
+            auto arrayPtr = static_cast<int64_t*>(array.mutable_data());
+
+            for (size_t i = 0; i < yearObj->size(); ++i)
+            {
+                std::tm time;
+                time.tm_year = yearObj->getAsInt(i) - 1900;
+                time.tm_mon = monthObj->getAsInt(i) - 1;
+                time.tm_mday = dayObj->getAsInt(i);
+                time.tm_hour = hourObj->getAsInt(i);
+                time.tm_min = minuteObj ? minuteObj->getAsInt(i) : 0;
+                time.tm_sec = secondObj ? secondObj->getAsInt(i) : 0;
+                time.tm_isdst = 0;
+
+                arrayPtr[i] = static_cast<int64_t>(timegm(&time));
+            }
+
+            return array;
         }
 #endif
 
