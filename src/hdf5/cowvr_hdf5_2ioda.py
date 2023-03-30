@@ -48,7 +48,9 @@ def main(args):
     tic = record_time()
 
     output_filename = args.output
-    dtg = datetime.strptime(args.date, '%Y%m%d%H')
+    dtg = None
+    if args.date:
+        dtg = datetime.strptime(args.date, '%Y%m%d%H')
 
     input_files = [(i) for i in args.input]
     # read / process files in parallel
@@ -88,7 +90,8 @@ def main(args):
     GlobalAttrs['datetimeRange'] = np.array([datetime.fromtimestamp(obs_data[('dateTime', metaDataName)][0], timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
                                             datetime.fromtimestamp(obs_data[('dateTime', metaDataName)][-1], timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")],
                                             dtype=object)
-    GlobalAttrs['datetimeReference'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
+    if dtg:
+        GlobalAttrs['datetimeReference'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
     GlobalAttrs['converter'] = os.path.basename(__file__)
 
     # pass parameters to the IODA writer
@@ -429,12 +432,6 @@ if __name__ == "__main__":
         '-i', '--input',
         help="path of satellite observation input file(s)",
         type=str, nargs='+', required=True)
-    required.add_argument(
-        '-d', '--date',
-        metavar="YYYYMMDDHH",
-        help="base date for the center of the window",
-        type=str, required=True)
-
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
         '-j', '--threads',
@@ -443,8 +440,14 @@ if __name__ == "__main__":
         type=int, default=1)
     optional.add_argument(
         '-o', '--output',
-        help='path to output ioda file',
-        type=str, default=os.getcwd())
+        help='fullpath and name for ioda output file',
+        type=str, default=os.path.join(os.getcwd(), 'test.nc4'))
+    optional.add_argument(
+        '-d', '--date',
+        metavar="YYYYMMDDHH",
+        help="base date for the center of the window",
+        type=str, default=None)
+
 
     args = parser.parse_args()
 
