@@ -8,22 +8,13 @@
 #
 
 from __future__ import print_function
-import sys
 import argparse
 import numpy as np
 from datetime import datetime, timedelta
 import netCDF4 as nc
-import re
-import dateutil.parser
-from pathlib import Path
 
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
-
-import ioda_conv_ncio as iconv
-from orddicts import DefaultOrderedDict
+import lib_python.ioda_conv_ncio as iconio
+from lib_python.orddicts import DefaultOrderedDict
 
 
 vName = "longwave_radiance"
@@ -183,7 +174,7 @@ def main():
     args = parser.parse_args()
     fdate = datetime.strptime(args.date, '%Y%m%d%H')
 
-    writer = iconv.NcWriter(args.output, [], locationKeyList)
+    writer = iconio.NcWriter(args.output, [], locationKeyList)
 
     # Read in the giirs lw radiance
     lwrad = LwRadiance(args.input, writer)

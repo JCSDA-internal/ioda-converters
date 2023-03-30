@@ -8,3 +8,4 @@ install*
 _build*
 _install*
 __pycache__/
+*.egg-info/
