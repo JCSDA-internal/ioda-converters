@@ -448,7 +448,6 @@ if __name__ == "__main__":
         help="base date for the center of the window",
         type=str, default=None)
 
-
     args = parser.parse_args()
 
     main(args)
