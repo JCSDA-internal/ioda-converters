@@ -21,6 +21,7 @@ import netCDF4 as nc
 import h5py
 import lib_python.ioda_conv_engines as iconv
 from lib_python.orddicts import DefaultOrderedDict
+from lib_python.def_jedi_utils import concat_obs_dict
 
 # globals
 ioda_int_type = 'int32'
@@ -384,31 +385,6 @@ def assign_values(data):
     elif data.dtype == int:
         data[np.abs(data) >= np.abs(int_missing_value)] = int_missing_value
         return np.array(data, dtype=ioda_int_type)
-
-
-def concat_obs_dict(obs_data, append_obs_data):
-    # For now we are assuming that the obs_data dictionary has the "golden" list
-    # of variables. If one is missing from append_obs_data, the obs_data variable
-    # will be extended using fill values.
-    #
-    # Use the first key in the append_obs_data dictionary to determine how
-    # long to make the fill value vector.
-    append_keys = list(append_obs_data.keys())
-    append_length = len(append_obs_data[append_keys[0]])
-    for gv_key in obs_data.keys():
-        if gv_key in append_keys:
-            obs_data[gv_key] = np.append(obs_data[gv_key], append_obs_data[gv_key])
-        else:
-            if obs_data[gv_key].dtype == float:
-                fill_data = np.repeat(float_missing_value, append_length, dtype=ioda_float_type)
-            elif obs_data[gv_key].dtype == int:
-                fill_data = np.repeat(int_missing_value, append_length, dtype=ioda_int_type)
-            elif obs_data[gv_key].dtype == np.int64:
-                fill_data = np.repeat(long_missing_value, append_length, dtype=np.int64)
-            elif obs_data[gv_key].dtype == object:
-                # string type, extend with empty strings
-                fill_data = np.repeat("", append_length, dtype=object)
-            obs_data[gv_key] = np.append(obs_data[gv_key], fill_data)
 
 
 if __name__ == "__main__":
