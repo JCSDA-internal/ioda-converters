@@ -11,22 +11,14 @@
 #        -o: output file path
 
 import numpy as np
-import inspect, sys, os, argparse
+import os, argparse
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime
 from builtins import str
-from numpy import NaN
-from pathlib import Path
 
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
-
-import meteo_utils
-import ioda_conv_engines as iconv
+import lib_python.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
-from orddicts import DefaultOrderedDict
+from lib_python.orddicts import DefaultOrderedDict
 
 
 def dateparse(x):
