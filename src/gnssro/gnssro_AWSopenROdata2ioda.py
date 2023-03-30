@@ -18,15 +18,9 @@ import os
 from pathlib import Path
 from itertools import repeat
 import netCDF4 as nc
-
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
-import ioda_conv_engines as iconv
-from orddicts import DefaultOrderedDict
-
 import h5py
+import lib_python.ioda_conv_engines as iconv
+from lib_python.orddicts import DefaultOrderedDict
 
 # globals
 ioda_int_type = 'int32'
