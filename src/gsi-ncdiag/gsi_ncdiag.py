@@ -75,7 +75,8 @@ conv_bufrtypes = {
     "rass": [126],
     "sfcship": [180, 183],
     "sfc": [181, 187],
-    "gps": [3, 4, 5, 42, 43, 44, 745, 750, 751, 752, 753, 825],
+#   "gps": [3, 4, 5, 42, 43, 44, 745, 750, 751, 752, 753, 825],
+    "gps": [3, 4, 5, 42, 43, 44, 66, 265, 266, 267, 268, 269, 745, 750, 751, 752, 753, 754, 755, 803, 804, 825],
     "sst": [181, 182, 183, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202],
     # 132 are dropsondes
 }
@@ -140,6 +141,7 @@ all_LocKeyList = {
     'BottomLevelPressure': ('bottom_level_pressure', 'float'),
     'Total_Ozone_Error_Flag': ('total_ozone_error_flag', 'float'),
     'Profile_Ozone_Error_Flag': ('profile_ozone_error_flag', 'float'),
+    'Algorithm_Flag_For_Best_Ozone':('bestOzoneAlgorithmFlag', 'float'),  #emily
     'XoverR': ('radar_azimuth', 'float'),
     'YoverR': ('radar_tilt', 'float'),
     'ZoverR': ('radar_dir3', 'float'),
@@ -155,8 +157,11 @@ all_LocKeyList = {
     'wind_computation_method': ('windComputationMethod', 'integer'),
     'satellite_zenith_angle': ('satelliteZenithAngle', 'float'),
     'satellite_identifier': ('satelliteIdentifier', 'integer'),
-    'QI_without_forecast_info': ('qualityInformationWithoutForecast', 'integer'),
-    'QI_with_forecast_info': ('qualityInformationWithForecast', 'integer'),
+#    'QI_without_forecast_info': ('qualityInformationWithoutForecast', 'integer'),
+#    'QI_with_forecast_info': ('qualityInformationWithForecast', 'integer'),
+    'QI_without_forecast_info': ('qualityInformationWithoutForecast', 'float'),
+    'QI_with_forecast_info': ('qualityInformationWithForecast', 'float'),
+    'expected_error': ('expectedError', 'float'),
     'expected_error': ('expectedError', 'float'),
     'coefficient_of_variation': ('coefficientOfVariation', 'float'),
     # end AMV QC
@@ -743,8 +748,12 @@ class Conv(BaseGSI):
                 print("Platform:%s Var:%s #Obs:%d" % (p, v, np.sum(idx)))
                 if v == 'bend':
                     # sort record_number
-                    record_number = self.var('record_number')[idx]
-                    id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
+#                   record_number = self.var('record_number')[idx]
+#                   id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
+#>>emily
+                    record_number = self.var('Station_ID')[idx]
+                    id_recordnum_sort = sorted(range(len(record_number)))
+#<<emily
                     print("Sorting ", v, " obs referring to record_number")
                     # record_number_sorted = [ record_number[ksort] for ksort in id_recordnum_sort ]
 
@@ -819,8 +828,11 @@ class Conv(BaseGSI):
                 print(self.obstype + " is not currently supported. Exiting.")
                 return
         # loop through obsvariables and platforms to do processing
+        print('emily checking self.obsvars = ', self.obsvars)
+        print('emily checking platforms = ', platforms)
         for v in self.obsvars:
             for p in platforms:
+                print('emily checking v, p = ', v, p)
                 # set up a NcWriter class
                 outname = OutDir + '/' + p + '_' + v + '_obs_' + \
                     self.validtime.strftime("%Y%m%d%H") + '.nc4'
@@ -834,6 +846,8 @@ class Conv(BaseGSI):
                     if (os.path.exists(outname)):
                         print("File exists. Skipping and not overwriting: %s" % outname)
                         continue
+                print('emily checking outname = ', outname)
+
                 LocKeyList = []
                 TestKeyList = []
                 LocVars = []
@@ -842,6 +856,7 @@ class Conv(BaseGSI):
                 outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
                 varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
                 test_fields_ = test_fields_conv
+                print('emily checking: list of location variable ...  ', self.df.variables)
                 # get list of location variable for this var/platform
                 for ncv in self.df.variables:
                     if ncv in all_LocKeyList:
@@ -852,14 +867,18 @@ class Conv(BaseGSI):
                     if ncv in test_fields_:
                         TestKeyList.append(test_fields_[ncv])
                         TestVars.append(ncv)
+                print('emily checking: grabobsidx to process ...  ')
                 # grab obs to process
                 idx = grabobsidx(self.df, p, v)
+                print('emily checking: grabobsidx to process ... np.sum(idx) ', np.sum(idx))
                 if (np.sum(idx) == 0):
                     print("No matching observations for Platform:%s Var:%s" % (p, v))
                     continue
                 print("Platform:%s Var:%s #Obs:%d" % (p, v, np.sum(idx)))
 
                 outvars = conv_varnames[v]
+                print('emily checking: v =  ', v)
+                print('emily checking: outvars =  ', outvars)
                 for value in outvars:
                     varDict[value]['valKey'] = value, iconv.OvalName()
                     varDict[value]['errKey'] = value, iconv.OerrName()
@@ -876,8 +895,12 @@ class Conv(BaseGSI):
 
                 if v == 'bend':
                     # sort record_number
-                    record_number = self.var('record_number')[idx]
-                    id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
+#                    record_number = self.var('record_number')[idx]
+#                    id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
+#>>emily
+                    record_number = self.var('Station_ID')[idx]
+                    id_recordnum_sort = sorted(range(len(record_number)))
+#<<emily
                     print("Sorting ", v, " obs referring to record_number")
                     # record_number_sorted = [ record_number[ksort] for ksort in id_recordnum_sort ]
                     # print('record_number:', record_number)
@@ -1716,9 +1739,11 @@ class Ozone(BaseGSI):
                 LocVars.append(ncv)
 
         nlocs = self.nobs
-        vname = "integrated_layer_ozone_in_air"
+#       vname = "integrated_layer_ozone_in_air"
+        vname = "ozoneTotal"   #emily
         if (self.sensor in oz_lay_sensors):
-            vname = "mole_fraction_of_ozone_in_air"
+#           vname = "mole_fraction_of_ozone_in_air"
+            vname = "ozoneTotal"
         varDict[vname]['valKey'] = vname, iconv.OvalName()
         varDict[vname]['errKey'] = vname, iconv.OerrName()
         varDict[vname]['qcKey'] = vname, iconv.OqcName()
@@ -1785,10 +1810,20 @@ class Ozone(BaseGSI):
                 outdata[gvname] = tmp
                 if vname in units_values.keys():
                     varAttrs[gvname]['units'] = units_values[vname]
+
         # observation data
         outdata[varDict[vname]['valKey']] = obsdata
         outdata[varDict[vname]['errKey']] = obserr
         outdata[varDict[vname]['qcKey']] = obsqc
+
+#>>emily
+        # create a GSI effective QC variable (group)
+        gsiqcname = vname, 'GsiEffectiveQC'
+        errname = vname, 'GsiFinalObsError'
+        gsiqc = np.zeros_like(outdata[varDict[vname]['valKey']])
+        gsiqc[outdata[errname] > 1e8] = 1
+        outdata[gsiqcname] = gsiqc.astype(np.int32)
+#<<emily
 
         #globalAttrs["platform"] = np.array([wmo_satid[self.satellite]], dtype=np.int32)
         #globalAttrs["sensor"] = np.array([wmo_instid[self.sensor]], dtype=np.int32)
