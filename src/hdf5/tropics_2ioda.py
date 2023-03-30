@@ -219,9 +219,9 @@ def set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data):
         (obs_data[(tb_key, obsValName)][:, 11] != float_missing_value)
     for k in obs_data:
         if metaDataName in k[1] and 'sensorChannelNumber' not in k[0]:
-            obs_data[k] = obs_data[k][good]     ## [::24] ## add as skip
+            obs_data[k] = obs_data[k][good]     # [::24] ## add as skip
         elif tb_key in k[0]:
-            obs_data[k] = obs_data[k][good, :]  ## [::24]  ## add as skip
+            obs_data[k] = obs_data[k][good, :]  # [::24] ## add as skip
 
     return obs_data
 
