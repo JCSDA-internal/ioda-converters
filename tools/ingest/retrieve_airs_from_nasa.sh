@@ -32,12 +32,17 @@ while (( dtg <= end_dtg )); do
   yyyy=${dtg:0:4}
   jjj=$( date -u --date="${dtg:0:4}-${dtg:4:2}-${dtg:6:2} 00" +%j )
   # AIRS.2021.04.02.203.L1B.AIRS_Rad.v5.0.25.0.R21092182132.bufr
+  # near-real time
   zfiles=$( wget -q -nH -nd  https://discnrt1.gesdisc.eosdis.nasa.gov/data/Aqua_NRT/AIRIBRAD_NRT_BUFR.005/${yyyy}/${jjj} -O - | grep "AIRS" | grep -v xml | cut -f4 -d\" 2>/dev/null )
+  # archive
+  # zfiles=$( wget -q -nH -nd https://airsl1.gesdisc.eosdis.nasa.gov/data/Aqua_AIRS_Level1/AIRIBRAD.005/${yyyy}/${jjj}/ -O - | grep "AIRS" | grep -v 'xml\|jpg\|map.gz' | cut -f4 -d\" 2>/dev/null )
 
   for afile in ${zfiles[@]}; do
     if [[ ! -s $afile ]]; then
       echo "wget -q -nH -nd https://discnrt1.gesdisc.eosdis.nasa.gov/data/Aqua_NRT/AIRIBRAD_NRT_BUFR.005/${yyyy}/${jjj}/${afile}"
       wget -q -nH -nd "https://discnrt1.gesdisc.eosdis.nasa.gov/data/Aqua_NRT/AIRIBRAD_NRT_BUFR.005/${yyyy}/${jjj}/${afile}"
+      # path for files if in archive
+      #  wget -q -nH -nd "https://airsl1.gesdisc.eosdis.nasa.gov/data/Aqua_AIRS_Level1/AIRIBRAD.005/${yyyy}/${jjj}/${afile}"
       chmod 664 ${afile}
     fi
   done
