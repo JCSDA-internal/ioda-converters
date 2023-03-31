@@ -157,12 +157,14 @@ list( APPEND test_output
 if( iodaconv_gnssro_ENABLED )
   list( APPEND test_input
     testinput/gnssro_kompsat5_20180415_00Z.bufr
+    testinput/gnssro_refractivityRetrieval_metop_romsaf_2401.0011_metopc-G32-202108020112.nc
     testinput/gnssaro_N49T_20210120_00Z.nc
   )
 
   list( APPEND test_output
     testoutput/gnssro_kompsat5_2018041500.nc4
     testoutput/gnssaro_obs_2021012000.nc
+    testoutput/gnssro_obs_awsopendata_2021080200.nc4
   )
 endif()
 
@@ -1023,6 +1025,18 @@ if( iodaconv_gnssro_ENABLED )
                             testrun/gnssro_kompsat5_2018041500.nc4"
                             gnssro_kompsat5_2018041500.nc4 ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS gnssro_bufr2ioda)
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gnssro_AWSopendataNetcdf_conv
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/gnssro_AWSopendataNetcdf2ioda.py
+                            -i testinput/gnssro_refractivityRetrieval_metop_romsaf_2401.0011_metopc-G32-202108020112.nc
+                            -o testrun/gnssro_obs_awsopendata_2021080200.nc4
+                            -d 2021080200"
+                            gnssro_obs_awsopendata_2021080200.nc4 ${IODA_CONV_COMP_TOL_ZERO})
 
   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gnssaro_netcdf_conv
                     TYPE    SCRIPT
