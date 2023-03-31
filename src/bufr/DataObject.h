@@ -266,14 +266,9 @@ namespace Ingester
             // Create the mask array
             py::array_t<bool> mask(dims_);
             bool* maskPtr = static_cast<bool*>(mask.mutable_data());
-            std::fill(maskPtr, maskPtr + dims_.size(), false);
-
             for (size_t idx = 0; idx < data_.size(); idx++)
             {
-                if (isMissing(idx))
-                {
-                    maskPtr[idx] = true;
-                }
+                maskPtr[idx] = isMissing(idx);
             }
 
             // Create a masked array from the data and mask arrays
@@ -302,14 +297,9 @@ namespace Ingester
             // Create the mask array
             py::array_t<bool> mask(dims_);
             bool* maskPtr = static_cast<bool*>(mask.mutable_data());
-            std::fill(maskPtr, maskPtr + dims_.size(), false);
-
             for (size_t idx = 0; idx < data_.size(); idx++)
             {
-                if (isMissing(idx))
-                {
-                    maskPtr[idx] = true;
-                }
+                maskPtr[idx] = isMissing(idx);
             }
 
             // Create a masked array from the data and mask arrays
