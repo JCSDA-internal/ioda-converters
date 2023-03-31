@@ -29,12 +29,10 @@ if ( iodaconv_bufr_ENABLED )
 		BufrParser/Exports/Variables/DatetimeVariable.cpp
 		BufrParser/Exports/Variables/SpectralRadianceVariable.h
 		BufrParser/Exports/Variables/SpectralRadianceVariable.cpp
-	#>>emily
 		BufrParser/Exports/Variables/RemappedBrightnessTemperatureVariable.h
 		BufrParser/Exports/Variables/RemappedBrightnessTemperatureVariable.cpp
 		BufrParser/Exports/Variables/SensorScanAngleVariable.h
 		BufrParser/Exports/Variables/SensorScanAngleVariable.cpp
-	#<<emily
 		BufrParser/Exports/Variables/AircraftAltitudeVariable.h
 		BufrParser/Exports/Variables/AircraftAltitudeVariable.cpp
 		BufrParser/Exports/Variables/TimeoffsetVariable.h
@@ -75,18 +73,19 @@ if ( iodaconv_bufr_ENABLED )
 		IodaEncoder/IodaDescription.cpp
 		IodaEncoder/IodaDescription.h
 	)
-	#>>Ron
+
 	list (APPEND _atmslib_srcs
-					BufrParser/Exports/Variables/Transforms/atms/kinds.F90
-					BufrParser/Exports/Variables/Transforms/atms/atms_spatial_average_mod.f90
-					BufrParser/Exports/Variables/Transforms/atms/atms_spatial_average_interface.h
-					BufrParser/Exports/Variables/Transforms/atms/atms_spatial_average_interface.f90
+		BufrParser/Exports/Variables/Transforms/atms/kinds.F90
+		BufrParser/Exports/Variables/Transforms/atms/atms_spatial_average_mod.f90
+		BufrParser/Exports/Variables/Transforms/atms/atms_spatial_average_interface.h
+		BufrParser/Exports/Variables/Transforms/atms/atms_spatial_average_interface.f90
 	)
+
 	ecbuild_add_library( TARGET   atms_lib
 											 SOURCES  ${_atmslib_srcs}
 											 TYPE STATIC
 											 INSTALL_HEADERS LISTED
-					)
+	)
 
 	list(APPEND _ingester_deps
 		Eigen3::Eigen
@@ -102,13 +101,13 @@ if ( iodaconv_bufr_ENABLED )
 											 INSTALL_HEADERS LISTED
 											 HEADER_DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/bufr
 											 LINKER_LANGUAGE CXX
-											)
+	)
 
 	target_link_libraries(ingester PUBLIC ${_ingester_deps})
 
 	target_include_directories(ingester PUBLIC
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-		$<INSTALL_INTERFACE:bufr>  # <prefix>/bufr
+		$<INSTALL_INTERFACE:bufr> # <prefix>/bufr
 	)
 
 	target_compile_definitions(ingester PRIVATE BUILD_IODA_BINDING=1)
