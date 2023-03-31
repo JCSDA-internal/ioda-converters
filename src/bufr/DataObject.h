@@ -258,23 +258,30 @@ namespace Ingester
         py::array _getNumpyArray(
             typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr) const
         {
-            py::array_t<T> array(dims_);
-            T* arrayPtr = static_cast<T*>(array.mutable_data());
-            std::copy(data_.begin(), data_.end(), arrayPtr);
+            // Create the data array
+            py::array_t<T> data(dims_);
+            T* dataPtr = static_cast<T*>(data.mutable_data());
+            std::copy(data_.begin(), data_.end(), dataPtr);
 
-            if (std::numeric_limits<T>::has_quiet_NaN)
+            // Create the mask array
+            py::array_t<bool> mask(dims_);
+            bool* maskPtr = static_cast<bool*>(mask.mutable_data());
+            std::fill(maskPtr, maskPtr + dims_.size(), false);
+
+            for (size_t idx = 0; idx < data_.size(); idx++)
             {
-                // Replace the missing value with NaN
-                for (size_t i = 0; i < data_.size(); ++i)
+                if (isMissing(idx))
                 {
-                    if (data_[i] == missingValue())
-                    {
-                        arrayPtr[i] = std::numeric_limits<T>::quiet_NaN();
-                    }
+                    maskPtr[idx] = true;
                 }
             }
 
-            return array;
+            // Create a masked array from the data and mask arrays
+            py::object numpyModule = py::module::import("numpy");
+            py::array maskedArray = numpyModule.attr("ma").attr("masked_array")(data, mask);
+            numpyModule.attr("ma").attr("set_fill_value")(maskedArray, missingValue());
+
+            return maskedArray;
         }
 
         template<typename U = void>
@@ -282,17 +289,35 @@ namespace Ingester
             typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr) const
         {
             // Create a char array to hold the data and fill it with nulls
-            auto array = py::array(py::dtype("S8"), dims_, {8});
-            auto arrayPtr = static_cast<char*>(array.request().ptr);
-            std::fill(arrayPtr, arrayPtr + (data_.size() * 8), 0);
+            auto data = py::array(py::dtype("S8"), dims_, {8});
+            auto dataPtr = static_cast<char*>(data.request().ptr);
+            std::fill(dataPtr, dataPtr + (data_.size() * 8), 0);
 
             // Copy the std::vector<std::string> into the char array
             for (size_t i = 0; i < data_.size(); ++i)
             {
-                std::copy(data_[i].begin(), data_[i].end(), arrayPtr + (i * 8));
+                std::copy(data_[i].begin(), data_[i].end(), dataPtr + (i * 8));
             }
 
-            return array;
+            // Create the mask array
+            py::array_t<bool> mask(dims_);
+            bool* maskPtr = static_cast<bool*>(mask.mutable_data());
+            std::fill(maskPtr, maskPtr + dims_.size(), false);
+
+            for (size_t idx = 0; idx < data_.size(); idx++)
+            {
+                if (isMissing(idx))
+                {
+                    maskPtr[idx] = true;
+                }
+            }
+
+            // Create a masked array from the data and mask arrays
+            py::object numpyModule = py::module::import("numpy");
+            py::array maskedArray = numpyModule.attr("ma").attr("masked_array")(data, mask);
+            numpyModule.attr("ma").attr("set_fill_value")(maskedArray, missingValue());
+
+            return maskedArray;
         }
 #endif
 
