@@ -1,4 +1,3 @@
-
 # (C) Copyright 2023 NOAA/NWS/NCEP/EMC
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
@@ -7,9 +6,9 @@
 import bufr
 import numpy as np
 
-DATA_PATH = './testinput/gdas.t00z.1bhrs4.tm00.bufr_d'
 
 def test_basic_query():
+    DATA_PATH = './testinput/gdas.t00z.1bhrs4.tm00.bufr_d'
 
     # Make the QuerySet for all the data we want
     q = bufr.QuerySet()
@@ -41,19 +40,36 @@ def test_basic_query():
     datetimes = r.get_datetime('year', 'month', 'day', 'hour', 'minute', 'second')
     assert datetimes[5] == np.datetime64('2020-10-26T21:00:00')
 
-def test_invalid_query():
-    with bufr.File(DATA_PATH) as f:
-        q = bufr.QuerySet()
 
-        try:
-            q.add('latitude', '!!! */CLON')
-        except Exception as e:
-            return
+def test_string_field():
+    DATA_PATH = './testinput/gdas.t12z.adpupa.tm00.bufr_d'
+
+    # Make the QuerySet for all the data we want
+    q = bufr.QuerySet()
+    q.add('borg', '*/BID/BORG')
+
+    # Open the BUFR file and execute the QuerySet
+    with bufr.File(DATA_PATH) as f:
+        r = f.execute(q)
+
+    # Use the ResultSet returned to get numpy arrays of the data
+    borg = r.get('borg')
+
+    assert (np.all(borg[0][0:3] == np.array([b'KWBC', b'KWBC', b'KAWN'])))
+
+
+def test_invalid_query():
+    q = bufr.QuerySet()
+
+    try:
+        q.add('latitude', '!!! */CLON')
+    except Exception as e:
+        return
 
     assert False, "Didn't throw exception for invalid query."
 
 
 if __name__ == '__main__':
     test_basic_query()
+    test_string_field()
     test_invalid_query()
-

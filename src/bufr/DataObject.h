@@ -284,7 +284,14 @@ namespace Ingester
             typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr) const
         {
             // Create a char array to hold the data and fill it with nulls
-            auto data = py::array(py::dtype("S8"), dims_, {8});
+            auto strides = std::vector<int> (dims_.size());
+            strides[0] = 8;
+            for (size_t idx = 1; idx < dims_.size(); idx++)
+            {
+                strides[idx] = dims_[idx];
+            }
+
+            auto data = py::array(py::dtype("S8"), dims_, strides);
             auto dataPtr = static_cast<char*>(data.request().ptr);
             std::fill(dataPtr, dataPtr + (data_.size() * 8), 0);
 
