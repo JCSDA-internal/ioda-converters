@@ -55,7 +55,8 @@ def test_string_field():
     # Use the ResultSet returned to get numpy arrays of the data
     borg = r.get('borg')
 
-    assert (np.all(borg[0][0:3] == np.array([b'KWBC', b'KWBC', b'KAWN'])))
+    # Validate the values that were returned
+    assert (np.all(borg[0][0:3] == ['KWBC', 'KWBC', 'KAWN']))
 
 
 def test_invalid_query():

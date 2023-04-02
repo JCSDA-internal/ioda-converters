@@ -283,23 +283,18 @@ namespace Ingester
         py::array _getNumpyArray(
             typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr) const
         {
-            // Create a char array to hold the data and fill it with nulls
-            auto strides = std::vector<int> (dims_.size());
-            strides[0] = 8;
-            for (size_t idx = 1; idx < dims_.size(); idx++)
-            {
-                strides[idx] = dims_[idx];
-            }
+            py::list pyStrList(data_.size());
 
-            auto data = py::array(py::dtype("S8"), dims_, strides);
-            auto dataPtr = static_cast<char*>(data.request().ptr);
-            std::fill(dataPtr, dataPtr + (data_.size() * 8), 0);
-
-            // Copy the std::vector<std::string> into the char array
+            // Convert the std::vector<std::string> into a list of Python Unicode strings
             for (size_t i = 0; i < data_.size(); ++i)
             {
-                std::copy(data_[i].begin(), data_[i].end(), dataPtr + (i * 8));
+                pyStrList[i] = py::str(data_[i]);
             }
+
+            // Create a NumPy array of Python Unicode strings with the correct dimensions
+            py::object numpyModule = py::module::import("numpy");
+            py::array data = numpyModule.attr("array")(pyStrList, py::dtype("O"));
+            data = data.attr("reshape")(dims_);
 
             // Create the mask array
             py::array_t<bool> mask(dims_);
@@ -310,7 +305,6 @@ namespace Ingester
             }
 
             // Create a masked array from the data and mask arrays
-            py::object numpyModule = py::module::import("numpy");
             py::array maskedArray = numpyModule.attr("ma").attr("masked_array")(data, mask);
             numpyModule.attr("ma").attr("set_fill_value")(maskedArray, missingValue());
 
