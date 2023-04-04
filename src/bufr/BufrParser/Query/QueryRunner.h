@@ -64,19 +64,6 @@ namespace bufr {
                     const DataProviderType& dataProvider);
         void accumulate();
 
-        Targets getTargets()
-        {
-            Targets targets;
-            for (auto& subset : targetCache_)
-            {
-                for (auto& target : subset.second)
-                {
-                    targets.push_back(target);
-                }
-            }
-            return targets;
-        }
-
      private:
         const QuerySet querySet_;
         ResultSet& resultSet_;

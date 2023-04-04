@@ -8,91 +8,184 @@ skinparam ParticipantBackgroundColor #lightyellow
 skinparam ParticipantBorderThickness 2
 skinparam ParticipantBorderColor #firebrick
 
-actor BufrParser
+actor User
 participant QuerySet
 participant File
 participant DataProvider
-participant Query
 participant ResultSet #orange
+participant QueryRunner
+participant SubsetTable
+
 participant Target
 participant DataFrame
 participant DataField
 
-create QuerySet 
-BufrParser -> QuerySet : QuerySet()
-BufrParser -> QuerySet : add("*/CLON", "longitude")
-BufrParser -> QuerySet : add("*/CLAT", "latitude")
 
+create QuerySet 
+User -> QuerySet : QuerySet()
+note right
+    See diagram
+    CreateQuerySet
+end note
 
 create File
-BufrParser -> File : File(filepath)
-
-BufrParser -> File : execute(queryset)
+User -> File : File(filepath)
+User -> File : execute(queryset)
 
 activate File
+
+
 create DataProvider
-File -> DataProvider : DataProvider()
+File -> DataProvider : DataProvider(filename)
 
 create ResultSet
 File -> ResultSet : ResultSet()
 
-create Query
-File -> Query : Query(queryset&, resultset&, dataprovider&)
+create QueryRunner
+File -> QueryRunner : QueryRunner(querySet, resultSet, dataProvider)
+
+File -> DataProvider : run(querySet, procSubset, procMsg, continue)
+activate DataProvider
+
+loop BUFR data
+    DataProvider -> DataProvider : processMessage()
+    activate DataProvider
+    deactivate DataProvider
+
+    DataProvider -> DataProvider : processSubset()
+        activate DataProvider
+
+        DataProvider -> QueryRunner : accumulate()
+        activate QueryRunner
+            QueryRunner -> QueryRunner : findTargets()
+            activate QueryRunner
+                QueryRunner -> QueryRunner : check cache for targets
+
+                loop if no targets
+                    create SubsetTable
+                    QueryRunner -> SubsetTable : SubsetTable(dataProvider)
+                    QueryRunner -> QuerySet : names()
+                    loop all names
+
+                        QueryRunner -> QuerySet : queriesFor(name)
+                        loop all queries
+                            activate QuerySet
+                                QuerySet --> QueryRunner : queries
+                            deactivate QuerySet
+                            QueryRunner -> SubsetTable : getNodeForPath(query.path)
+
+                            create Target
+                            QueryRunner -> Target : Target()
+                        end loop
+                    end loop
+                end loop
+
+            deactivate QueryRunner
+
+            QueryRunner -> QueryRunner : collectData()
+            activate QueryRunner
+                QueryRunner -> ResultSet : nextDataFrame()
+                activate ResultSet
+                    create DataFrame
+                    ResultSet -> DataFrame : DataFrame(fieldCount)
+
+                    create DataField
+                    loop all data fields
+                        DataFrame -> DataField : DataField()
+                    end
+                    ResultSet --> QueryRunner : dataframe
+                deactivate ResultSet
+
+                QueryRunner -> QueryRunner : make data lookup table
+                activate QueryRunner
+                    loop all data nodes
+                        QueryRunner -> DataProvider : get node data
+                        QueryRunner -> QueryRunner : add node data to table
+                    end
+                deactivate QueryRunner
+
+                loop all target fields
 
 
-loop all BUFR subsets
-	File -> DataProvider : updateData()
-	File -> Query : query()
+                    QueryRunner -> DataFrame : fieldAtIdx(idx)
+                    activate DataFrame
+                        DataFrame --> QueryRunner : datafield
+                    deactivate DataFrame
 
-	activate Query
+                    QueryRunner -> DataField : setData(data)
+                    note left
+                        Copy data for node
+                        from the lookup table
+                    end note
+                end
+            deactivate QueryRunner
+        deactivate QueryRunner
 
-	Query -> Query : findTargets
+    deactivate DataProvider
 
-	activate Query
-	Query -> Query : check cache for targets
-	
-	loop if no targets
-		Query -> DataProvider : find target
-		activate DataProvider
-		create Target
-		DataProvider -> Target : Target()
-		deactivate DataProvider
-	end
-	deactivate Query
+    DataProvider -> DataProvider : continue()
+    activate DataProvider
+    deactivate DataProvider
 
-	Query -> Query : collectData
-	activate Query
-	Query -> ResultSet : nextDataFrame()
-	activate ResultSet
-	
-	create DataFrame
-	ResultSet -> DataFrame : DataFrame(fieldCount)
-
-	create DataField
-	loop all data fields
-		DataFrame -> DataField : DataField()
-	end
-	ResultSet --> Query : dataframe
-
-
-	deactivate ResultSet
-
-	loop all target fields
-		Query -> DataProvider : find data for target
-		Query -> DataFrame : fieldAtIdx(idx)
-		activate DataFrame
-		DataFrame --> Query : datafield
-		deactivate DataFrame
-
-		Query -> DataField : fill in data
-	end
-
-	deactivate Query
-
-	deactivate Query
+deactivate DataProvider
 end
 
-File --> BufrParser : resultSet
+
+
+
+'	File -> Query : query()
+'
+'	activate Query
+'
+'	Query -> Query : findTargets
+'
+'	activate Query
+'	Query -> Query : check cache for targets
+'
+'	loop if no targets
+'		Query -> DataProvider : find target
+'		activate DataProvider
+'		create Target
+'		DataProvider -> Target : Target()
+'		deactivate DataProvider
+'	end
+'	deactivate Query
+'
+'	Query -> Query : collectData
+'	activate Query
+'	Query -> ResultSet : nextDataFrame()
+'	activate ResultSet
+'
+'	create DataFrame
+'	ResultSet -> DataFrame : DataFrame(fieldCount)
+'
+'	create DataField
+'	loop all data fields
+'		DataFrame -> DataField : DataField()
+'	end
+'	ResultSet --> Query : dataframe
+'
+'
+'	deactivate ResultSet
+'
+'	loop all target fields
+'		Query -> DataProvider : find data for target
+'		Query -> DataFrame : fieldAtIdx(idx)
+'		activate DataFrame
+'		DataFrame --> Query : datafield
+'		deactivate DataFrame
+'
+'		Query -> DataField : fill in data
+'	end
+'
+'	deactivate Query
+'
+'	deactivate Query
+'end
+
+deactivate DataProvider
+
+File --> User : resultSet
 
 deactivate File
 
