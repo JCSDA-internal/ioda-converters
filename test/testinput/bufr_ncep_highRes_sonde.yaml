@@ -34,6 +34,8 @@ observations:
             query: "*/UARLVB/LONDH"
           stationElevation:
             query: "*/HSMSL"
+          stationWIGOSId:
+            query: "*/WGOSLID"
 
           # ObsValue
           pressure:
@@ -114,6 +116,11 @@ observations:
           source: variables/stationElevation
           longName: "Station Elevation"
           units: "m"
+
+        - name: "MetaData/stationWIGOSId"
+          coordinates: "longitude latitude"
+          source: variables/stationWIGOSId
+          longName: "WIGOS Station Identifier"
 
         # ObsValue
         - name: "ObsValue/pressure"
