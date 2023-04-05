@@ -26,8 +26,12 @@ observations:
             query: "*/RPID"
           latitude:
             query: "*/CLATH"
+          levelLatitudeDisplacement:
+            query: "*/UARLVB/LATDH"
           longitude:
             query: "*/CLONH"
+          levelLongitudeDisplacement:
+            query: "*/UARLVB/LONDH"
           stationElevation:
             query: "*/HSMSL"
 
@@ -36,7 +40,7 @@ observations:
             query: "*/UARLVB/PRLC"
           airTemperature:
             query: "*/UARLVB/UATMP/TMDB"
-          dewpointTemperature:
+          dewPointTemperature:
             query: "*/UARLVB/UATMP/TMDP"
           windDirection:
             query: "*/UARLVB/UAWND/WDIR"
@@ -54,7 +58,7 @@ observations:
             query: "*/UARLVB/QMPR"
           airTemperatureQM:
             query: "*/UARLVB/UATMP/QMAT"
-          dewpointTemperatureQM:
+          dewPointTemperatureQM:
             query: "*/UARLVB/UATMP/QMDD"
           windSpeedQM:
             query: "*/UARLVB/UAWND/QMWN"
@@ -84,10 +88,24 @@ observations:
           units: "degree_north"
           range: [-90, 90]
 
+        - name: "MetaData/levelLatitudeDisplacement"
+          coordinates: "longitude latitude"
+          source: variables/levelLatitudeDisplacement
+          longName: "Latitude Displacement"
+          units: "degree_north"
+          range: [-90, 90]
+
         - name: "MetaData/longitude"
           coordinates: "longitude latitude"
           source: variables/longitude
           longName: "Longitude"
+          units: "degree_east"
+          range: [-180, 180]
+
+        - name: "MetaData/levelLongitudeDisplacement"
+          coordinates: "longitude latitude"
+          source: variables/levelLongitudeDisplacement
+          longName: "Longitude Displacement"
           units: "degree_east"
           range: [-180, 180]
 
@@ -110,9 +128,9 @@ observations:
           longName: "Air Temperature"
           units: "K"
 
-        - name: "ObsValue/dewpointTemperature"
+        - name: "ObsValue/dewPointTemperature"
           coordinates: "longitude latitude"
-          source: variables/dewpointTemperature
+          source: variables/dewPointTemperature
           longName: "Dewpoint Temperature"
           units: "K"
 
@@ -151,9 +169,9 @@ observations:
           source: variables/airTemperatureQM
           longName: "Quality Indicator for Temperature"
 
-        - name: "QualityMarker/dewpointTemperature"
+        - name: "QualityMarker/dewPointTemperature"
           coordinates: "longitude latitude"
-          source: variables/dewpointTemperatureQM
+          source: variables/dewPointTemperatureQM
           longName: "Quality Indicator for Moisture"
 
         - name: "QualityMarker/windSpeed"
