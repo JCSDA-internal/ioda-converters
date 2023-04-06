@@ -93,7 +93,7 @@ list(APPEND _ingester_deps
   eckit
   ${oops_LIBRARIES}
   ioda_engines
-  bufr::bufr_d
+  bufr::bufr_4
   atms_lib
 )
 
