@@ -181,6 +181,10 @@ namespace bufr {
         /// \param The index of the data object for which you want a value.
         inline double getVal(FortranIdx idx) const { return val_[idx - 1]; }
 
+        /// \brief Get the value of the data element at the given data index.
+        /// \param The index of the data object for which you want a value.
+        inline gsl::span<const double> getVals() const { return val_; }
+
         /// \brief Get the TypeInfo object for the table node at the given idx.
         /// \param idx BUFR table node index
         TypeInfo getTypeInfo(FortranIdx idx) const;
