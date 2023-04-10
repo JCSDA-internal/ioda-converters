@@ -33,7 +33,7 @@ program gnssro_bufr2ioda2
    integer   :: varid_bnd, varid_bndoe, varid_impp, varid_imph, varid_azim
    integer   :: nlev_dimid
    integer   :: varid_geo_temp, varid_geo_pres, varid_geo_shum, varid_geo_geop, varid_geo_geop_sfc
-   integer   :: grpid_metadata, grpid_obserror, grpid_obsvalue
+   integer   :: grpid_metadata, grpid_obserror, grpid_obsvalue, grpid_obspreqc
    integer   :: deflate_level
    character(len=256)        :: infile, outfile
    character, dimension(8)    :: subset
@@ -222,6 +222,31 @@ program gnssro_bufr2ioda2
 
          nrec = nrec + 1
          ndata0 = ndata
+
+     if (ogce .eq. 60) then
+
+        do k = 1, levs
+           if (data1b(5,k) < 1.e+9_r_kind ) then
+              if ( data1b(5,k) - roc > 25000 ) then
+                 startp = 1
+                 endp   = levs
+                 stride = 1 ! top down
+              else
+                 startp = levs
+                 endp   = 1
+                 stride = -1 !bottom up
+              end if
+              exit
+          end if
+       end do
+
+       do k = startp, endp, stride
+          if ( data1b(20,k) < 1.e+9_r_kind  .and. data1b(18,k) < 1.e+9_r_kind ) then
+             preqc(k:endp:stride)= max(int(data1b(20,k)/data1b(18,k)*100), preqc(k))
+          end if
+       end do
+
+    end if
 
          do k = 1, levs
             rlat = data1b(1, k)  ! earth relative latitude (degrees)
