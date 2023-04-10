@@ -31,6 +31,7 @@ program gnssro_bufr2ioda2
    integer   :: varid_geoid, varid_rfict
    integer   :: varid_ref, varid_msl, varid_refoe
    integer   :: varid_bnd, varid_bndoe, varid_impp, varid_imph, varid_azim
+   integer   :: varid_bndlsw_preqc
    integer   :: nlev_dimid
    integer   :: varid_geo_temp, varid_geo_pres, varid_geo_shum, varid_geo_geop, varid_geo_geop_sfc
    integer   :: grpid_metadata, grpid_obserror, grpid_obsvalue, grpid_obspreqc
@@ -59,6 +60,7 @@ program gnssro_bufr2ioda2
       integer(int32), allocatable, dimension(:)    :: recn
       integer(int32), allocatable, dimension(:)    :: asce
       integer(int32), allocatable, dimension(:)    :: ogce
+      integer(int32), allocatable, dimension(:)    :: bndlsw_preqc
       integer(int64), allocatable, dimension(:)     :: epochtime
       real(real64), allocatable, dimension(:)     :: lat
       real(real64), allocatable, dimension(:)     :: lon
@@ -83,9 +85,11 @@ program gnssro_bufr2ioda2
    real(real64) :: pcc, qfro(1), usage, dlat, dlat_earth, dlon, dlon_earth, freq_chk, freq, azim
    real(real64) :: height, rlat, rlon, ref, bend, impact, roc, geoid, bend_error, ref_error, bend_pccf, ref_pccf
    real(real64) :: obsErr
+   integer(int32), dimension(1000)     ::  preqc
+   integer(int32) :: startp, endp, stride
    real(real64)    :: r_missing
-   integer(int32) :: i_missing
-   integer(int64)   :: i64_missing
+   integer(int32)  :: i_missing
+   integer(int64)  :: i64_missing
 
    logical, parameter :: GlobalModel = .true. ! temporary
 
@@ -146,6 +150,7 @@ program gnssro_bufr2ioda2
    allocate (gnssro_data%bend_ang(maxobs))
    allocate (gnssro_data%impact_para(maxobs))
    allocate (gnssro_data%bndoe_gsi(maxobs))
+   allocate (gnssro_data%bndlsw_preqc(maxobs))
 
 !rewind lnbufr
    call closbf(lnbufr)
@@ -306,6 +311,7 @@ program gnssro_bufr2ioda2
                gnssro_data%msl_alt(ndata) = height
                gnssro_data%bend_ang(ndata) = bend
                gnssro_data%bndoe_gsi(ndata) = bend_error
+               gnssro_data%bndlsw_preqc(ndata) = preqc(k)
                gnssro_data%impact_para(ndata) = impact
                gnssro_data%rfict(ndata) = roc
                gnssro_data%geoid(ndata) = geoid
@@ -340,6 +346,7 @@ program gnssro_bufr2ioda2
    call check(nf90_def_grp(ncid, 'MetaData', grpid_metadata))
    call check(nf90_def_grp(ncid, 'ObsValue', grpid_obsvalue))
    call check(nf90_def_grp(ncid, 'ObsError', grpid_obserror))
+   call check(nf90_def_grp(ncid, 'PreQC', grpid_obspreqc) )
 
    call check(nf90_def_var(grpid_metadata, "latitude", NF90_FLOAT, nlocs_dimid, varid_lat))
    call check(nf90_def_var_fill(grpid_metadata, varid_lat, 0, real(r_missing)))
@@ -372,8 +379,7 @@ program gnssro_bufr2ioda2
    call check(nf90_def_var_deflate(grpid_metadata, varid_sclf,       &
                                     & shuffle=1, deflate=1, deflate_level=deflate_level))
    call check(nf90_put_att(grpid_metadata, varid_sclf, "longname", &
-   		& "GNSS satellite classification, e.g., 401=GPS, 402=GLONASS"))
-
+      & "GNSS satellite classification, e.g., 401=GPS, 402=GLONASS"))
    call check(nf90_put_att(grpid_metadata, varid_sclf, "units", "1"))
 
    call check(nf90_def_var(grpid_metadata, "satelliteTransmitterId", NF90_INT, nlocs_dimid, varid_ptid))
@@ -388,7 +394,7 @@ program gnssro_bufr2ioda2
    call check(nf90_def_var_deflate(grpid_metadata, varid_said,       &
                                     & shuffle=1, deflate=1, deflate_level=deflate_level))
    call check(nf90_put_att(grpid_metadata, varid_said, "longname", &
-   	& "Low Earth Orbit satellite identifier, e.g., COSMIC2=750-755"))
+      & "Low Earth Orbit satellite identifier, e.g., COSMIC2=750-755"))
    call check(nf90_put_att(grpid_metadata, varid_said, "units", "1"))
 
    call check(nf90_def_var(grpid_metadata, "occulting_sat_is", NF90_INT, nlocs_dimid, varid_siid))
@@ -446,7 +452,6 @@ program gnssro_bufr2ioda2
    call check(nf90_put_att(grpid_obsvalue, varid_bnd, "units", "radian"))
    call check(nf90_put_att(grpid_obsvalue, varid_bnd, "valid_range", real((/-0.001, 0.08/))))
    call check(nf90_def_var_fill(grpid_obsvalue, varid_bnd, 0, real(r_missing)))
-   call check(nf90_def_var_deflate(grpid_obsvalue, varid_bnd, shuffle=1, deflate=1, deflate_level=deflate_level))
 
    call check(nf90_def_var(grpid_obserror, "bendingAngle", NF90_FLOAT, nlocs_dimid, varid_bndoe))
    call check(nf90_def_var_deflate(grpid_obserror, varid_bndoe,     &
@@ -455,6 +460,14 @@ program gnssro_bufr2ioda2
    call check(nf90_put_att(grpid_obserror, varid_bndoe, "units", "radian"))
    call check(nf90_put_att(grpid_obserror, varid_bndoe, "valid_range", real((/0.0, 0.008/))))
    call check(nf90_def_var_fill(grpid_obserror, varid_bndoe, 0, real(r_missing)))
+
+   call check( nf90_def_var(grpid_obspreqc, "bendingAngle", NF90_INT, nlocs_dimid, varid_bndlsw_preqc))
+   call check(nf90_def_var_deflate(grpid_obspreqc, varid_bndlsw_preqc,   &
+                                    & shuffle=1, deflate=1, deflate_level=deflate_level))
+   call check( nf90_put_att(grpid_obspreqc, varid_bndlsw_preqc, "units", "%")
+   call check( nf90_put_att(grpid_obspreqc, varid_bndlsw_preqc, "longname",  &
+                                    & "PreQC based on LSW magnitude in percentage of bending angle value" ))
+   call check( nf90_put_att(grpid_obspreqc, varid_bndlsw_preqc, "valid_range", "0 - 100" ))
 
    call check(nf90_def_var(grpid_metadata, "impactParameterRO", NF90_FLOAT, nlocs_dimid, varid_impp))
    call check(nf90_def_var_deflate(grpid_metadata, varid_impp,      &
@@ -502,6 +515,7 @@ program gnssro_bufr2ioda2
    call check(nf90_put_var(grpid_obserror, varid_refoe, gnssro_data%refoe_gsi(1:ndata)))
    call check(nf90_put_var(grpid_obsvalue, varid_bnd, gnssro_data%bend_ang(1:ndata)))
    call check(nf90_put_var(grpid_obserror, varid_bndoe, gnssro_data%bndoe_gsi(1:ndata)))
+   call check(nf90_put_var(grpid_obspreqc, varid_bndlsw_preqc, gnssro_data%bndlsw_preqc(1:ndata)))
    call check(nf90_put_var(grpid_metadata, varid_lat, gnssro_data%lat(1:ndata)))
    call check(nf90_put_var(grpid_metadata, varid_lon, gnssro_data%lon(1:ndata)))
    call check(nf90_put_var(grpid_metadata, varid_epochtime, gnssro_data%epochtime(1:ndata)))
@@ -541,6 +555,7 @@ program gnssro_bufr2ioda2
    deallocate (gnssro_data%bend_ang)
    deallocate (gnssro_data%impact_para)
    deallocate (gnssro_data%bndoe_gsi)
+   deallocate (gnssro_data%bndlsw_preqc)
 
 contains
    subroutine check(status)
