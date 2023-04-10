@@ -3,7 +3,7 @@
 !  for jedi/ufo/gnssro/ operator test
 !  Copyright UCAR 2022
 !  Author: Hailing Zhang
-!  Last upate: Feb 9 2023
+!  Last upate: APR 10 2023
 
 !!!---------  to run   -----------------------------------------------------------------
 !  ./gnssro_bufr2ioda2 yyyymmddhh $bufrfile_input $netcdffile_output
@@ -17,10 +17,6 @@ program gnssro_bufr2ioda2
    use, intrinsic :: iso_fortran_env
    use netcdf
    implicit none
-
-!integer, parameter :: i_kind  = selected_int_kind(8)    !4
-!integer, parameter :: int64    = selected_int_kind(10)   !8
-!integer, parameter :: real64  = selected_real_kind(15)  !8
 
 ! output obs data stucture
    integer   :: ncid
@@ -36,22 +32,22 @@ program gnssro_bufr2ioda2
    integer   :: varid_geo_temp, varid_geo_pres, varid_geo_shum, varid_geo_geop, varid_geo_geop_sfc
    integer   :: grpid_metadata, grpid_obserror, grpid_obsvalue, grpid_obspreqc
    integer   :: deflate_level
-   character(len=256)        :: infile, outfile
-   character, dimension(8)    :: subset
-   character(len=10)         :: anatime
+   character(len=256)       :: infile, outfile
+   character, dimension(8)  :: subset
+   character(len=10)        :: anatime
    integer(int32)           :: i, k, m, ireadmg, ireadsb, said, siid, ptid, sclf, asce, ogce
    integer(int32)           :: lnbufr = 10
    integer(int32)           :: nread, ndata, nvars, nrec, ndata0
    integer(int32)           :: idate5(6), idate
-   integer(int64)             :: epochtime
+   integer(int64)           :: epochtime
 
    logical                   :: good, outside
    integer                   :: refflag, bendflag
    integer(int32), parameter :: mxib = 31
-   integer(int32)           :: ibit(mxib), nib
+   integer(int32)            :: ibit(mxib), nib
    integer(int32), parameter :: maxlevs = 500
    integer(int32), parameter :: n1ahdr = 13
-   integer(int32)           :: maxobs
+   integer(int32)            :: maxobs
    type gnssro_type
       integer(int32), allocatable, dimension(:)    :: said
       integer(int32), allocatable, dimension(:)    :: siid
@@ -61,7 +57,7 @@ program gnssro_bufr2ioda2
       integer(int32), allocatable, dimension(:)    :: asce
       integer(int32), allocatable, dimension(:)    :: ogce
       integer(int32), allocatable, dimension(:)    :: bndlsw_preqc
-      integer(int64), allocatable, dimension(:)     :: epochtime
+      integer(int64), allocatable, dimension(:)    :: epochtime
       real(real64), allocatable, dimension(:)     :: lat
       real(real64), allocatable, dimension(:)     :: lon
       real(real64), allocatable, dimension(:)     :: rfict
@@ -77,16 +73,16 @@ program gnssro_bufr2ioda2
 
    type(gnssro_type) :: gnssro_data
 
-   real(real64), dimension(n1ahdr)     :: bfr1ahdr
+   real(real64), dimension(n1ahdr)      :: bfr1ahdr
    real(real64), dimension(50, maxlevs) :: data1b
    real(real64), dimension(50, maxlevs) :: data2a
-   real(real64), dimension(maxlevs)    :: nreps_this_ROSEQ2
-   integer(int32)                    :: iret, levs, levsr, nreps_ROSEQ1, nreps_ROSEQ2_int
+   real(real64), dimension(maxlevs)     :: nreps_this_ROSEQ2
+   integer(int32)                       :: iret, levs, levsr, nreps_ROSEQ1, nreps_ROSEQ2_int
    real(real64) :: pcc, qfro(1), usage, dlat, dlat_earth, dlon, dlon_earth, freq_chk, freq, azim
    real(real64) :: height, rlat, rlon, ref, bend, impact, roc, geoid, bend_error, ref_error, bend_pccf, ref_pccf
    real(real64) :: obsErr
    integer(int32), dimension(1000)     ::  preqc
-   integer(int32) :: startp, endp, stride
+   integer(int32)  :: startp, endp, stride
    real(real64)    :: r_missing
    integer(int32)  :: i_missing
    integer(int64)  :: i64_missing
@@ -231,7 +227,7 @@ program gnssro_bufr2ioda2
      if (ogce .eq. 60) then
 
         do k = 1, levs
-           if (data1b(5,k) < 1.e+9_r_kind ) then
+           if (data1b(5,k) < 1.e+9_real64 ) then
               if ( data1b(5,k) - roc > 25000 ) then
                  startp = 1
                  endp   = levs
@@ -246,7 +242,7 @@ program gnssro_bufr2ioda2
        end do
 
        do k = startp, endp, stride
-          if ( data1b(20,k) < 1.e+9_r_kind  .and. data1b(18,k) < 1.e+9_r_kind ) then
+          if ( data1b(20,k) < 1.e+9_real64 .and. data1b(18,k) <1.e+9_real64 ) then
              preqc(k:endp:stride)= max(int(data1b(20,k)/data1b(18,k)*100), preqc(k))
           end if
        end do
@@ -464,7 +460,7 @@ program gnssro_bufr2ioda2
    call check( nf90_def_var(grpid_obspreqc, "bendingAngle", NF90_INT, nlocs_dimid, varid_bndlsw_preqc))
    call check(nf90_def_var_deflate(grpid_obspreqc, varid_bndlsw_preqc,   &
                                     & shuffle=1, deflate=1, deflate_level=deflate_level))
-   call check( nf90_put_att(grpid_obspreqc, varid_bndlsw_preqc, "units", "%")
+   call check( nf90_put_att(grpid_obspreqc, varid_bndlsw_preqc, "units", "%"))
    call check( nf90_put_att(grpid_obspreqc, varid_bndlsw_preqc, "longname",  &
                                     & "PreQC based on LSW magnitude in percentage of bending angle value" ))
    call check( nf90_put_att(grpid_obspreqc, varid_bndlsw_preqc, "valid_range", "0 - 100" ))
