@@ -224,30 +224,31 @@ program gnssro_bufr2ioda2
          nrec = nrec + 1
          ndata0 = ndata
 
-     if (ogce .eq. 60) then
+         preqc = 0
+         if (ogce .eq. 60) then
 
-        do k = 1, levs
-           if (data1b(5,k) < 1.e+9_real64 ) then
-              if ( data1b(5,k) - roc > 25000 ) then
-                 startp = 1
-                 endp   = levs
-                 stride = 1 ! top down
-              else
-                 startp = levs
-                 endp   = 1
-                 stride = -1 !bottom up
+            do k = 1, levs
+               if (data1b(5,k) < 1.e+9_real64 ) then
+                  if ( data1b(5,k) - roc > 25000 ) then
+                     startp = 1
+                     endp   = levs
+                     stride = 1 ! top down
+                  else
+                     startp = levs
+                     endp   = 1
+                     stride = -1 !bottom up
+                  end if
+                  exit
               end if
-              exit
-          end if
-       end do
+            end do
 
-       do k = startp, endp, stride
-          if ( data1b(20,k) < 1.e+9_real64 .and. data1b(18,k) <1.e+9_real64 ) then
-             preqc(k:endp:stride)= max(int(data1b(20,k)/data1b(18,k)*100), preqc(k))
-          end if
-       end do
+            do k = startp, endp, stride
+               if ( data1b(20,k) < 1.e+9_real64 .and. data1b(18,k) <1.e+9_real64 ) then
+                  preqc(k:endp:stride) = max(int(data1b(20,k)/data1b(18,k)*100), preqc(k))
+               end if
+            end do
 
-    end if
+         end if
 
          do k = 1, levs
             rlat = data1b(1, k)  ! earth relative latitude (degrees)
