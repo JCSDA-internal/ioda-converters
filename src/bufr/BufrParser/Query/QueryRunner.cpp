@@ -40,28 +40,18 @@ namespace bufr
     void QueryRunner::accumulate()
     {
         Targets targets;
-        std::shared_ptr<__details::ProcessingMasks> masks;
 
-        findTargets(targets, masks);
-        collectData(targets, masks, resultSet_);
+        findTargets(targets);
+        collectData(targets, resultSet_);
     }
 
-    void QueryRunner::findTargets(Targets &targets,
-                                  std::shared_ptr<__details::ProcessingMasks> &masks)
+    void QueryRunner::findTargets(Targets &targets)
     {
         // Check if the target list for this subset is cached
         if (targetCache_.find(dataProvider_->getSubsetVariant()) != targetCache_.end())
         {
             targets = targetCache_.at(dataProvider_->getSubsetVariant());
-            masks = maskCache_.at(dataProvider_->getSubsetVariant());
             return;
-        }
-
-        masks = std::make_shared<__details::ProcessingMasks>();
-        {  // Initialize Masks
-            size_t numNodes = dataProvider_->getIsc(dataProvider_->getInode());
-            masks->valueNodeMask.resize(numNodes, false);
-            masks->pathNodeMask.resize(numNodes, false);
         }
 
         auto table = SubsetTable(dataProvider_);
@@ -139,33 +129,14 @@ namespace bufr
             target->nodeIdx = tableNode->nodeIdx;
 
             targets.push_back(target);
-
-            // Set the mask
-            masks->valueNodeMask[target->nodeIdx] = true;
-            for (size_t pathIdx = 0; pathIdx < target->seqPath.size(); ++pathIdx)
-            {
-                masks->pathNodeMask[target->seqPath[pathIdx]] = true;
-            }
         }
 
         // Cache the targets and masks we just found
         targetCache_.insert({dataProvider_->getSubsetVariant(), targets});
-        maskCache_.insert({dataProvider_->getSubsetVariant(), masks});
     }
 
-    bool QueryRunner::isQueryNode(int nodeIdx) const
+    void QueryRunner::collectData(Targets& targets, ResultSet &resultSet) const
     {
-        return (dataProvider_->getTyp(nodeIdx) == Typ::DelayedRep ||
-                dataProvider_->getTyp(nodeIdx) == Typ::FixedRep ||
-                dataProvider_->getTyp(nodeIdx) == Typ::DelayedRepStacked ||
-                dataProvider_->getTyp(nodeIdx) == Typ::DelayedBinary);
-    }
-
-    void QueryRunner::collectData(Targets& targets,
-                                  std::shared_ptr<__details::ProcessingMasks> masks,
-                                  ResultSet &resultSet) const
-    {
-
         auto walker = DataWalker(dataProvider_);
         auto dataMap = walker.walk(targets);
 

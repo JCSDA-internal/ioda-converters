@@ -20,6 +20,30 @@
 namespace Ingester {
 namespace bufr {
 
+    namespace __details
+    {
+        /// \brief BUFR messages are indexed according to start and stop values that are dependant
+        /// on the message itself (the indexing is a property of the message). This object allows
+        /// lets you make an array where the indexing is offset with respect to the actual position
+        /// of the object in the array.
+        template <typename T>
+        class OffsetArray
+        {
+        public:
+            OffsetArray(size_t startIdx, size_t endIdx)
+                : offset_(startIdx)
+            {
+                data_.resize(endIdx - startIdx + 1);
+            }
+
+            T& operator[](size_t idx) { return data_[idx - offset_]; }
+
+        private:
+            std::vector<T> data_;
+            size_t offset_;
+        };
+    }  // namespace __details
+
     class DataWalker
     {
         typedef size_t NodeId;
