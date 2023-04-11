@@ -69,6 +69,8 @@ list(APPEND _ingester_srcs
   BufrParser/Query/Tokenizer.cpp
   BufrParser/Query/SubsetTable.h
   BufrParser/Query/SubsetTable.cpp
+	BufrParser/Query/DataWalker.h
+	BufrParser/Query/DataWalker.cpp
   IodaEncoder/IodaEncoder.cpp
   IodaEncoder/IodaEncoder.h
   IodaEncoder/IodaDescription.cpp

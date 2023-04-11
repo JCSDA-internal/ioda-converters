@@ -102,6 +102,7 @@ namespace bufr {
         std::vector<int> link;
         std::vector<int> itp;
         std::vector<int> jmpb;
+        std::vector<int> irf;
         std::vector<Typ> typ;
         std::vector<std::string> tag;
         int varientNumber;
@@ -210,6 +211,10 @@ namespace bufr {
         ///        of any sequence. Valid while executing "run".
         /// \param idx BUFR table node index
         inline FortranIdx getJmpb(FortranIdx idx) const { return getTableData()->jmpb[idx - 1]; }
+
+        /// \brief Given a BUFR table node index, gives you a way to discover the number of repeats
+        ///        in a fixed replication sequence. Valid while executing "run".
+        inline FortranIdx getIrf(FortranIdx idx) const { return getTableData()->irf[idx - 1]; }
 
         /// \breif Given a BUFR table node index, returns the type (see the Typ enum and maps above)
         ///        Valid while executing "run".

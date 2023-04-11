@@ -30,10 +30,11 @@ namespace bufr {
             Unknown
         };
 
-        std::shared_ptr<QueryComponent> queryComponent;
-        size_t branch;
         Type type;
-
+        std::shared_ptr<QueryComponent> queryComponent;
+        size_t nodeId;
+        size_t parentNodeId;
+        size_t fixedRepeatCount;
 
         /// \brief Check if this component adds a dimension to the data.
         bool addsDimension() const
@@ -118,7 +119,7 @@ namespace bufr {
                 if (component.type == TargetComponent::Type::Repeat ||
                     component.type == TargetComponent::Type::Binary)
                 {
-                    seqPath.push_back(component.branch);
+                    seqPath.push_back(component.nodeId);
                 }
 
                 componentIdx++;
