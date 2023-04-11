@@ -940,11 +940,11 @@ class Conv(BaseGSI):
                                 tmp[tmp > 4e4] = self.INT_FILL
                             else:
                                 if value != 'GsiAdjustObsError' and value != 'GsiInputObsError':
-                                   tmp[tmp > 4e8] = self.FLOAT_FILL
+                                    tmp[tmp > 4e8] = self.FLOAT_FILL
                             outdata[gvname] = tmp
                             if gvname[1] != 'PreUseFlag' and gvname[1] != 'ObsType' and gvname[1] != 'GsiUseFlag' and gvname[1] != 'GsiQCWeight':
                                 varAttrs[gvname]['units'] = units_values[gvname[0]]
-                    # if Error_Adjust exists, save it as GsiAdjustObsError. 
+                    # if Error_Adjust exists, save it as GsiAdjustObsError.
                     for key, value in gsivars.items():
                         if key in self.df.variables:
                             df_key = self.var(key)
