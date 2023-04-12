@@ -100,7 +100,7 @@ namespace bufr
                 targets.push_back(target);
 
 #ifdef BUILD_IODA_BINDING
-                // Print message to inform the user of the missing targetz
+                // Print message to inform the user of the missing targets
                 oops::Log::warning() << "Warning: Query String ";
                 oops::Log::warning() << querySet_.queriesFor(name)[0].str();
                 oops::Log::warning() << " didn't apply to subset ";
