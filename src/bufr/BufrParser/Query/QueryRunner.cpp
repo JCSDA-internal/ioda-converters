@@ -98,7 +98,7 @@ namespace bufr
                 target->exportDimIdxs = {0};
                 targets.push_back(target);
 
-                // Print message to inform the user of the missing targetz
+                // Print message to inform the user of the missing targets
                 oops::Log::warning() << "Warning: Query String ";
                 oops::Log::warning() << querySet_.queriesFor(name)[0].str();
                 oops::Log::warning() << " didn't apply to subset ";
