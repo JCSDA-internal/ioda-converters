@@ -253,7 +253,7 @@ class GoesConverter:
         start_date_tt = start_date.timetuple()
         day_number = start_date_tt.tm_yday
         declin = 23.45 * np.sin(d2r*(360./365.*(day_number-81)))
-        eqnOfTime = 9.87*np.sin(2*declin*d2r) - 7.53*np.cos(declin*d2r) -1.5*np.sin(declin*d2r);
+        eqnOfTime = 9.87*np.sin(2*declin*d2r) - 7.53*np.cos(declin*d2r) - 1.5*np.sin(declin*d2r)
 
         # Compute local solar time (including time correction factor) and solar hour angle (omega).
         localStdTimeMeridian = 0.0
