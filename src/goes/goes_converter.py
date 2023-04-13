@@ -234,70 +234,57 @@ class GoesConverter:
         output_dataset['/MetaData/sensorViewAngle'][:] = sensor_view_angle_data_array
         output_dataset['/MetaData/sensorViewAngle'].setncattr('units', 'degrees')
 
-    def _create_metadata_solar_zenith_angle_variable(self, output_dataset):
+    def _create_metadata_solar_angle_variables(self, output_dataset):
         """
         Creates the /MetaData/solarZenithAngle variable in an output netCDF4 dataset.
         output_dataset - A netCDF4 Dataset object
         """
+        d2r = np.pi / 180.0
         dataset = Dataset(self._input_file_path_template, 'r')
         dataset.set_auto_scale(True)
         dataset_latlon = Dataset(self._latlon_file_path, 'r')
         latitude = ma.getdata(dataset_latlon['/MetaData/latitude'][:].real)
         longitude = ma.getdata(dataset_latlon['/MetaData/longitude'][:].real)
-        latitude_rad = latitude * np.pi / 180.0
-        start_date = self._start_date
-        start_date_tt = start_date.timetuple()
-        julian_day = start_date_tt.tm_yday
-        day_angle = (360.0 / 365.0) * (julian_day - 1.0) * np.pi / 180.0
-        comps_eqt = [0.001868 * np.cos(day_angle), 0.032077 * np.sin(day_angle), 0.014615 * np.cos(2.0 * day_angle),
-                     0.040890 * np.sin(2.0 * day_angle), 229.18 / 60.0]
-        equation_of_time = (0.000075 + (comps_eqt[0]) - (comps_eqt[1]) - (comps_eqt[2]) - (comps_eqt[3])) * comps_eqt[4]
-        universal_time = start_date.hour + start_date.minute / 60.0 + start_date.second / 3600.0
-        local_sun_time = universal_time + equation_of_time + longitude / (360.0 / 24.0)
-        hour_angle = (360.0 / 24.0) * np.mod(local_sun_time + 12.0, 24.0)
-        hour_angle_rad = hour_angle * np.pi / 180.0
-        comps_dec = [0.399912 * np.cos(day_angle), 0.070257 * np.sin(day_angle), 0.006758 * np.cos(2.0 * day_angle),
-                     0.000907 * np.sin(2.0 * day_angle), 0.002697 * np.cos(3.0 * day_angle),
-                     0.001480 * np.sin(3.0 * day_angle)]
-        declin = 0.006918 - comps_dec[0] + comps_dec[1] - comps_dec[2] + comps_dec[3] - comps_dec[4] + comps_dec[5]
-        comps_za = [np.arccos(np.sin(latitude_rad) * np.sin(declin)),
-                    np.cos(latitude_rad) * np.cos(declin) * np.cos(hour_angle_rad)]
-        solar_zenith_angle_data_array = comps_za[0] + comps_za[1]
-        solar_zenith_angle_data_array = \
-            self._goes_util.filter_data_array_by_yaw_flip_flag(solar_zenith_angle_data_array)
-        solar_zenith_angle_data_array = solar_zenith_angle_data_array * 180.0 / np.pi
         dataset.close()
         dataset_latlon.close()
+
+        latitude_rad = latitude * d2r
+        start_date = self._start_date
+        start_date_tt = start_date.timetuple()
+        day_number = start_date_tt.tm_yday
+        declin = 23.45 * np.sin(d2r*(360./365.*(day_number-81)))
+        eqnOfTime = 9.87*np.sin(2*declin*d2r) - 7.53*np.cos(declin*d2r) - 1.5*np.sin(declin*d2r)
+
+        # Compute local solar time (including time correction factor) and solar hour angle (omega).
+        localStdTimeMeridian = 0.0
+        timeCorrection = 4.0*(longitude - localStdTimeMeridian) + eqnOfTime
+        localSolarTime = (start_date.hour*60.0 + start_date.minute + start_date.second/60.0 + timeCorrection)/60.0
+        omega = 15.0 * (localSolarTime - 12.0)
+        omega = np.where(omega > 180.0, omega-360.0, omega)
+
+        # Compute solar zenith angle.
+        cos_theta = np.sin(declin*d2r)*np.sin(latitude_rad) + np.cos(declin*d2r)*np.cos(latitude_rad)*np.cos(omega*d2r)
+        theta = np.arccos(cos_theta)
+        solar_zenith_angle_data_array = theta / d2r
+
+        # Compute solar azimuth angle.
+        dY = -np.sin(omega*d2r)
+        dX = np.tan(declin*d2r) * np.cos(latitude_rad) - np.sin(latitude_rad) * np.cos(omega*d2r)
+        dAzimuth = np.arctan2(dY, dX)
+        dAzimuth[dAzimuth < 0.0] = dAzimuth[dAzimuth < 0.0] + 2.0 * np.pi
+        solar_azimuth_angle_data_array = dAzimuth / d2r
+
+        # If the incoming data is flipped south-to-north.
+        solar_zenith_angle_data_array = \
+            self._goes_util.filter_data_array_by_yaw_flip_flag(solar_zenith_angle_data_array)
+        solar_azimuth_angle_data_array = \
+            self._goes_util.filter_data_array_by_yaw_flip_flag(solar_azimuth_angle_data_array)
+
         solar_zenith_angle_data_array = np.nan_to_num(solar_zenith_angle_data_array, nan=-999)
         output_dataset.createVariable('/MetaData/solarZenithAngle', 'f4', 'Location', fill_value=-999)
         output_dataset['/MetaData/solarZenithAngle'][:] = solar_zenith_angle_data_array
         output_dataset['/MetaData/solarZenithAngle'].setncattr('units', 'degrees')
 
-    def _create_metadata_solar_azimuth_angle_variable(self, output_dataset):
-        """
-        Creates the /MetaData/solarAzimuthAngle variable in an output netCDF4 dataset.
-        output_dataset - A netCDF4 Dataset object
-        """
-        dataset = Dataset(self._input_file_path_template, 'r')
-        dataset.set_auto_scale(True)
-        goes_imager_projection = dataset.variables['goes_imager_projection']
-        lon_0 = goes_imager_projection.getncattr('longitude_of_projection_origin')
-        lon_0_rad = lon_0 * np.pi / 180.0
-        dataset_latlon = Dataset(self._latlon_file_path, 'r')
-        latitude = ma.getdata(dataset_latlon['/MetaData/latitude'][:].real)
-        longitude = ma.getdata(dataset_latlon['/MetaData/longitude'][:].real)
-        latitude_rad = latitude * np.pi / 180.0
-        longitude_rad = longitude * np.pi / 180.0
-        start_date = self._start_date
-        t = start_date.hour + (start_date.minute / 60.0) + (start_date.second / 3600.0)
-        h = -1.0 * ((t - 12.0) / 12.0)
-        beta_0 = np.arccos(np.cos(latitude_rad) * np.cos(longitude_rad - lon_0_rad))
-        solar_azimuth_angle_data_array = np.arcsin((np.sin(h - longitude_rad)) / (np.sin(beta_0)))
-        solar_azimuth_angle_data_array = \
-            self._goes_util.filter_data_array_by_yaw_flip_flag(solar_azimuth_angle_data_array)
-        solar_azimuth_angle_data_array = solar_azimuth_angle_data_array * 180.0 / np.pi
-        dataset.close()
-        dataset_latlon.close()
         solar_azimuth_angle_data_array = np.nan_to_num(solar_azimuth_angle_data_array, nan=-999)
         output_dataset.createVariable('/MetaData/solarAzimuthAngle', 'f4', 'Location', fill_value=-999)
         output_dataset['/MetaData/solarAzimuthAngle'][:] = solar_azimuth_angle_data_array
@@ -549,8 +536,7 @@ class GoesConverter:
         self._create_metadata_sensor_azimuth_angle_variable(dataset)
         self._create_metadata_sensor_view_angle_variable(dataset)
         self._create_metadata_sensor_zenith_angle_variable(dataset)
-        self._create_metadata_solar_zenith_angle_variable(dataset)
-        self._create_metadata_solar_azimuth_angle_variable(dataset)
+        self._create_metadata_solar_angle_variables(dataset)
         self._create_metadata_time_variable(dataset)
         self._create_obsvalue_brightness_temperature_variable(dataset)
         self._create_obserror_brightness_temperature_variable(dataset)
@@ -575,8 +561,7 @@ class GoesConverter:
         self._create_metadata_sensor_azimuth_angle_variable(dataset)
         self._create_metadata_sensor_view_angle_variable(dataset)
         self._create_metadata_sensor_zenith_angle_variable(dataset)
-        self._create_metadata_solar_zenith_angle_variable(dataset)
-        self._create_metadata_solar_azimuth_angle_variable(dataset)
+        self._create_metadata_solar_angle_variables(dataset)
         self._create_metadata_time_variable(dataset)
         self._create_obsvalue_albedo_variable(dataset)
         self._create_obserror_albedo_variable(dataset)
