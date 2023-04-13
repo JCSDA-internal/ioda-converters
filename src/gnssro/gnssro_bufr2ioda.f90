@@ -315,7 +315,7 @@ program gnssro_bufr2ioda2
                gnssro_data%azim(ndata) = azim
                CALL bendingangle_err_gsi(rlat, impact - roc, obsErr, ogce)
                gnssro_data%bndoe_gsi(ndata) = obsErr
-               if (ref > r_missing) then
+               if (ref < r_missing) then
                   CALL refractivity_err_gsi(rlat, height, GlobalModel, obsErr)
                   gnssro_data%refoe_gsi(ndata) = obsErr
                else
