@@ -45,7 +45,7 @@ namespace bufr {
     }  // namespace __details
 
 
-    class QueryLookupTable
+    class NodeLookupTable
     {
         typedef std::vector<double> DataVector;
         typedef std::vector<int> CountsVector;
@@ -61,7 +61,7 @@ namespace bufr {
         typedef __details::OffsetArray<NodeData> LookupTable;
 
       public:
-        QueryLookupTable(const std::shared_ptr<DataProvider>& dataProvider,
+        NodeLookupTable(const std::shared_ptr<DataProvider>& dataProvider,
                          const Targets& targets) :
             dataProvider_(dataProvider),
             lookupTable_(makeLookupTable(targets))
@@ -134,6 +134,7 @@ namespace bufr {
 
             for (const auto& target : targets)
             {
+                if (target->nodeIdx == 0) { continue; }
                 const auto& path = target->path.back();
                 lookup[target->nodeIdx].data.reserve(product(lookup[path.parentNodeId].counts));
                 validNodeIds.insert(target->nodeIdx);

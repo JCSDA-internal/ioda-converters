@@ -16,7 +16,7 @@
 #include "Constants.h"
 #include "SubsetTable.h"
 #include "VectorMath.h"
-#include "QueryLookupTable.h"
+#include "NodeLookupTable.h"
 
 
 namespace Ingester {
@@ -137,8 +137,7 @@ namespace bufr
 
     void QueryRunner::collectData(Targets& targets, ResultSet &resultSet) const
     {
-        auto lookupTable = QueryLookupTable(dataProvider_, targets);
-
+        auto lookupTable = NodeLookupTable(dataProvider_, targets);
         auto &dataFrame = resultSet.nextDataFrame();
 
         for (size_t targetIdx = 0; targetIdx < targets.size(); targetIdx++)
@@ -198,7 +197,7 @@ namespace bufr
 
                 if (!hasFilter)
                 {
-                    dataField.data = std::move(lookupTable[targ->path.back().nodeId].data);
+                    dataField.data = lookupTable[targ->path.back().nodeId].data;
                 }
                 else
                 {
