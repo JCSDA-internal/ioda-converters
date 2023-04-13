@@ -136,7 +136,7 @@ namespace bufr {
             {
                 if (target->nodeIdx == 0) { continue; }
                 const auto& path = target->path.back();
-                lookup[target->nodeIdx].data.reserve(product(lookup[path.parentNodeId].counts));
+                lookup[target->nodeIdx].data.reserve(sum(lookup[path.parentNodeId].counts));
                 validNodeIds.insert(target->nodeIdx);
             }
 
