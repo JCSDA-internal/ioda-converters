@@ -16,7 +16,7 @@
 #include "Constants.h"
 #include "SubsetTable.h"
 #include "VectorMath.h"
-#include "DataWalker.h"
+#include "QueryLookupTable.h"
 
 
 namespace Ingester {
@@ -137,8 +137,7 @@ namespace bufr
 
     void QueryRunner::collectData(Targets& targets, ResultSet &resultSet) const
     {
-        auto walker = DataWalker(dataProvider_);
-        auto dataMap = walker.walk(targets);
+        auto lookupTable = QueryLookupTable(dataProvider_, targets);
 
         auto &dataFrame = resultSet.nextDataFrame();
 
@@ -167,43 +166,43 @@ namespace bufr
                     auto& filter = pathComponent.queryComponent->filter;
                     if (filter.empty())
                     {
-                        dataField.seqCounts[pathIdx + 1] = dataMap[targ->name].counts[pathIdx + 1];
+                        dataField.seqCounts[pathIdx + 1] = lookupTable[pathComponent.nodeId].counts;
                     }
                     else
                     {
-//                        // Delay the creation of the counts and filters until we know we need them
-//                        // in order to avoid unnecessary allocations
-//                        if (counts.empty())
-//                            counts = SeqCounts(
-//                                std::vector<std::vector<int>>(targ->seqPath.size() + 1, {1}));
-//
-//                        if (filters.empty())
-//                            filters = std::vector<std::vector<size_t>>(targ->seqPath.size() + 1);
-//
-//                        filters[pathIdx + 1] = filter;
-//                        hasFilter = true;
-//
-//                        auto filteredCounts =
-//                          std::vector<int>(dataTable[targ->seqPath[pathIdx] + 1].counts.size(), 1);
-//
-//                        for (size_t countIdx = 0; countIdx < filteredCounts.size(); countIdx++)
-//                        {
-//                            filteredCounts[countIdx] =
-//                                std::max(static_cast<int>(filter.size()), filteredCounts[countIdx]);
-//                        }
-//
-//                        dataField.seqCounts[pathIdx + 1] = filteredCounts;
-//                        counts[pathIdx + 1] = dataTable[targ->seqPath[pathIdx] + 1].counts;
+                        // Delay the creation of the counts and filters until we know we need them
+                        // in order to avoid unnecessary allocations
+                        if (counts.empty())
+                            counts = SeqCounts(
+                                std::vector<std::vector<int>>(targ->seqPath.size() + 1, {1}));
+
+                        if (filters.empty())
+                            filters = std::vector<std::vector<size_t>>(targ->seqPath.size() + 1);
+
+                        filters[pathIdx + 1] = filter;
+                        hasFilter = true;
+
+                        auto filteredCounts =
+                          std::vector<int>(lookupTable[targ->path[pathIdx].nodeId].counts.size(), 1);
+
+                        for (size_t countIdx = 0; countIdx < filteredCounts.size(); countIdx++)
+                        {
+                            filteredCounts[countIdx] =
+                                std::max(static_cast<int>(filter.size()), filteredCounts[countIdx]);
+                        }
+
+                        dataField.seqCounts[pathIdx + 1] = filteredCounts;
+                        counts[pathIdx + 1] = lookupTable[targ->path[pathIdx].nodeId].counts;
                     }
                 }
 
                 if (!hasFilter)
                 {
-                    dataField.data = dataMap[targ->name].data;
+                    dataField.data = std::move(lookupTable[targ->path.back().nodeId].data);
                 }
                 else
                 {
-                    dataField.data = makeFilteredData(dataMap[targ->name].data,
+                    dataField.data = makeFilteredData(lookupTable[targ->path.back().nodeId].data,
                                                       counts,
                                                       filters);
                 }

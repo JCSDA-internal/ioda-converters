@@ -44,18 +44,11 @@ namespace bufr {
         };
     }  // namespace __details
 
-    class DataWalker
+
+    class QueryLookupTable
     {
-        typedef size_t NodeId;
         typedef std::vector<double> DataVector;
         typedef std::vector<int> CountsVector;
-        typedef std::vector<CountsVector> Counts;
-
-        struct DataElement
-        {
-            DataVector data;
-            Counts counts;
-        };
 
         struct NodeData
         {
@@ -66,53 +59,25 @@ namespace bufr {
         };
 
         typedef __details::OffsetArray<NodeData> LookupTable;
-        typedef std::unordered_map<std::string, DataElement> DataMap;
 
       public:
-        DataWalker(const std::shared_ptr<DataProvider>& dataProvider) :
-            dataProvider_(dataProvider)
-        {}
-
-        /// \brief Walk the data tree along the given path. For each repeated node in the path
-        ///        (i.e. delayed or fixed repeat), record the counts in the counts vector vector, the
-        ///        offsets for each block of data and the total number of data elements that will be
-        ///        returned (product of the counts along the path).
-        /// \param path The path to walk.
-        /// \return DataNode containing the name of the node, the counts, offsets and size.
-
-        DataMap walk(const Targets& targets) const
+        QueryLookupTable(const std::shared_ptr<DataProvider>& dataProvider,
+                         const Targets& targets) :
+            dataProvider_(dataProvider),
+            lookupTable_(makeLookupTable(targets))
         {
-            auto dataMap = DataMap(targets.size());
-            auto lookup = makeLookTable(targets);
-
-            for (const auto& target : targets)
-            {
-                auto data = DataElement();
-                data.counts = {};
-                data.counts.resize(target->numDimensions);
-
-                size_t depth = 0;
-                for (size_t pathIdx = 0; pathIdx < target->path.size(); ++pathIdx)
-                {
-                    if (target->path[pathIdx].addsDimension())
-                    {
-                        data.counts[depth] = lookup[target->path[pathIdx].nodeId].counts;
-                        ++depth;
-                    }
-                }
-
-                data.data = lookup[target->nodeIdx].data;
-                dataMap[target->name] = std::move(data);
-            }
-
-            return dataMap;
         }
 
+        NodeData& operator[](size_t nodeId)
+        {
+            return lookupTable_[nodeId];
+        }
 
      private:
-        std::shared_ptr<DataProvider> dataProvider_;
+        const std::shared_ptr<DataProvider> dataProvider_;
+        LookupTable lookupTable_;
 
-        LookupTable makeLookTable(const Targets& targets) const
+        LookupTable makeLookupTable(const Targets& targets) const
         {
             auto lookupTable = LookupTable(dataProvider_->getInode(),
                                            dataProvider_->getIsc(dataProvider_->getInode()));
