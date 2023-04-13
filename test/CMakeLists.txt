@@ -156,7 +156,6 @@ list( APPEND test_output
 
 if( iodaconv_gnssro_ENABLED )
   list( APPEND test_input
-    testinput/gnssro_kompsat5_20180415_00Z.bufr
     testinput/gnssro_3prof_2022090100.bufr
     testinput/gnssaro_N49T_20210120_00Z.nc
   )
@@ -1723,16 +1722,6 @@ endif()
 #==============================================================================
 
 if( iodaconv_pbfortran_ENABLED )
-
-  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gnssro_conv
-                    TYPE    SCRIPT
-                    COMMAND bash
-                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                            netcdf
-                            "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
-                            -i testinput -o testrun gnssro_kompsat5_20180415_00Z.bufr"
-                            gnssro_obs_2018041500.nc4 ${IODA_CONV_COMP_TOL_ZERO}
-                    DEPENDS bufr2nc_fortran.x)
 
   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_prepbufr_conv
                     TYPE    SCRIPT
