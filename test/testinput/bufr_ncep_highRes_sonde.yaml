@@ -26,12 +26,8 @@ observations:
             query: "*/RPID"
           latitude:
             query: "*/CLATH"
-          levelLatitudeDisplacement:
-            query: "*/UARLVB/LATDH"
           longitude:
             query: "*/CLONH"
-          levelLongitudeDisplacement:
-            query: "*/UARLVB/LONDH"
           stationElevation:
             query: "*/HSMSL"
           stationWIGOSId:
@@ -90,24 +86,10 @@ observations:
           units: "degree_north"
           range: [-90, 90]
 
-        - name: "MetaData/levelLatitudeDisplacement"
-          coordinates: "longitude latitude"
-          source: variables/levelLatitudeDisplacement
-          longName: "Latitude Displacement"
-          units: "degree_north"
-          range: [-90, 90]
-
         - name: "MetaData/longitude"
           coordinates: "longitude latitude"
           source: variables/longitude
           longName: "Longitude"
-          units: "degree_east"
-          range: [-180, 180]
-
-        - name: "MetaData/levelLongitudeDisplacement"
-          coordinates: "longitude latitude"
-          source: variables/levelLongitudeDisplacement
-          longName: "Longitude Displacement"
           units: "degree_east"
           range: [-180, 180]
 
