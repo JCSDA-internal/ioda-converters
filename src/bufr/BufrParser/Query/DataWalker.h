@@ -48,27 +48,25 @@ namespace bufr {
     {
         typedef size_t NodeId;
         typedef std::vector<double> DataVector;
-        typedef std::vector<std::vector<int>> CountsVector;
-
-        typedef std::unordered_map<NodeId, std::vector<int>> CountsMap;
-        typedef std::unordered_map<NodeId, DataVector> DataMap;
-        typedef std::unordered_map<NodeId, TargetComponent> ComponentMap;
+        typedef std::vector<int> CountsVector;
+        typedef std::vector<CountsVector> Counts;
 
         struct DataElement
         {
-        public:
             DataVector data;
-            CountsVector counts;
-
-            explicit DataElement() = default;
-
-            size_t size() const
-            {
-                return data.size();
-            }
+            Counts counts;
         };
 
-        typedef std::unordered_map<std::string, DataElement> TargetDataMap;
+        struct NodeData
+        {
+            DataVector data;
+            CountsVector counts;
+            TargetComponent component;
+            bool isCollected = false;
+        };
+
+        typedef __details::OffsetArray<NodeData> LookupTable;
+        typedef std::unordered_map<std::string, DataElement> DataMap;
 
       public:
         DataWalker(const std::shared_ptr<DataProvider>& dataProvider) :
@@ -82,12 +80,10 @@ namespace bufr {
         /// \param path The path to walk.
         /// \return DataNode containing the name of the node, the counts, offsets and size.
 
-        TargetDataMap walk(const Targets& targets) const
+        DataMap walk(const Targets& targets) const
         {
-            TargetDataMap targetDataMap;
-
-            CountsMap countsMap = getCountsMap(targets);
-            DataMap dataMap = getDataMap(targets, countsMap);
+            auto dataMap = DataMap(targets.size());
+            auto lookup = makeLookTable(targets);
 
             for (const auto& target : targets)
             {
@@ -98,52 +94,37 @@ namespace bufr {
                 size_t depth = 0;
                 for (size_t pathIdx = 0; pathIdx < target->path.size(); ++pathIdx)
                 {
-                    if (target->path[pathIdx].type == TargetComponent::Type::Repeat ||
-                        target->path[pathIdx].type == TargetComponent::Type::Subset)
+                    if (target->path[pathIdx].addsDimension())
                     {
-                        data.counts[depth] = countsMap[target->path[pathIdx].nodeId];
+                        data.counts[depth] = lookup[target->path[pathIdx].nodeId].counts;
                         ++depth;
                     }
                 }
 
-                data.data = std::move(dataMap[target->nodeIdx]);
-
-//                std::cout << "** " << target->name << " **"  << std::endl;
-//
-//                // print data to stdout
-//                std::cout << "data.data = ";
-//                for (auto i : data.data) {
-//                    std::cout << i << " ";
-//                }
-//
-//                std::cout << std::endl;
-//
-//                std::cout << "data.counts = ";
-//                for (auto i : data.counts) {
-//                    std::cout << "[";
-//                    for (auto j : i) {
-//                        std::cout << j << " ";
-//                    }
-//                    std::cout << "]";
-//                }
-//                std::cout << std::endl;
-//                std::cout << std::endl;
-
-                targetDataMap[target->name] = std::move(data);
+                data.data = lookup[target->nodeIdx].data;
+                dataMap[target->name] = std::move(data);
             }
 
-            return targetDataMap;
+            return dataMap;
         }
 
 
      private:
         std::shared_ptr<DataProvider> dataProvider_;
 
-        CountsMap getCountsMap(const Targets& targets) const
+        LookupTable makeLookTable(const Targets& targets) const
         {
-            CountsMap countsMap;
-            ComponentMap componentMap;
+            auto lookupTable = LookupTable(dataProvider_->getInode(),
+                                           dataProvider_->getIsc(dataProvider_->getInode()));
 
+            addCounts(targets, lookupTable);
+            addData(targets, lookupTable);
+
+            return lookupTable;
+        }
+
+        void addCounts(const Targets& targets, LookupTable& lookup) const
+        {
             for (const auto& target : targets)
             {
                 for (const auto& path : target->path)
@@ -151,8 +132,9 @@ namespace bufr {
                     if (path.type == TargetComponent::Type::Repeat ||
                         path.type == TargetComponent::Type::Subset)
                     {
-                        countsMap[path.nodeId] = {};
-                        componentMap[path.nodeId] = path;
+                        lookup[path.nodeId].counts = {};
+                        lookup[path.nodeId].component = path;
+                        lookup[path.nodeId].isCollected = true;
                     }
                 }
             }
@@ -160,51 +142,47 @@ namespace bufr {
             for (size_t cursor = 1; cursor <= dataProvider_->getNVal(); ++cursor)
             {
                 auto nodeId = static_cast<size_t>(dataProvider_->getInv(cursor));
-                if (countsMap.find(nodeId) != countsMap.end())
+                if (lookup[nodeId].isCollected)
                 {
-                    const auto& component = componentMap[nodeId];
+                    const auto& component = lookup[nodeId].component;
 
                     if (component.type == TargetComponent::Type::Subset)
                     {
-                        countsMap[nodeId].push_back(1);
+                        lookup[nodeId].counts.push_back(1);
                     }
                     else if (component.fixedRepeatCount > 1)
                     {
-                        countsMap[nodeId].push_back(component.fixedRepeatCount);
+                        lookup[nodeId].counts.push_back(component.fixedRepeatCount);
                     }
                     else
                     {
-                        countsMap[nodeId].push_back(dataProvider_->getVal(cursor));
+                        lookup[nodeId].counts.push_back(dataProvider_->getVal(cursor));
                     }
                 }
             }
-
-            return countsMap;
         }
 
-        DataMap getDataMap(const Targets& targets, const CountsMap& countsMap) const
+        void addData(const Targets& targets, LookupTable& lookup) const
         {
-            DataMap dataMap;
-            std::unordered_map<size_t, size_t> valIdxMap;
+            std::unordered_set<size_t> validNodeIds;
+            validNodeIds.reserve(targets.size());
 
             for (const auto& target : targets)
             {
                 const auto& path = target->path.back();
-                dataMap[target->nodeIdx].resize(product(countsMap.at(path.parentNodeId)));
-                valIdxMap[target->nodeIdx] = 0;
+                lookup[target->nodeIdx].data.reserve(product(lookup[path.parentNodeId].counts));
+                validNodeIds.insert(target->nodeIdx);
             }
 
             for (size_t cursor = 1; cursor <= dataProvider_->getNVal(); ++cursor)
             {
                 const auto nodeId = dataProvider_->getInv(cursor);
-                if (dataMap.find(nodeId) != dataMap.end())
+
+                if (validNodeIds.find(nodeId) != validNodeIds.end())
                 {
-                    dataMap[nodeId][valIdxMap[nodeId]] = dataProvider_->getVal(cursor);
-                    ++valIdxMap[nodeId];
+                    lookup[nodeId].data.push_back(dataProvider_->getVal(cursor));
                 }
             }
-
-            return dataMap;
         }
     };
 }  // namespace bufr
