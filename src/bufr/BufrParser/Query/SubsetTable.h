@@ -275,15 +275,11 @@ namespace bufr {
 
         /// \brief Get the dimensioning parent of this node.
         /// \return The dimensioning parent of this node.
-        std::shared_ptr<BufrNode> getDimensioningParent()
+        std::shared_ptr<BufrNode> getParent()
         {
-            if (isDimensioningNode())
+            if (!parent.expired())
             {
-                return shared_from_this();
-            }
-            else if (!parent.expired())
-            {
-                return parent.lock()->getDimensioningParent();
+                return parent.lock();
             }
 
             return nullptr;

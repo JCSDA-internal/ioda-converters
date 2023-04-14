@@ -94,8 +94,7 @@ namespace bufr {
             {
                 for (const auto& path : target->path)
                 {
-                    if (path.type == TargetComponent::Type::Repeat ||
-                        path.type == TargetComponent::Type::Subset)
+                    if (path.isContainer())
                     {
                         lookup[path.nodeId].counts = {};
                         lookup[path.nodeId].component = path;

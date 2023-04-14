@@ -118,7 +118,7 @@ namespace bufr
             {
                 path[pathIdx].queryComponent = foundQuery.path[nodeIdx - 1];
                 path[pathIdx].nodeId = nodes[nodeIdx]->nodeIdx;
-                path[pathIdx].parentNodeId = nodes[nodeIdx]->getDimensioningParent()->nodeIdx;
+                path[pathIdx].parentNodeId = nodes[nodeIdx]->getParent()->nodeIdx;
                 path[pathIdx].setType(nodes[nodeIdx]->type);
                 path[pathIdx].fixedRepeatCount = nodes[nodeIdx]->fixedRepCount;
                 pathIdx++;
