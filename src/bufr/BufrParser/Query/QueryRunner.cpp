@@ -182,7 +182,7 @@ namespace bufr
                         hasFilter = true;
 
                         auto filteredCounts =
-                          std::vector<int>(lookupTable[targ->path[pathIdx].nodeId].counts.size(), 1);
+                          std::vector<int>(lookupTable[pathComponent.nodeId].counts.size(), 1);
 
                         for (size_t countIdx = 0; countIdx < filteredCounts.size(); countIdx++)
                         {
@@ -191,7 +191,7 @@ namespace bufr
                         }
 
                         dataField.seqCounts[pathIdx + 1] = filteredCounts;
-                        counts[pathIdx + 1] = lookupTable[targ->path[pathIdx].nodeId].counts;
+                        counts[pathIdx + 1] = lookupTable[pathComponent.nodeId].counts;
                     }
                 }
 
