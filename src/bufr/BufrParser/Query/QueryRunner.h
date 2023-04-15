@@ -32,6 +32,9 @@ namespace bufr {
         QueryRunner(const QuerySet& querySet,
                     ResultSet& resultSet,
                     const DataProviderType& dataProvider);
+
+        /// \brief Run the queries against the currently open BUFR message subset. Collect the
+        /// results into the ResultSet.
         void accumulate();
 
      private:
@@ -41,29 +44,24 @@ namespace bufr {
         std::unordered_map<SubsetVariant, Targets> targetCache_;
 
         /// \brief Look for the list of targets for the currently active BUFR message subset that
-        /// apply to the QuerySet and cache them. Processing mask information is also collected in
-        /// order to make the data collection more efficient.
+        /// apply to the QuerySet and cache them.
         /// \param[in, out] targets The list of targets to populate.
-        /// \param[in, out] masks The processing masks to populate.
         void findTargets(Targets& targets);
-
 
         /// \brief Accumulate the data for the currently open BUFR message subset.
         /// \param[in] targets The list of targets to collect for this subset.
         /// \param[in, out] resultSet The object used to store the accumulated collected data.
         void collectData(Targets& targets, ResultSet& resultSet) const;
 
-
         /// \brief Given data counts and a filter specification this function creates the resulting
         ///        data vector.
         /// \param[in] srcData The source data vector.
-        /// \param[in] origCounts The original data counts.
+        /// \param[in] origCounts The original (unfiltered) data counts.
         /// \param[in] filter The filter specification.
         /// \return The resulting data vector after the filter is applied.
         std::vector<double> makeFilteredData(const std::vector<double>& srcData,
                                              const SeqCounts &origCounts,
-                                             const std::vector<std::vector<size_t>> &filter)
-                                                  const;
+                                             const std::vector<std::vector<size_t>> &filter) const;
 
         /// \brief Recursive function that does the actual work of creating the filtered data
         ///        vector.

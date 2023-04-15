@@ -157,18 +157,22 @@ namespace bufr
                 dataField.seqCounts[0] = {1};
                 SeqCounts counts;
 
+                // Compute the output counts for each path component. If the component has a filter
+                // we need to exclude the filtered out values from the counts.
                 bool hasFilter = false;
                 std::vector<std::vector<size_t>> filters;
                 for (size_t pathIdx = 0; pathIdx < targ->seqPath.size(); pathIdx++)
                 {
                     auto& pathComponent = targ->path[pathIdx + 1];
                     auto& filter = pathComponent.queryComponent->filter;
-                    if (filter.empty())
+                    if (filter.empty())  // No filter
                     {
                         dataField.seqCounts[pathIdx + 1] = lookupTable[pathComponent.nodeId].counts;
                     }
-                    else
+                    else  // Component has a filter
                     {
+                        hasFilter = true;
+
                         // Delay the creation of the counts and filters until we know we need them
                         // in order to avoid unnecessary allocations
                         if (counts.empty())
@@ -178,29 +182,35 @@ namespace bufr
                         if (filters.empty())
                             filters = std::vector<std::vector<size_t>>(targ->seqPath.size() + 1);
 
+                        // Add the filter to the filters vector
                         filters[pathIdx + 1] = filter;
-                        hasFilter = true;
 
+                        // Create a new counts vector with the filtered out values excluded
                         auto filteredCounts =
                           std::vector<int>(lookupTable[pathComponent.nodeId].counts.size(), 1);
-
                         for (size_t countIdx = 0; countIdx < filteredCounts.size(); countIdx++)
                         {
                             filteredCounts[countIdx] =
                                 std::max(static_cast<int>(filter.size()), filteredCounts[countIdx]);
                         }
 
+                        // Store the filtered counts in the data field
                         dataField.seqCounts[pathIdx + 1] = filteredCounts;
+
+                        // Store the original (unfiltered) counts in the counts vector
                         counts[pathIdx + 1] = lookupTable[pathComponent.nodeId].counts;
                     }
                 }
 
                 if (!hasFilter)
                 {
+                    // No filters so just copy the data.
                     dataField.data = lookupTable[targ->path.back().nodeId].data;
                 }
                 else
                 {
+                    // There are filters, so we need to create a new data vector with the filtered
+                    // values.
                     dataField.data = makeFilteredData(lookupTable[targ->path.back().nodeId].data,
                                                       counts,
                                                       filters);

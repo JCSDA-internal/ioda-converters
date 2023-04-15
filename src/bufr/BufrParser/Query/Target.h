@@ -43,7 +43,7 @@ namespace bufr {
                    (queryComponent->filter.empty() || queryComponent->filter.size() > 1);
         }
 
-        /// \brief Check if this component adds a dimension to the data.
+        /// \brief Is this node a contatiner (node that can have children)?
         bool isContainer() const
         {
             return type == Type::Subset ||
