@@ -33,6 +33,7 @@ observations:
 
           fieldOfViewNumber:
             query: "*/FOVN"
+            type: float
 
           landOrSeaQualifier:
             query: "*/LSQL"
@@ -55,6 +56,12 @@ observations:
           sensorAzimuthAngle:
             query: "*/BEARAZ"
 
+          sensorScanAngle:
+            sensorScanAngle:
+              fieldOfViewNumber: "*/FOVN"
+              scanStart: -48.333
+              scanStep: 3.333 
+
           sensorChannelNumber:
             query: "*/BRITCSTC/CHNM"
 
@@ -72,16 +79,17 @@ observations:
                 _3: metop-b
                 _4: metop-a
                 _5: metop-c
-#               _206: noaa-15
-                _209: noaa-18
-                _223: noaa-19
+#               _206: n15
+                _209: n18
+                _223: n19
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/gdas.t12z.1bamua.{splits/satId}.tm00.nc"
+      obsdataout: "./testrun/gdas.t12z.amsua_{splits/satId}_ta.tm00.nc"
 
       dimensions:
-        - name: Channel 
+        - name: Channel
+          source: variables/sensorChannelNumber
           path: "*/BRITCSTC"
 
       globals:
@@ -162,16 +170,25 @@ observations:
           units: "degree"
           range: [0, 360]
 
+        - name: "MetaData/sensorViewAngle"
+          source: variables/sensorScanAngle
+          longName: "Sensor View Angle"
+          units: "degree"
+
         - name: "MetaData/sensorChannelNumber"
           source: variables/sensorChannelNumber
           longName: "Sensor Channel Number"
 
+        - name: "MetaData/sensorScanPosition"
+          source: variables/fieldOfViewNumber
+          longName: "Field of View Number"
+
         # ObsValue
-        - name: "ObsValue/antennaTemperature"
-          coordinates: "longitude latitude Channel"
+        # For now, store the antennaTemperature as brightnessTemperature
+        - name: "ObsValue/brightnessTemperature"
           source: variables/antennaTemperature
           longName: "Antenna Temperature"
           units: "K"
-          range: [100, 500]
+#         range: [100, 500]
           chunks: [1000, 15]
           compressionLevel: 4

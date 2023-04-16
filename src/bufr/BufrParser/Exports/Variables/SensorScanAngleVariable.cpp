@@ -25,13 +25,13 @@ namespace
     namespace ConfKeys
     {
         const char* FieldOfViewNumber = "fieldOfViewNumber";
-        const char* HeightOfStation = "heightOfStation";
+//      const char* HeightOfStation = "heightOfStation";
         const char* ScanStart = "scanStart";
         const char* ScanStep = "scanStep";
     }  // namespace ConfKeys
 
     const std::vector<std::string> FieldNames = {ConfKeys::FieldOfViewNumber,
-                                                 ConfKeys::HeightOfStation,
+//                                               ConfKeys::HeightOfStation,
                                                 };
 }  // namespace
 
@@ -65,7 +65,7 @@ namespace Ingester
         }
 
         // Read the variables from the map
-        auto& satghtObj = map.at(getExportKey(ConfKeys::HeightOfStation));
+//      auto& satghtObj = map.at(getExportKey(ConfKeys::HeightOfStation));
         auto& fovnObj = map.at(getExportKey(ConfKeys::FieldOfViewNumber));
 
         // Declare and initialize scanline array

@@ -56,7 +56,6 @@ observations:
           sensorScanAngle:
             sensorScanAngle:
               fieldOfViewNumber: "*/FOVN"
-              heightOfStation: "*/HMSL"
               scanStart: -52.725
               scanStep: 1.110 
 
@@ -64,7 +63,8 @@ observations:
             query: "*/ATMSCH/CHNM"
 
           # ObsValue
-          # Remapped Brightness Temperature
+          # Remapped Brightness Temperature (TMBR)
+          # Remapped Antenna Temperature (TMANT)
           remappedBT:
             remappedBrightnessTemperature:
               fieldOfViewNumber: "*/FOVN"
@@ -88,7 +88,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/gdas.t00z.atms_{splits/satId}_remap.tm00.nc"
+      obsdataout: "./testrun/gdas.t00z.atms_{splits/satId}_tb_remap.tm00.nc"
 
       dimensions:
         - name: Channel
@@ -173,7 +173,7 @@ observations:
           longName: "Sensor Channel Number"
 
         # ObsValue
-        # Remapped Brightness Temperature
+        # Remapped Brightness Temperature (Tb)
         - name: "ObsValue/brightnessTemperature"
           source: variables/remappedBT
           longName: "3-by-3 Averaged Brightness Temperature"

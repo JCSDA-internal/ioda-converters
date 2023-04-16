@@ -204,7 +204,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/gdas.t12z.acft_profiles.prepbufr
     testinput/bufr_ncep_snow_adpsfc.yaml
     testinput/bufr_read_2_dim_blocks.yaml
-    testinput/bufr_ncep_1bamua.yaml
+    testinput/bufr_ncep_1bamua_ta.yaml
     testinput/bufr_ncep_1bamua_n15.yaml
     testinput/bufr_ncep_1bmhs.yaml
     testinput/bufr_ncep_esamua.yaml
@@ -222,6 +222,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_ncep_mtiasi.yaml
     testinput/bufr_ncep_atms.yaml
     testinput/bufr_ncep_atms_remap.yaml
+    testinput/bufr_ncep_atms_ta_remap.yaml
     testinput/bufr_simple_groupby.yaml
     testinput/bufr_empty_fields.yaml
     testinput/bufr_sfcshp.yaml
@@ -267,10 +268,10 @@ if( iodaconv_bufr_ENABLED )
     testoutput/gdas.t18z.1bmhs.tm00.filtering.nc
     testoutput/gdas.t18z.1bmhs.tm00.15.seven.split.nc
     testoutput/gdas.t18z.1bmhs.tm00.15.7.filter_split.nc
-    testoutput/gdas.t12z.1bamua.noaa-15.tm00.nc
-    testoutput/gdas.t12z.1bamua.metop-c.tm00.nc
+    testoutput/gdas.t12z.amsua_n15.tm00.nc
+    testoutput/gdas.t12z.amsua_metop-c_ta.tm00.nc
     testoutput/gdas.t00z.atms_n20.tm00.nc
-    testoutput/gdas.t12z.esamua.noaa-18.tm00.nc
+    testoutput/gdas.t12z.esamua_n18.tm00.nc
     testoutput/gdas.t12z.1bmhs.metop-b.tm00.nc
     testoutput/gdas.t12z.esmhs.noaa-19.tm00.nc
     testoutput/gdas.t12z.adpsfc.prepbufr.nc
@@ -1237,8 +1238,8 @@ if(iodaconv_bufr_ENABLED)
                     COMMAND bash
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
-                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_1bamua.yaml"
-                            gdas.t12z.1bamua.metop-c.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_1bamua_ta.yaml"
+                            gdas.t12z.amsua_metop-c_ta.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_1bamua2ioda_n15
@@ -1247,7 +1248,7 @@ if(iodaconv_bufr_ENABLED)
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_1bamua_n15.yaml"
-                            gdas.t12z.1bamua.noaa-15.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                            gdas.t12z.amsua_n15.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_esamua2ioda
@@ -1256,7 +1257,7 @@ if(iodaconv_bufr_ENABLED)
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_esamua.yaml"
-                            gdas.t12z.esamua.noaa-18.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                            gdas.t12z.esamua_n18.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_1bmhs2ioda
