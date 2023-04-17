@@ -1742,10 +1742,8 @@ class Ozone(BaseGSI):
                 LocVars.append(ncv)
 
         nlocs = self.nobs
-#       vname = "integrated_layer_ozone_in_air"
         vname = "ozoneTotal"
         if (self.sensor in oz_lay_sensors):
-#           vname = "mole_fraction_of_ozone_in_air"
             vname = "ozoneLayer"
         varDict[vname]['valKey'] = vname, iconv.OvalName()
         varDict[vname]['errKey'] = vname, iconv.OerrName()
