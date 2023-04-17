@@ -8,13 +8,15 @@
 
 import os
 from collections import defaultdict, OrderedDict
-from lib_python.orddicts import DefaultOrderedDict
+#from lib_python.orddicts import DefaultOrderedDict
+from orddicts import DefaultOrderedDict
 
 import numpy as np
 import datetime as dt
 import netCDF4 as nc
 
-import lib_python.ioda_conv_engines as iconv
+#import lib_python.ioda_conv_engines as iconv
+import ioda_conv_engines as iconv
 
 __ALL__ = ['conv_platforms']
 
@@ -141,7 +143,7 @@ all_LocKeyList = {
     'BottomLevelPressure': ('bottom_level_pressure', 'float'),
     'Total_Ozone_Error_Flag': ('total_ozone_error_flag', 'float'),
     'Profile_Ozone_Error_Flag': ('profile_ozone_error_flag', 'float'),
-    'Algorithm_Flag_For_Best_Ozone':('bestOzoneAlgorithmFlag', 'float'),  #emily
+    'Algorithm_Flag_For_Best_Ozone':('bestOzoneAlgorithmFlag', 'float'),
     'XoverR': ('radar_azimuth', 'float'),
     'YoverR': ('radar_tilt', 'float'),
     'ZoverR': ('radar_dir3', 'float'),
@@ -157,8 +159,8 @@ all_LocKeyList = {
     'wind_computation_method': ('windComputationMethod', 'integer'),
     'satellite_zenith_angle': ('satelliteZenithAngle', 'float'),
     'satellite_identifier': ('satelliteIdentifier', 'integer'),
-#    'QI_without_forecast_info': ('qualityInformationWithoutForecast', 'integer'),
-#    'QI_with_forecast_info': ('qualityInformationWithForecast', 'integer'),
+#   'QI_without_forecast_info': ('qualityInformationWithoutForecast', 'integer'),
+#   'QI_with_forecast_info': ('qualityInformationWithForecast', 'integer'),
     'QI_without_forecast_info': ('qualityInformationWithoutForecast', 'float'),
     'QI_with_forecast_info': ('qualityInformationWithForecast', 'float'),
     'expected_error': ('expectedError', 'float'),
@@ -208,7 +210,7 @@ gsi_add_vars_allsky = {
     'Nonlinear_QC_Rel_Wgt': 'GsiQCWeight',
     'Errinv_Adjust': 'GsiAdjustObsError',
     'Errinv_Final': 'GsiFinalObsError',
-    'TotalBias': 'GsiObsBias',     #emily
+    'TotalBias': 'GsiObsBias',
     'Forecast_unadjusted': 'GsiHofX',
     'Forecast_adjusted': 'GsiHofXBc',
     'Forecast_unadjusted': 'GsiHofX',
@@ -245,7 +247,7 @@ gsi_add_vars = {
     'Obs_Minus_Forecast_unadjusted': 'GsiHofX',
     'Forecast_adjusted': 'GsiHofXBc',
     'Forecast_unadjusted': 'GsiHofX',
-    'TotalBias': 'GsiObsBias',     #emily
+    'TotalBias': 'GsiObsBias',
     'Inverse_Observation_Error': 'GsiFinalObsError',
     'Input_Observation_Error': 'GsiInputObsError',
     'Bias_Correction': 'GsiBc',
@@ -828,11 +830,8 @@ class Conv(BaseGSI):
                 print(self.obstype + " is not currently supported. Exiting.")
                 return
         # loop through obsvariables and platforms to do processing
-        print('emily checking self.obsvars = ', self.obsvars)
-        print('emily checking platforms = ', platforms)
         for v in self.obsvars:
             for p in platforms:
-                print('emily checking v, p = ', v, p)
                 # set up a NcWriter class
                 outname = OutDir + '/' + p + '_' + v + '_obs_' + \
                     self.validtime.strftime("%Y%m%d%H") + '.nc4'
@@ -846,7 +845,6 @@ class Conv(BaseGSI):
                     if (os.path.exists(outname)):
                         print("File exists. Skipping and not overwriting: %s" % outname)
                         continue
-                print('emily checking outname = ', outname)
 
                 LocKeyList = []
                 TestKeyList = []
@@ -856,7 +854,6 @@ class Conv(BaseGSI):
                 outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
                 varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
                 test_fields_ = test_fields_conv
-                print('emily checking: list of location variable ...  ', self.df.variables)
                 # get list of location variable for this var/platform
                 for ncv in self.df.variables:
                     if ncv in all_LocKeyList:
@@ -867,18 +864,14 @@ class Conv(BaseGSI):
                     if ncv in test_fields_:
                         TestKeyList.append(test_fields_[ncv])
                         TestVars.append(ncv)
-                print('emily checking: grabobsidx to process ...  ')
                 # grab obs to process
                 idx = grabobsidx(self.df, p, v)
-                print('emily checking: grabobsidx to process ... np.sum(idx) ', np.sum(idx))
                 if (np.sum(idx) == 0):
                     print("No matching observations for Platform:%s Var:%s" % (p, v))
                     continue
                 print("Platform:%s Var:%s #Obs:%d" % (p, v, np.sum(idx)))
 
                 outvars = conv_varnames[v]
-                print('emily checking: v =  ', v)
-                print('emily checking: outvars =  ', outvars)
                 for value in outvars:
                     varDict[value]['valKey'] = value, iconv.OvalName()
                     varDict[value]['errKey'] = value, iconv.OerrName()
@@ -1740,10 +1733,10 @@ class Ozone(BaseGSI):
 
         nlocs = self.nobs
 #       vname = "integrated_layer_ozone_in_air"
-        vname = "ozoneTotal"   #emily
+        vname = "ozoneTotal"
         if (self.sensor in oz_lay_sensors):
 #           vname = "mole_fraction_of_ozone_in_air"
-            vname = "ozoneTotal"
+            vname = "ozoneLayer"
         varDict[vname]['valKey'] = vname, iconv.OvalName()
         varDict[vname]['errKey'] = vname, iconv.OerrName()
         varDict[vname]['qcKey'] = vname, iconv.OqcName()
