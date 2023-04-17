@@ -284,6 +284,25 @@ namespace bufr {
 
             return nullptr;
         }
+
+        /// \brief Get the dimensioning parent of this node.
+        /// \return The dimensioning parent of this node.
+        std::shared_ptr<BufrNode> getDimensionParent()
+        {
+            if (!parent.expired())
+            {
+                if (parent.lock()->isDimensioningNode())
+                {
+                    return parent.lock();
+                }
+                else
+                {
+                    return parent.lock()->getDimensionParent();
+                }
+            }
+
+            return nullptr;
+        }
     };
 
     typedef std::vector<std::shared_ptr<Ingester::bufr::BufrNode>> BufrNodeVector;

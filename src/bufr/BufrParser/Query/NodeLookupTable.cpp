@@ -76,23 +76,24 @@ namespace bufr {
 
     void NodeLookupTable::addData(const Targets &targets, LookupTable &lookup) const
     {
-        std::unordered_set<size_t> validNodeIds;
-        validNodeIds.reserve(targets.size());
+        const auto startIdx = dataProvider_->getInode();
+        auto mask = std::vector<char>  // use a char array for performance (bool vectors are slow)
+            (dataProvider_->getIsc(dataProvider_->getInode()) - startIdx, false);
 
         // Reserve space for the data in the lookup table by summing the counts for each node.
         for (const auto& target : targets)
         {
             if (target->nodeIdx == 0) { continue; }
             const auto &path = target->path.back();
-            lookup[target->nodeIdx].data.reserve(sum(lookup[path.parentNodeId].counts));
-            validNodeIds.insert(target->nodeIdx);
+
+            lookup[target->nodeIdx].data.reserve(sum(lookup[path.parentDimensionNodeId].counts));
+            mask[target->nodeIdx - startIdx] = true;
         }
 
         for (size_t cursor = 1; cursor <= dataProvider_->getNVal(); ++cursor)
         {
             const auto nodeId = dataProvider_->getInv(cursor);
-
-            if (validNodeIds.find(nodeId) != validNodeIds.end())
+            if (mask[nodeId - startIdx])
             {
                 lookup[nodeId].data.push_back(dataProvider_->getVal(cursor));
             }

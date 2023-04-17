@@ -34,6 +34,7 @@ namespace bufr {
         std::shared_ptr<QueryComponent> queryComponent;
         size_t nodeId;
         size_t parentNodeId;
+        size_t parentDimensionNodeId;
         size_t fixedRepeatCount;
 
         /// \brief Check if this component adds a dimension to the data.

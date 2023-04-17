@@ -110,6 +110,7 @@ namespace bufr
             path[pathIdx].queryComponent = foundQuery.subset;
             path[pathIdx].nodeId = table.getRoot()->nodeIdx;
             path[pathIdx].parentNodeId = 0;
+            path[pathIdx].parentDimensionNodeId = 0;
             path[pathIdx].setType(Typ::Subset);
             pathIdx++;
 
@@ -119,6 +120,8 @@ namespace bufr
                 path[pathIdx].queryComponent = foundQuery.path[nodeIdx - 1];
                 path[pathIdx].nodeId = nodes[nodeIdx]->nodeIdx;
                 path[pathIdx].parentNodeId = nodes[nodeIdx]->getParent()->nodeIdx;
+                path[pathIdx].parentDimensionNodeId =
+                    nodes[nodeIdx]->getDimensionParent()->nodeIdx;
                 path[pathIdx].setType(nodes[nodeIdx]->type);
                 path[pathIdx].fixedRepeatCount = nodes[nodeIdx]->fixedRepCount;
                 pathIdx++;
