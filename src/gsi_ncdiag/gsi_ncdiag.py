@@ -8,14 +8,12 @@
 
 import os
 from collections import defaultdict, OrderedDict
-#from lib_python.orddicts import DefaultOrderedDict
 from orddicts import DefaultOrderedDict
 
 import numpy as np
 import datetime as dt
 import netCDF4 as nc
 
-#import lib_python.ioda_conv_engines as iconv
 import ioda_conv_engines as iconv
 
 __ALL__ = ['conv_platforms']
@@ -109,27 +107,37 @@ wmo_instid = {
 # LocKeyList = { 'gsiname':('IODAname','dtype')}
 all_LocKeyList = {
     'Station_ID': ('stationIdentification', 'string'),
-    'Time': ('dateTime', 'string'),
-    'time': ('time', 'string'),
+    'Time': ('dateTime', 'string'), 
+    'time': ('time', 'string'),   
     'ascending_flag': ('satelliteAscendingFlag', 'integer'),
     'earth_radius_of_curvature': ('earthRadiusCurvature', 'float'),
     'reference_sat_id': ('satelliteTransmitterId', 'integer'),
-    'occulting_sat_id': ('satelliteIdentifier', 'integer'),
-    'record_number': ('sequenceNumber', 'integer'),
+    'occulting_sat_id': ('satelliteIdentifier', 'integer'),  
+    'Observation_Subtype': ('sequenceNumber', 'integer'),
     'geoid_height_above_reference_ellipsoid': ('geoidUndulation', 'float'),
-    'gnss_sat_class': ('satelliteConstellationRO', 'string'),
-    'impact_height': ('impactHeightRO', 'float'),
+    'gnss_sat_class': ('satelliteConstellationRO', 'string'), 
+    'impact_height': ('impactHeightRO', 'float'), 
     'impact_parameter': ('impactParameterRO', 'float'),
     'Latitude': ('latitude', 'float'),
     'Longitude': ('longitude', 'float'),
     'Station_Elevation': ('stationElevation', 'float'),
     'Pressure': ('pressure', 'float'),
-    'Height': ('height', 'float'),
+    'Height': ('height', 'float'),                  
+    'Impact_Height': ('impactHeightRO', 'float'),   
+    'Observation_Type': ('satelliteIdentifier', 'integer'),
+    # xuanli GPSRO 
+    'height': ('height', 'float'),                  
+    'qfro': ('qualityFlags', 'integer'),
+    'pccf': ('pccf', 'float'),
+    'occulting_sat': ('satelliteInstrument', 'integer'),  
+    'Sensor_Azimuth_Angle': ('sensorAzimuthAngle', 'float'),
+    'Sat_Constellation': ('satelliteConstellationRO', 'integer'),
+    'process_center': ('dataProviderOrigin', 'integer'),
+     # end GPSRO
     'Elevation': ('heightOfSurface', 'float'),
     'Obs_Time': ('dateTime', 'string'),
     'Scan_Position': ('sensorScanPosition', 'float'),
     'Sat_Zenith_Angle': ('sensorZenithAngle', 'float'),
-    'Sat_Azimuth_Angle': ('sensorAzimuthAngle', 'float'),
     'Sol_Zenith_Angle': ('solarZenithAngle', 'float'),
     'Sol_Azimuth_Angle': ('solarAzimuthAngle', 'float'),
     'Scan_Angle': ('sensorViewAngle', 'float'),
@@ -387,6 +395,8 @@ geovals_vars = {
     'geopotential_height': 'geopotential_height',
     'geometric_height': 'geometric_height',
     'height': 'height_above_mean_sea_level',
+    # xuanli GPSRO for surface_altitude
+    'Model_Elevation': 'surface_altitude',
     'tropopause_pressure': 'tropopause_pressure',
     'surface_pressure': 'surface_pressure',
     'surface_air_pressure': 'surface_pressure',
@@ -722,6 +732,7 @@ class Conv(BaseGSI):
             print(self.obstype + " is not currently supported. Exiting.")
             return
         # loop through obsvariables and platforms to do processing
+        
         for v in self.obsvars:
             for p in platforms:
                 outname = OutDir + '/' + p + '_' + v + '_geoval_' + \
@@ -750,12 +761,8 @@ class Conv(BaseGSI):
                 print("Platform:%s Var:%s #Obs:%d" % (p, v, np.sum(idx)))
                 if v == 'bend':
                     # sort record_number
-#                   record_number = self.var('record_number')[idx]
-#                   id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
-#>>emily
-                    record_number = self.var('Station_ID')[idx]
-                    id_recordnum_sort = sorted(range(len(record_number)))
-#<<emily
+                    record_number = self.var('Observation_Subtype')[idx]
+                    id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
                     print("Sorting ", v, " obs referring to record_number")
                     # record_number_sorted = [ record_number[ksort] for ksort in id_recordnum_sort ]
 
@@ -784,10 +791,13 @@ class Conv(BaseGSI):
                         "ninterfaces", self.df.dimensions["atmosphere_pressure_coordinate_interface_arr_dim"].size)
                 dimname = "Station_ID_maxstrlen"
                 ncout.createDimension(dimname, self.df.dimensions[dimname].size)
+                
                 dimname = "Observation_Class_maxstrlen"
                 ncout.createDimension(dimname, self.df.dimensions[dimname].size)
+               
                 for var in self.df.variables.values():
                     vname = var.name
+
                     if (vname in geovals_metadata_dict.keys()) or (
                             vname in geovals_vars.keys()):
                         vdata = var[...].data
@@ -802,6 +812,7 @@ class Conv(BaseGSI):
                             else:
                                 var_out[...] = vdata[idx, ...]
                         if vname in geovals_vars.keys():
+                            
                             if (len(var.dimensions) == 1):
                                 dims = ("nlocs",)
                             else:
@@ -810,7 +821,9 @@ class Conv(BaseGSI):
                                     dims = ("nlocs", "ninterfaces")
                                 else:
                                     dims = ("nlocs", "nlevs")
+                            
                             var_out = ncout.createVariable(geovals_vars[vname], vdata.dtype, dims)
+                            
                             if v == 'bend':
                                 var_out[...] = vdata[idx_sorted, ...]
                             else:
@@ -888,12 +901,8 @@ class Conv(BaseGSI):
 
                 if v == 'bend':
                     # sort record_number
-#                    record_number = self.var('record_number')[idx]
-#                    id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
-#>>emily
-                    record_number = self.var('Station_ID')[idx]
-                    id_recordnum_sort = sorted(range(len(record_number)))
-#<<emily
+                    record_number = self.var('Observation_Subtype')[idx]
+                    id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
                     print("Sorting ", v, " obs referring to record_number")
                     # record_number_sorted = [ record_number[ksort] for ksort in id_recordnum_sort ]
                     # print('record_number:', record_number)
@@ -907,7 +916,7 @@ class Conv(BaseGSI):
                     idx_id = idx_tuples[0]
                     idx_sorted = [idx_id[ksort] for ksort in id_recordnum_sort]
                     idx = idx_sorted
-
+                     
                 for o in range(len(outvars)):
                     obsdata = self.var(conv_gsivarnames[v][o])[idx]
                     if outvars[o] == 'stationPressure':
@@ -923,6 +932,7 @@ class Conv(BaseGSI):
                     # obserr[mask] = self.FLOAT_FILL
                     # obserr[obserr > 4e8] = self.FLOAT_FILL
                     # convert surface_pressure error to Pa from hPa
+                     
                     if v == 'ps' and np.nanmin(obserr) < 10:
                         obserr = obserr * 100
                     try:
@@ -1000,7 +1010,7 @@ class Conv(BaseGSI):
                         tmp = self.var(lvar)[idx]
                         StationIDs = [bytes((b''.join(tmp[a])).decode('iso-8859-1').encode('utf8')) for a in range(len(tmp))]
                         outdata[(loc_mdata_name, 'MetaData')] = np.array(StationIDs, dtype=object)
-                    elif lvar == 'Time' or lvar == 'time':  # need to process into time stamp strings #"%Y-%m-%dT%H:%M:%SZ"
+                    elif (lvar == 'Time') or (lvar == 'time'):  # need to process into time stamp strings #"%Y-%m-%dT%H:%M:%SZ"
                         tmp = self.var(lvar)[idx]
                         obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                         obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
