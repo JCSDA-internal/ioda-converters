@@ -6,8 +6,8 @@ import argparse
 import ioda_obs_space as ios
 from collections import defaultdict, OrderedDict
 
-import lib_python.ioda_conv_engines as iconv
-from lib_python.orddicts import DefaultOrderedDict
+import ioda_conv_engines as iconv
+from orddicts import DefaultOrderedDict
 
 # these are the variables that can be used to match up locations
 loc_vars = [
