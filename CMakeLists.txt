@@ -158,7 +158,7 @@ add_subdirectory( src )
 add_subdirectory( tools )
 add_subdirectory( test )
 add_subdirectory( doc )
-
+add_subdirectory( share )
 # Package Config
 
 ecbuild_install_project( NAME ${PROJECT_NAME} )
