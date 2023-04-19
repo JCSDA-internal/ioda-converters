@@ -85,7 +85,6 @@ def main(args):
    # pass parameters to the IODA writer
     VarDims = {
         'bendingAngle': ['Location'],
-        'atmosphericRefractivity': ['Location']
     }
 
     # write them out
@@ -139,15 +138,6 @@ def main(args):
     VarAttrs[('bendingAngle', 'ObsValue')]['_FillValue'] = float_missing_value
     VarAttrs[('bendingAngle', 'ObsValue')]['valid_range'] = '0-0.008'
     VarAttrs[('bendingAngle', 'ObsValue')]['longname'] = 'Bending Angle'
-
-    VarAttrs[('height',  'MetaData')]['units'] = 'meter'
-    VarAttrs[('height',  'MetaData')]['_FillValue'] = float_missing_value
-    VarAttrs[('height',  'MetaData')]['longname'] = 'Geometric altitude'
-
-    VarAttrs[('atmosphericRefractivity', 'ObsValue')]['units'] = 'N'
-    VarAttrs[('atmosphericRefractivity', 'ObsValue')]['_FillValue'] = float_missing_value
-    VarAttrs[('atmosphericRefractivity', 'ObsValue')]['valid_range'] = '0-500'
-    VarAttrs[('atmosphericRefractivity', 'ObsValue')]['longname'] = 'Atmospheric refractivity'
 
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
@@ -255,14 +245,12 @@ def get_opendata(f, add_qc, record_number=1):
     altitu = np.array(f['altitude'], dtype=ioda_float_type)
     setting = np.array(f['setting'], dtype=ioda_int_type)
     bang = np.array(f['bendingAngle'], dtype=ioda_float_type)
-    ref = np.array(f['refractivity'], dtype=ioda_float_type)
     obs_data[('latitude', 'MetaData')] = np.float32(assign_values(lats))
     obs_data[('longitude', 'MetaData')] = np.float32(assign_values(lons))
     obs_data[('height', 'MetaData')] = np.float32(assign_values(altitu))
     obs_data[('impactParameterRO', "MetaData")] = np.float32(assign_values(impact))
     obs_data[('sensorAzimuthAngle', "MetaData")] = np.float32(assign_values(azim))
     obs_data[('bendingAngle', "ObsValue")] = np.float32(assign_values(bang))
-    obs_data[('atmosphericRefractivity', "ObsValue")] = np.float32(assign_values(ref))
 
 #   switch ascending/descending values following IODA defination
     if setting == 1:
