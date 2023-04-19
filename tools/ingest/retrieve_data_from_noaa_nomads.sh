@@ -21,7 +21,6 @@
 
 nomads_address='https://nomads.ncep.noaa.gov/pub/data/nccf/com/gfs/prod'
 ftpprd_address='https://ftpprd.ncep.noaa.gov/data/nccf/com/obsproc/prod'
-# https://ftpprd.ncep.noaa.gov/data/nccf/com/obsproc/prod/gdas.20230419/
 
 usage="usage bash ${0} yyyymmddhh [user_input_data_type]"
 example="example:  bash ${0} 2021091500 [adpupa]"
