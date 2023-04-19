@@ -21,6 +21,7 @@
 
 nomads_address='https://nomads.ncep.noaa.gov/pub/data/nccf/com/gfs/prod'
 ftpprd_address='https://ftpprd.ncep.noaa.gov/data/nccf/com/obsproc/prod'
+# https://ftpprd.ncep.noaa.gov/data/nccf/com/obsproc/prod/gdas.20230419/
 
 usage="usage bash ${0} yyyymmddhh [user_input_data_type]"
 example="example:  bash ${0} 2021091500 [adpupa]"
@@ -63,12 +64,17 @@ get_files() {
         # retrieve the files
         gfile=${nomads_address}/${data_cut}.${dtg:0:8}/${dtg:8:2}/atmos/${data_cut}.t${dtg:8:2}z.${atype}.tm00.bufr_d
         nfile=${nomads_address}/${data_cut}.${dtg:0:8}/${dtg:8:2}/atmos/${data_cut}.t${dtg:8:2}z.${atype}.tm00.bufr_d.nr
-        pfile=${ftpprd_address}/${data_cut}.${dtg:0:8}/${data_cut}.t${dtg:8:2}z.${atype}.tm00.bufr_d.nr
+        pfile=${ftpprd_address}/${data_cut}.${dtg:0:8}/${data_cut}.t${dtg:8:2}z.${atype}.tm00.bufr_d
+        qfile=${ftpprd_address}/${data_cut}.${dtg:0:8}/${data_cut}.t${dtg:8:2}z.${atype}.tm00.bufr_d.nr
         # check both "normal" name and one with restricted data stripped ( appended with "nr" )
-        for afile in ${gfile} ${nfile} ${pfile}; do
+        for afile in ${gfile} ${nfile} ${pfile} ${qfile}; do
             out_file=${afile##*/}
-            # optional rename
-            # out_file="${out_file%.bufr_d*}.bfr"
+            # use common name for all data sources
+            out_file="gdas.t${dtg:8:2}.t${dtg:8:2}z.${atype}.tm00.bfr"
+            if [[ -s ${out_file} ]]; then
+                # echo "  ... output exists skipping: ${afile}"
+                continue
+            fi
             # does the file exist on the server
             if curl --output /dev/null --silent --head --fail "${afile}"; then
                 wget -nc ${afile} -O ${out_file}
