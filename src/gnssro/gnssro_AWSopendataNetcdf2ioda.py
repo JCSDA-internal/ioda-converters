@@ -237,29 +237,91 @@ def get_opendata(f, add_qc, record_number=1):
 
     profile_meta_data = get_meta_opendata(f)
     obs_data={}
-    lats = np.array(f['latitude'], dtype=ioda_float_type)
-    lons = np.array(f['longitude'], dtype=ioda_float_type)
-    local_nlocs = len(lats)
-    azim = np.array(f['orientation'], dtype=ioda_float_type)
-    impact = np.array(f['impactParameter'], dtype=ioda_float_type)
-    altitu = np.array(f['altitude'], dtype=ioda_float_type)
-    setting = np.array(f['setting'], dtype=ioda_int_type)
-    bang = np.array(f['bendingAngle'], dtype=ioda_float_type)
-    obs_data[('latitude', 'MetaData')] = np.float32(assign_values(lats))
-    obs_data[('longitude', 'MetaData')] = np.float32(assign_values(lons))
-    obs_data[('height', 'MetaData')] = np.float32(assign_values(altitu))
-    obs_data[('impactParameterRO', "MetaData")] = np.float32(assign_values(impact))
-    obs_data[('sensorAzimuthAngle', "MetaData")] = np.float32(assign_values(azim))
-    obs_data[('bendingAngle', "ObsValue")] = np.float32(assign_values(bang))
 
-#   switch ascending/descending values following IODA defination
+    if f['impactParameter'][0] > f['impactParameter'][-1]:
+        lats_full = np.array(f['latitude'], dtype=ioda_float_type)[::-1]
+        lons_full = np.array(f['longitude'], dtype=ioda_float_type)[::-1]
+        azim_full = np.array(f['orientation'], dtype=ioda_float_type)[::-1]
+        impact_full = np.array(f['impactParameter'], dtype=ioda_float_type)[::-1]
+        bang_full = np.array(f['bendingAngle'], dtype=ioda_float_type)[::-1]
+
+    else:
+        lats_full = np.array(f['latitude'], dtype=ioda_float_type)
+        lons_full = np.array(f['longitude'], dtype=ioda_float_type)
+        azim_full = np.array(f['orientation'], dtype=ioda_float_type)
+        impact_full = np.array(f['impactParameter'], dtype=ioda_float_type)
+        bang_full = np.array(f['bendingAngle'], dtype=ioda_float_type)
+
+    setting = np.array(f['setting'], dtype=ioda_int_type)
+
+    # Compute impact height
+    impact_height_full = \
+        f['impactParameter'] - \
+        profile_meta_data['geoidUndulation'] - \
+        profile_meta_data['earthRadiusCurvature']
+
+    impact_height_full = impact_height_full[::-1]
+    used = np.zeros(len(impact_height_full))
+
+    impact_height = []
+    impact = []
+    lats = []
+    lons = []
+    azim = []
+    bang = []
+
+    interval = 120
+    layer_height = impact_height_full[0] + interval
+    step = 180/(40000 - impact_height_full[0])
+    ind = 0
+    while layer_height <= 40000:
+        diffs = abs(impact_height_full - layer_height)
+        min_loc = np.nanargmin(diffs)
+        if used[min_loc] == 1: min_loc += 1
+
+        impact_height.append(impact_height_full[min_loc])
+        impact.append(impact_full[min_loc])
+        bang.append(bang_full[min_loc])
+        lats.append(lats_full[min_loc])
+        lons.append(lons_full[min_loc])
+        azim.append(azim_full[min_loc])
+
+        used[:min_loc] = 1
+        ind += 1
+        interval += ind*step
+        layer_height = impact_height[ind-1] + interval
+
+    while layer_height <= 60000:
+        diffs = abs(impact_height_full - layer_height)
+        min_loc = np.nanargmin(diffs)
+        if used[min_loc] == 1: min_loc += 1
+
+        impact_height.append(impact_height_full[min_loc])
+        impact.append(impact_full[min_loc])
+        bang.append(bang_full[min_loc])
+        lats.append(lats_full[min_loc])
+        lons.append(lons_full[min_loc])
+        azim.append(azim_full[min_loc])
+
+        used[:min_loc] = 1
+        ind += 1
+        layer_height = impact_height[ind-1] + interval
+
+    obs_data[('impactHeightRO', 'MetaData')] = np.float32(assign_values(np.asarray(impact_height, dtype=ioda_float_type)))
+    obs_data[('latitude', 'MetaData')] = np.float32(assign_values(np.asarray(lats, dtype=ioda_float_type)))
+    obs_data[('longitude', 'MetaData')] = np.float32(assign_values(np.asarray(lons, dtype=ioda_float_type)))
+    obs_data[('impactParameterRO', "MetaData")] = np.float32(assign_values(np.asarray(impact, dtype=ioda_float_type)))
+    obs_data[('sensorAzimuthAngle', "MetaData")] = np.float32(assign_values(np.asarray(azim, dtype=ioda_float_type)))
+    obs_data[('bendingAngle', "ObsValue")] = np.float32(assign_values(np.asarray(bang, dtype=ioda_float_type)))
+
+    local_nlocs = len(lats)
+    #   switch ascending/descending values following IODA defination
     if setting == 1:
         obs_data[('satelliteAscendingFlag', "MetaData")] = np.array(np.repeat(0, local_nlocs), dtype=ioda_int_type)
     elif setting == 0: 
         obs_data[('satelliteAscendingFlag', "MetaData")] = np.array(np.repeat(1, local_nlocs), dtype=ioda_int_type)
     else:
         obs_data[('satelliteAscendingFlag', "MetaData")] = np.array(np.repeat(int_missing_value, local_nlocs), dtype=ioda_int_type)
-
 
     meta_data_types = def_meta_types()
 
@@ -274,12 +336,6 @@ def get_opendata(f, add_qc, record_number=1):
             print('do not know type')
             sys.exit() 
 
-    # Compute impact height
-    obs_data[('impactHeightRO', 'MetaData')] = \
-        obs_data[('impactParameterRO', 'MetaData')] - \
-        obs_data[('geoidUndulation', 'MetaData')] - \
-        obs_data[('earthRadiusCurvature', 'MetaData')]
-
     # set record number (multi file procesing will change this)
     if record_number is None:
         nrec = 1
@@ -288,8 +344,8 @@ def get_opendata(f, add_qc, record_number=1):
     obs_data[('sequenceNumber', 'MetaData')] = np.array(np.repeat(nrec, local_nlocs), dtype=ioda_int_type)
 
     if add_qc:
-        good = quality_control(profile_meta_data, altitu, lats, lons)
-        if len(lats[good]) == 0: 
+        good = quality_control(profile_meta_data, np.array(impact_height,float), np.array(lats,float), np.array(lons,float) )
+        if len(good) == 0:
             return{}
             # exit if entire profile is missing
         for k in obs_data.keys():
@@ -332,7 +388,7 @@ def get_meta_opendata(f):
 def quality_control(profile_meta_data, heights, lats, lons):
     print('Performing QC Checks')
 
-    good = (heights > 0.) & (heights < 100000.) & (abs(lats) <= 90.) & (abs(lons) <= 360.)
+    good = (heights > 0.) & (heights < 100000.) & (abs(lats) <= 90.)  & (abs(lons) <= 360.)
     # bad radius or large geoid undulation
     if (profile_meta_data['earthRadiusCurvature'] > 6450000.) or (profile_meta_data['earthRadiusCurvature'] < 6250000.) or \
        (abs(profile_meta_data['geoidUndulation']) > 200): 
