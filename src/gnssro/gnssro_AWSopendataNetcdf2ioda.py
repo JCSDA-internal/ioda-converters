@@ -27,7 +27,7 @@ from lib_python.def_jedi_utils import concat_obs_dict
 ioda_int_type = 'int32'
 ioda_float_type = 'float'
 ioda_float32_type = np.float32
-ioda_byte_type    ='bytes'
+ioda_byte_type = 'bytes'
 float_missing_value = nc.default_fillvals['f4']
 int_missing_value = nc.default_fillvals['i4']
 long_missing_value = nc.default_fillvals['i8']
@@ -39,6 +39,7 @@ locationKeyList = [
     ("longitude", 'float'),
     ("datetime", "np.int64")
 ]
+
 
 def main(args):
 
@@ -54,15 +55,15 @@ def main(args):
     # normal serial loop
     record_number = args.recordnumber
     for input_file in args.input:
-        file_obs_data = read_input([input_file, record_number],add_qc=qc)
-        timeoff =  file_obs_data[('dateTime', 'MetaData')][0] - round((args.date-epoch).total_seconds())
+        file_obs_data = read_input([input_file, record_number], add_qc=qc)
+        timeoff = file_obs_data[('dateTime', 'MetaData')][0] - round((args.date-epoch).total_seconds())
 
-        if not file_obs_data: 
+        if not file_obs_data:
             print("INFO: non-nominal file skipping")
             continue
-        if timeoff  < -args.window*3600 or timeoff >= args.window*3600 :
-           print("INFO: outside time window file skipping")
-           continue 
+        if timeoff < -args.window*3600 or timeoff >= args.window*3600 :
+            print("INFO: outside time window file skipping")
+            continue
 
         record_number += 1
         if obs_data:
@@ -76,13 +77,13 @@ def main(args):
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
-    GlobalAttrs = {} 
+    GlobalAttrs = {}
     GlobalAttrs['datetimeReference'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
     date_time_int32 = np.array(int(args.date.strftime("%Y%m%d%H")), dtype='int32')
     GlobalAttrs['converter'] = os.path.basename(__file__)
     GlobalAttrs['source data'] = 'https://registry.opendata.aws/gnss-ro-opendata'
- 
-   # pass parameters to the IODA writer
+
+    # pass parameters to the IODA writer
     VarDims = {
         'bendingAngle': ['Location'],
     }
@@ -93,13 +94,13 @@ def main(args):
     meta_data_types = def_meta_types()
 
     for k, v in meta_data_types.items():
-        locationKeyList.append((k, v)) 
+        locationKeyList.append((k, v))
 
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     VarAttrs[('dateTime', 'MetaData')]['longname'] = 'seconds since 1970-01-01T00:00:00Z'
-    VarAttrs[('latitude',  'MetaData')]['_FillValue'] = float_missing_value
+    VarAttrs[('latitude', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('latitude', 'MetaData')]['units'] = 'degree_north'
     VarAttrs[('longitude', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('longitude', 'MetaData')]['units'] = 'degree_east'
@@ -107,7 +108,7 @@ def main(args):
     VarAttrs[('geoidUndulation', 'MetaData')]['units'] = 'm'
     VarAttrs[('geoidUndulation', 'MetaData')]['longname'] = 'undulation height above WGS-84 ellipsoid'
     VarAttrs[('earthRadiusCurvature', 'MetaData')]['units'] = 'm'
-    VarAttrs[('earthRadiusCurvature', 'MetaData')]['longname'] = 'Earth’s local radius of curvature' 
+    VarAttrs[('earthRadiusCurvature', 'MetaData')]['longname'] = 'Earth’s local radius of curvature'
 
     VarAttrs[('sensorAzimuthAngle', 'MetaData')]['units'] = 'degree'
     VarAttrs[('sensorAzimuthAngle', 'MetaData')]['longname'] = 'The direction of the occultation ray, transmitter to receiver,\
@@ -167,6 +168,7 @@ def read_input(input_file_and_record, add_qc):
     f.close()
     return obs_data
 
+
 # assign satellite identifier  
 def get_WMO_satellite_ID(filename):
     os.path.basename(filename)
@@ -204,39 +206,42 @@ def get_WMO_satellite_ID(filename):
         WMO_sat_ID = 745
     else:
         print('unknown satellite id')
-        sys.exit() 
+        sys.exit()
     return WMO_sat_ID
+
 
 # assign processing center originate
 def get_WMO_processcenter_ID(pid):
     if pid.lower() == 'ucar':
-       WMO_processcenter_ID=60 
+        WMO_processcenter_ID = 60
     elif pid.lower() == 'dmi':
-       WMO_processcenter_ID=94
+        WMO_processcenter_ID = 94
     elif pid.lower() == 'gfz' or pid.lower() == 'dwd':
-       WMO_processcenter_ID=78
+        WMO_processcenter_ID = 78
     elif pid.lower() == 'romsaf' or pid.lower() == 'eumetsat':
-       WMO_processcenter_ID=254
+        WMO_processcenter_ID = 254
     else:
         print('unknown process center id')
-        sys.exit() 
+        sys.exit()
     return WMO_processcenter_ID
+
 
 # assign GNSS satellite constellation
 def get_GNSS_satellite_class_ID(pid):
     if pid.upper() == 'G':
-       satellite_class_ID=401
+        satellite_class_ID = 401
     elif pid.upper() == 'R':
-       satellite_class_ID=402
+        satellite_class_ID = 402
     else:
-        print('unknown  GNSS satellite class')
-        sys.exit()
+         print('unknown  GNSS satellite class')
+         sys.exit()
     return satellite_class_ID
+
 
 def get_opendata(f, add_qc, record_number=1):
 
     profile_meta_data = get_meta_opendata(f)
-    obs_data={}
+    obs_data = {}
 
     if f['impactParameter'][0] > f['impactParameter'][-1]:
         lats_full = np.array(f['latitude'], dtype=ioda_float_type)[::-1]
@@ -277,7 +282,8 @@ def get_opendata(f, add_qc, record_number=1):
     while layer_height <= 40000:
         diffs = abs(impact_height_full - layer_height)
         min_loc = np.nanargmin(diffs)
-        if used[min_loc] == 1: min_loc += 1
+        if used[min_loc] == 1: 
+            min_loc += 1
 
         impact_height.append(impact_height_full[min_loc])
         impact.append(impact_full[min_loc])
@@ -294,7 +300,8 @@ def get_opendata(f, add_qc, record_number=1):
     while layer_height <= 60000:
         diffs = abs(impact_height_full - layer_height)
         min_loc = np.nanargmin(diffs)
-        if used[min_loc] == 1: min_loc += 1
+        if used[min_loc] == 1: 
+            min_loc += 1
 
         impact_height.append(impact_height_full[min_loc])
         impact.append(impact_full[min_loc])
@@ -318,7 +325,7 @@ def get_opendata(f, add_qc, record_number=1):
     #   switch ascending/descending values following IODA defination
     if setting == 1:
         obs_data[('satelliteAscendingFlag', "MetaData")] = np.array(np.repeat(0, local_nlocs), dtype=ioda_int_type)
-    elif setting == 0: 
+    elif setting == 0:
         obs_data[('satelliteAscendingFlag', "MetaData")] = np.array(np.repeat(1, local_nlocs), dtype=ioda_int_type)
     else:
         obs_data[('satelliteAscendingFlag', "MetaData")] = np.array(np.repeat(int_missing_value, local_nlocs), dtype=ioda_int_type)
@@ -331,7 +338,7 @@ def get_opendata(f, add_qc, record_number=1):
         elif isinstance(v, int):
             obs_data[(k, 'MetaData')] = np.array(np.repeat(v, local_nlocs), dtype=ioda_int_type)
         elif v.dtype.kind == 'f':
-             obs_data[(k, 'MetaData')] = np.array(np.repeat(v, local_nlocs), dtype=ioda_float32_type)
+            obs_data[(k, 'MetaData')] = np.array(np.repeat(v, local_nlocs), dtype=ioda_float32_type)
         else:
             print('do not know type')
             sys.exit() 
@@ -344,7 +351,7 @@ def get_opendata(f, add_qc, record_number=1):
     obs_data[('sequenceNumber', 'MetaData')] = np.array(np.repeat(nrec, local_nlocs), dtype=ioda_int_type)
 
     if add_qc:
-        good = quality_control(profile_meta_data, np.array(impact_height,float), np.array(lats,float), np.array(lons,float) )
+        good = quality_control(profile_meta_data, np.array(impact_height, float), np.array(lats, float), np.array(lons, float))
         if len(good) == 0:
             return{}
             # exit if entire profile is missing
@@ -361,9 +368,9 @@ def get_meta_opendata(f):
     # these are the MetaData we are interested in
     profile_meta_data = {}
     for k, v in meta_data_keys.items():
-        profile_meta_data[k] = np.array(f[v],dtype=ioda_float_type)
+        profile_meta_data[k] = np.array(f[v], dtype=ioda_float_type)
 
-    year = f.attrs['year'][0] 
+    year = f.attrs['year'][0]
     month = f.attrs['month'][0]
     day = f.attrs['day'][0]
     hour = f.attrs['hour'][0]
@@ -383,15 +390,15 @@ def get_meta_opendata(f):
     satGnssclass = get_GNSS_satellite_class_ID(f.attrs['occGnss'].decode()[0])
     profile_meta_data['satelliteConstellationRO'] = satGnssclass
     return profile_meta_data
-   
+
 
 def quality_control(profile_meta_data, heights, lats, lons):
     print('Performing QC Checks')
 
-    good = (heights > 0.) & (heights < 100000.) & (abs(lats) <= 90.)  & (abs(lons) <= 360.)
+    good = (heights > 0.) & (heights < 100000.) & (abs(lats) <= 90.) & (abs(lons) <= 360.)
     # bad radius or large geoid undulation
     if (profile_meta_data['earthRadiusCurvature'] > 6450000.) or (profile_meta_data['earthRadiusCurvature'] < 6250000.) or \
-       (abs(profile_meta_data['geoidUndulation']) > 200): 
+       (abs(profile_meta_data['geoidUndulation']) > 200):
         good = []
     return good
 
@@ -403,6 +410,7 @@ def def_meta_opendata():
         "earthRadiusCurvature": 'radiusOfCurvature',
     }
     return meta_data_keys
+
 
 def def_meta_types():
 
