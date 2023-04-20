@@ -78,10 +78,11 @@ def main(args):
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
     GlobalAttrs = {}
+    GlobalAttrs['totalProfiles'] = str(record_number-1)
     GlobalAttrs['datetimeReference'] = args.date.strftime("%Y-%m-%dT%H:%M:%SZ")
     date_time_int32 = np.array(int(args.date.strftime("%Y%m%d%H")), dtype='int32')
     GlobalAttrs['converter'] = os.path.basename(__file__)
-    GlobalAttrs['source data'] = 'https://registry.opendata.aws/gnss-ro-opendata'
+    GlobalAttrs['sourceData'] = 'https://registry.opendata.aws/gnss-ro-opendata'
 
     # pass parameters to the IODA writer
     VarDims = {
