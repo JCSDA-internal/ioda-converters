@@ -61,7 +61,7 @@ def main(args):
         if not file_obs_data:
             print("INFO: non-nominal file skipping")
             continue
-        if timeoff < -args.window*3600 or timeoff >= args.window*3600 :
+        if timeoff < -args.window*3600 or timeoff >= args.window*3600:
             print("INFO: outside time window file skipping")
             continue
 
@@ -169,7 +169,7 @@ def read_input(input_file_and_record, add_qc):
     return obs_data
 
 
-# assign satellite identifier  
+# assign satellite identifier
 def get_WMO_satellite_ID(filename):
     os.path.basename(filename)
     if 'kompsat' in filename:
@@ -233,8 +233,8 @@ def get_GNSS_satellite_class_ID(pid):
     elif pid.upper() == 'R':
         satellite_class_ID = 402
     else:
-         print('unknown  GNSS satellite class')
-         sys.exit()
+        print('unknown  GNSS satellite class')
+        sys.exit()
     return satellite_class_ID
 
 
@@ -282,7 +282,7 @@ def get_opendata(f, add_qc, record_number=1):
     while layer_height <= 40000:
         diffs = abs(impact_height_full - layer_height)
         min_loc = np.nanargmin(diffs)
-        if used[min_loc] == 1: 
+        if used[min_loc] == 1:
             min_loc += 1
 
         impact_height.append(impact_height_full[min_loc])
@@ -300,7 +300,7 @@ def get_opendata(f, add_qc, record_number=1):
     while layer_height <= 60000:
         diffs = abs(impact_height_full - layer_height)
         min_loc = np.nanargmin(diffs)
-        if used[min_loc] == 1: 
+        if used[min_loc] == 1:
             min_loc += 1
 
         impact_height.append(impact_height_full[min_loc])
@@ -341,7 +341,7 @@ def get_opendata(f, add_qc, record_number=1):
             obs_data[(k, 'MetaData')] = np.array(np.repeat(v, local_nlocs), dtype=ioda_float32_type)
         else:
             print('do not know type')
-            sys.exit() 
+            sys.exit()
 
     # set record number (multi file procesing will change this)
     if record_number is None:
