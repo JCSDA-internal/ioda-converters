@@ -1,6 +1,6 @@
-================
-Ioda Converter Docs
-================
+===============
+Ioda Converters
+===============
 
 
 .. toctree::
