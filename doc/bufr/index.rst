@@ -3,4 +3,8 @@
 BUFR Query
 ===========
 
-This is a section about BUFR query.
+BUFR Query provides a simple way to extract data from BUFR files (both WMO and NCEP) via a simple
+query language.
+
+
+:doc:`bufr`
