@@ -15,9 +15,9 @@ The table part of the message describes how the bytes are layed out in the data 
 subset type (aka. Table A mnemonic). It takes the form of a tree with nested branches than can be
 repeated in arbitrary ways. The traditional (NCEPLibs-bufr) way of illustrating this is as follows:
 
-.. image:: images/NCEPLIB-table.png
+.. image:: /bufr/images/NCEPLIB-table.png
 
 Basically this is the output you get when you run the NCEPLIB_bufr gettab utility which gives you
 an overview of the subset tables you may find in a BUFR tfile. In this case the BUFR file contains
-one type of subset, **NC003010**.
+one type of subset, **NC003010**. We can think of the
 
