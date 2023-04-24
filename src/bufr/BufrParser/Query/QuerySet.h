@@ -17,7 +17,7 @@
 namespace Ingester {
 namespace bufr
 {
-    class Query;
+    struct Query;
 
     typedef std::set<std::string> Subsets;
 
