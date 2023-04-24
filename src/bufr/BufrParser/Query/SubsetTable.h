@@ -19,7 +19,7 @@
 namespace Ingester {
 namespace bufr {
 
-    class PathComponent;
+    struct PathComponent;
 
     /// \brief A node in the bufr data tree (metadata). This is a recursive data structure.
     struct BufrNode : public std::enable_shared_from_this<BufrNode>

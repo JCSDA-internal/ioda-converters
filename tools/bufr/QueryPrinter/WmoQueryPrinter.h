@@ -30,10 +30,6 @@ namespace bufr {
         ///        and reset the file pointer.
         /// \returns Vector of subset variants
         std::set<SubsetVariant> getSubsetVariants() const final;
-
-     private:
-        const int FileUnitTable1 = 13;
-        const int FileUnitTable2 = 14;
     };
 }  // namespace bufr
 }  // namespace Ingester

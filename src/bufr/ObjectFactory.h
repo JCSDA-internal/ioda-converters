@@ -28,6 +28,7 @@ namespace Ingester
         class ObjectMakerBase
         {
          public:
+            virtual ~ObjectMakerBase() {}
             /// \brief Instantiate a object instance
             /// \param args List of arguments required to construct the object
             /// \returns shared_ptr<U> (base class) for the the constructed object defined for this
@@ -45,6 +46,9 @@ namespace Ingester
             /// \param args List of arguments required to construct the object
             /// \returns shared_ptr<U> (base class) for the the constructed object defined for this
             ///          ObjectFactory.
+
+            virtual ~ObjectMaker() {}
+
             std::shared_ptr<U> make(Args... args) override
             {
                 return std::make_shared<T>(args...);

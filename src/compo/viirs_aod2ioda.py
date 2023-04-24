@@ -126,9 +126,9 @@ class AOD(object):
 
             # defined surface type and uncertainty
             if self.method == "nesdis":
-                errs = 0.00784394 + 0.219923*vals
-                errs[qcpath == 1] = 0.0550472 + 0.299558*vals[qcpath == 1]
-                errs[qcpath != 1] = 0.111431 + 0.128699*vals[qcpath != 1]
+                errs = 0.111431 + 0.128699*vals    # over land (dark)
+                errs[qcpath % 2 == 1] = 0.00784394 + 0.219923*vals[qcpath % 2 == 1]  # over ocean
+                errs[qcpath % 4 == 2] = 0.0550472 + 0.299558*vals[qcpath % 4 == 2]   # over bright land
 
             #  Write out data
             self.outdata[('latitude', metaDataName)] = np.append(self.outdata[('latitude', metaDataName)], np.array(lats, dtype=np.float32))

@@ -121,7 +121,7 @@ namespace bufr {
         {
         }
 
-        ~DataProvider() = default;
+        virtual ~DataProvider() = default;
 
         /// \brief Runs through the contents of the BUFR file. Calls the functions given as its
         ///        its running.
