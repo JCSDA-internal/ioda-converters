@@ -40,7 +40,6 @@ namespace bufr {
             {
                 if (path.isContainer())
                 {
-                    lookup[path.nodeId].counts = {};
                     lookup[path.nodeId].component = path;
                     lookup[path.nodeId].isCollected = true;
                 }
