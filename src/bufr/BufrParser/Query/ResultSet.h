@@ -21,6 +21,9 @@
 
 namespace Ingester {
 namespace bufr {
+
+    typedef std::vector<std::vector<int>> SeqCounts;
+
     /// \brief Represents a single BUFR data element (a element from one message subset). It
     /// contains both the data value(s) and the associated metadata that is used to construct the
     /// results data.
@@ -28,7 +31,7 @@ namespace bufr {
     {
         std::shared_ptr<Target> target;
         std::vector<double> data;
-        std::vector<std::vector<int>> seqCounts;
+        SeqCounts seqCounts;
     };
 
     /// \brief Container for a "row" of data (all the collected data for a message subset)., with a
@@ -127,7 +130,7 @@ namespace bufr {
                           const std::string& groupByField,
                           std::vector<double>& data,
                           std::vector<int>& dims,
-                          std::vector<std::string>& dimPaths,
+                          std::vector<Query>& dimPaths,
                           TypeInfo& info) const;
 
         /// \brief Retrieves the data for the specified target field, one row per message subset.
@@ -163,7 +166,7 @@ namespace bufr {
                                 const std::string& overrideType,
                                 const std::vector<double> data,
                                 const std::vector<int> dims,
-                                const std::vector<std::string> dimPaths) const;
+                                const std::vector<Query> dimPaths) const;
 
         /// \brief Make an appropriate DataObject for data with the TypeInfo
         /// \param info The meta data for the element.

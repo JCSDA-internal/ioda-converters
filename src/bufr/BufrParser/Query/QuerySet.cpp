@@ -8,7 +8,7 @@
 #include "QuerySet.h"
 
 #include <algorithm>
-#include <iostream>
+
 
 namespace Ingester {
 namespace bufr {
@@ -39,22 +39,18 @@ namespace bufr {
         {
             if (limitSubsets_.empty())
             {
-                if (query.subset == "*")
-                {
-                    includesAllSubsets_ = true;
-                }
-
-                presentSubsets_.insert(query.subset);
+                includesAllSubsets_ = query.subset->isAnySubset;
+                presentSubsets_.insert(query.subset->name);
             }
             else
             {
-                if (query.subset == "*")
+                if (query.subset->isAnySubset)
                 {
                     presentSubsets_ = limitSubsets_;
                 }
                 else
                 {
-                    presentSubsets_.insert(query.subset);
+                    presentSubsets_.insert(query.subset->name);
 
                     std::vector<std::string> newSubsets;
                     std::set_intersection(limitSubsets_.begin(),
@@ -102,5 +98,11 @@ namespace bufr {
 
         return names;
     }
+
+    std::vector<Query> QuerySet::queriesFor(const std::string& name) const
+    {
+        return queryMap_.at(name);
+    }
+
 }  // namespace bufr
 }  // namespace Ingester

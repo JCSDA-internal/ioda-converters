@@ -23,17 +23,13 @@ namespace bufr {
 
         /// \brief Get the query data for a specific subset variant type
         /// \param variant The subset variant
-        /// \returns Vector of SubsetTable QueryData objects
-        std::vector<QueryData> getQueries(const SubsetVariant& variant) final;
+        /// \returns Vector of BufrNode QueryData objects
+        SubsetTableType getTable(const SubsetVariant& variant) final;
 
         /// \brief Get a complete set of subsets in the data file. WARNING: using this will be slow
         ///        and reset the file pointer.
         /// \returns Vector of subset variants
         std::set<SubsetVariant> getSubsetVariants() const final;
-
-     private:
-        const int FileUnitTable1 = 13;
-        const int FileUnitTable2 = 14;
     };
 }  // namespace bufr
 }  // namespace Ingester
