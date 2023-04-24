@@ -191,6 +191,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/gdas.t12z.adpupa_nc002103.tm00.bufr_d
     testinput/bufr_mhs.yaml
     testinput/bufr_hrs.yaml
+    testinput/bufr_query_filtering.yaml
     testinput/bufr_filtering.yaml
     testinput/bufr_splitting.yaml
     testinput/bufr_filter_split.yaml
@@ -312,6 +313,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/bufr_specifying_subsets.nc
     testoutput/rrfs.t06z.lgycld.bufr.nc
     testoutput/rrfs.t06z.adpsfc.prepbufr.nc
+    testoutput/bufr_query_filtering.nc
   )
 endif()
 
@@ -1203,6 +1205,15 @@ if(iodaconv_bufr_ENABLED)
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_hrs.yaml"
                             gdas.t00z.1bhrs4.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_query_filtering
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_query_filtering.yaml"
+                    bufr_query_filtering.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_filtering

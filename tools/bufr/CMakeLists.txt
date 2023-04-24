@@ -16,6 +16,8 @@ list(APPEND _srcs
             ../../src/bufr/BufrParser/Query/QuerySet.cpp
             ../../src/bufr/BufrParser/Query/QueryParser.h
             ../../src/bufr/BufrParser/Query/QueryParser.cpp
+            ../../src/bufr/BufrParser/Query/Tokenizer.h
+            ../../src/bufr/BufrParser/Query/Tokenizer.cpp
             ../../src/bufr/BufrParser/Query/DataProvider/DataProvider.h
             ../../src/bufr/BufrParser/Query/DataProvider/DataProvider.cpp
             ../../src/bufr/BufrParser/Query/DataProvider/NcepDataProvider.h

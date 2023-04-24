@@ -14,8 +14,6 @@
 #include "eckit/exception/Exceptions.h"
 
 #include "QueryPrinter.h"
-#include "../../../src/bufr/BufrParser/Query/DataProvider/NcepDataProvider.h"
-#include "../../../src/bufr/BufrParser/Query/SubsetTable.h"
 
 namespace Ingester {
 namespace bufr {
@@ -25,28 +23,26 @@ namespace bufr {
     {
     }
 
-    std::vector<QueryData> NcepQueryPrinter::getQueries(const SubsetVariant& variant)
+    SubsetTableType NcepQueryPrinter::getTable(const SubsetVariant& variant)
     {
         if (dataProvider_->isFileOpen())
         {
             std::ostringstream errStr;
-            errStr << "Tried to call QueryPrinter::getQueries, but the file is already open!";
+            errStr << "Tried to call QueryPrinter::getTable, but the file is already open!";
             throw eckit::BadParameter(errStr.str());
         }
 
         bool finished = false;
 
-        std::vector<QueryData> queryData;
-
         dataProvider_->open();
 
+        std::shared_ptr<SubsetTable> subsetTable;
         auto& dataProvider = dataProvider_;
-        auto processSubset = [&queryData, &finished, &dataProvider]() mutable
+        auto processSubset = [&subsetTable, &finished, &dataProvider]() mutable
         {
-            queryData = SubsetTable(dataProvider).allQueryData();
+            subsetTable = std::make_shared<SubsetTable>(dataProvider);
             finished = true;
         };
-
 
         auto continueProcessing = [&finished]() -> bool
         {
@@ -60,7 +56,7 @@ namespace bufr {
 
         dataProvider_->close();
 
-        return queryData;
+        return subsetTable;
     }
 
     std::set<SubsetVariant> NcepQueryPrinter::getSubsetVariants() const
