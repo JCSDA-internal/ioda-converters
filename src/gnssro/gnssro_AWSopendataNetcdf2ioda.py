@@ -27,7 +27,6 @@ from lib_python.def_jedi_utils import concat_obs_dict
 ioda_int_type = 'int32'
 ioda_float_type = 'float'
 ioda_float32_type = np.float32
-ioda_byte_type = 'bytes'
 float_missing_value = nc.default_fillvals['f4']
 int_missing_value = nc.default_fillvals['i4']
 long_missing_value = nc.default_fillvals['i8']
