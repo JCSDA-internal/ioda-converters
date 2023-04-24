@@ -42,7 +42,8 @@ namespace Ingester
                         "Incomplete obs found. All obs must have a obs space and ioda.");
                 }
 
-                auto parser = parseFactory.create("bufr", obsConf.getSubConfiguration("obs space"));
+                auto configuration = obsConf.getSubConfiguration("obs space");
+                auto parser = parseFactory.create("bufr", configuration);
                 auto data = parser->parse(numMsgs);
 
                 auto encoder = IodaEncoder(obsConf.getSubConfiguration("ioda"));
@@ -107,9 +108,11 @@ int main(int argc, char **argv)
         }
     }
 
+    Ingester::parse(yamlPath, numMsgs);
+
     try
     {
-        Ingester::parse(yamlPath, numMsgs);
+//        Ingester::parse(yamlPath, numMsgs);
     }
     catch (const std::exception &e)
     {

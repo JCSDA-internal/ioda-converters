@@ -53,7 +53,7 @@ namespace Ingester
         // Get input parameters for sensor scan angle calculation
         float start;
         float step;
-        if (conf_.has(ConfKeys::ScanStart) & conf_.has(ConfKeys::ScanStep))
+        if (conf_.has(ConfKeys::ScanStart) && conf_.has(ConfKeys::ScanStep))
         {
              start = conf_.getFloat(ConfKeys::ScanStart);
              step = conf_.getFloat(ConfKeys::ScanStep);
@@ -65,7 +65,7 @@ namespace Ingester
         }
 
         // Read the variables from the map
-//      auto& satghtObj = map.at(getExportKey(ConfKeys::HeightOfStation));
+
         auto& fovnObj = map.at(getExportKey(ConfKeys::FieldOfViewNumber));
 
         // Declare and initialize scanline array

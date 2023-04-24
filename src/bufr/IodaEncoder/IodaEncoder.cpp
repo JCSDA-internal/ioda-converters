@@ -42,7 +42,7 @@ namespace Ingester
         // Get a list of all the named dimensions
         {
             std::set<std::string> dimNames;
-            std::set<std::string> dimPaths;
+            std::set<bufr::Query> dimPaths;
             for (const auto& dim : description_.getDims())
             {
                 if (dimNames.find(dim.name) != dimNames.end())
@@ -53,19 +53,21 @@ namespace Ingester
 
                 dimNames.insert(dim.name);
 
+                // Validate the dimension paths so that we don't have duplicates and they all start
+                // with a *.
                 for (auto path : dim.paths)
                 {
                     if (dimPaths.find(path) != dimPaths.end())
                     {
                         throw eckit::BadParameter("ioda::dimensions: Declared duplicate dim. path: "
-                              + path);
+                              + path.str());
                     }
 
-                    if (path.substr(0, 1) != "*")
+                    if (path.str().substr(0, 1) != "*")
                     {
                         std::ostringstream errStr;
                         errStr << "ioda::dimensions: ";
-                        errStr << "Path " << path << " must start with *. ";
+                        errStr << "Path " << path.str() << " must start with *. ";
                         errStr << "Subset specific named dimensions are not supported.";
 
                         throw eckit::BadParameter(errStr.str());
@@ -368,7 +370,7 @@ namespace Ingester
         return result;
     }
 
-    bool IodaEncoder::existsInNamedPath(const std::string& path, const NamedPathDims& pathMap) const
+    bool IodaEncoder::existsInNamedPath(const bufr::Query& path, const NamedPathDims& pathMap) const
     {
         for (auto& paths : pathMap)
         {
@@ -381,7 +383,7 @@ namespace Ingester
         return false;
     }
 
-    DimensionDescription IodaEncoder::dimForDimPath(const std::string& path,
+    DimensionDescription IodaEncoder::dimForDimPath(const bufr::Query& path,
                                                     const NamedPathDims& pathMap) const
     {
         DimensionDescription dimDesc;

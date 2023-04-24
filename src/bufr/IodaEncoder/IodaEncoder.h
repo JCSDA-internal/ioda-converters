@@ -33,7 +33,7 @@ namespace Ingester
                                                     bool append = false);
 
      private:
-        typedef std::map<std::vector<std::string>, DimensionDescription> NamedPathDims;
+        typedef std::map<std::vector<bufr::Query>, DimensionDescription> NamedPathDims;
 
         /// \brief The description
         const IodaDescription description_;
@@ -53,13 +53,13 @@ namespace Ingester
         /// \param path The subquery string to check.
         /// \param pathMap The map of named dimensions.
         /// \return True if the subquery string is a named dimension.
-        bool existsInNamedPath(const std::string& path, const NamedPathDims& pathMap) const;
+        bool existsInNamedPath(const bufr::Query& path, const NamedPathDims& pathMap) const;
 
         /// \brief Get the description associated with the named dimension.
         /// \param path The subquery string for the dimension.
         /// \param pathMap The map of named dimensions.
         /// \return The dimension description associated with the named dimension.
-        DimensionDescription dimForDimPath(const std::string& path,
+        DimensionDescription dimForDimPath(const bufr::Query& path,
                                            const NamedPathDims& pathMap) const;
     };
 }  // namespace Ingester

@@ -9,14 +9,13 @@
 
 #include <algorithm>
 #include <iostream>
-#include <sstream>
 #include <map>
 
 
 namespace Ingester {
 namespace bufr {
 
-    QueryPrinter::QueryPrinter(std::shared_ptr<DataProvider> dataProvider) :
+    QueryPrinter::QueryPrinter(DataProviderType dataProvider) :
         dataProvider_(dataProvider)
     {
     }
@@ -25,13 +24,13 @@ namespace bufr {
     {
         if (!subset.empty())
         {
-            auto queries = getQueries({subset, 0});
+            auto table = getTable({subset, 0});
             std::cout << subset << std::endl;
             std::cout << " Dimensioning Sub-paths: " << std::endl;
-            printDimPaths(getDimPaths(queries));
+            printDimPaths(getDimPaths(table));
             std::cout << std::endl;
             std::cout << " Queries: " << std::endl;
-            printQueryList(queries);
+            printQueryList(table);
             std::cout << std::endl;
         }
         else
@@ -58,7 +57,7 @@ namespace bufr {
 
             for (const auto& v : variants)
             {
-                auto queries = getQueries(v);
+                auto queries = getTable(v);
 
                 std::cout << v.str() << std::endl;
                 std::cout << " Dimensioning Sub-paths: " << std::endl;
@@ -73,21 +72,15 @@ namespace bufr {
 
 
     std::vector<std::pair<int, std::string>>
-    QueryPrinter::getDimPaths(const std::vector<Ingester::bufr::QueryData>& queryData)
+    QueryPrinter::getDimPaths(const SubsetTableType& table)
     {
         std::map<std::string, std::pair<int, std::string>> dimPathMap;
-        for (auto& query : queryData)
+        for (const auto& leaf : table->getLeaves())
         {
-            std::stringstream pathStream;
-            pathStream << "*";
-            for (size_t idx=1; idx <= query.dimIdxs.back(); idx++)
+            for (const auto& path : leaf->getDimPaths())
             {
-                pathStream << "/" << query.pathComponents[idx];
+                dimPathMap[path] = std::make_pair(leaf->getDimIdxs().size(), path);
             }
-
-            dimPathMap[pathStream.str()] =
-                std::make_pair(query.dimIdxs.size(),
-                               pathStream.str());
         }
 
         std::vector<std::pair<int, std::string>> result;
@@ -109,7 +102,7 @@ namespace bufr {
     }
 
 
-    std::string QueryPrinter::typeStyledStr(const Ingester::bufr::TypeInfo& info)
+    std::string QueryPrinter::typeStyledStr(const TypeInfo& info)
     {
         std::string typeStr;
 
@@ -167,30 +160,39 @@ namespace bufr {
     }
 
 
-    void QueryPrinter::printQueryList(const std::vector<Ingester::bufr::QueryData>& queries)
+    void QueryPrinter::printQueryList(const SubsetTableType& table)
     {
-        for (auto query : queries)
+        for (auto leaf : table->getLeaves())
         {
-            std::ostringstream ostr;
-            ostr << dimStyledStr(query.dimIdxs.size()) << "  ";
-            ostr << typeStyledStr(query.typeInfo) << "  ";
-            ostr << query.pathComponents[0];
-            for (size_t pathIdx = 1; pathIdx < query.pathComponents.size(); pathIdx++)
+            std::vector<std::string> pathComponents;
+            std::shared_ptr<BufrNode> currentNode = leaf;
+
+            while (currentNode != nullptr)
             {
-                if (std::find(query.dimIdxs.begin(),query.dimIdxs.end(), pathIdx)
-                    != query.dimIdxs.end())
+                if (currentNode->isQueryPathNode() || currentNode->isLeaf())
                 {
-                    ostr << "/" << query.pathComponents[pathIdx];
+                    std::ostringstream pathStr;
+                    pathStr << currentNode->mnemonic;
+
+                    if (currentNode->hasDuplicates)
+                    {
+                        pathStr << "[" << currentNode->copyIdx << "]";
+                    }
+
+                    pathComponents.push_back(pathStr.str());
                 }
-                else
-                {
-                    ostr << "/" << query.pathComponents[pathIdx];
-                }
+
+                currentNode = currentNode->parent.lock();
             }
 
-            if (query.requiresIdx)
+            std::ostringstream ostr;
+            ostr << dimStyledStr(static_cast<int>(leaf->getDimIdxs().size())) << "  ";
+            ostr << typeStyledStr(leaf->typeInfo) << "  ";
+
+            for (auto it = pathComponents.rbegin(); it != pathComponents.rend(); ++it)
             {
-                ostr << "[" << query.idx << "]";
+                if (it != pathComponents.rbegin()) ostr << "/";
+                ostr << *it;
             }
 
             std::cout << "  " << ostr.str() << std::endl;

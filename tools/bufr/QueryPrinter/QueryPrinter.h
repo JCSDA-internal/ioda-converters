@@ -21,6 +21,7 @@ namespace bufr {
     {
      public:
         QueryPrinter() = delete;
+        virtual ~QueryPrinter() = default;
 
         explicit QueryPrinter(std::shared_ptr<DataProvider> dataProvider);
 
@@ -31,7 +32,7 @@ namespace bufr {
         /// \brief Get the query data for a specific subset variant type
         /// \param variant The subset variant
         /// \returns Vector of SubsetTable QueryData objects
-        virtual std::vector<QueryData> getQueries(const SubsetVariant& variant) = 0;
+        virtual SubsetTableType getTable(const SubsetVariant& variant) = 0;
 
         /// \brief Get a complete set of subsets in the data file.
         /// \returns Vector of subset variants
@@ -44,8 +45,7 @@ namespace bufr {
         /// \brief Get the dimension paths for the given query data objects
         /// \param queryData Vector of QueryData objects
         /// \returns Vector of number of dimension/query sub-path string pairs.
-        std::vector<std::pair<int, std::string>> getDimPaths(
-            const std::vector<Ingester::bufr::QueryData>& queryData);
+        std::vector<std::pair<int, std::string>> getDimPaths(const SubsetTableType& table);
 
         /// \brief Create a styled string for the dimension (ex: 2d)
         /// \param dims The number of dimensions
@@ -56,7 +56,7 @@ namespace bufr {
         ///        the TypeInfo object for a field.
         /// \param info The TypeInfo object for the field in question
         /// \returns Styled string for the type of the field.
-        std::string typeStyledStr(const Ingester::bufr::TypeInfo& info);
+        std::string typeStyledStr(const TypeInfo& info);
 
         /// \brief Print the list of dimensioning sub-paths to stdioo
         /// \param dimPaths Vector of piars of number of dimensions to sub-path string
@@ -65,7 +65,7 @@ namespace bufr {
 
         /// \brief Print the list of possible queries out to stdio
         /// \param queries Vector of QueryData objects for each available query.
-        void printQueryList(const std::vector<Ingester::bufr::QueryData>& queries);
+        void printQueryList(const SubsetTableType& table);
     };
 }  // namespace bufr
 }  // namespace Ingester
