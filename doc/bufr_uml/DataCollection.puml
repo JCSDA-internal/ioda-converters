@@ -84,35 +84,35 @@ loop BUFR data
 
             QueryRunner -> QueryRunner : collectData()
             activate QueryRunner
+                create NodeLookupTable
+                QueryRunner -> NodeLookupTable : NodeLookupTable(targets)
+                activate NodeLookupTable
+                    NodeLookupTable -> NodeLookupTable : makeLookupTable(targets)
+                    NodeLookupTable -> DataProvider : get node data
+                deactivate NodeLookupTable
+
+
                 QueryRunner -> ResultSet : nextDataFrame()
                 activate ResultSet
                     create DataFrame
-                    ResultSet -> DataFrame : DataFrame(fieldCount)
-
+                    ResultSet -> DataFrame : DataFrame()
                     create DataField
-                    loop all data fields
-                        DataFrame -> DataField : DataField()
-                    end
+                    DataFrame -> DataField : DataField()
                     ResultSet --> QueryRunner : dataframe
                 deactivate ResultSet
 
-                QueryRunner -> QueryRunner : make data lookup table
-                activate QueryRunner
-                    loop all data nodes
-                        QueryRunner -> DataProvider : get node data
-                        QueryRunner -> QueryRunner : add node data to table
-                    end
-                deactivate QueryRunner
-
                 loop all target fields
-
-
                     QueryRunner -> DataFrame : fieldAtIdx(idx)
                     activate DataFrame
                         DataFrame --> QueryRunner : datafield
                     deactivate DataFrame
 
+                    QueryRunner -> NodeLookupTable : operator[nodeId].counts
+                    QueryRunner -> DataField : set counts for path (nodeId, counts)
+
+                    QueryRunner -> NodeLookupTable : operator[nodeId].data
                     QueryRunner -> DataField : setData(data)
+
                     note left
                         Copy data for node
                         from the lookup table
@@ -129,59 +129,6 @@ loop BUFR data
 
 deactivate DataProvider
 end
-
-
-
-
-'	File -> Query : query()
-'
-'	activate Query
-'
-'	Query -> Query : findTargets
-'
-'	activate Query
-'	Query -> Query : check cache for targets
-'
-'	loop if no targets
-'		Query -> DataProvider : find target
-'		activate DataProvider
-'		create Target
-'		DataProvider -> Target : Target()
-'		deactivate DataProvider
-'	end
-'	deactivate Query
-'
-'	Query -> Query : collectData
-'	activate Query
-'	Query -> ResultSet : nextDataFrame()
-'	activate ResultSet
-'
-'	create DataFrame
-'	ResultSet -> DataFrame : DataFrame(fieldCount)
-'
-'	create DataField
-'	loop all data fields
-'		DataFrame -> DataField : DataField()
-'	end
-'	ResultSet --> Query : dataframe
-'
-'
-'	deactivate ResultSet
-'
-'	loop all target fields
-'		Query -> DataProvider : find data for target
-'		Query -> DataFrame : fieldAtIdx(idx)
-'		activate DataFrame
-'		DataFrame --> Query : datafield
-'		deactivate DataFrame
-'
-'		Query -> DataField : fill in data
-'	end
-'
-'	deactivate Query
-'
-'	deactivate Query
-'end
 
 deactivate DataProvider
 
