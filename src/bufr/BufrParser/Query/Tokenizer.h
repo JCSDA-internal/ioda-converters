@@ -135,7 +135,7 @@ namespace bufr {
     /// \brief Token for the filter parts of a query (i.e. '{1-3,5}')
     class FilterToken : public TokenBase<FilterToken> {
      public:
-        constexpr static const char* Pattern = "\\{\\d+(\\-\\d+)?(\\,\\d+(\\-\\d+)?)*\\}";
+        constexpr static const char* Pattern = "\\{\\d+(\\-\\d+)?(,\\d+(\\-\\d+)?)*\\}";
         constexpr static const char* DebugStr = "<filter>";
 
         std::vector<size_t> indices() { return indices_; }
@@ -212,7 +212,7 @@ namespace bufr {
     class QueryToken : public TokenBase<QueryToken> {
      public:
         constexpr static const char* Pattern =
-            "([A-Z0-9_\\*\\/]+(\\[\\d+\\])?+(\\{[0-9\\-\\,]+\\})?)+";
+            "([A-Z0-9_\\*\\/]+((\\[\\d+\\])?)+(\\{[0-9\\-,]+\\})?)+";
         constexpr static const char* DebugStr = "<query>";
         constexpr static const char* SubPattern = "[^,]+";
 
@@ -309,7 +309,7 @@ namespace bufr {
         void tokenize() final
         {
             static const auto multiPattern = "\\[" + std::string(QueryToken::Pattern) +
-                                             "((\\,)" + std::string(QueryToken::Pattern) + ")*"
+                                             "((,)" + std::string(QueryToken::Pattern) + ")*"
                                              + "\\]";
 
             static const auto queryRegex =
