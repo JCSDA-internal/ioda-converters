@@ -37,7 +37,7 @@ epoch = datetime.fromisoformat('1970-01-01T00:00:00')
 locationKeyList = [
     ("latitude", 'float'),
     ("longitude", 'float'),
-    ("datetime", "np.int64")
+    ("dateTime", 'np.int64')
 ]
 
 
@@ -86,11 +86,11 @@ def main(args):
 
     # pass parameters to the IODA writer
     VarDims = {
-        'bendingAngle': ['Location'],
+        'bendingAngle': ['Location']
     }
 
     # write them out
-    nlocs = obs_data[('bendingAngle', 'ObsValue')].shape[0]
+    nlocs = np.int32(obs_data[('bendingAngle', 'ObsValue')].shape[0])
     DimDict = {'Location': nlocs}
     meta_data_types = def_meta_types()
 
@@ -101,6 +101,7 @@ def main(args):
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     VarAttrs[('dateTime', 'MetaData')]['longname'] = 'seconds since 1970-01-01T00:00:00Z'
+    VarAttrs[('dateTime', 'MetaData')]['units'] = 'seconds since 1970-01-01T00:00:00Z'
     VarAttrs[('latitude', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('latitude', 'MetaData')]['units'] = 'degree_north'
     VarAttrs[('longitude', 'MetaData')]['_FillValue'] = float_missing_value
@@ -116,21 +117,31 @@ def main(args):
              at the occultation tangent point,measured eastward from north'
 
     VarAttrs[('sequenceNumber', 'MetaData')]['longname'] = 'GNSS RO profile identifier'
+    VarAttrs[('sequenceNumber', 'MetaData')]['units'] = '1'
 
     VarAttrs[('satelliteIdentifier', 'MetaData')]['longname'] = 'Low Earth Orbit satellite identifier, e.g., COSMIC2=750-755'
+    VarAttrs[('satelliteIdentifier', 'MetaData')]['units'] = '1'
+
     VarAttrs[('satelliteTransmitterId', 'MetaData')]['longname'] = 'GNSS satellite transmitter identifier'
+    VarAttrs[('satelliteTransmitterId', 'MetaData')]['units'] = '1'
+
     VarAttrs[('satelliteAscendingFlag', 'MetaData')]['flag_values'] = '0,1'
     VarAttrs[('satelliteAscendingFlag', 'MetaData')]['flag_meanings'] = 'descending/ascending'
     VarAttrs[('satelliteAscendingFlag', 'MetaData')]['longname'] = 'the original occultation ascending/descending flag'
+    VarAttrs[('satelliteAscendingFlag', 'MetaData')]['units'] = '1'
 
     VarAttrs[('dataProviderOrigin', 'MetaData')]['longname'] = 'originally data processing_center,e.g., 60=UCAR'
     VarAttrs[('dataProviderOrigin', 'MetaData')]['name_in_earlier_version'] = 'process_center'
+    VarAttrs[('dataProviderOrigin', 'MetaData')]['units'] = '1'
+
     VarAttrs[('satelliteConstellationRO', 'MetaData')]['longname'] = 'GNSS satellite classification, e.g., 401=GPS'
+    VarAttrs[('satelliteConstellationRO', 'MetaData')]['units'] = '1'
 
     VarAttrs[('impactHeightRO', 'MetaData')]['units'] = 'meter'
     VarAttrs[('impactHeightRO', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('impactHeightRO', 'MetaData')]['valid_range'] = '0-200000'
     VarAttrs[('impactHeightRO', 'MetaData')]['longname'] = 'distance from mean sea level'
+
     VarAttrs[('impactParameterRO', 'MetaData')]['units'] = 'meter'
     VarAttrs[('impactParameterRO', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('impactParameterRO', 'MetaData')]['valid_range'] = '6200000-6600000'
