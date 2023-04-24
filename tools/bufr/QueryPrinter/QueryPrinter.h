@@ -21,6 +21,7 @@ namespace bufr {
     {
      public:
         QueryPrinter() = delete;
+        virtual ~QueryPrinter() = default;
 
         explicit QueryPrinter(std::shared_ptr<DataProvider> dataProvider);
 

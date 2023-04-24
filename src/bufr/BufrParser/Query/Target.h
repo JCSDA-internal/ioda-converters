@@ -42,8 +42,8 @@ namespace bufr {
                    (queryComponent->filter.empty() || queryComponent->filter.size() > 1);
         }
 
-        /// \brief Sets the TargetComponent type based on the type of the BUFR query node TYP.
-        /// \param bufrTyp The TYP of the BUFR query node.
+        /// \brief Sets the TargetComponent type based on the type of the BUFR query node type.
+        /// \param bufrTyp The type of the BUFR query node.
         void setType(const Typ& bufrTyp)
         {
             static std::unordered_map<Typ, Type> typMap = {

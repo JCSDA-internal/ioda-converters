@@ -331,7 +331,7 @@ namespace bufr {
             std::vector<std::vector<double>> frameData;
             auto& targetField = dataFrame.fieldAtIdx(targetFieldIdx);
 
-            if (!targetField.data.size() == 0) {
+            if (!targetField.data.empty()) {
                 getRowsForField(targetField,
                                 frameData,
                                 allDims,

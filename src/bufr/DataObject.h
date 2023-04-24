@@ -44,6 +44,8 @@ namespace Ingester
 #ifdef BUILD_IODA_BINDING
     struct DimensionDataBase
     {
+        virtual ~DimensionDataBase() = default;
+
         std::shared_ptr<ioda::NewDimensionScale_Base> dimScale;
 
         virtual void write(ioda::Variable& var) = 0;
@@ -55,6 +57,8 @@ namespace Ingester
         std::vector<T> data;
 
         DimensionData() = delete;
+
+        virtual ~DimensionData() = default;
 
         explicit DimensionData(size_t size) :
             data(std::vector<T>(size, _default()))
@@ -233,7 +237,7 @@ namespace Ingester
             data_(data)
         {};
 
-        ~DataObject() = default;
+        virtual ~DataObject() = default;
 
         /// \brief Set the data for this object
         /// \param data The data vector

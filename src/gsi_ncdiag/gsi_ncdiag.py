@@ -206,15 +206,21 @@ gsi_add_qcvars_allsky = {
     'Inverse_Observation_Error_sdoei': 'GsiObsError_sdoei',
     'Inverse_Observation_Error_grosschk': 'GsiObsError_grosschk',
 }
-
+# Save Errinv_Input and Errinv_Adjust if Error_Input and Error_Adjust
+# are unavailable in GSI nc_diag files, respectively.
 gsi_add_vars = {
     'ObsBias': 'GsiObsBias',
     'Observation_Type': 'ObsType',
+    'Observation_Subtype': 'ObsSubType',
     'Prep_Use_Flag': 'PreUseFlag',
     'Analysis_Use_Flag': 'GsiUseFlag',
     'Nonlinear_QC_Rel_Wgt': 'GsiQCWeight',
     'Errinv_Adjust': 'GsiAdjustObsError',
+    'Error_Adjust': 'GsiAdjustObsError',
     'Errinv_Final': 'GsiFinalObsError',
+    'Errinv_Input': 'GsiInputObsError',
+    'Error_Input': 'GsiInputObsError',
+    'Dupobs_Factor': 'Dupobs_Factor',
     'Obs_Minus_Forecast_adjusted': 'GsiHofXBc',
     'Obs_Minus_Forecast_unadjusted': 'GsiHofX',
     'Forecast_adjusted': 'GsiHofXBc',
@@ -242,12 +248,16 @@ gsi_add_qcvars = {
 
 gsi_add_vars_uv = {
     'Observation_Type': 'ObsType',
+    'Observation_Subtype': 'ObsSubType',
     'Prep_Use_Flag': 'PreUseFlag',
     'Analysis_Use_Flag': 'GsiUseFlag',
     'Nonlinear_QC_Rel_Wgt': 'GsiQCWeight',
     'Errinv_Adjust': 'GsiAdjustObsError',
+    'Error_Adjust': 'GsiAdjustObsError',
     'Errinv_Final': 'GsiFinalObsError',
     'Errinv_Input': 'GsiInputObsError',
+    'Error_Input': 'GsiInputObsError',
+    'Dupobs_Factor': 'Dupobs_Factor',
     'u_Forecast_adjusted': 'GsiHofXBc',
     'u_Forecast_unadjusted': 'GsiHofX',
     'v_Forecast_adjusted': 'GsiHofXBc',
@@ -273,6 +283,7 @@ gsiint = [
     'PreUseFlag',
     'GsiUseFlag',
     'ObsType',
+    'ObsSubType',
     'Observation_Subtype',
     'observationTypeNum',
     'observationSubTypeNum',
@@ -411,6 +422,7 @@ geovals_vars = {
     'seas4': 'seas4',
     'dbzges': 'equivalent_reflectivity_factor',
     'upward_air_velocity': 'upward_air_velocity',
+    'dup_kx_vector': 'dup_kx_vector',
 }
 
 obsdiag_vars = {
@@ -862,13 +874,17 @@ class Conv(BaseGSI):
                         if np.median(obsdata) < 1100.:
                             obsdata = obsdata * 100.  # convert to Pa from hPa
                         obsdata[obsdata > 4e8] = self.FLOAT_FILL  # 1e11 is fill value for surface_pressure
-                    obserr = self.var('Errinv_Input')[idx]
-                    mask = obserr < self.EPSILON
-                    obserr[~mask] = 1.0 / obserr[~mask]
-                    # below is a temporary hack until missing ObsError support returns to IODA/UFO
-                    obserr[mask] = 1e8
-                    # obserr[mask] = self.FLOAT_FILL
-                    # obserr[obserr > 4e8] = self.FLOAT_FILL
+                    try:
+                        # All original observation errors are saved as "Error_Input". J.Jin 10/24/2022.
+                        obserr = self.var('Error_Input')[idx]
+                    except BaseException:
+                        obserr = self.var('Errinv_Input')[idx]
+                        mask = obserr < self.EPSILON
+                        obserr[~mask] = 1.0 / obserr[~mask]
+                        # below is a temporary hack until missing ObsError support returns to IODA/UFO
+                        obserr[mask] = 1e8
+                        # obserr[mask] = self.FLOAT_FILL
+                        # obserr[obserr > 4e8] = self.FLOAT_FILL
                     # convert surface_pressure error to Pa from hPa
                     if v == 'ps' and np.nanmin(obserr) < 10:
                         obserr = obserr * 100
@@ -923,10 +939,19 @@ class Conv(BaseGSI):
                                 tmp = tmp.astype(np.int32)
                                 tmp[tmp > 4e4] = self.INT_FILL
                             else:
-                                tmp[tmp > 4e8] = self.FLOAT_FILL
+                                if value != 'GsiAdjustObsError' and value != 'GsiInputObsError':
+                                    tmp[tmp > 4e8] = self.FLOAT_FILL
                             outdata[gvname] = tmp
                             if gvname[1] != 'PreUseFlag' and gvname[1] != 'ObsType' and gvname[1] != 'GsiUseFlag' and gvname[1] != 'GsiQCWeight':
                                 varAttrs[gvname]['units'] = units_values[gvname[0]]
+                    # if Error_Adjust exists, save it as GsiAdjustObsError.
+                    for key, value in gsivars.items():
+                        if key in self.df.variables:
+                            df_key = self.var(key)
+                            gvname = outvars[o], value
+                            if "Error_Adjust" in key:
+                                tmp = df_key[idx]
+                                outdata[gvname] = tmp
                     # create a GSI effective QC variable
                     gsiqcname = outvars[o], 'GsiEffectiveQC'
                     errname = outvars[o], 'GsiFinalObsError'
