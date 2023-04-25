@@ -29,7 +29,7 @@ namespace Ingester {
     {
      public:
         explicit BufrParser(const BufrDescription& description);
-        explicit BufrParser(const eckit::Configuration& conf);
+        explicit BufrParser(const eckit::LocalConfiguration& conf);
 
         ~BufrParser();
 

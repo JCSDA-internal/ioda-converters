@@ -8,9 +8,9 @@
 #include "SubsetTable.h"
 
 #include <algorithm>
-#include <iostream>
 #include <memory>
-#include <sstream>
+
+#include "QueryParser.h"
 
 
 namespace Ingester {
@@ -22,235 +22,109 @@ namespace bufr {
         initialize();
     }
 
-    std::vector<QueryData> SubsetTable::allQueryData()
-    {
-        std::vector<QueryData> queryData;
-        queryData.reserve(queryMap_.size());
-
-        for (auto queryKey : queryMapKeys_)
-        {
-            queryData.push_back(queryMap_[queryKey]);
-        }
-
-        return queryData;
-    }
-
-
-    QueryData SubsetTable::dataForQuery(const std::vector<std::string>& queryComponents) const
-    {
-        QueryData queryData;
-        auto key = mapKey(queryComponents);
-        if (queryMap_.find(key) != queryMap_.end())
-        {
-            queryData = queryMap_.at(key);
-        }
-        else
-        {
-            queryData.isMissing = true;
-            queryData.nodeId = 0;
-            queryData.pathComponents = {};
-            queryData.isString = false;
-            queryData.seqPath = {};
-            queryData.dimIdxs = {};
-        }
-
-        return queryData;
-    }
-
-
     void SubsetTable::initialize()
     {
-        std::vector<size_t> seqPath;
-        std::vector<std::vector<std::string>> currentPathElements = {{}};
+        root_ = std::make_shared<BufrNode>();
+        root_->mnemonic = dataProvider_->getTag(dataProvider_->getInode());
+        root_->type = Typ::Subset;
+        root_->nodeIdx = dataProvider_->getInode();
 
-        std::vector<std::shared_ptr<QueryData>> allQueries;
-        std::unordered_map<std::string, std::shared_ptr<QueryData>> foundQueryMap;
+        // Recursively parse the entire tree of BUFR nodes
+        processNode(root_);
 
-        auto isDigit = [](const std::string& str) -> bool
+        // Find all the leaves of the tree
+        leaves_ = root_->getLeaves();
+    }
+
+    void SubsetTable::processNode(std::shared_ptr<BufrNode>& parent)
+    {
+        if (!parent->isContainer())
         {
-            return !str.empty() && std::find_if(str.begin(),
-                str.end(), [](unsigned char c) { return !std::isdigit(c); }) == str.end();
-        };
+            return;
+        }
 
-        seqPath.push_back(dataProvider_->getInode());
-        for (auto nodeIdx = dataProvider_->getInode();
-             nodeIdx <= dataProvider_->getIsc(dataProvider_->getInode());
-             nodeIdx++)
+        auto nodeIdx = static_cast<int> (parent->nodeIdx + 1);
+        auto lastNode = static_cast<int>(dataProvider_->getLink(parent->nodeIdx) - 1);
+        if (lastNode == -1) lastNode = dataProvider_->getIsc(dataProvider_->getInode());
+
+        auto mnemonicCounts = std::unordered_map<std::string, size_t>();
+        auto mnemonicMaps =
+            std::unordered_map<std::string, std::vector<std::shared_ptr<BufrNode>>>();
+
+        while (nodeIdx != 0 && nodeIdx <= lastNode)
         {
-            if (dataProvider_->getTyp(nodeIdx) == Typ::Repeat ||
-                dataProvider_->getTyp(nodeIdx) == Typ::StackedRepeat)
+            parent->children.push_back(std::make_shared<BufrNode>());
+            auto& newNode = parent->children.back();
+            newNode->nodeIdx = nodeIdx;
+            newNode->mnemonic = dataProvider_->getTag(nodeIdx);
+            newNode->type = dataProvider_->getTyp(nodeIdx);
+            newNode->parent = parent;
+
+            // add to and increment duplicate mnemonic count, update duplicate status if there are
+            // duplicates
+            const auto& mnemonic = newNode->mnemonic;
+            if (mnemonicMaps.find(mnemonic) == mnemonicMaps.end())
             {
-                seqPath.push_back(nodeIdx);
-                currentPathElements.push_back({});
+                mnemonicMaps[mnemonic] = std::vector<std::shared_ptr<BufrNode>>();
             }
-            else if (dataProvider_->getTyp(nodeIdx) == Typ::DelayedBinary ||
-                     dataProvider_->getTyp(nodeIdx) == Typ::FixedRep)
+
+            mnemonicMaps[mnemonic].push_back(newNode);
+            newNode->copyIdx = mnemonicMaps[mnemonic].size();
+
+            if (parent->isQueryPathParentNode() && parent->hasDuplicates)
             {
-                seqPath.push_back(nodeIdx + 1);  // push the node idx for the embedded sequence
-                currentPathElements.push_back({});
+                newNode->copyIdx = parent->copyIdx;
             }
-            else if ((dataProvider_->getTyp(nodeIdx) == Typ::Number ||
-                     dataProvider_->getTyp(nodeIdx) == Typ::Character) &&
-                     !isDigit(dataProvider_->getTag(nodeIdx)))
+
+            if (newNode->copyIdx > 1)
             {
-                auto elementTag = dataProvider_->getTag(nodeIdx);
-                currentPathElements.back().push_back(elementTag);
-
-                auto numElements = std::count(currentPathElements.back().begin(),
-                                                currentPathElements.back().end(),
-                                               elementTag);
-
-                auto pathComponents = makePathComponents(seqPath, nodeIdx);
-
-                if (numElements == 2)
+                // We need to fix the initial nodes to indicate that they are duplicates
+                mnemonicMaps[mnemonic][0]->hasDuplicates = true;
+                if (mnemonicMaps[mnemonic][0]->isQueryPathParentNode())
                 {
-                    // Update the matching quiry to require idxs.
-                    auto& otherQuery = foundQueryMap[mapKey(pathComponents, 1)];
-                    otherQuery->requiresIdx = true;
+                    mnemonicMaps[mnemonic][0]->children[0]->hasDuplicates = true;
                 }
 
-                auto query = std::make_shared<QueryData>();
-                query->nodeId = nodeIdx;
-                query->isMissing = false;
-                query->seqPath = seqPath;
-                query->pathComponents = pathComponents;
-                query->isString = (dataProvider_->getItp(nodeIdx) == 3);
-                query->dimIdxs = dimPathIdxs(seqPath);
-                query->idx = numElements;
-                query->requiresIdx = (numElements > 1);
-                query->typeInfo = dataProvider_->getTypeInfo(nodeIdx);
-
-                allQueries.push_back(query);
-                foundQueryMap[mapKey(query->pathComponents, numElements)] = allQueries.back();
+                newNode->hasDuplicates = true;
             }
 
-            if (seqPath.size() > 1)
+            processNode(newNode);
+
+            if (newNode->isLeaf())
             {
-                auto jumpBackNode = dataProvider_->getInode();
-                if (nodeIdx < dataProvider_->getIsc(dataProvider_->getInode()))
-                {
-                    // Skip pure sequences not inside any kind of repeated sequence
-                    jumpBackNode = dataProvider_->getJmpb(nodeIdx + 1);
-                    if (jumpBackNode == 0) jumpBackNode = dataProvider_->getInode();
+                newNode->typeInfo = dataProvider_->getTypeInfo(newNode->nodeIdx);
+            }
 
-                    while (dataProvider_->getTyp(jumpBackNode) == Typ::Sequence &&
-                           dataProvider_->getTyp(jumpBackNode - 1) != Typ::DelayedRep &&
-                           dataProvider_->getTyp(jumpBackNode - 1) != Typ::FixedRep &&
-                           dataProvider_->getTyp(jumpBackNode - 1) != Typ::DelayedRepStacked &&
-                           dataProvider_->getTyp(jumpBackNode - 1) != Typ::DelayedBinary)
-                    {
-                        auto newJumpBackNode = dataProvider_->getJmpb(jumpBackNode);
-                        if (newJumpBackNode != jumpBackNode)
-                        {
-                            jumpBackNode = newJumpBackNode;
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
+            nodeIdx = dataProvider_->getLink(nodeIdx);
+        }
+    }
+
+    std::shared_ptr<BufrNode>
+        SubsetTable::getNodeForPath(const std::vector<std::shared_ptr<PathComponent>>& path)
+    {
+        auto node = root_;
+        for (const auto& component : path)
+        {
+            if (node->isContainer())
+            {
+                auto child = node->getChild(component->name, component->index);
+                if (child)
+                {
+                    node = child;
                 }
-
-                // Peak ahead to see if the next node is inside one of the containing sequences.
-                for (int pathIdx = seqPath.size() - 2; pathIdx >= 0; pathIdx--)
+                else
                 {
-                    // Check if the node idx is the next node for the current path
-                    // or if the parent node of the next node is the previous path index
-
-                    if (seqPath[pathIdx] == jumpBackNode)
-                    {
-                        auto numToRewind = seqPath.size() - pathIdx - 1;
-                        for (size_t rewindIdx = 0; rewindIdx < numToRewind; rewindIdx++)
-                        {
-                            seqPath.pop_back();
-                            currentPathElements.pop_back();
-                        }
-                    }
+                    return nullptr;
                 }
             }
-        }
-
-        for (const auto& query : allQueries)
-        {
-            auto queryStr = mapKey(query);
-            queryMapKeys_.push_back(queryStr);
-            queryMap_[queryStr] = *query;
-        }
-    }
-
-
-    std::vector<size_t> SubsetTable::dimPathIdxs(std::vector<size_t> seqPath) const
-    {
-        std::vector<size_t> dimPathIdxs;
-        dimPathIdxs.push_back(0);
-        for (size_t idx = 1; idx < seqPath.size(); idx++)
-        {
-            if (dataProvider_->getTyp(seqPath[idx] - 1) == Typ::DelayedRep ||
-                dataProvider_->getTyp(seqPath[idx] - 1) == Typ::FixedRep ||
-                dataProvider_->getTyp(seqPath[idx] - 1) == Typ::DelayedRepStacked)
+            else
             {
-                dimPathIdxs.push_back(idx);
+                return nullptr;
             }
         }
 
-        return dimPathIdxs;
+        return node;
     }
 
-
-    std::vector<std::string> SubsetTable::makePathComponents(std::vector<size_t> seqPath,
-                                                             int nodeIdx)
-    {
-        std::vector<std::string> pathComps;
-
-        pathComps.push_back(dataProvider_->getTag(seqPath[0]));
-        for (size_t idx = 1; idx < seqPath.size(); idx++)
-        {
-            if (dataProvider_->getTyp(seqPath[idx] - 1) == Typ::DelayedRep ||
-                dataProvider_->getTyp(seqPath[idx] - 1) == Typ::FixedRep ||
-                dataProvider_->getTyp(seqPath[idx] - 1) == Typ::DelayedRepStacked ||
-                dataProvider_->getTyp(seqPath[idx] - 1) == Typ::DelayedBinary)
-            {
-                pathComps.push_back(dataProvider_->getTag(seqPath[idx]));
-            }
-        }
-
-        pathComps.push_back(dataProvider_->getTag(nodeIdx));
-        return pathComps;
-    }
-
-
-    std::string SubsetTable::mapKey(const std::vector<std::string>& pathComponents,
-                                    size_t idx) const
-    {
-        std::ostringstream ostr;
-        for (size_t pathIdx = 1; pathIdx < pathComponents.size(); pathIdx++)
-        {
-            ostr << "/" << pathComponents[pathIdx];
-        }
-
-        if (idx > 0)
-        {
-            ostr << "[" << idx << "]";
-        }
-
-        return ostr.str();
-    }
-
-    std::string SubsetTable::mapKey(const std::shared_ptr<QueryData> query) const
-    {
-        std::string key;
-        if (query->requiresIdx)
-        {
-            key = mapKey(query->pathComponents, query->idx);
-        }
-        else
-        {
-            key = mapKey(query->pathComponents);
-        }
-
-        return key;
-    }
 }  // namespace bufr
 }  // namespace Ingester
-
-
