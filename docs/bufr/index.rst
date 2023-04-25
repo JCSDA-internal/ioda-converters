@@ -11,7 +11,7 @@ Please see the following topics for more information:
 
    overview
    target_identification
-   query_language
+   query_path
    python_api
    yaml
    software_architecture

@@ -1,7 +1,6 @@
 Ioda Converters
 ===============
 
-
 .. toctree::
    :maxdepth: 2
 
