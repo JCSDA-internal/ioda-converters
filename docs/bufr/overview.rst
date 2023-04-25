@@ -14,7 +14,7 @@ subset type (aka. Table A mnemonic). It takes the form of a tree with nested bra
 repeated in arbitrary ways. The traditional (NCEPLibs-bufr) way of illustrating this is as follows:
 
 
-.. image:: _static/NCEPLIB-table.png
+.. image:: docs/_static/NCEPLIB_table.png
     :align: center
     :alt: NCEPLIB table
 
