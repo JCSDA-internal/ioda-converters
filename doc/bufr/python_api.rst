@@ -4,23 +4,22 @@ Python
 It is very easy query BUFR files via python.
 
 .. code-block:: python
-    .. example::
-        import bufr
+    import bufr
 
-        # Make the QuerySet for all the data we want
-        q = bufr.QuerySet()
-        q.add('latitude', '*/CLAT')
-        q.add('longitude', '*/CLON')
-        q.add('radiance', '*/BRIT/TMBR')
+    # Make the QuerySet for all the data we want
+    q = bufr.QuerySet()
+    q.add('latitude', '*/CLAT')
+    q.add('longitude', '*/CLON')
+    q.add('radiance', '*/BRIT/TMBR')
 
-        # Open the BUFR file and execute the QuerySet
-        with bufr.File( './testinput/gdas.t00z.1bhrs4.tm00.bufr_d') as f:
-            r = f.execute(q)
+    # Open the BUFR file and execute the QuerySet
+    with bufr.File( './testinput/gdas.t00z.1bhrs4.tm00.bufr_d') as f:
+        r = f.execute(q)
 
-        # Use the ResultSet returned to get correctly dimensioned numpy arrays of the data
-        lat = r.get('latitude')
-        lon = r.get('longitude')
-        rad = r.get('radiance')
+    # Use the ResultSet returned to get correctly dimensioned numpy arrays of the data
+    lat = r.get('latitude')
+    lon = r.get('longitude')
+    rad = r.get('radiance')
 
 
 The steps are:
@@ -43,14 +42,13 @@ If you are only interested in specific subsets within the BUFR file you can inst
 with a list of the Subsets you want. For example:
 
 .. code-block:: python
-    .. example::
-        # Make the QuerySet for all the data we want
-        q = bufr.QuerySet(['NC000001', 'NC000002'])
-        q.add('latitude', '*/CLAT')
-        q.add('longitude', '*/CLON')
-        q.add('radiance', '*/BRIT/TMBR')
+    # Make the QuerySet for all the data we want
+    q = bufr.QuerySet(['NC000001', 'NC000002'])
+    q.add('latitude', '*/CLAT')
+    q.add('longitude', '*/CLON')
+    q.add('radiance', '*/BRIT/TMBR')
 
-        # And so on...
+    # And so on...
 
 
 Execute the QuerySet
@@ -70,9 +68,8 @@ It is also possible to group data elements with respect to each other. In this c
 the field you want to group by. So for example:
 
 .. code-block:: python
-    .. example::
-        lat_grouped = r.get('latitude', group_by='radiance')
-        lon_grouped = r.get('longitude', group_by='radiance')
-        rad_grouped = r.get('radiance', group_by='radiance')
+    lat_grouped = r.get('latitude', group_by='radiance')
+    lon_grouped = r.get('longitude', group_by='radiance')
+    rad_grouped = r.get('radiance', group_by='radiance')
 
 The result in either case are masked numpy arrays.
