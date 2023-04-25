@@ -76,8 +76,6 @@ namespace bufr {
     void NodeLookupTable::addData(const Targets &targets, LookupTable &lookup) const
     {
         const auto startIdx = dataProvider_->getInode();
-        auto mask = std::vector<char>  // use a char array for performance (bool vectors are slow)
-            (dataProvider_->getIsc(dataProvider_->getInode()) - startIdx, false);
 
         // Reserve space for the data in the lookup table by summing the counts for each node.
         for (const auto& target : targets)
@@ -86,13 +84,13 @@ namespace bufr {
             const auto &path = target->path.back();
 
             lookup[target->nodeIdx].data.reserve(sum(lookup[path.parentDimensionNodeId].counts));
-            mask[target->nodeIdx - startIdx] = true;
+            lookup[target->nodeIdx].isCollected = true;
         }
 
         for (size_t cursor = 1; cursor <= dataProvider_->getNVal(); ++cursor)
         {
             const auto nodeId = dataProvider_->getInv(cursor);
-            if (mask[nodeId - startIdx])
+            if (lookup[nodeId].isCollected)
             {
                 lookup[nodeId].data.push_back(dataProvider_->getVal(cursor));
             }
