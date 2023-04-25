@@ -50,9 +50,7 @@ get_file_names() {
 
 get_files() {
     for afile in ${zfiles[@]}; do
-        echo wget -nc ${apath}/${afile}
-        # wget -nc ${apath}/${afile}
-        exit 0
+        wget -nc ${apath}/${afile}
     done
 }
 
