@@ -1,1 +1,0 @@
-.. _query_language:

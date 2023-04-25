@@ -1,5 +1,3 @@
-.. _bufr-query:
-
 BUFR Query
 ===========
 

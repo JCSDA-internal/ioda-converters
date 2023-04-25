@@ -1,5 +1,3 @@
-.. _overview:
-
 What is BUFR?
 =============
 

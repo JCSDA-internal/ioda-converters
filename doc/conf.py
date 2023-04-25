@@ -1,0 +1,2 @@
+
+extensions = ['sphinx.ext.autodoc']
