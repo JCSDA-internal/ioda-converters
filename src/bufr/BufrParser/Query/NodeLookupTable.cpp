@@ -41,7 +41,7 @@ namespace bufr {
                 if (path.isContainer())
                 {
                     lookup[path.nodeId].component = path;
-                    lookup[path.nodeId].isCollected = true;
+                    lookup[path.nodeId].collectedCounts = true;
                 }
             }
         }
@@ -50,7 +50,7 @@ namespace bufr {
         for (size_t cursor = 1; cursor <= dataProvider_->getNVal(); ++cursor)
         {
             auto nodeId = static_cast<size_t>(dataProvider_->getInv(cursor));
-            if (lookup[nodeId].isCollected)
+            if (lookup[nodeId].collectedCounts)
             {
                 const auto &component = lookup[nodeId].component;
 
@@ -75,8 +75,6 @@ namespace bufr {
 
     void NodeLookupTable::addData(const Targets &targets, LookupTable &lookup) const
     {
-        const auto startIdx = dataProvider_->getInode();
-
         // Reserve space for the data in the lookup table by summing the counts for each node.
         for (const auto& target : targets)
         {
@@ -84,13 +82,13 @@ namespace bufr {
             const auto &path = target->path.back();
 
             lookup[target->nodeIdx].data.reserve(sum(lookup[path.parentDimensionNodeId].counts));
-            lookup[target->nodeIdx].isCollected = true;
+            lookup[target->nodeIdx].collectedData = true;
         }
 
         for (size_t cursor = 1; cursor <= dataProvider_->getNVal(); ++cursor)
         {
             const auto nodeId = dataProvider_->getInv(cursor);
-            if (lookup[nodeId].isCollected)
+            if (lookup[nodeId].collectedData)
             {
                 lookup[nodeId].data.push_back(dataProvider_->getVal(cursor));
             }

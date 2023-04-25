@@ -58,7 +58,8 @@ namespace bufr {
             DataVector data;
             CountsVector counts;
             TargetComponent component;
-            bool isCollected = false;
+            bool collectedCounts = false;
+            bool collectedData = false;
         };
 
         typedef __details::OffsetArray<NodeData> LookupTable;
