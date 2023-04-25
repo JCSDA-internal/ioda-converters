@@ -181,39 +181,38 @@ def read_input(input_file_and_record, add_qc):
 
 
 # assign satellite identifier
-def get_WMO_satellite_ID(filename):
-    os.path.basename(filename)
-    if 'kompsat' in filename:
+def get_WMO_satellite_ID(leo):
+    if 'kompsat' in leo:
         WMO_sat_ID = 825
-    elif 'metopa' in filename:
+    elif 'metopa' in leo:
         WMO_sat_ID = 4
-    elif 'metopb' in filename:
+    elif 'metopb' in leo:
         WMO_sat_ID = 3
-    elif 'metopc' in filename:
+    elif 'metopc' in leo:
         WMO_sat_ID = 5
-    elif 'cosmic2e1' in filename:
+    elif 'cosmic2e1' in leo:
         WMO_sat_ID = 750
-    elif 'cosmic2e2' in filename:
+    elif 'cosmic2e2' in leo:
         WMO_sat_ID = 751
-    elif 'cosmic2e3' in filename:
+    elif 'cosmic2e3' in leo:
         WMO_sat_ID = 752
-    elif 'cosmic2e4' in filename:
+    elif 'cosmic2e4' in leo:
         WMO_sat_ID = 753
-    elif 'cosmic2e5' in filename:
+    elif 'cosmic2e5' in leo:
         WMO_sat_ID = 754
-    elif 'cosmic2e6' in filename:
+    elif 'cosmic2e6' in leo:
         WMO_sat_ID = 755
-    elif 'cosmic1e1' in filename:
+    elif 'cosmic1e1' in leo:
         WMO_sat_ID = 740
-    elif 'cosmic1e2' in filename:
+    elif 'cosmic1e2' in leo:
         WMO_sat_ID = 741
-    elif 'cosmic1e3' in filename:
+    elif 'cosmic1e3' in leo:
         WMO_sat_ID = 742
-    elif 'cosmic1e4' in filename:
+    elif 'cosmic1e4' in leo:
         WMO_sat_ID = 743
-    elif 'cosmic1e5' in filename:
+    elif 'cosmic1e5' in leo:
         WMO_sat_ID = 744
-    elif 'cosmic1e6' in filename:
+    elif 'cosmic1e6' in leo:
         WMO_sat_ID = 745
     else:
         print('unknown satellite id')
@@ -392,7 +391,7 @@ def get_meta_opendata(f):
     this_datetime = datetime.strptime(dtg, "%Y-%m-%dT%H:%M:%SZ")
     time_offset = round((this_datetime - epoch).total_seconds())
     profile_meta_data['dateTime'] = np.int64(time_offset)
-    WMO_sat_ID = get_WMO_satellite_ID(f.filename)
+    WMO_sat_ID = get_WMO_satellite_ID(f.attrs['leo'].decode())
     profile_meta_data['satelliteIdentifier'] = WMO_sat_ID
     refGnss = int(f.attrs['occGnss'].decode()[1-2])
     profile_meta_data['satelliteTransmitterId'] = refGnss
