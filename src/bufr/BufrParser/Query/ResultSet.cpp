@@ -19,8 +19,7 @@
 
 namespace Ingester {
 namespace bufr {
-    ResultSet::ResultSet(const Targets& targets) :
-      targets_(targets)
+    ResultSet::ResultSet()
     {
     }
 
@@ -121,16 +120,18 @@ namespace bufr {
         }
 
         // Find the dims based on the largest sequence counts in each frame
-        dimsList.resize(target.path.size(), 0);
+        dimsList.resize(target->path.size(), 0);
         for (const auto& frame : frames_)
         {
-            for (const auto& p : target.path)
+            auto pathIdx = 0;
+            for (const auto& p : target->path)
             {
-
+                dimsList[pathIdx] = std::max(dimsList[pathIdx], max(frame[p.nodeId].counts));
+                pathIdx++;
             }
         }
 
-        // Find the dims based on the largest sequence counts in the fields
+//         Find the dims based on the largest sequence counts in the fields
 //        for (auto& dataFrame : dataFrames_)
 //        {
 //            auto& targetField = dataFrame.fieldAtIdx(targetFieldIdx);
@@ -261,148 +262,148 @@ namespace bufr {
 //            dims = allDims;
 //        }
 
-        dims = allDims;
-
-        size_t totalRows = dims[0] * frames_.size();
-
-        // Make data set
-        int rowLength = 1;
-        for (size_t dimIdx = 1; dimIdx < dims.size(); ++dimIdx)
-        {
-            rowLength *= dims[dimIdx];
-        }
-
-        data.resize(totalRows * rowLength, MissingValue);
-        for (size_t frameIdx = 0; frameIdx < frames_.size(); ++frameIdx)
-        {
-            auto& dataFrame = dataFrames_[frameIdx];
-            std::vector<std::vector<double>> frameData;
-            auto& targetField = dataFrame.fieldAtIdx(targetFieldIdx);
-
-            if (!targetField.data.empty()) {
-                getRowsForField(targetField,
-                                frameData,
-                                allDims,
-                                groupbyIdx);
-
-                auto dataRowIdx = dims[0] * frameIdx;
-                for (size_t rowIdx = 0; rowIdx < frameData.size(); ++rowIdx)
-                {
-                    auto &row = frameData[rowIdx];
-                    for (size_t colIdx = 0; colIdx < row.size(); ++colIdx)
-                    {
-                        data[dataRowIdx*rowLength + rowIdx * row.size() + colIdx] = row[colIdx];
-                    }
-                }
-            }
-        }
-
-        // Convert dims per data frame to dims for all the collected data.
-        dims[0] = totalRows;
-        dims = slice(dims, exportDims);
+//        dims = allDims;
+//
+//        size_t totalRows = dims[0] * frames_.size();
+//
+//        // Make data set
+//        int rowLength = 1;
+//        for (size_t dimIdx = 1; dimIdx < dims.size(); ++dimIdx)
+//        {
+//            rowLength *= dims[dimIdx];
+//        }
+//
+//        data.resize(totalRows * rowLength, MissingValue);
+//        for (size_t frameIdx = 0; frameIdx < frames_.size(); ++frameIdx)
+//        {
+//            auto& dataFrame = dataFrames_[frameIdx];
+//            std::vector<std::vector<double>> frameData;
+//            auto& targetField = dataFrame.fieldAtIdx(targetFieldIdx);
+//
+//            if (!targetField.data.empty()) {
+//                getRowsForField(targetField,
+//                                frameData,
+//                                allDims,
+//                                groupbyIdx);
+//
+//                auto dataRowIdx = dims[0] * frameIdx;
+//                for (size_t rowIdx = 0; rowIdx < frameData.size(); ++rowIdx)
+//                {
+//                    auto &row = frameData[rowIdx];
+//                    for (size_t colIdx = 0; colIdx < row.size(); ++colIdx)
+//                    {
+//                        data[dataRowIdx*rowLength + rowIdx * row.size() + colIdx] = row[colIdx];
+//                    }
+//                }
+//            }
+//        }
+//
+//        // Convert dims per data frame to dims for all the collected data.
+//        dims[0] = totalRows;
+//        dims = slice(dims, exportDims);
     }
 
 //    subroutine result_set__get_rows_for_field(self, target_field, data_rows, dims, groupby_idx)
 
-    void ResultSet::getRowsForField(const DataField& targetField,
-                                    std::vector<std::vector<double>>& dataRows,
-                                    const std::vector<int>& dims,
-                                    int groupbyIdx) const
-    {
-        size_t maxCounts = 0;
-        std::vector<size_t> idxs(targetField.data.size());
-        for (size_t i = 0; i < idxs.size(); ++i)
-        {
-            idxs[i] = i;
-        }
-
-        // Compute max counts
-        for (size_t i = 0; i < targetField.seqCounts.size(); ++i)
-        {
-            if (maxCounts < targetField.seqCounts[i].size())
-            {
-                maxCounts = targetField.seqCounts[i].size();
-            }
-        }
-
-        // Compute insert array
-        std::vector<std::vector<int>> inserts(dims.size(), {0});
-        for (size_t repIdx = 0;
-             repIdx < std::min(dims.size(), targetField.seqCounts.size());
-             ++repIdx)
-        {
-            inserts[repIdx] = product<int>(dims.begin() + repIdx, dims.end()) -
-                              targetField.seqCounts[repIdx] *
-                              product<int>(dims.begin() + repIdx + 1, dims.end());
-        }
-
-        // Inflate the data, compute the idxs for each data element in the result array
-        for (int dim_idx = dims.size() - 1; dim_idx >= 0; --dim_idx)
-        {
-            for (size_t insert_idx = 0; insert_idx < inserts[dim_idx].size(); ++insert_idx)
-            {
-                size_t num_inserts = inserts[dim_idx][insert_idx];
-                if (num_inserts > 0)
-                {
-                    int data_idx = product<int>(dims.begin() + dim_idx, dims.end()) *
-                            insert_idx + product<int>(dims.begin() + dim_idx, dims.end())
-                                    - num_inserts - 1;
-
-                    for (size_t i = 0; i < idxs.size(); ++i)
-                    {
-                        if (static_cast<int>(idxs[i]) > data_idx)
-                        {
-                            idxs[i] += num_inserts;
-                        }
-                    }
-                }
-            }
-        }
-
-        auto output = std::vector<double>(product(dims), MissingValue);
-        for (size_t i = 0; i < idxs.size(); ++i)
-        {
-            output[idxs[i]] = targetField.data[i];
-        }
-
-        // Apply groupBy and make output
-        if (groupbyIdx > 0)
-        {
-            if (groupbyIdx > static_cast<int>(targetField.seqCounts.size()))
-            {
-                size_t numRows = product(dims);
-                dataRows.resize(numRows * maxCounts, {MissingValue});
-                for (size_t i = 0; i < numRows; ++i)
-                {
-                    if (output.size())
-                    {
-                        dataRows[i][0] = output[0];
-                    }
-                }
-            }
-            else
-            {
-                size_t numRows = product<int>(dims.begin(), dims.begin() + groupbyIdx);
-                std::vector<int> rowDims;
-                rowDims.assign(dims.begin() + groupbyIdx, dims.end());
-
-                size_t numsPerRow = static_cast<size_t>(product(rowDims));
-                dataRows.resize(numRows, std::vector<double>(numsPerRow, MissingValue));
-                for (size_t i = 0; i < numRows; ++i)
-                {
-                    for (size_t j = 0; j < numsPerRow; ++j)
-                    {
-                        dataRows[i][j] = output[i * numsPerRow + j];
-                    }
-                }
-            }
-        }
-        else
-        {
-            dataRows.resize(1);
-            dataRows[0] = output;
-        }
-    }
+//    void ResultSet::getRowsForField(const DataField& targetField,
+//                                    std::vector<std::vector<double>>& dataRows,
+//                                    const std::vector<int>& dims,
+//                                    int groupbyIdx) const
+//    {
+//        size_t maxCounts = 0;
+//        std::vector<size_t> idxs(targetField.data.size());
+//        for (size_t i = 0; i < idxs.size(); ++i)
+//        {
+//            idxs[i] = i;
+//        }
+//
+//        // Compute max counts
+//        for (size_t i = 0; i < targetField.seqCounts.size(); ++i)
+//        {
+//            if (maxCounts < targetField.seqCounts[i].size())
+//            {
+//                maxCounts = targetField.seqCounts[i].size();
+//            }
+//        }
+//
+//        // Compute insert array
+//        std::vector<std::vector<int>> inserts(dims.size(), {0});
+//        for (size_t repIdx = 0;
+//             repIdx < std::min(dims.size(), targetField.seqCounts.size());
+//             ++repIdx)
+//        {
+//            inserts[repIdx] = product<int>(dims.begin() + repIdx, dims.end()) -
+//                              targetField.seqCounts[repIdx] *
+//                              product<int>(dims.begin() + repIdx + 1, dims.end());
+//        }
+//
+//        // Inflate the data, compute the idxs for each data element in the result array
+//        for (int dim_idx = dims.size() - 1; dim_idx >= 0; --dim_idx)
+//        {
+//            for (size_t insert_idx = 0; insert_idx < inserts[dim_idx].size(); ++insert_idx)
+//            {
+//                size_t num_inserts = inserts[dim_idx][insert_idx];
+//                if (num_inserts > 0)
+//                {
+//                    int data_idx = product<int>(dims.begin() + dim_idx, dims.end()) *
+//                            insert_idx + product<int>(dims.begin() + dim_idx, dims.end())
+//                                    - num_inserts - 1;
+//
+//                    for (size_t i = 0; i < idxs.size(); ++i)
+//                    {
+//                        if (static_cast<int>(idxs[i]) > data_idx)
+//                        {
+//                            idxs[i] += num_inserts;
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//
+//        auto output = std::vector<double>(product(dims), MissingValue);
+//        for (size_t i = 0; i < idxs.size(); ++i)
+//        {
+//            output[idxs[i]] = targetField.data[i];
+//        }
+//
+//        // Apply groupBy and make output
+//        if (groupbyIdx > 0)
+//        {
+//            if (groupbyIdx > static_cast<int>(targetField.seqCounts.size()))
+//            {
+//                size_t numRows = product(dims);
+//                dataRows.resize(numRows * maxCounts, {MissingValue});
+//                for (size_t i = 0; i < numRows; ++i)
+//                {
+//                    if (output.size())
+//                    {
+//                        dataRows[i][0] = output[0];
+//                    }
+//                }
+//            }
+//            else
+//            {
+//                size_t numRows = product<int>(dims.begin(), dims.begin() + groupbyIdx);
+//                std::vector<int> rowDims;
+//                rowDims.assign(dims.begin() + groupbyIdx, dims.end());
+//
+//                size_t numsPerRow = static_cast<size_t>(product(rowDims));
+//                dataRows.resize(numRows, std::vector<double>(numsPerRow, MissingValue));
+//                for (size_t i = 0; i < numRows; ++i)
+//                {
+//                    for (size_t j = 0; j < numsPerRow; ++j)
+//                    {
+//                        dataRows[i][j] = output[i * numsPerRow + j];
+//                    }
+//                }
+//            }
+//        }
+//        else
+//        {
+//            dataRows.resize(1);
+//            dataRows[0] = output;
+//        }
+//    }
 
     std::string ResultSet::unit(const std::string& fieldName) const
     {

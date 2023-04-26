@@ -34,8 +34,9 @@ namespace bufr
     void QueryRunner::accumulate()
     {
         Targets targets;
-
         findTargets(targets);
+
+        resultSet_.addTarget(dataProvider_->getSubsetVariant(), targets);
         resultSet_.addFrame(SubsetLookupTable(dataProvider_, targets));
     }
 

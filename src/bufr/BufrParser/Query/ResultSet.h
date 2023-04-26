@@ -40,7 +40,7 @@ namespace bufr {
     class ResultSet
     {
      public:
-        explicit ResultSet(const Targets& targets);
+        explicit ResultSet();
         ~ResultSet();
 
         /// \brief Gets the resulting data for a specific field with a given name grouped by the
@@ -62,8 +62,19 @@ namespace bufr {
             frames_.push_back(std::move(frame));
         }
 
+        void addTarget(const SubsetVariant& subset, const Targets&& targets)
+        {
+            targetMap_[subset] = std::move(targets);
+        }
+
+        Targets getTargets(const SubsetVariant& subset) const
+        {
+            return targetMap_.at(subset);
+        }
+
      private:
         Targets targets_;
+        std::unordered_map<SubsetVariant, Targets> targetMap_;
         std::vector<SubsetLookupTable> frames_;
 
         /// \brief Computes the data for a specific field with a given name grouped by the
@@ -81,17 +92,17 @@ namespace bufr {
                           std::vector<Query>& dimPaths,
                           TypeInfo& info) const;
 
-        /// \brief Retrieves the data for the specified target field, one row per message subset.
-        /// The dims are used to determine the filling pattern so that that the resulting data can
-        /// be reshaped to the dimensions specified.
-        /// \param[in] targetField The target field to retrieve.
-        /// \param[out] dataRows The data.
-        /// \param[in] dims Vector of dimension sizes.
-        /// \param[in] groupbyIdx Idx of the group by field (which query component).
-        void getRowsForField(const DataField& targetField,
-                             std::vector<std::vector<double>>& dataRows,
-                             const std::vector<int>& dims,
-                             int groupbyIdx) const;
+//        /// \brief Retrieves the data for the specified target field, one row per message subset.
+//        /// The dims are used to determine the filling pattern so that that the resulting data can
+//        /// be reshaped to the dimensions specified.
+//        /// \param[in] targetField The target field to retrieve.
+//        /// \param[out] dataRows The data.
+//        /// \param[in] dims Vector of dimension sizes.
+//        /// \param[in] groupbyIdx Idx of the group by field (which query component).
+//        void getRowsForField(const DataField& targetField,
+//                             std::vector<std::vector<double>>& dataRows,
+//                             const std::vector<int>& dims,
+//                             int groupbyIdx) const;
 
         /// \brief Is the field a string field?
         /// \param fieldName The name of the field.

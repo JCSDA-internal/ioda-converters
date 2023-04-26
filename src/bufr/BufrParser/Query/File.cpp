@@ -48,7 +48,7 @@ namespace bufr {
     ResultSet File::execute(const QuerySet &querySet, size_t next)
     {
         size_t msgCnt = 0;
-        auto resultSet = ResultSet(querySet.names());
+        auto resultSet = ResultSet();
         auto queryRunner = QueryRunner(querySet, resultSet, dataProvider_);
 
         auto processMsg = [&msgCnt] () mutable

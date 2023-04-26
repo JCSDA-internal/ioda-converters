@@ -72,24 +72,32 @@ namespace bufr {
         /// \return The NodeData for the given node.
         NodeData& operator[](size_t nodeId) { return lookupTable_[nodeId]; }
 
+
+        SubsetVariant getSubsetVariant() const { return subsetVariant_; }
+
      private:
-        const std::shared_ptr<DataProvider> dataProvider_;
         LookupTable lookupTable_;
+        SubsetVariant subsetVariant_;
 
         /// \brief Creates a lookup table that maps node ids to NodeData objects.
         /// \param[in] targets The targets to create the lookup table for.
         /// \return The lookup table.
-        LookupTable makeLookupTable(const Targets& targets) const;
+        LookupTable makeLookupTable(const std::shared_ptr<DataProvider>& dataProvider,
+                                    const Targets& targets) const;
 
         /// \brief Adds the counts data for the given targets to the lookup table.
         /// \param[in] targets The targets to add the counts data for.
         /// \param[in, out] lookup The lookup table to add the counts data to.
-        void addCounts(const Targets& targets, LookupTable& lookup) const;
+        void addCounts(const std::shared_ptr<DataProvider>& dataProvider,
+                       const Targets& targets,
+                       LookupTable& lookup) const;
 
         /// \brief Adds the data for the given targets to the lookup table.
         /// \param[in] targets The targets to add the data for.
         /// \param[in, out] lookup The lookup table to add the data to.
-        void addData(const Targets& targets, LookupTable& lookup) const;
+        void addData(const std::shared_ptr<DataProvider>& dataProvider,
+                     const Targets& targets,
+                     LookupTable& lookup) const;
     };
 }  // namespace bufr
 }  // namespace Ingester
