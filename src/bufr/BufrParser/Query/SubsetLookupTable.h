@@ -48,7 +48,7 @@ namespace bufr {
     /// \brief Lookup table that maps BUFR subset node ids to the data and counts found in the BUFR
     /// message subset data section. This makes it possible to quickly access the data and counts
     /// information for a given node.
-    class NodeLookupTable
+    class SubsetLookupTable
     {
         typedef std::vector<double> DataVector;
         typedef std::vector<int> CountsVector;
@@ -65,7 +65,7 @@ namespace bufr {
         typedef __details::OffsetArray<NodeData> LookupTable;
 
      public:
-        NodeLookupTable(const std::shared_ptr<DataProvider>& dataProvider, const Targets& targets);
+        SubsetLookupTable(const std::shared_ptr<DataProvider>& dataProvider, const Targets& targets);
 
         /// \brief Returns the NodeData for a given bufr node.
         /// \param[in] nodeId The id of the node to get the data for.

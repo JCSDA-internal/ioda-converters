@@ -5,19 +5,19 @@
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
  */
 
-#include "NodeLookupTable.h"
+#include "SubsetLookupTable.h"
 
 
 namespace Ingester {
 namespace bufr {
-    NodeLookupTable::NodeLookupTable(const std::shared_ptr<DataProvider>& dataProvider,
+    SubsetLookupTable::SubsetLookupTable(const std::shared_ptr<DataProvider>& dataProvider,
                                      const Targets& targets) :
         dataProvider_(dataProvider),
         lookupTable_(makeLookupTable(targets))
     {
     }
 
-    NodeLookupTable::LookupTable NodeLookupTable::makeLookupTable(const Targets &targets) const
+    SubsetLookupTable::LookupTable SubsetLookupTable::makeLookupTable(const Targets &targets) const
     {
         auto lookupTable = LookupTable(dataProvider_->getInode(),
                                        dataProvider_->getIsc(dataProvider_->getInode()));
@@ -30,7 +30,7 @@ namespace bufr {
         return lookupTable;
     }
 
-    void NodeLookupTable::addCounts(const Targets &targets, LookupTable &lookup) const
+    void SubsetLookupTable::addCounts(const Targets &targets, LookupTable &lookup) const
     {
         // Add entries for all the path nodes in the targets that are containers (can contain)
         // children. Uses merged data from the Subset metadata and Query strings.
@@ -73,7 +73,7 @@ namespace bufr {
         }
     }
 
-    void NodeLookupTable::addData(const Targets &targets, LookupTable &lookup) const
+    void SubsetLookupTable::addData(const Targets &targets, LookupTable &lookup) const
     {
         // Reserve space for the data in the lookup table by summing the counts for each node.
         for (const auto& target : targets)

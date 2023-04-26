@@ -17,62 +17,11 @@
 #include "DataProvider/DataProvider.h"
 #include "DataObject.h"
 #include "Target.h"
+#include "SubsetLookupTable.h"
 
 
 namespace Ingester {
 namespace bufr {
-
-    typedef std::vector<std::vector<int>> SeqCounts;
-
-    /// \brief Represents a single BUFR data element (a element from one message subset). It
-    /// contains both the data value(s) and the associated metadata that is used to construct the
-    /// results data.
-    struct DataField
-    {
-        std::shared_ptr<Target> target;
-        std::vector<double> data;
-        SeqCounts seqCounts;
-    };
-
-    /// \brief Container for a "row" of data (all the collected data for a message subset)., with a
-    /// DataField for each data element
-    class DataFrame
-    {
-     public:
-        explicit DataFrame(int fieldCnt)
-        {
-            fields_.resize(fieldCnt);
-        }
-
-        /// \brief Get a reference for the const DataField at the given index.
-        /// \param idx The index of the data field to get.
-        inline const DataField& fieldAtIdx(size_t idx) const { return fields_[idx]; }
-
-        /// \brief Get a reference for the DataField at the given index.
-        /// \param idx The index of the data field to get.
-        inline DataField& fieldAtIdx(size_t idx) { return fields_[idx]; }
-
-        /// \brief Get the index for the field with the given name. This field idx is valid for all
-        /// data frames in the result set.
-        /// \param name The name of the field to get the index for.
-        int fieldIndexForNodeNamed(const std::string& name) const
-        {
-            auto result = -1;
-            for (size_t fieldIdx = 0; fieldIdx < fields_.size(); fieldIdx++)
-            {
-                if (fields_[fieldIdx].target->name == name)
-                {
-                    result = fieldIdx;
-                    break;
-                }
-            }
-
-            return result;
-        }
-
-     private:
-        std::vector<DataField> fields_;
-    };
 
     /// \brief This class acts as the container for all the data that is collected during the
     /// the BUFR querying process. Internally it arranges the data as DataFrames for each message
@@ -91,7 +40,7 @@ namespace bufr {
     class ResultSet
     {
      public:
-        explicit ResultSet(const std::vector<std::string>& names);
+        explicit ResultSet(const Targets& targets);
         ~ResultSet();
 
         /// \brief Gets the resulting data for a specific field with a given name grouped by the
@@ -106,17 +55,16 @@ namespace bufr {
             const std::string& groupByFieldName = "",
             const std::string& overrideType = "") const;
 
-        /// \brief Adds a new DataFrame to the ResultSet and returns a reference to it.
-        /// \return A reference to the new DataFrame.
-        DataFrame& nextDataFrame();
-
-        void setTargets(Targets targets) { targets_ = targets; }
+        /// \brief Move a new frame into the ResultSet.
+        /// \param frame The NodeLookupTable to std::move.
+        void addFrame(SubsetLookupTable&& frame)
+        {
+            frames_.push_back(std::move(frame));
+        }
 
      private:
         Targets targets_;
-        std::vector<DataFrame> dataFrames_;
-        std::vector<std::string> names_;
-        std::vector<int> fieldWidths;
+        std::vector<SubsetLookupTable> frames_;
 
         /// \brief Computes the data for a specific field with a given name grouped by the
         /// groupByField. It determines the required dimensions for the field and then uses

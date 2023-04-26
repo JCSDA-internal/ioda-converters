@@ -19,10 +19,9 @@
 
 namespace Ingester {
 namespace bufr {
-    ResultSet::ResultSet(const std::vector<std::string>& names) :
-      names_(names)
+    ResultSet::ResultSet(const Targets& targets) :
+      targets_(targets)
     {
-        fieldWidths.resize(names.size());
     }
 
     ResultSet::~ResultSet()
@@ -57,13 +56,6 @@ namespace bufr {
         return object;
     }
 
-
-    DataFrame& ResultSet::nextDataFrame()
-    {
-        dataFrames_.push_back(DataFrame(names_.size()));
-        return dataFrames_.back();
-    }
-
     void ResultSet::getRawValues(const std::string& fieldName,
                                  const std::string& groupByField,
                                  std::vector<double>& data,
@@ -71,119 +63,141 @@ namespace bufr {
                                  std::vector<Query>& dimPaths,
                                  TypeInfo& info) const
     {
-        // Find the dims based on the largest sequence counts in the fields
+        // Make sure we have accunulated frames
+        if (frames_.size() == 0)
+        {
+            throw eckit::BadValue("No data was found.");
+        }
 
         // Compute Dims
         std::vector<int> dimsList;
         std::vector<int> exportDims;
-        int groupbyIdx = 0;
-        int totalGroupbyElements = 0;
 
-        int targetFieldIdx = 0;
-        int groupByFieldIdx = 0;
-        if (dataFrames_.size() > 0)
+        // Find the target for the fieldName
+        std::shared_ptr<Target> target = nullptr;
+        for (const auto& targ : targets_)
         {
-            targetFieldIdx = dataFrames_[0].fieldIndexForNodeNamed(fieldName);
-
-            if (groupByField != "")
+            if (targ->name == fieldName)
             {
-                groupByFieldIdx = dataFrames_[0].fieldIndexForNodeNamed(groupByField);
-
-                // Validate that the groupByField and the targetField share a common path
-                auto& groupByFieldElement = dataFrames_[0].fieldAtIdx(groupByFieldIdx);
-                auto& groupByPath = groupByFieldElement.target->dimPaths.back();
-                auto& targetPath =
-                    dataFrames_[0].fieldAtIdx(targetFieldIdx).target->dimPaths.back();
-                auto groupByPathComps = splitPath(groupByPath.str());
-                auto targetPathComps = splitPath(targetPath.str());
-
-                for (size_t i = 1;
-                     i < std::min(groupByPathComps.size(), targetPathComps.size());
-                     i++)
-                {
-                    if (targetPathComps[i] != groupByPathComps[i])
-                    {
-                        std::ostringstream errStr;
-                        errStr << "The GroupBy and Target Fields do not share a common path.\n";
-                        errStr << "GroupByField path: " << groupByPath.str()<< std::endl;
-                        errStr << "TargetField path: " << targetPath.str() << std::endl;
-                        throw eckit::BadParameter(errStr.str());
-                    }
-                }
+                target = targ;
+                break;
             }
-
-            auto& targetField = dataFrames_[0].fieldAtIdx(targetFieldIdx);
-            dimPaths = targetField.target->dimPaths;
-            exportDims = targetField.target->exportDimIdxs;
         }
 
-        for (auto& dataFrame : dataFrames_)
+        // Find the target for the groupByField if it exists
+        std::shared_ptr<Target> groupByTarget = nullptr;
+        if (!groupByField.empty())
         {
-            auto& targetField = dataFrame.fieldAtIdx(targetFieldIdx);
-            if (!targetField.target->dimPaths.empty() &&
-                dimPaths.size() < targetField.target->dimPaths.size())
+            for (const auto& targ : targets_)
             {
-                dimPaths = targetField.target->dimPaths;
-                exportDims = targetField.target->exportDimIdxs;
-            }
-
-            size_t dimsLen = targetField.seqCounts.size();
-            if (dimsList.size() < dimsLen)
-            {
-                dimsList.resize(dimsLen, 0);
-            }
-
-            for (size_t cntIdx = 0; cntIdx < targetField.seqCounts.size(); ++cntIdx)
-            {
-                if (!targetField.seqCounts[cntIdx].empty())
+                if (target->name == groupByField)
                 {
-                    dimsList[cntIdx] = std::max(dimsList[cntIdx],
-                                                max(targetField.seqCounts[cntIdx]));
-                }
-            }
-
-            info.reference = std::min(info.reference, targetField.target->typeInfo.reference);
-            info.bits = std::max(info.bits, targetField.target->typeInfo.bits);
-
-            if (std::abs(targetField.target->typeInfo.scale) > info.scale)
-            {
-                info.scale = targetField.target->typeInfo.scale;
-            }
-
-            if (info.unit.empty()) info.unit = targetField.target->typeInfo.unit;
-
-            if (groupByField != "")
-            {
-                auto& groupByField = dataFrame.fieldAtIdx(groupByFieldIdx);
-                groupbyIdx = std::max(groupbyIdx, static_cast<int>(groupByField.seqCounts.size()));
-
-                if (groupbyIdx > static_cast<int>(dimsList.size()))
-                {
-                    dimPaths = {groupByField.target->dimPaths.back()};
-
-                    int groupbyElementsForFrame = 1;
-                    for (auto &seqCount : groupByField.seqCounts)
-                    {
-                        if (!seqCount.empty())
-                        {
-                            groupbyElementsForFrame *= max(seqCount);
-                        }
-                    }
-
-                    totalGroupbyElements = std::max(totalGroupbyElements, groupbyElementsForFrame);
-                }
-                else
-                {
-                    dimPaths = {};
-                    for (size_t targetIdx = groupByField.target->exportDimIdxs.size() - 1;
-                         targetIdx < targetField.target->dimPaths.size();
-                         ++targetIdx)
-                    {
-                        dimPaths.push_back(targetField.target->dimPaths[targetIdx]);
-                    }
+                    groupByTarget = targ;
+                    break;
                 }
             }
         }
+
+        // If groupByTarget exists check that is shares a common path with the target
+        if (groupByTarget)
+        {
+            auto groupByPathComps = splitPath(groupByTarget->dimPaths.back().str());
+            auto targetPathComps = splitPath(target->dimPaths.back().str());
+
+            for (size_t i = 1;
+                 i < std::min(groupByPathComps.size(), targetPathComps.size());
+                 i++)
+            {
+                if (targetPathComps[i] != groupByPathComps[i])
+                {
+                    std::ostringstream errStr;
+                    errStr << "The groupByField " << groupByField << " and the targetField "
+                           << fieldName << " do not share a common path. The groupByField path is "
+                           << groupByTarget->dimPaths.back().str() << " and the targetField path is"
+                           << " " << target->dimPaths.back().str();
+                    throw eckit::BadValue(errStr.str());
+                }
+            }
+        }
+
+        // Find the dims based on the largest sequence counts in each frame
+        dimsList.resize(target.path.size(), 0);
+        for (const auto& frame : frames_)
+        {
+            for (const auto& p : target.path)
+            {
+
+            }
+        }
+
+        // Find the dims based on the largest sequence counts in the fields
+//        for (auto& dataFrame : dataFrames_)
+//        {
+//            auto& targetField = dataFrame.fieldAtIdx(targetFieldIdx);
+//            if (!targetField.target->dimPaths.empty() &&
+//                dimPaths.size() < targetField.target->dimPaths.size())
+//            {
+//                dimPaths = targetField.target->dimPaths;
+//                exportDims = targetField.target->exportDimIdxs;
+//            }
+//
+//            size_t dimsLen = targetField.seqCounts.size();
+//            if (dimsList.size() < dimsLen)
+//            {
+//                dimsList.resize(dimsLen, 0);
+//            }
+//
+//            for (size_t cntIdx = 0; cntIdx < targetField.seqCounts.size(); ++cntIdx)
+//            {
+//                if (!targetField.seqCounts[cntIdx].empty())
+//                {
+//                    dimsList[cntIdx] = std::max(dimsList[cntIdx],
+//                                                max(targetField.seqCounts[cntIdx]));
+//                }
+//            }
+//
+//            info.reference = std::min(info.reference, targetField.target->typeInfo.reference);
+//            info.bits = std::max(info.bits, targetField.target->typeInfo.bits);
+//
+//            if (std::abs(targetField.target->typeInfo.scale) > info.scale)
+//            {
+//                info.scale = targetField.target->typeInfo.scale;
+//            }
+//
+//            if (info.unit.empty()) info.unit = targetField.target->typeInfo.unit;
+//
+//            if (groupByField != "")
+//            {
+//                auto& groupByField = dataFrame.fieldAtIdx(groupByFieldIdx);
+//                groupbyIdx = std::max(groupbyIdx, static_cast<int>(groupByField.seqCounts.size()));
+//
+//                if (groupbyIdx > static_cast<int>(dimsList.size()))
+//                {
+//                    dimPaths = {groupByField.target->dimPaths.back()};
+//
+//                    int groupbyElementsForFrame = 1;
+//                    for (auto &seqCount : groupByField.seqCounts)
+//                    {
+//                        if (!seqCount.empty())
+//                        {
+//                            groupbyElementsForFrame *= max(seqCount);
+//                        }
+//                    }
+//
+//                    totalGroupbyElements = std::max(totalGroupbyElements, groupbyElementsForFrame);
+//                }
+//                else
+//                {
+//                    dimPaths = {};
+//                    for (size_t targetIdx = groupByField.target->exportDimIdxs.size() - 1;
+//                         targetIdx < targetField.target->dimPaths.size();
+//                         ++targetIdx)
+//                    {
+//                        dimPaths.push_back(targetField.target->dimPaths[targetIdx]);
+//                    }
+//                }
+//            }
+//        }
 
         auto allDims = dimsList;
 
@@ -199,55 +213,57 @@ namespace bufr {
             }
         }
 
-        if (groupbyIdx > 0)
-        {
-            // The groupby field occurs at the same or greater repetition level as the target field.
-            if (groupbyIdx > static_cast<int>(dimsList.size()))
-            {
-                dims.resize(1, totalGroupbyElements);
-                exportDims = {0};
-                allDims = dims;
-            }
-            // The groupby field occurs at a lower repetition level than the target field.
-            else
-            {
-                dims.resize(dimsList.size() - groupbyIdx + 1, 1);
-                for (auto dimIdx = 0; dimIdx < groupbyIdx; ++dimIdx)
-                {
-                    dims[0] *= allDims[dimIdx];
-                }
+//        if (groupbyIdx > 0)
+//        {
+//            // The groupby field occurs at the same or greater repetition level as the target field.
+//            if (groupbyIdx > static_cast<int>(dimsList.size()))
+//            {
+//                dims.resize(1, totalGroupbyElements);
+//                exportDims = {0};
+//                allDims = dims;
+//            }
+//            // The groupby field occurs at a lower repetition level than the target field.
+//            else
+//            {
+//                dims.resize(dimsList.size() - groupbyIdx + 1, 1);
+//                for (auto dimIdx = 0; dimIdx < groupbyIdx; ++dimIdx)
+//                {
+//                    dims[0] *= allDims[dimIdx];
+//                }
+//
+//                for (size_t dimIdx = groupbyIdx; dimIdx < allDims.size(); ++dimIdx)
+//                {
+//                    dims[dimIdx - groupbyIdx + 1] = allDims[dimIdx];
+//                }
+//
+//                exportDims = exportDims - (groupbyIdx - 1);
+//
+//                // Filter out exportDims that are 0
+//                std::vector<int> filteredExportDims;
+//                for (size_t dimIdx = 0; dimIdx < exportDims.size(); ++dimIdx)
+//                {
+//                    if (exportDims[dimIdx] >= 0)
+//                    {
+//                        filteredExportDims.push_back(exportDims[dimIdx]);
+//                    }
+//                }
+//
+//                if (filteredExportDims.empty() || filteredExportDims[0] != 0)
+//                {
+//                    filteredExportDims.insert(filteredExportDims.begin(), 0);
+//                }
+//
+//                exportDims = filteredExportDims;
+//            }
+//        }
+//        else
+//        {
+//            dims = allDims;
+//        }
 
-                for (size_t dimIdx = groupbyIdx; dimIdx < allDims.size(); ++dimIdx)
-                {
-                    dims[dimIdx - groupbyIdx + 1] = allDims[dimIdx];
-                }
+        dims = allDims;
 
-                exportDims = exportDims - (groupbyIdx - 1);
-
-                // Filter out exportDims that are 0
-                std::vector<int> filteredExportDims;
-                for (size_t dimIdx = 0; dimIdx < exportDims.size(); ++dimIdx)
-                {
-                    if (exportDims[dimIdx] >= 0)
-                    {
-                        filteredExportDims.push_back(exportDims[dimIdx]);
-                    }
-                }
-
-                if (filteredExportDims.empty() || filteredExportDims[0] != 0)
-                {
-                    filteredExportDims.insert(filteredExportDims.begin(), 0);
-                }
-
-                exportDims = filteredExportDims;
-            }
-        }
-        else
-        {
-            dims = allDims;
-        }
-
-        size_t totalRows = dims[0] * dataFrames_.size();
+        size_t totalRows = dims[0] * frames_.size();
 
         // Make data set
         int rowLength = 1;
@@ -257,7 +273,7 @@ namespace bufr {
         }
 
         data.resize(totalRows * rowLength, MissingValue);
-        for (size_t frameIdx = 0; frameIdx < dataFrames_.size(); ++frameIdx)
+        for (size_t frameIdx = 0; frameIdx < frames_.size(); ++frameIdx)
         {
             auto& dataFrame = dataFrames_[frameIdx];
             std::vector<std::vector<double>> frameData;
@@ -283,10 +299,7 @@ namespace bufr {
 
         // Convert dims per data frame to dims for all the collected data.
         dims[0] = totalRows;
-        if (dataFrames_.size() > 0)
-        {
-            dims = slice(dims, exportDims);
-        }
+        dims = slice(dims, exportDims);
     }
 
 //    subroutine result_set__get_rows_for_field(self, target_field, data_rows, dims, groupby_idx)

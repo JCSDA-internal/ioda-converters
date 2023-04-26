@@ -16,18 +16,12 @@
 #include "Constants.h"
 #include "SubsetTable.h"
 #include "VectorMath.h"
-#include "NodeLookupTable.h"
+#include "SubsetLookupTable.h"
 
 
 namespace Ingester {
 namespace bufr
 {
-    struct NodeData
-    {
-        std::vector<double> values;
-        std::vector<int> counts;
-    };
-
     QueryRunner::QueryRunner(const QuerySet &querySet,
                              ResultSet &resultSet,
                              const DataProviderType &dataProvider) :
@@ -42,7 +36,7 @@ namespace bufr
         Targets targets;
 
         findTargets(targets);
-        collectData(targets, resultSet_);
+        resultSet_.addFrame(SubsetLookupTable(dataProvider_, targets));
     }
 
     void QueryRunner::findTargets(Targets &targets)
@@ -136,152 +130,6 @@ namespace bufr
 
         // Cache the targets and masks we just found
         targetCache_.insert({dataProvider_->getSubsetVariant(), targets});
-    }
-
-    void QueryRunner::collectData(Targets& targets, ResultSet &resultSet) const
-    {
-        auto lookupTable = NodeLookupTable(dataProvider_, targets);
-        auto &dataFrame = resultSet.nextDataFrame();
-
-        for (size_t targetIdx = 0; targetIdx < targets.size(); targetIdx++)
-        {
-            const auto &targ = targets.at(targetIdx);
-            auto &dataField = dataFrame.fieldAtIdx(targetIdx);
-            dataField.target = targ;
-
-            if (targ->nodeIdx == 0)
-            {
-                dataField.data = {MissingValue};
-                dataField.seqCounts = SeqCounts(std::vector<std::vector<int>>(1, {1}));
-            }
-            else
-            {
-                dataField.seqCounts.resize(targ->seqPath.size() + 1);
-                dataField.seqCounts[0] = {1};
-                SeqCounts counts;
-
-                // Compute the output counts for each path component. If the component has a filter
-                // we need to exclude the filtered out values from the counts.
-                bool hasFilter = false;
-                std::vector<std::vector<size_t>> filters;
-                for (size_t pathIdx = 0; pathIdx < targ->seqPath.size(); pathIdx++)
-                {
-                    auto& pathComponent = targ->path[pathIdx + 1];
-                    auto& filter = pathComponent.queryComponent->filter;
-                    if (filter.empty())  // No filter
-                    {
-                        dataField.seqCounts[pathIdx + 1] = lookupTable[pathComponent.nodeId].counts;
-                    }
-                    else  // Component has a filter
-                    {
-                        hasFilter = true;
-
-                        // Delay the creation of the counts and filters until we know we need them
-                        // in order to avoid unnecessary allocations
-                        if (counts.empty())
-                            counts = SeqCounts(
-                                std::vector<std::vector<int>>(targ->seqPath.size() + 1, {1}));
-
-                        if (filters.empty())
-                            filters = std::vector<std::vector<size_t>>(targ->seqPath.size() + 1);
-
-                        // Add the filter to the filters vector
-                        filters[pathIdx + 1] = filter;
-
-                        // Create a new counts vector with the filtered out values excluded
-                        auto filteredCounts =
-                          std::vector<int>(lookupTable[pathComponent.nodeId].counts.size(), 1);
-                        for (size_t countIdx = 0; countIdx < filteredCounts.size(); countIdx++)
-                        {
-                            filteredCounts[countIdx] =
-                                std::max(static_cast<int>(filter.size()), filteredCounts[countIdx]);
-                        }
-
-                        // Store the filtered counts in the data field
-                        dataField.seqCounts[pathIdx + 1] = filteredCounts;
-
-                        // Store the original (unfiltered) counts in the counts vector
-                        counts[pathIdx + 1] = lookupTable[pathComponent.nodeId].counts;
-                    }
-                }
-
-                if (!hasFilter)
-                {
-                    // No filters so just copy the data.
-                    dataField.data = lookupTable[targ->path.back().nodeId].data;
-                }
-                else
-                {
-                    // There are filters, so we need to create a new data vector with the filtered
-                    // values.
-                    dataField.data = makeFilteredData(lookupTable[targ->path.back().nodeId].data,
-                                                      counts,
-                                                      filters);
-                }
-            }
-        }
-    }
-
-    std::vector<double> QueryRunner::makeFilteredData(
-                                            const std::vector<double>& srcData,
-                                            const SeqCounts& origCounts,
-                                            const std::vector<std::vector<size_t>>& filter) const
-    {
-        auto data = std::vector<double>();
-        data.reserve(sum(origCounts.back()));
-
-        size_t offset = 0;
-        _makeFilteredData(srcData, origCounts, filter, data, offset, 0);
-
-        return data;
-    }
-
-    void QueryRunner::_makeFilteredData(const std::vector<double>& srcData,
-                                        const SeqCounts& origCounts,
-                                        const std::vector<std::vector<size_t>> &filters,
-                                        std::vector<double>& data,
-                                        size_t& offset,
-                                        size_t depth,
-                                        bool skipResult) const
-    {
-        if (depth > origCounts.size() - 1)
-        {
-            if (!skipResult) data.push_back(srcData[offset]);
-            offset++;
-
-            return;
-        }
-
-        auto& layerCounts = origCounts[depth];
-        auto& layerFilter = filters[depth];
-
-        if (layerFilter.empty())
-        {
-            for (size_t countIdx = 0; countIdx < layerCounts.size(); countIdx++)
-            {
-                _makeFilteredData(srcData, origCounts, filters, data,
-                                  offset, depth + 1, skipResult);
-            }
-        }
-        else
-        {
-            for (size_t countIdx = 0; countIdx < layerCounts.size(); countIdx++)
-            {
-                for (size_t count = 1; count <= static_cast<size_t>(layerCounts[countIdx]); count++)
-                {
-                    bool skip = skipResult;
-
-                    if (!skip)
-                    {
-                        skip = std::find(layerFilter.begin(),
-                                         layerFilter.end(),
-                                         count) == layerFilter.end();
-                    }
-
-                    _makeFilteredData(srcData, origCounts, filters, data, offset, depth + 1, skip);
-                }
-            }
-        }
     }
 }  // namespace bufr
 }  // namespace Ingester
