@@ -69,7 +69,7 @@ get_files() {
         for afile in ${gfile} ${nfile} ${pfile} ${qfile}; do
             out_file=${afile##*/}
             # use common name for all data sources
-            out_file="gdas.t${dtg:8:2}.t${dtg:8:2}z.${atype}.tm00.bfr"
+            out_file="gdas.${dtg:0:8}.t${dtg:8:2}z.${atype}.tm00.bfr"
             if [[ -s ${out_file} ]]; then
                 # echo "  ... output exists skipping: ${afile}"
                 continue
