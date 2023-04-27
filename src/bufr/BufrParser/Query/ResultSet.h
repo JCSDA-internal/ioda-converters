@@ -62,19 +62,23 @@ namespace bufr {
             frames_.push_back(std::move(frame));
         }
 
-        void addTarget(const SubsetVariant& subset, const Targets&& targets)
+        void addTargets(const SubsetVariant& subset, const std::shared_ptr<Targets>&& targets)
         {
             targetMap_[subset] = std::move(targets);
         }
 
-        Targets getTargets(const SubsetVariant& subset) const
+        std::shared_ptr<Targets> getTargets(const SubsetVariant& subset) const
         {
+            if (targetMap_.find(subset) == targetMap_.end())
+            {
+                return nullptr;
+            }
+
             return targetMap_.at(subset);
         }
 
      private:
-        Targets targets_;
-        std::unordered_map<SubsetVariant, Targets> targetMap_;
+        std::unordered_map<SubsetVariant, std::shared_ptr<Targets>> targetMap_;
         std::vector<SubsetLookupTable> frames_;
 
         /// \brief Computes the data for a specific field with a given name grouped by the

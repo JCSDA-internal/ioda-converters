@@ -41,12 +41,11 @@ namespace bufr {
         const QuerySet querySet_;
         ResultSet& resultSet_;
         const DataProviderType& dataProvider_;
-        std::unordered_map<SubsetVariant, Targets> targetCache_;
 
         /// \brief Look for the list of targets for the currently active BUFR message subset that
         /// apply to the QuerySet and cache them.
         /// \param[in, out] targets The list of targets to populate.
-        void findTargets(Targets& targets);
+        std::shared_ptr<Targets> getTargets();
     };
 }  // namespace bufr
 }  // namespace Ingester

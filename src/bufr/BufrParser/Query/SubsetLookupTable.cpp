@@ -11,15 +11,15 @@
 namespace Ingester {
 namespace bufr {
     SubsetLookupTable::SubsetLookupTable(const std::shared_ptr<DataProvider>& dataProvider,
-                                     const Targets& targets) :
+                                         const Targets& targets) :
         subsetVariant_(dataProvider->getSubsetVariant()),
-        lookupTable_(makeLookupTable(targets))
+        lookupTable_(makeLookupTable(dataProvider, targets))
     {
     }
 
     SubsetLookupTable::LookupTable
     SubsetLookupTable::makeLookupTable(const std::shared_ptr<DataProvider>& dataProvider,
-                                       const Targets &targets) const
+                                       const Targets& targets) const
     {
         auto lookupTable = LookupTable(dataProvider->getInode(),
                                        dataProvider->getIsc(dataProvider->getInode()));
@@ -33,7 +33,8 @@ namespace bufr {
     }
 
     void SubsetLookupTable::addCounts(const std::shared_ptr<DataProvider>& dataProvider,
-                                      const Targets &targets, LookupTable &lookup) const
+                                      const Targets &targets,
+                                      LookupTable &lookup) const
     {
         // Add entries for all the path nodes in the targets that are containers (can contain)
         // children. Uses merged data from the Subset metadata and Query strings.

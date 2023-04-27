@@ -37,6 +37,7 @@ namespace bufr {
             }
 
             T& operator[](size_t idx) { return data_[idx - offset_]; }
+            const T& operator[](size_t idx) const { return data_[idx - offset_]; }
 
          private:
             std::vector<T> data_;
@@ -70,14 +71,13 @@ namespace bufr {
         /// \brief Returns the NodeData for a given bufr node.
         /// \param[in] nodeId The id of the node to get the data for.
         /// \return The NodeData for the given node.
-        NodeData& operator[](size_t nodeId) { return lookupTable_[nodeId]; }
-
+        const NodeData& operator[](size_t nodeId) const { return lookupTable_[nodeId]; }
 
         SubsetVariant getSubsetVariant() const { return subsetVariant_; }
 
      private:
-        LookupTable lookupTable_;
         SubsetVariant subsetVariant_;
+        LookupTable lookupTable_;
 
         /// \brief Creates a lookup table that maps node ids to NodeData objects.
         /// \param[in] targets The targets to create the lookup table for.

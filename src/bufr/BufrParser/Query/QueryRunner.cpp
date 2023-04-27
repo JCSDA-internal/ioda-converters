@@ -33,24 +33,22 @@ namespace bufr
 
     void QueryRunner::accumulate()
     {
-        Targets targets;
-        findTargets(targets);
-
-        resultSet_.addTarget(dataProvider_->getSubsetVariant(), targets);
-        resultSet_.addFrame(SubsetLookupTable(dataProvider_, targets));
+        resultSet_.addFrame(SubsetLookupTable(dataProvider_, *getTargets()));
     }
 
-    void QueryRunner::findTargets(Targets &targets)
+    std::shared_ptr<Targets> QueryRunner::getTargets()
     {
         // Check if the target list for this subset is cached
-        if (targetCache_.find(dataProvider_->getSubsetVariant()) != targetCache_.end())
+        auto targets = resultSet_.getTargets(dataProvider_->getSubsetVariant());
+        if (targets)
         {
-            targets = targetCache_.at(dataProvider_->getSubsetVariant());
-            return;
+            return targets;
         }
 
         auto table = SubsetTable(dataProvider_);
 
+        targets = std::make_shared<Targets>();
+        targets->reserve(querySet_.names().size());
         for (const auto &name : querySet_.names())
         {
             // Find the table node for the query. Loop through all the sub-queries until you find
@@ -82,7 +80,7 @@ namespace bufr
                 target->dimPaths.push_back({Query()});
                 target->typeInfo = TypeInfo();
                 target->exportDimIdxs = {0};
-                targets.push_back(target);
+                targets->push_back(target);
 
                 // Print message to inform the user of the missing targetz
                 oops::Log::warning() << "Warning: Query String ";
@@ -126,11 +124,13 @@ namespace bufr
             target->typeInfo = tableNode->typeInfo;
             target->nodeIdx = tableNode->nodeIdx;
 
-            targets.push_back(target);
+            targets->push_back(target);
         }
 
         // Cache the targets and masks we just found
-        targetCache_.insert({dataProvider_->getSubsetVariant(), targets});
+        resultSet_.addTargets(dataProvider_->getSubsetVariant(), std::move(targets));
+
+        return resultSet_.getTargets(dataProvider_->getSubsetVariant());
     }
 }  // namespace bufr
 }  // namespace Ingester
