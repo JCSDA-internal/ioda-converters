@@ -17,7 +17,6 @@
 # /MetaData/sensorScanAngle
 # /MetaData/sensorScanPosition
 # /MetaData/sensorAzimuthAngle
-# /MetaData/sensorViewAngle
 # /MetaData/sensorZenithAngle
 # /MetaData/latitude
 # /MetaData/latitude -> lat_nadir
@@ -136,43 +135,41 @@ class GoesLatLon:
         scan_position = np.full(latitude.shape, 1, dtype='int32')
         return scan_position
 
-    def _calc_sensor_zenith_azimuth_view_angles(self, latitude, longitude):
+    def _calc_sensor_zenith_azimuth_angles(self, latitude, longitude):
         """
-        Calculates the sensor zenith, azimuth, and view angles. These angles are limited to values between -80 and 80
+        Calculates the sensor zenith and azimuth angles. Zenith angle is limited to values between -80 and 80
         degrees due to a constraint in CRTM.
         latitude - the latitude data array
         longitude - the longitude data array
         """
+        d2r = np.pi / 180.0
         goes_imager_projection = self._source_dataset.variables['goes_imager_projection']
         r_eq = goes_imager_projection.getncattr('semi_major_axis')
         h = goes_imager_projection.getncattr('perspective_point_height') + \
             goes_imager_projection.getncattr('semi_major_axis')
         lat_0 = goes_imager_projection.getncattr('latitude_of_projection_origin')
         lon_0 = goes_imager_projection.getncattr('longitude_of_projection_origin')
-        lat_0_rad = lat_0 * np.pi / 180.0
-        lon_0_rad = lon_0 * np.pi / 180.0
-        latitude_rad = latitude * np.pi / 180.0
-        longitude_rad = longitude * np.pi / 180.0
+        lat_0_rad = lat_0 * d2r
+        lon_0_rad = lon_0 * d2r
+        latitude_rad = latitude * d2r
+        longitude_rad = longitude * d2r
         h_sqr = np.power(h, 2.0)
         r_eq_sqr = np.power(r_eq, 2.0)
         beta = np.arccos(np.cos(latitude_rad - lat_0_rad) * np.cos(longitude_rad - lon_0_rad))
         sqrt_comp = h_sqr + r_eq_sqr - (2.0 * h * r_eq * np.cos(beta))
-        sensor_zenith_angle = np.arcsin((h * np.sin(beta)) / np.sqrt(sqrt_comp)) * 180.0 / np.pi
-        sensor_azimuth_angle = np.arcsin(np.sin(lon_0_rad - longitude_rad) / np.sin(beta)) * 180.0 / np.pi
-        sensor_view_angle = sensor_zenith_angle
-        sensor_zenith_angle = self._goes_util.filter_data_array_by_yaw_flip_flag(sensor_zenith_angle)
-        sensor_azimuth_angle = self._goes_util.filter_data_array_by_yaw_flip_flag(sensor_azimuth_angle)
-        sensor_view_angle = self._goes_util.filter_data_array_by_yaw_flip_flag(sensor_view_angle)
-        sensor_zenith_angle = np.nan_to_num(sensor_zenith_angle, nan=-999)
-        sensor_azimuth_angle = np.nan_to_num(sensor_azimuth_angle, nan=-999)
-        sensor_view_angle = np.nan_to_num(sensor_view_angle, nan=-999)
+        sensor_zenith_angle = np.arcsin((h * np.sin(beta)) / np.sqrt(sqrt_comp)) / d2r
+        x = np.sin(longitude_rad - lon_0_rad) * np.cos(latitude_rad)
+        y = np.cos(lat_0_rad)*np.sin(latitude_rad) - np.sin(lat_0_rad)*np.cos(latitude_rad)*np.cos(longitude_rad - lon_0_rad)
+        sensor_azimuth_angle = np.arctan2(x,y) / d2r + 180.0
         sensor_zenith_angle = np.where(sensor_zenith_angle > 80, 80, sensor_zenith_angle)
         sensor_zenith_angle = np.where(sensor_zenith_angle < -80, -80, sensor_zenith_angle)
         sensor_azimuth_angle = np.where(sensor_azimuth_angle > 360, 360, sensor_azimuth_angle)
         sensor_azimuth_angle = np.where(sensor_azimuth_angle < 0, 0, sensor_azimuth_angle)
-        sensor_view_angle = np.where(sensor_view_angle > 80, 80, sensor_view_angle)
-        sensor_view_angle = np.where(sensor_view_angle < -80, -80, sensor_view_angle)
-        return sensor_zenith_angle, sensor_azimuth_angle, sensor_view_angle
+        sensor_zenith_angle = np.nan_to_num(sensor_zenith_angle, nan=-999)
+        sensor_azimuth_angle = np.nan_to_num(sensor_azimuth_angle, nan=-999)
+        sensor_zenith_angle = self._goes_util.filter_data_array_by_yaw_flip_flag(sensor_zenith_angle)
+        sensor_azimuth_angle = self._goes_util.filter_data_array_by_yaw_flip_flag(sensor_azimuth_angle)
+        return sensor_zenith_angle, sensor_azimuth_angle
 
     def _filter_by_fill_value(self, data_array):
         """
@@ -189,8 +186,8 @@ class GoesLatLon:
         latitude, longitude = self._calc_latlon()
         scan_angle, elevation_angle = self._calc_scan_elevation_angles()
         scan_position = GoesLatLon._calc_scan_position(latitude)
-        sensor_zenith_angle, sensor_azimuth_angle, sensor_view_angle = \
-            self._calc_sensor_zenith_azimuth_view_angles(latitude, longitude)
+        sensor_zenith_angle, sensor_azimuth_angle = \
+            self._calc_sensor_zenith_azimuth_angles(latitude, longitude)
         latlon_dataset = Dataset(self._latlon_file_path, 'w')
         Location = len(latitude)
         latlon_dataset.createDimension('Location', Location)
@@ -208,7 +205,6 @@ class GoesLatLon:
         latlon_dataset.createVariable('/MetaData/sensorElevationAngle', 'f4', 'Location', fill_value=-999)
         latlon_dataset.createVariable('/MetaData/sensorZenithAngle', 'f4', 'Location', fill_value=-999)
         latlon_dataset.createVariable('/MetaData/sensorAzimuthAngle', 'f4', 'Location', fill_value=-999)
-        latlon_dataset.createVariable('/MetaData/sensorViewAngle', 'f4', 'Location', fill_value=-999)
         latlon_dataset['/MetaData/latitude'][:] = latitude
         latlon_dataset['/MetaData/longitude'][:] = longitude
         latlon_dataset['/MetaData/sensorScanAngle'][:] = scan_angle
@@ -216,7 +212,6 @@ class GoesLatLon:
         latlon_dataset['/MetaData/sensorElevationAngle'][:] = elevation_angle
         latlon_dataset['/MetaData/sensorZenithAngle'][:] = sensor_zenith_angle
         latlon_dataset['/MetaData/sensorAzimuthAngle'][:] = sensor_azimuth_angle
-        latlon_dataset['/MetaData/sensorViewAngle'][:] = sensor_view_angle
         lat_nadir, lon_nadir = self._get_nadir_attributes()
         latlon_dataset['/MetaData/latitude'].setncattr('lat_nadir', lat_nadir)
         latlon_dataset['/MetaData/longitude'].setncattr('lon_nadir', lon_nadir)

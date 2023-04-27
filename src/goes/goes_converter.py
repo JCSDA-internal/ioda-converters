@@ -21,7 +21,6 @@
 # /MetaData/sensorScanAngle -> units
 # /MetaData/sensorScanPosition
 # /MetaData/sensorAzimuthAngle -> units
-# /MetaData/sensorViewAngle -> units
 # /MetaData/sensorZenithAngle -> units
 # /MetaData/solarAzimuthAngle -> units
 # /MetaData/solarZenithAngle -> units
@@ -223,16 +222,6 @@ class GoesConverter:
         output_dataset.createVariable('/MetaData/sensorAzimuthAngle', 'f4', 'Location', fill_value=-999)
         output_dataset['/MetaData/sensorAzimuthAngle'][:] = sensor_azimuth_angle_data_array
         output_dataset['/MetaData/sensorAzimuthAngle'].setncattr('units', 'degrees')
-
-    def _create_metadata_sensor_view_angle_variable(self, output_dataset):
-        """
-        Creates the /MetaData/sensorViewAngle variable in an output netCDF4 dataset.
-        output_dataset - A netCDF4 Dataset object
-        """
-        sensor_view_angle_data_array = self._latlon_dataset['MetaData'].variables['sensorViewAngle'][:].real
-        output_dataset.createVariable('/MetaData/sensorViewAngle', 'f4', 'Location', fill_value=-999)
-        output_dataset['/MetaData/sensorViewAngle'][:] = sensor_view_angle_data_array
-        output_dataset['/MetaData/sensorViewAngle'].setncattr('units', 'degrees')
 
     def _create_metadata_solar_angle_variables(self, output_dataset):
         """
@@ -534,7 +523,6 @@ class GoesConverter:
         self._create_metadata_scan_angle_variable(dataset)
         self._create_metadata_scan_position_variable(dataset)
         self._create_metadata_sensor_azimuth_angle_variable(dataset)
-        self._create_metadata_sensor_view_angle_variable(dataset)
         self._create_metadata_sensor_zenith_angle_variable(dataset)
         self._create_metadata_solar_angle_variables(dataset)
         self._create_metadata_time_variable(dataset)
@@ -559,7 +547,6 @@ class GoesConverter:
         self._create_metadata_scan_angle_variable(dataset)
         self._create_metadata_scan_position_variable(dataset)
         self._create_metadata_sensor_azimuth_angle_variable(dataset)
-        self._create_metadata_sensor_view_angle_variable(dataset)
         self._create_metadata_sensor_zenith_angle_variable(dataset)
         self._create_metadata_solar_angle_variables(dataset)
         self._create_metadata_time_variable(dataset)
