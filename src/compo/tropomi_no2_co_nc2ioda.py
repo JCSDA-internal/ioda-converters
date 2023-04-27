@@ -71,10 +71,12 @@ class tropomi(object):
             # many variables are time, scanline, ground_pixel
             # but others are just time, scanline
             lats = ncd.groups['PRODUCT'].variables['latitude'][:].ravel()
+            nlocs = len(lats)
             lons = ncd.groups['PRODUCT'].variables['longitude'][:].ravel()
             qa_value = ncd.groups['PRODUCT'].variables['qa_value'][:]  # 2D
             times = np.empty_like(qa_value, dtype=object)
             qa_value = qa_value.ravel()
+            nlevs = ncd.groups['PRODUCT'].dimensions['layer'].size
 
             # adding ability to pre filter the data using the qa value
             # and also perform thinning using random uniform draw
@@ -88,6 +90,7 @@ class tropomi(object):
             for t in range(len(time1[0])):
                 times[0, t, :] = time1[0, t][0:19]+'Z'
             times = times.ravel()
+
             if self.varname == 'no2':
                 trop_layer = ncd.groups['PRODUCT'].variables['tm5_tropopause_layer_index'][:].ravel()
                 total_airmass = ncd.groups['PRODUCT'].variables['air_mass_factor_total'][:].ravel()
@@ -99,17 +102,28 @@ class tropomi(object):
                 # bottom of layer is vertice 0, very top layer is TOA (0hPa)
                 ak = ncd.groups['PRODUCT'].variables['tm5_constant_a'][:, :]
                 bk = ncd.groups['PRODUCT'].variables['tm5_constant_b'][:, :]
-                # grab the averaging kernel
+                # grab the averaging kernel and reshape it
                 avg_kernel = ncd.groups['PRODUCT'].variables['averaging_kernel'][:]
+                avg_kernel = np.reshape(avg_kernel, (nlocs,nlevs))
+                #contruct the pressure vertices array
+                preslv = np.transpose(ak[...,0][:,np.newaxis] + np.outer(bk[...,0], ps[...].ravel()))
+                top = ak[nlevs-1, 1] + bk[nlevs-1, 1]*ps[...].ravel()
+
+
             elif self.varname == 'co':
-                preslv = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].\
-                    groups['DETAILED_RESULTS'].variables['pressure_levels'][:]
-                # grab the averaging kernel
+                # grab the averaging kernel and reshape it
                 avg_kernel = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].\
                     groups['DETAILED_RESULTS'].variables['column_averaging_kernel'][:]
+                avg_kernel = np.reshape(avg_kernel, (nlocs,nlevs))
 
-            nlevs = len(avg_kernel[0, 0, 0])
-            AttrData['averaging_kernel_levels'] = np.int32(nlevs)
+                #contruct the pressure vertices array
+                preslv = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].\
+                    groups['DETAILED_RESULTS'].variables['pressure_levels'][:]
+                preslv = np.flip(np.reshape(preslv, (nlocs,nlevs)), axis=1)
+                top = np.zeros(nlocs)
+
+            #assemble presvertices with top vertice
+            preslv = np.append(preslv, top[:,np.newaxis], axis=1)
 
             # scale the avk using AMF ratio and tropopause level for tropo column
             nlocf = len(lats[flg])
@@ -126,22 +140,9 @@ class tropomi(object):
                 self.outdata[('latitude', 'MetaData')] = lats[flg]
                 self.outdata[('longitude', 'MetaData')] = lons[flg]
                 self.outdata[('quality_assurance_value', 'MetaData')] = qa_value[flg]
-                for k in range(nlevs):
-                    varname_ak = ('averaging_kernel_level_'+str(k+1), 'RtrvlAncData')
-                    self.outdata[varname_ak] = avg_kernel[..., k].ravel()[flg] * scaleAK[..., k]
-                    varname_pr = ('pressure_level_'+str(k+1), 'RtrvlAncData')
-                    if self.varname == 'no2':
-                        self.outdata[varname_pr] = ak[k, 0] + bk[k, 0]*ps[...].ravel()[flg]
-                    elif self.varname == 'co':
-                        rev_k = nlevs-k-1
-                        self.outdata[varname_pr] = preslv[..., rev_k].ravel()[flg]
-                # add top vertice in IODA file, here it is 0hPa but can be different
-                # for other obs stream
-                varname_pr = ('pressure_level_'+str(nlevs+1), 'RtrvlAncData')
-                if self.varname == 'no2':
-                    self.outdata[varname_pr] = ak[nlevs-1, 1] + bk[nlevs-1, 1]*ps[...].ravel()
-                elif self.varname == 'co':
-                    self.outdata[varname_pr] = np.zeros((nlocf), dtype=np.float32)
+
+                self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = avg_kernel[flg]
+                self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = preslv[flg]
 
             else:
                 self.outdata[('dateTime', 'MetaData')] = np.concatenate((
@@ -152,24 +153,11 @@ class tropomi(object):
                     self.outdata[('longitude', 'MetaData')], lons[flg]))
                 self.outdata[('quality_assurance_value', 'MetaData')] = np.concatenate((
                     self.outdata[('quality_assurance_value', 'MetaData')], qa_value[flg]))
-                for k in range(nlevs):
-                    varname_ak = ('averaging_kernel_level_'+str(k+1), 'RtrvlAncData')
-                    self.outdata[varname_ak] = np.concatenate(
-                        (self.outdata[varname_ak], avg_kernel[..., k].ravel()[flg] * scaleAK[..., k]))
-                    varname_pr = ('pressure_level_'+str(k+1), 'RtrvlAncData')
-                    if self.varname == 'no2':
-                        pr_data = ak[k, 0] + bk[k, 0]*ps[...].ravel()[flg]
-                    elif self.varname == 'co':
-                        rev_k = nlevs-k-1
-                        pr_data = preslv[..., rev_k].ravel()[flg]
-                    self.outdata[varname_pr] = np.concatenate((self.outdata[varname_pr], pr_data))
-                varname_pr = ('pressure_level_'+str(nlevs+1), 'RtrvlAncData')
-                if self.varname == 'no2':
-                    self.outdata[varname_pr] = np.concatenate(
-                        (self.outdata[varname_pr], ak[nlevs-1, 1] + bk[nlevs-1, 1]*ps[...].ravel()[flg]))
-                elif self.varname == 'co':
-                    self.outdata[varname_pr] = np.concatenate(
-                        (self.outdata[varname_pr], np.zeros((nlocf), dtype=np.float32)))
+
+                self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = np.concatenate((
+                    self.outdata[('averagingKernel', 'RetrievalAncillaryData')], avg_kernel[flg]))
+                self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = np.concatenate((
+                    self.outdata[('pressureVertice', 'RetrievalAncillaryData')], preslv[flg]))
 
             for ncvar, iodavar in self.obsVar.items():
 
@@ -197,12 +185,20 @@ class tropomi(object):
 
         DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
         AttrData['Location'] = np.int32(DimDict['Location'])
+        DimDict['Layer'] = nlevs
+        AttrData['Layer'] = np.int32(DimDict['Layer'])
+        DimDict['Vertice'] = nlevs + 1
+        AttrData['Vertice'] = np.int32(DimDict['Vertice'])
 
-        for k in range(nlevs):
-            varname = 'averaging_kernel_level_'+str(k+1)
-            vkey = (varname, 'RtrvlAncData')
-            self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
-            self.varAttrs[vkey]['units'] = ''
+        varname = 'pressureVertice'
+        vkey = (varname, 'RetrievalAncillaryData')
+        self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
+        self.varAttrs[vkey]['units'] = 'Pa'
+
+        varname = 'averagingKernel'
+        vkey = (varname, 'RetrievalAncillaryData')
+        self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
+        self.varAttrs[vkey]['units'] = ''
 
 
 def main():
@@ -278,6 +274,9 @@ def main():
         varDims = {
             var_name+'Total': ['Location']
         }
+
+    varDims['averagingKernel'] = ['Location','Layer']
+    varDims['pressureVertice'] = ['Location','Vertice']
 
     # Read in the NO2 data
     var = tropomi(args.input, args.variable, args.column, args.qa_value, args.thin, obsVar)
