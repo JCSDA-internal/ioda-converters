@@ -104,9 +104,10 @@ class tropomi(object):
                 bk = ncd.groups['PRODUCT'].variables['tm5_constant_b'][:, :]
                 # grab the averaging kernel and reshape it
                 avg_kernel = ncd.groups['PRODUCT'].variables['averaging_kernel'][:]
-                avg_kernel = np.reshape(avg_kernel, (nlocs,nlevs))
+                avg_kernel = np.flip(np.reshape(avg_kernel, (nlocs,nlevs)), axis=1)
                 #contruct the pressure vertices array
-                preslv = np.transpose(ak[...,0][:,np.newaxis] + np.outer(bk[...,0], ps[...].ravel()))
+                preslv = np.flip(np.transpose(ak[...,0][:,np.newaxis] +
+                                 np.outer(bk[...,0], ps[...].ravel())), axis=1)
                 top = ak[nlevs-1, 1] + bk[nlevs-1, 1]*ps[...].ravel()
 
 
@@ -119,11 +120,11 @@ class tropomi(object):
                 #contruct the pressure vertices array
                 preslv = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].\
                     groups['DETAILED_RESULTS'].variables['pressure_levels'][:]
-                preslv = np.flip(np.reshape(preslv, (nlocs,nlevs)), axis=1)
+                preslv = np.reshape(preslv, (nlocs,nlevs))
                 top = np.zeros(nlocs)
 
             #assemble presvertices with top vertice
-            preslv = np.append(preslv, top[:,np.newaxis], axis=1)
+            preslv = np.append(top[:,np.newaxis], preslv, axis=1)
 
             # scale the avk using AMF ratio and tropopause level for tropo column
             nlocf = len(lats[flg])
@@ -131,8 +132,8 @@ class tropomi(object):
             if self.varname == 'no2' and self.columnType == 'tropo':
                 # do not loop over nlocs here this makes the execution very slow
                 for k in range(nlevs):
-                    scaleAK[..., k][np.full((nlocf), k, dtype=int) > trop_layer[flg]] = 0
-                    scaleAK[..., k] *= total_airmass[flg] / trop_airmass[flg]
+                    avg_kernel[..., k][np.full((nlocs), k, dtype=int) <= trop_layer] = 0
+                    avg_kernel[..., k] *= total_airmass / trop_airmass
 
             if first:
                 # add metadata variables
