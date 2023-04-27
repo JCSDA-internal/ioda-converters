@@ -92,48 +92,47 @@ class tropomi(object):
             times = times.ravel()
 
             if self.varname == 'no2':
-                trop_layer = ncd.groups['PRODUCT'].variables['tm5_tropopause_layer_index'][:].ravel()
-                total_airmass = ncd.groups['PRODUCT'].variables['air_mass_factor_total'][:].ravel()
-                trop_airmass = ncd.groups['PRODUCT'].\
-                    variables['air_mass_factor_troposphere'][:].ravel()
-                # get info to construct the pressure level array
+                # grab the averaging kernel and reshape it
+                avg_kernel = ncd.groups['PRODUCT'].variables['averaging_kernel'][:]
+                avg_kernel = np.flip(np.reshape(avg_kernel, (nlocs, nlevs)), axis=1)
+
+                if self.columnType == 'tropo':
+                    trop_layer = ncd.groups['PRODUCT'].variables['tm5_tropopause_layer_index'][:].ravel()
+                    total_airmass = ncd.groups['PRODUCT'].variables['air_mass_factor_total'][:].ravel()
+                    trop_airmass = ncd.groups['PRODUCT'].variables['air_mass_factor_troposphere'][:].ravel()
+                    # do not loop over nlocs here this makes the execution very slow
+                    for k in range(nlevs):
+                        avg_kernel[..., k][np.full((nlocs), k, dtype=int) <= trop_layer] = 0
+                        avg_kernel[..., k] *= total_airmass / trop_airmass
+
+                # construct the pressure vertices array
                 ps = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].groups['INPUT_DATA'].\
                     variables['surface_pressure'][:]
                 # bottom of layer is vertice 0, very top layer is TOA (0hPa)
                 ak = ncd.groups['PRODUCT'].variables['tm5_constant_a'][:, :]
                 bk = ncd.groups['PRODUCT'].variables['tm5_constant_b'][:, :]
-                # grab the averaging kernel and reshape it
-                avg_kernel = ncd.groups['PRODUCT'].variables['averaging_kernel'][:]
-                avg_kernel = np.flip(np.reshape(avg_kernel, (nlocs,nlevs)), axis=1)
-                #contruct the pressure vertices array
-                preslv = np.flip(np.transpose(ak[...,0][:,np.newaxis] +
-                                 np.outer(bk[...,0], ps[...].ravel())), axis=1)
+                preslv = np.flip(np.transpose(ak[..., 0][:, np.newaxis] + np.outer(bk[..., 0],
+                                 ps[...].ravel())), axis=1)
                 top = ak[nlevs-1, 1] + bk[nlevs-1, 1]*ps[...].ravel()
-
 
             elif self.varname == 'co':
                 # grab the averaging kernel and reshape it
                 avg_kernel = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].\
                     groups['DETAILED_RESULTS'].variables['column_averaging_kernel'][:]
-                avg_kernel = np.reshape(avg_kernel, (nlocs,nlevs))
+                avg_kernel = np.reshape(avg_kernel, (nlocs, nlevs))
 
-                #contruct the pressure vertices array
+                # construct the pressure vertices array
                 preslv = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].\
                     groups['DETAILED_RESULTS'].variables['pressure_levels'][:]
-                preslv = np.reshape(preslv, (nlocs,nlevs))
+                preslv = np.reshape(preslv, (nlocs, nlevs))
                 top = np.zeros(nlocs)
 
-            #assemble presvertices with top vertice
-            preslv = np.append(top[:,np.newaxis], preslv, axis=1)
+            # assemble presvertices with top vertice
+            preslv = np.append(top[:, np.newaxis], preslv, axis=1)
 
             # scale the avk using AMF ratio and tropopause level for tropo column
             nlocf = len(lats[flg])
             scaleAK = np.ones((nlocf, nlevs), dtype=np.float32)
-            if self.varname == 'no2' and self.columnType == 'tropo':
-                # do not loop over nlocs here this makes the execution very slow
-                for k in range(nlevs):
-                    avg_kernel[..., k][np.full((nlocs), k, dtype=int) <= trop_layer] = 0
-                    avg_kernel[..., k] *= total_airmass / trop_airmass
 
             if first:
                 # add metadata variables
@@ -276,8 +275,8 @@ def main():
             var_name+'Total': ['Location']
         }
 
-    varDims['averagingKernel'] = ['Location','Layer']
-    varDims['pressureVertice'] = ['Location','Vertice']
+    varDims['averagingKernel'] = ['Location', 'Layer']
+    varDims['pressureVertice'] = ['Location', 'Vertice']
 
     # Read in the NO2 data
     var = tropomi(args.input, args.variable, args.column, args.qa_value, args.thin, obsVar)

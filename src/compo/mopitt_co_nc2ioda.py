@@ -37,8 +37,8 @@ DimDict = {
 
 VarDims = {
     'carbonmonoxideTotal': ['Location'],
-    'averagingKernel': ['Location','Layer'],
-    'pressureVertice': ['Location','Vertice']
+    'averagingKernel': ['Location', 'Layer'],
+    'pressureVertice': ['Location', 'Vertice']
 }
 
 # constants
@@ -157,7 +157,7 @@ class mopitt(object):
 
             flg = np.logical_and(qaf, tsf)
 
-            #flip stuff for ufo conventions: top -> bottom
+            # flip stuff for ufo conventions: top -> bottom
             ak_tc_dimless = np.flip(ak_tc_dimless, axis=1)
             pr_gd = np.flip(pr_gd, axis=1)
 
