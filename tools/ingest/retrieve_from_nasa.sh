@@ -41,7 +41,7 @@ get_listing() {
     if [[ -s index.html ]]; then
         rm -rf index.html
     fi
-    wget ${apath}
+    wget ${apath}/
 }
 
 get_file_names() {
@@ -79,13 +79,13 @@ macOS=False
 }
 
 get_instru_path() {
-    # instru_path=GPM_L1B/GPM_1BGMI.07              # GMI   - level 1B
-    instru_path=GPM_L1C/GPM_1CGCOMW1AMSR2.07        # AMSR2 - level 1C
+    instru_path=GPM_L1C/GPM_1CGPMGMI_R.07             # GMI   - level 1C-R
+    # instru_path=GPM_L1C/GPM_1CGCOMW1AMSR2.07        # AMSR2 - level 1C
 }
 
 get_instrument() {
-    # instrument=gmi
-    instrument=amsr2
+    instrument=gmi
+    # instrument=amsr2
 }
 
 get_macOS
@@ -93,7 +93,7 @@ get_instrument
 get_instru_path
 while (( dtg <= end_dtg )); do
     get_julian_day
-    apath=${disc_address}/data/${instru_path}/${dtg:0:4}/${jjj}/
+    apath=${disc_address}/data/${instru_path}/${dtg:0:4}/${jjj}
     get_listing
     get_file_names
     get_files
