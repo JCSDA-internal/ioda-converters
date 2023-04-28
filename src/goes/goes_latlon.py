@@ -163,7 +163,7 @@ class GoesLatLon:
         sensor_view_angle = np.arcsin(r_eq / h * np.sin(sensor_zenith_angle*d2r)) / d2r
         x = np.sin(longitude_rad - lon_0_rad) * np.cos(latitude_rad)
         y = np.cos(lat_0_rad)*np.sin(latitude_rad) - np.sin(lat_0_rad)*np.cos(latitude_rad)*np.cos(longitude_rad - lon_0_rad)
-        sensor_azimuth_angle = np.arctan2(x,y) / d2r + 180.0
+        sensor_azimuth_angle = np.arctan2(x, y) / d2r + 180.0
         sensor_zenith_angle = np.where(sensor_zenith_angle > 80, 80, sensor_zenith_angle)
         sensor_zenith_angle = np.where(sensor_zenith_angle < 0, 0, sensor_zenith_angle)
         sensor_view_angle = np.where(sensor_view_angle > 80, 80, sensor_view_angle)
