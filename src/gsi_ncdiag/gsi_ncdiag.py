@@ -927,18 +927,22 @@ class Conv(BaseGSI):
                     mask = obserr < self.EPSILON
                     obserr[~mask] = 1.0 / obserr[~mask]
                     # below is a temporary hack until missing ObsError support returns to IODA/UFO
-                    # obserr[mask] = 1e8
+                    obserr[mask] = 1e8
                     obserr[:] = self.FLOAT_FILL   # emily: commented out this line so obserr stores the initial obs error
-                    # obserr[mask] = self.FLOAT_FILL
-                    # obserr[obserr > 4e8] = self.FLOAT_FILL
+                    obserr[mask] = self.FLOAT_FILL
+                    obserr[obserr > 4e8] = self.FLOAT_FILL
                     # convert surface_pressure error to Pa from hPa
-                     
+
                     if v == 'ps' and np.nanmin(obserr) < 10:
                         obserr = obserr * 100
                     try:
                         obsqc = self.var('Prep_QC_Mark')[idx]
                     except BaseException:
                         obsqc = np.ones_like(obsdata) * 2
+#>>emily
+                    if v == 'bend':
+                       obsqc = self.var('Setup_QC_Mark')[idx]
+#<<emily
                     if (v == 'uv'):
                         gsivars = gsi_add_vars_uv
                     else:
