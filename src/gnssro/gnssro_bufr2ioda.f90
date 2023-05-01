@@ -463,7 +463,7 @@ program gnssro_bufr2ioda2
    call check(nf90_put_att(grpid_metadata, varid_adjlsw, "units", "%"))
    call check(nf90_put_att(grpid_metadata, varid_adjlsw, "longname",  &
                                     & "adjust local spectral width in percentage of bending angle value" ))
-   call check(nf90_put_att(grpid_metadata, varid_adjlsw, "valid_range", "0 - 100" ))
+   call check(nf90_put_att(grpid_metadata, varid_adjlsw, "valid_range", real((/0.0, 100.0/)) ))
    call check(nf90_def_var_fill(grpid_metadata, varid_adjlsw, 0, real(i_missing)))
 
    call check(nf90_def_var(grpid_metadata, "impactParameterRO", NF90_FLOAT, nlocs_dimid, varid_impp))
