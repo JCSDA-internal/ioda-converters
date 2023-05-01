@@ -11,9 +11,9 @@
 namespace Ingester {
 namespace bufr {
     SubsetLookupTable::SubsetLookupTable(const std::shared_ptr<DataProvider>& dataProvider,
-                                         const Targets& targets) :
-        subsetVariant_(dataProvider->getSubsetVariant()),
-        lookupTable_(makeLookupTable(dataProvider, targets))
+                                         const std::shared_ptr<Targets>& targets) :
+        targets_(targets),
+        lookupTable_(makeLookupTable(dataProvider, *targets))
     {
     }
 

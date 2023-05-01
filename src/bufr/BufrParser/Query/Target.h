@@ -91,6 +91,8 @@ namespace bufr {
         std::vector<int> exportDimIdxs;
         std::vector<int> seqPath;
 
+        bool hasDelayedRepeats = false;
+
         Target() = default;
 
         /// \brief Sets metadata for a target given the TargetComponents in the path to the target.
@@ -120,6 +122,11 @@ namespace bufr {
                     else
                     {
                         dimPaths.emplace_back(queryComponents);
+                    }
+
+                    if (component.fixedRepeatCount == 1)
+                    {
+                        hasDelayedRepeats = true;
                     }
 
                     exportDimIdxs.emplace_back(componentIdx);

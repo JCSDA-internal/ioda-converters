@@ -66,17 +66,18 @@ namespace bufr {
         typedef __details::OffsetArray<NodeData> LookupTable;
 
      public:
-        SubsetLookupTable(const std::shared_ptr<DataProvider>& dataProvider, const Targets& targets);
+        SubsetLookupTable(const std::shared_ptr<DataProvider>& dataProvider,
+                          const std::shared_ptr<Targets>& targets);
 
         /// \brief Returns the NodeData for a given bufr node.
         /// \param[in] nodeId The id of the node to get the data for.
         /// \return The NodeData for the given node.
         const NodeData& operator[](size_t nodeId) const { return lookupTable_[nodeId]; }
 
-        SubsetVariant getSubsetVariant() const { return subsetVariant_; }
+        std::shared_ptr<Targets> getTargets() const { return targets_; }
 
      private:
-        SubsetVariant subsetVariant_;
+        const std::shared_ptr<Targets> targets_;
         LookupTable lookupTable_;
 
         /// \brief Creates a lookup table that maps node ids to NodeData objects.

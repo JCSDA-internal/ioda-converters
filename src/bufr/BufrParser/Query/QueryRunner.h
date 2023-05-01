@@ -42,6 +42,8 @@ namespace bufr {
         ResultSet& resultSet_;
         const DataProviderType& dataProvider_;
 
+        std::unordered_map<SubsetVariant, std::shared_ptr<Targets>> targetsCache_;
+
         /// \brief Look for the list of targets for the currently active BUFR message subset that
         /// apply to the QuerySet and cache them.
         /// \param[in, out] targets The list of targets to populate.

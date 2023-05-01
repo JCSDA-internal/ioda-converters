@@ -10,6 +10,7 @@
 
 #include <numeric>
 #include <vector>
+#include <Eigen/Dense>
 
 namespace Ingester {
 namespace bufr {
@@ -158,6 +159,23 @@ namespace bufr {
         }
 
         return result;
+    }
+
+    /// \brief Are all values in the vector equal?
+    /// \param vec The vector to check.
+    /// \return True if all values are equal, false otherwise.
+    template<typename T>
+    bool allEqual(const std::vector<T>& vec)
+    {
+        for (size_t i = 1; i < vec.size(); i++)
+        {
+            if (vec[i] != vec[0])
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }  // namespace bufr
 }  // namespace Ingester

@@ -62,23 +62,7 @@ namespace bufr {
             frames_.push_back(std::move(frame));
         }
 
-        void addTargets(const SubsetVariant& subset, const std::shared_ptr<Targets>&& targets)
-        {
-            targetMap_[subset] = std::move(targets);
-        }
-
-        std::shared_ptr<Targets> getTargets(const SubsetVariant& subset) const
-        {
-            if (targetMap_.find(subset) == targetMap_.end())
-            {
-                return nullptr;
-            }
-
-            return targetMap_.at(subset);
-        }
-
      private:
-        std::unordered_map<SubsetVariant, std::shared_ptr<Targets>> targetMap_;
         std::vector<SubsetLookupTable> frames_;
 
         /// \brief Computes the data for a specific field with a given name grouped by the
@@ -107,6 +91,10 @@ namespace bufr {
 //                             std::vector<std::vector<double>>& dataRows,
 //                             const std::vector<int>& dims,
 //                             int groupbyIdx) const;
+
+        void padJaggedArray(std::shared_ptr<Target> target,
+                            std::vector<double>& data,
+                            size_t rowLength) const;
 
         /// \brief Is the field a string field?
         /// \param fieldName The name of the field.

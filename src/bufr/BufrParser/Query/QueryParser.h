@@ -42,7 +42,7 @@ namespace bufr {
         {
             const auto& token = tokens[0];
 
-            auto component = std::make_shared<SubsetComponent>();;
+            auto component = std::make_shared<SubsetComponent>();
             component->name = token->str();
             if (std::dynamic_pointer_cast<AnySubset>(token))
             {

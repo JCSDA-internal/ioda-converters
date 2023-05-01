@@ -33,21 +33,20 @@ namespace bufr
 
     void QueryRunner::accumulate()
     {
-        resultSet_.addFrame(SubsetLookupTable(dataProvider_, *getTargets()));
+        resultSet_.addFrame(SubsetLookupTable(dataProvider_, getTargets()));
     }
 
     std::shared_ptr<Targets> QueryRunner::getTargets()
     {
-        // Check if the target list for this subset is cached
-        auto targets = resultSet_.getTargets(dataProvider_->getSubsetVariant());
-        if (targets)
+        // Attempt to get targets from the cache
+        if (targetsCache_.find(dataProvider_->getSubsetVariant()) != targetsCache_.end())
         {
-            return targets;
+            return targetsCache_.at(dataProvider_->getSubsetVariant());
         }
 
         auto table = SubsetTable(dataProvider_);
 
-        targets = std::make_shared<Targets>();
+        const auto targets = std::make_shared<Targets>();
         targets->reserve(querySet_.names().size());
         for (const auto &name : querySet_.names())
         {
@@ -128,9 +127,9 @@ namespace bufr
         }
 
         // Cache the targets and masks we just found
-        resultSet_.addTargets(dataProvider_->getSubsetVariant(), std::move(targets));
+        targetsCache_.insert({dataProvider_->getSubsetVariant(), targets});
 
-        return resultSet_.getTargets(dataProvider_->getSubsetVariant());
+        return targets;
     }
 }  // namespace bufr
 }  // namespace Ingester

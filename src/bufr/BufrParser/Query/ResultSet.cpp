@@ -73,31 +73,21 @@ namespace bufr {
         std::vector<int> exportDims;
 
         // Find the target for the fieldName
-        std::shared_ptr<Target> target = nullptr;
-        for (const auto& targ : *(targetMap_.at(frames_.front().getSubsetVariant())))
+        std::shared_ptr<Targets> targets = frames_.front().getTargets();
+        size_t targetIdx = 0;
+        for (const auto& target : *targets)
         {
-            if (targ->name == fieldName)
-            {
-                target = targ;
-                dimPaths = target->dimPaths;
-                info = target->typeInfo;
-                break;
-            }
+            if (target->name == fieldName) { break; }
+            targetIdx++;
         }
 
-        // Find the target for the groupByField if it exists
+        auto target = targets->at(targetIdx);
+
         std::shared_ptr<Target> groupByTarget = nullptr;
-        if (!groupByField.empty())
-        {
-            for (const auto& targ : *(targetMap_.at(frames_.front().getSubsetVariant())))
-            {
-                if (target->name == groupByField)
-                {
-                    groupByTarget = targ;
-                    break;
-                }
-            }
-        }
+//        if (!groupByField.empty())
+//        {
+//            groupByTarget = targets->at(groupByField);
+//        }
 
         // If groupByTarget exists check that is shares a common path with the target
         if (groupByTarget)
@@ -121,15 +111,53 @@ namespace bufr {
             }
         }
 
-        // Find the dims based on the largest sequence counts in each frame
+        // Find the dims based on the largest sequence counts in each frame and check for jaggedness
+        bool jagged = false;
         dimsList.resize(target->path.size() - 1, 0);
         for (const auto& frame : frames_)
         {
+            targets = frame.getTargets();
+            target = targets->at(targetIdx);
+
             auto pathIdx = 0;
             for (auto p = target->path.begin(); p != target->path.end() - 1; ++p)
             {
-                dimsList[pathIdx] = std::max(dimsList[pathIdx], max(frame[p->nodeId].counts));
+                if (frame[p->nodeId].counts.empty()) { break; }
+
+                const auto newDimVal = std::max(dimsList[pathIdx], max(frame[p->nodeId].counts));
+
+                if (!jagged)
+                {
+                    jagged = !allEqual(frame[p->nodeId].counts);
+
+                    if (!jagged && dimsList[pathIdx] != 0)
+                    {
+                        jagged = (dimsList[pathIdx] != newDimVal);
+                    }
+                }
+
+                dimsList[pathIdx] = newDimVal;
                 pathIdx++;
+            }
+
+            // Fill in the type information
+            info.reference = std::min(info.reference, target->typeInfo.reference);
+            info.bits = std::max(info.bits, target->typeInfo.bits);
+
+            if (std::abs(target->typeInfo.scale) > info.scale)
+            {
+                info.scale = target->typeInfo.scale;
+            }
+
+            if (info.unit.empty()) info.unit = target->typeInfo.unit;
+
+
+            // Fill in the dimPaths data
+            if (!target->dimPaths.empty() &&
+                dimPaths.size() < target->dimPaths.size())
+            {
+                dimPaths = target->dimPaths;
+                exportDims = target->exportDimIdxs;
             }
         }
 
@@ -148,167 +176,111 @@ namespace bufr {
             }
         }
 
-        size_t totalRows = frames_.size();
 
-        // Make data set
         int rowLength = 1;
         for (size_t dimIdx = 1; dimIdx < dims.size(); ++dimIdx)
         {
             rowLength *= dims[dimIdx];
         }
 
+        // Allocate the output data
+        auto totalRows = frames_.size();
         data.resize(totalRows * rowLength, MissingValue);
 
+        // Copy the data fragments from the frames into the output data
+        std::vector<std::vector<int>> inserts(dims.size());
         for (size_t frameIdx=0; frameIdx < frames_.size(); ++frameIdx)
         {
             const auto& frame = frames_[frameIdx];
-            const auto& frameData = frame[target->nodeIdx].data;
+            const auto& fragment = frame[target->nodeIdx].data;
 
-            std::copy(frameData.begin(), frameData.end(), data.begin() + frameIdx * rowLength);
+            targets = frame.getTargets();
+            target = targets->at(targetIdx);
+
+            if (jagged)
+            {
+                std::cout << "Found Jagged Array " << std::endl;
+
+                std::vector<size_t> idxs(fragment.size());
+                for (size_t i = 0; i < idxs.size(); ++i)
+                {
+                    idxs[i] = i;
+                }
+
+                for (size_t i = 0; i < dims.size(); ++i) { inserts[i] = {0}; }
+
+                // Compute insert array
+                for (size_t repIdx = 0;
+                     repIdx < std::min(dims.size(), target->path.size());
+                     ++repIdx)
+                {
+                    inserts[repIdx] = product<int>(dims.begin() + repIdx, dims.end()) -
+                                      frame[target->path[repIdx].nodeId].counts *
+                                      product<int>(dims.begin() + repIdx + 1, dims.end());
+                }
+
+                // Inflate the data, compute the idxs for each data element in the result array
+                for (int dim_idx = dims.size() - 1; dim_idx >= 0; --dim_idx)
+                {
+                    for (size_t insert_idx = 0; insert_idx < inserts[dim_idx].size(); ++insert_idx)
+                    {
+                        size_t num_inserts = inserts[dim_idx][insert_idx];
+                        if (num_inserts > 0)
+                        {
+                            int data_idx = product<int>(dims.begin() + dim_idx, dims.end()) *
+                                           insert_idx + product<int>(dims.begin() + dim_idx, dims.end())
+                                           - num_inserts - 1;
+
+                            for (size_t i = 0; i < idxs.size(); ++i)
+                            {
+                                if (static_cast<int>(idxs[i]) > data_idx)
+                                {
+                                    idxs[i] += num_inserts;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                for (size_t i = 0; i < idxs.size(); ++i)
+                {
+                    data[idxs[i] + frameIdx * rowLength] = fragment[i];
+                }
+            }
+            else
+            {
+                std::copy(fragment.begin(), fragment.end(), data.begin() + frameIdx * rowLength);
+            }
         }
-
-//        for (size_t frameIdx = 0; frameIdx < frames_.size(); ++frameIdx)
-//        {
-//            auto& dataFrame = dataFrames_[frameIdx];
-//            std::vector<std::vector<double>> frameData;
-//            auto& targetField = dataFrame.fieldAtIdx(targetFieldIdx);
-//
-//            if (!targetField.data.empty()) {
-//                getRowsForField(targetField,
-//                                frameData,
-//                                allDims,
-//                                groupbyIdx);
-//
-//                auto dataRowIdx = dims[0] * frameIdx;
-//                for (size_t rowIdx = 0; rowIdx < frameData.size(); ++rowIdx)
-//                {
-//                    auto &row = frameData[rowIdx];
-//                    for (size_t colIdx = 0; colIdx < row.size(); ++colIdx)
-//                    {
-//                        data[dataRowIdx*rowLength + rowIdx * row.size() + colIdx] = row[colIdx];
-//                    }
-//                }
-//            }
-//        }
 
         // Convert dims per data frame to dims for all the collected data.
         dims[0] = totalRows;
         dims = slice(dims, target->exportDimIdxs);
     }
 
-//    subroutine result_set__get_rows_for_field(self, target_field, data_rows, dims, groupby_idx)
 
-//    void ResultSet::getRowsForField(const DataField& targetField,
-//                                    std::vector<std::vector<double>>& dataRows,
-//                                    const std::vector<int>& dims,
-//                                    int groupbyIdx) const
-//    {
-//        size_t maxCounts = 0;
+    void ResultSet::padJaggedArray(std::shared_ptr<Target> target,
+                                    std::vector<double>& data,
+                                    size_t rowLength) const
+    {
 //        std::vector<size_t> idxs(targetField.data.size());
 //        for (size_t i = 0; i < idxs.size(); ++i)
 //        {
 //            idxs[i] = i;
 //        }
-//
-//        // Compute max counts
-//        for (size_t i = 0; i < targetField.seqCounts.size(); ++i)
-//        {
-//            if (maxCounts < targetField.seqCounts[i].size())
-//            {
-//                maxCounts = targetField.seqCounts[i].size();
-//            }
-//        }
-//
-//        // Compute insert array
-//        std::vector<std::vector<int>> inserts(dims.size(), {0});
-//        for (size_t repIdx = 0;
-//             repIdx < std::min(dims.size(), targetField.seqCounts.size());
-//             ++repIdx)
-//        {
-//            inserts[repIdx] = product<int>(dims.begin() + repIdx, dims.end()) -
-//                              targetField.seqCounts[repIdx] *
-//                              product<int>(dims.begin() + repIdx + 1, dims.end());
-//        }
-//
-//        // Inflate the data, compute the idxs for each data element in the result array
-//        for (int dim_idx = dims.size() - 1; dim_idx >= 0; --dim_idx)
-//        {
-//            for (size_t insert_idx = 0; insert_idx < inserts[dim_idx].size(); ++insert_idx)
-//            {
-//                size_t num_inserts = inserts[dim_idx][insert_idx];
-//                if (num_inserts > 0)
-//                {
-//                    int data_idx = product<int>(dims.begin() + dim_idx, dims.end()) *
-//                            insert_idx + product<int>(dims.begin() + dim_idx, dims.end())
-//                                    - num_inserts - 1;
-//
-//                    for (size_t i = 0; i < idxs.size(); ++i)
-//                    {
-//                        if (static_cast<int>(idxs[i]) > data_idx)
-//                        {
-//                            idxs[i] += num_inserts;
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//
-//        auto output = std::vector<double>(product(dims), MissingValue);
-//        for (size_t i = 0; i < idxs.size(); ++i)
-//        {
-//            output[idxs[i]] = targetField.data[i];
-//        }
-//
-//        // Apply groupBy and make output
-//        if (groupbyIdx > 0)
-//        {
-//            if (groupbyIdx > static_cast<int>(targetField.seqCounts.size()))
-//            {
-//                size_t numRows = product(dims);
-//                dataRows.resize(numRows * maxCounts, {MissingValue});
-//                for (size_t i = 0; i < numRows; ++i)
-//                {
-//                    if (output.size())
-//                    {
-//                        dataRows[i][0] = output[0];
-//                    }
-//                }
-//            }
-//            else
-//            {
-//                size_t numRows = product<int>(dims.begin(), dims.begin() + groupbyIdx);
-//                std::vector<int> rowDims;
-//                rowDims.assign(dims.begin() + groupbyIdx, dims.end());
-//
-//                size_t numsPerRow = static_cast<size_t>(product(rowDims));
-//                dataRows.resize(numRows, std::vector<double>(numsPerRow, MissingValue));
-//                for (size_t i = 0; i < numRows; ++i)
-//                {
-//                    for (size_t j = 0; j < numsPerRow; ++j)
-//                    {
-//                        dataRows[i][j] = output[i * numsPerRow + j];
-//                    }
-//                }
-//            }
-//        }
-//        else
-//        {
-//            dataRows.resize(1);
-//            dataRows[0] = output;
-//        }
-//    }
+    }
 
     std::string ResultSet::unit(const std::string& fieldName) const
     {
-        for (const auto& target : *(targetMap_.begin()->second))
-        {
-            if (target->name == fieldName)
-            {
-                return target->unit;
-            }
-        }
-
-        throw eckit::BadParameter("Target not found for field \"" + fieldName + "\"");
+//        const auto& targets = frames_[0].getTargets();
+//        if (targets->find(fieldName) != targets->end())
+//        {
+//            return targets->at(fieldName)->unit;
+//        }
+//        else
+//        {
+//            throw eckit::BadParameter("Target not found for field \"" + fieldName + "\"");
+//        }
     }
 
     std::shared_ptr<DataObjectBase> ResultSet::makeDataObject(
