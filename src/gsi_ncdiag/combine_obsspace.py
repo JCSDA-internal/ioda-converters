@@ -19,6 +19,7 @@ loc_vars = [
     'MetaData/stationIdentification',
     'MetaData/height',
     'MetaData/datetime',
+    'MetaData/dateTime',
 ]
 
 
@@ -64,7 +65,7 @@ def combine_obsspace(FileList, OutFile, GeoDir):
         obsspace = ios.ObsSpace(iodafile)
         _var = obsspace.Variable(fullvname)
         if fullvname == 'MetaData/dateTime':
-            VarTypes[fullvname] = np.dtype('object')
+            VarTypes[fullvname] = np.dtype('int64')
         else:
             VarTypes[fullvname] = _var.numpy_dtype()
         for attr in _var.attrs:
@@ -102,6 +103,9 @@ def combine_obsspace(FileList, OutFile, GeoDir):
                     tmpdata = tmpdata.astype('<U22')
                     tmpdata = [x.replace(' ', 'T') + 'Z' for x in tmpdata]
                     tmpdata = np.array(tmpdata).astype('<U22')
+                if vname == 'MetaData/dateTime':
+                    tmpdata = [int(x.strftime('%s')) for x in tmpdata]
+                    tmpdata = np.array(tmpdata).astype('int64')
                 tmpvardata.append(tmpdata)
                 del _var
                 del obsspace
