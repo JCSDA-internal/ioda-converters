@@ -70,8 +70,6 @@ def combine_obsspace(FileList, OutFile, GeoDir):
             VarTypes[fullvname] = _var.numpy_dtype()
         for attr in _var.attrs:
             if attr not in ['DIMENSION_LIST', '_FillValue']:
-                if attr in ['units'] and fullvname == 'MetaData/dateTime':
-                    continue
                 gname, vname = fullvname.split('/')
                 varAttrs[(vname, gname)][attr] = _var.read_attr(attr)
         # for now going to assume all are just 'Location' dim
