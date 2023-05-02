@@ -1,0 +1,50 @@
+@startuml
+hide footbox
+skinparam dpi 300
+skinparam SequenceActorBorderThickness 2
+skinparam SequenceActorBorderColor #firebrick
+skinparam ActorBackgroundColor #lightyellow
+skinparam ParticipantBackgroundColor #lightyellow
+skinparam ParticipantBorderThickness 2
+skinparam ParticipantBorderColor #firebrick
+
+actor BufrParser
+participant ResultSet #orange
+participant DataFrame
+participant DataField
+participant DataObject
+
+BufrParser -> ResultSet : get(fieldName, groupByFieldName)
+activate ResultSet
+
+ResultSet -> ResultSet : getRawValues(fieldName, groupBy, data&, alldims&, dimPaths&)
+activate ResultSet
+ResultSet -> ResultSet : determine result dimensions
+
+
+loop for every dataFrame
+	ResultSet -> DataFrame : fieldAtIdx(idx) 
+	DataField --> ResultSet : dims, paths
+	ResultSet -> ResultSet : getRowsForField(field, frameData&, alldims, groupbyIdx)
+
+	activate ResultSet
+	DataField --> ResultSet : counts, data
+	ResultSet -> ResultSet : compute inserts array
+	ResultSet -> ResultSet : create the data array using inserts
+	return data
+	deactivate ResultSet
+
+	ResultSet -> ResultSet : flatten into final array
+end
+
+
+ResultSet -> ResultSet : filter dims to exported dimensions
+
+create DataObject
+ResultSet -> DataObject : dataObject
+return dataObject
+
+deactivate ResultSet
+
+
+@enduml
