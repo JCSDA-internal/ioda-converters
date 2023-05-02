@@ -160,7 +160,10 @@ namespace bufr {
         inline void deleteData() { delete_table_data_f(); }
 
         /// \brief Get the current active suibset variant.
-        SubsetVariant getSubsetVariant() const { return {subset_, variantId(), hasVariants()}; }
+        SubsetVariant getSubsetVariant() const
+        {
+            return SubsetVariant(subset_, variantId(), hasVariants());
+        }
 
         /// \brief Get the filepath for the currently open BUFR file.
         std::string getFilepath() const { return filePath_; }
