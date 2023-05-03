@@ -79,7 +79,9 @@ observations:
                 _3: metop-b
                 _4: metop-a
                 _5: metop-c
-#               _206: n15
+                _206: n15
+                _207: n16
+                _208: n17
                 _209: n18
                 _223: n19
 
