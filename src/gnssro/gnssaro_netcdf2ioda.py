@@ -149,9 +149,9 @@ def get_obs_data(ifile):
     height = ifile['MSL_alt'][:]*10e2
     satelliteC = get_satelliteC(file_stamp[5][0])
     aircraftId = get_aircraftIdentifier(file_stamp[0])
-    aircraftIs = get_aircraftInstrument(str(ifile.attrs['aircraftAROInstrument'])[2:-1])
-    aircraftTn = get_aircrafttailnumber(str(ifile.attrs['aircraftTailNumber'])[2:-1])
-    aircraftAn = get_aircraftAntenna(str(ifile.attrs['aircraftAROAntenna'])[2:-1])
+    aircraftIs = get_aircraftInstrument(str(ifile.attrs['receiver'])[2:-1])
+    aircraftTn = get_aircrafttailnumber(str(ifile.attrs['tailnumber'])[2:-1])
+    aircraftAn = get_aircraftAntenna(str(ifile.attrs['antenna'])[2:-1])
     ascFlag = 0  # descending: from top to bottom
     centerP = get_centerId(str(ifile.attrs['center'])[2:-1])
     impactH = cal_impactHeightRO(ifile['Impact_parm'], ifile.attrs['rfict'])
@@ -271,18 +271,24 @@ def def_meta_types():
 
 
 def get_centerId(center):
-    if center == 'IGPP/SIO/UCSD':
+    if 'SIO' in center:
         centerId = 61  # Id for IGPP/SIO/UCSD (provisionally)
+    else:
+        centerId = int_missing_value
     return centerId
 
 
 def get_satelliteC(satelliteC):
-    if satelliteC == 'G':
+    if satelliteC == 'G': # GPS
         satelliteC_ID = 401
-    elif satelliteC == 'R':
+    elif satelliteC == 'R': # GLONASS
         satelliteC_ID = 402
-    elif satelliteC == 'E':
+    elif satelliteC == 'E': # GALILEO
         satelliteC_ID = 403
+    elif satelliteC == 'C': # BDS (BeiDou navigation satellite system)
+        satelliteC_ID = 404
+    else:
+        satelliteC_ID = int_missing_value
     return satelliteC_ID
 
 
@@ -301,14 +307,18 @@ def get_aircraftIdentifier(arcftId):
         arcftid = 795
     elif arcftId == 'R47T':
         arcftid = 796
+    else:
+        arcftid = int_missing_value
     return arcftid
 
 
 def get_aircraftInstrument(arcftIs):
-    if arcftIs == 'SEPT ASTERXU':
+    if arcftIs == 'SEPT_ASTERXU':
         arcftis = 1
-    elif arcftIs == 'SEPT ASTERXSB3':
+    elif arcftIs == 'SEPT_ASTERXSB3':
         arcftis = 2
+    else:
+        arcftis = int_missing_value
     return arcftis
 
 
@@ -335,14 +345,20 @@ def get_aircrafttailnumber(tailN):
         tailnumber = 5308
     elif tailN == 'AF309':
         tailnumber = 5309
+    else:
+        tailnumber = int_missing_value
     return tailnumber
 
 
 def get_aircraftAntenna(arcftAn):
-    if arcftAn == 'AERAT1675_381 NONE':
+    if arcftAn == 'AERAT1675_381':
         arcftan = 1
-    elif arcftAn == 'NOV42G1215A NONE':
+    elif arcftAn == 'NOV42G1215A':
         arcftan = 2
+    elif arcftAn == 'AERAT1675_180':
+        arcftan = 3
+    else:
+        arcftan = int_missing_value
     return arcftan
 
 
