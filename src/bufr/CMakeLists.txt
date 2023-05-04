@@ -123,8 +123,6 @@ if ( iodaconv_bufr_ENABLED )
   ecbuild_add_executable( TARGET  bufr2ioda.x
                           SOURCES bufr2ioda.cpp
                           LIBS    ingester )
-  set_property(TARGET bufr2ioda.x PROPERTY CXX_STANDARD 14)
-  target_compile_features(bufr2ioda.x PUBLIC cxx_std_14)
 
   ecbuild_add_test( TARGET  ${PROJECT_NAME}_bufr_coding_norms
                     TYPE    SCRIPT
@@ -183,8 +181,6 @@ if ( iodaconv_bufr_python_ENABLED )
                            ARCHIVE_OUTPUT_DIRECTORY "${PYIODACONV_BUILD_LIBDIR}"
                            LIBRARY_OUTPUT_DIRECTORY "${PYIODACONV_BUILD_LIBDIR}"
     )
-  set_property(TARGET bufr PROPERTY CXX_STANDARD 14)
-  target_compile_features(bufr PUBLIC cxx_std_14)
 
   install (TARGETS bufr DESTINATION ${PYIODACONV_INSTALL_LIBDIR})
 
