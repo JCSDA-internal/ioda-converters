@@ -87,9 +87,6 @@ if ( iodaconv_bufr_ENABLED )
                        INSTALL_HEADERS LISTED
     )
 
-  set_property(TARGET atms_lib PROPERTY CXX_STANDARD 14)
-  target_compile_features(atms_lib PUBLIC cxx_std_14)
-
   list(APPEND _ingester_deps
               Eigen3::Eigen
               eckit
@@ -106,9 +103,6 @@ if ( iodaconv_bufr_ENABLED )
                        LINKER_LANGUAGE CXX
     )
 
-  set_property(TARGET ingester PROPERTY CXX_STANDARD 14)
-  target_compile_features(ingester PUBLIC cxx_std_14)
-
   target_link_libraries(ingester PUBLIC ${_ingester_deps})
 
   target_include_directories(ingester PUBLIC
@@ -123,8 +117,6 @@ if ( iodaconv_bufr_ENABLED )
   ecbuild_add_executable( TARGET  bufr2ioda.x
                           SOURCES bufr2ioda.cpp
                           LIBS    ingester )
-  set_property(TARGET bufr2ioda.x PROPERTY CXX_STANDARD 14)
-  target_compile_features(bufr2ioda.x PUBLIC cxx_std_14)
 
   ecbuild_add_test( TARGET  ${PROJECT_NAME}_bufr_coding_norms
                     TYPE    SCRIPT
@@ -183,8 +175,6 @@ if ( iodaconv_bufr_python_ENABLED )
                            ARCHIVE_OUTPUT_DIRECTORY "${PYIODACONV_BUILD_LIBDIR}"
                            LIBRARY_OUTPUT_DIRECTORY "${PYIODACONV_BUILD_LIBDIR}"
     )
-  set_property(TARGET bufr PROPERTY CXX_STANDARD 14)
-  target_compile_features(bufr PUBLIC cxx_std_14)
 
   install (TARGETS bufr DESTINATION ${PYIODACONV_INSTALL_LIBDIR})
 
