@@ -787,8 +787,8 @@ class Conv(BaseGSI):
                                 var_out[...] = vdata[idx, ...]
                             if vname == "surface_geopotential_height":
                                 # Copy surface_geopotential_height to surface_geometric_height
-                                var_out = ncout.createVariable(geovals_vars["surface_height"], \
-                                    var.dtype, dims)
+                                var_out = ncout.createVariable(geovals_vars["surface_height"],
+                                                               var.dtype, dims)
                                 if v == 'bend':
                                     var_out[...] = vdata[idx_sorted, ...]
                                 else:
