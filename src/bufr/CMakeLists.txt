@@ -33,6 +33,8 @@ list(APPEND _ingester_srcs
   BufrParser/Exports/Variables/RemappedBrightnessTemperatureVariable.cpp
   BufrParser/Exports/Variables/SensorScanAngleVariable.h
   BufrParser/Exports/Variables/SensorScanAngleVariable.cpp
+  BufrParser/Exports/Variables/SensorScanPositionVariable.h
+  BufrParser/Exports/Variables/SensorScanPositionVariable.cpp
 #<<emily
   BufrParser/Exports/Variables/AircraftAltitudeVariable.h
   BufrParser/Exports/Variables/AircraftAltitudeVariable.cpp

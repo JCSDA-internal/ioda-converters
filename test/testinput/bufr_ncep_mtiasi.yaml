@@ -6,8 +6,7 @@
 observations:
   - obs space:
       name: bufr
-      obsdatain: "./testinput/gdas.t12z.mtiasi.tm00.bufr_d" 
-
+      obsdatain: "./testinput/gdas.t12z.mtiasi.tm00.bufr_d"
       exports:
         variables:
           # MetaData
@@ -39,6 +38,12 @@ observations:
 
           fieldOfViewNumber:
             query: "*/FOVN"
+            type: float 
+
+          sensorScanPosition:
+            sensorScanPosition:
+              fieldOfViewNumber: "*/FOVN"
+              sensor: iasi 
 
           solarZenithAngle:
             query: "*/SOZA"
@@ -54,6 +59,15 @@ observations:
 
           heightOfStation:
             query: "*/SELV"
+
+          sensorViewAngle:
+            sensorScanAngle:
+              fieldOfViewNumber: "*/FOVN"
+              heightOfStation: "*/SELV"
+              scanStart: -48.330
+              scanStep: 3.334
+              scanStepAdjust: 0.625 
+              sensor: iasi
 
           fractionOfClearPixelsInFov:
             query: "*/IASIL1CS/FCPH"
@@ -88,9 +102,12 @@ observations:
 
       dimensions:
         - name: Channel
+          source: variables/sensorChannelNumber
           path: "*/IASICHN"
+
         - name: Cluster 
           path: "*/IASIL1CS"
+
         - name: Band 
           path: "*/IASIL1CB"
 
@@ -143,6 +160,10 @@ observations:
           source: variables/fieldOfViewNumber
           longName: "Field of View Number"
 
+        - name: "MetaData/sensorScanPosition"
+          source: variables/sensorScanPosition
+          longName: "Sensor Scan Position"
+
         - name: "MetaData/solarZenithAngle"
           source: variables/solarZenithAngle
           longName: "Solar Zenith Angle"
@@ -167,6 +188,11 @@ observations:
           units: "degree"
           range: [ 0, 360 ]
 
+        - name: "MetaData/sensorViewAngle"
+          source: variables/sensorViewAngle
+          longName: "Sensor View Angle"
+          units: "degree"
+
         - name: "MetaData/heightOfStation"
           source: variables/heightOfStation
           longName: "Altitude of Satellite"
@@ -182,7 +208,8 @@ observations:
           units: "1"
           range: [0, 1]
 
-        - name: "ObsValue/spectralRadiance"
+        - name: "ObsValue/radiance"
           source: variables/spectralRadiance
           longName: "IASI Spectral Radiance"
-          units: "W m-2 sr-1 m"
+          units: "mW m-2 sr-1 m"
+
