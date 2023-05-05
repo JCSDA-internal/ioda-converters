@@ -8,13 +8,13 @@
 
 import os
 from collections import defaultdict, OrderedDict
-from orddicts import DefaultOrderedDict
+from lib_python.orddicts import DefaultOrderedDict
 
 import numpy as np
 import datetime as dt
 import netCDF4 as nc
 
-import ioda_conv_engines as iconv
+import lib_python.ioda_conv_engines as iconv
 
 __ALL__ = ['conv_platforms']
 
@@ -75,7 +75,6 @@ conv_bufrtypes = {
     "rass": [126],
     "sfcship": [180, 183],
     "sfc": [181, 187],
-#   "gps": [3, 4, 5, 42, 43, 44, 745, 750, 751, 752, 753, 825],
     "gps": [3, 4, 5, 42, 43, 44, 66, 265, 266, 267, 268, 269, 745, 750, 751, 752, 753, 754, 755, 803, 804, 825],
     "sst": [181, 182, 183, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202],
     # 132 are dropsondes
@@ -125,7 +124,6 @@ all_LocKeyList = {
     'Height': ('height', 'float'),                  
     'Impact_Height': ('impactHeightRO', 'float'),   
     'Observation_Type': ('satelliteIdentifier', 'integer'),
-    # xuanli GPSRO 
     'height': ('height', 'float'),                  
     'qfro': ('qualityFlags', 'integer'),
     'pccf': ('pccf', 'float'),
@@ -133,11 +131,11 @@ all_LocKeyList = {
     'Sensor_Azimuth_Angle': ('sensorAzimuthAngle', 'float'),
     'Sat_Constellation': ('satelliteConstellationRO', 'integer'),
     'process_center': ('dataProviderOrigin', 'integer'),
-     # end GPSRO
     'Elevation': ('heightOfSurface', 'float'),
     'Obs_Time': ('dateTime', 'string'),
     'Scan_Position': ('sensorScanPosition', 'float'),
     'Sat_Zenith_Angle': ('sensorZenithAngle', 'float'),
+    'Sat_Azimuth_Angle': ('sensorAzimuthAngle', 'float'),
     'Sol_Zenith_Angle': ('solarZenithAngle', 'float'),
     'Sol_Azimuth_Angle': ('solarAzimuthAngle', 'float'),
     'Scan_Angle': ('sensorViewAngle', 'float'),
@@ -163,19 +161,14 @@ all_LocKeyList = {
     'QI_without_FC': ('percentConfidenceWithoutForecast', 'float'),
     'Data_Vertical_Velocity': ('windUpward', 'float'),
     'LaunchTime': ('releaseTime', 'float'),
-    # below are for Brett Hoover's AMV QC testing
     'wind_computation_method': ('windComputationMethod', 'integer'),
     'satellite_zenith_angle': ('satelliteZenithAngle', 'float'),
     'satellite_identifier': ('satelliteIdentifier', 'integer'),
-#   'QI_without_forecast_info': ('qualityInformationWithoutForecast', 'integer'),
-#   'QI_with_forecast_info': ('qualityInformationWithForecast', 'integer'),
     'QI_without_forecast_info': ('qualityInformationWithoutForecast', 'float'),
     'QI_with_forecast_info': ('qualityInformationWithForecast', 'float'),
     'expected_error': ('expectedError', 'float'),
     'expected_error': ('expectedError', 'float'),
     'coefficient_of_variation': ('coefficientOfVariation', 'float'),
-    # end AMV QC
-    # SEVIRI cloud_fraction
     'Cloud_Frac': ('cloud_frac','float'),
     'cloudAmountInSegment': ('cloudAmount','float'),
     'amountSegmentCloudFree': ('cloudFree','float'),
@@ -406,7 +399,6 @@ geovals_vars = {
     'geopotential_height': 'geopotential_height',
     'geometric_height': 'geometric_height',
     'height': 'height_above_mean_sea_level',
-    # xuanli GPSRO for surface_altitude
     'Model_Elevation': 'surface_altitude',
     'tropopause_pressure': 'tropopause_pressure',
     'surface_pressure': 'surface_pressure',
@@ -456,7 +448,6 @@ geovals_vars = {
     'Soil_Type': 'soil_type',
     'Snow_Depth': 'surface_snow_thickness',
     'humidity_mixing_ratio': 'humidity_mixing_ratio',
-#   'Sfc_Height': 'surface_geometric_height',
     'Sfc_Height': 'surface_geopotential_height',
     'Wind_Reduction_Factor_at_10m': 'wind_reduction_factor_at_10m',
     'sulf': 'sulf',
@@ -1634,10 +1625,6 @@ class Radiances(BaseGSI):
             except IndexError:
                 pass
 
-        # global attributes
-        #globalAttrs["platform"] = np.array([wmo_satid[self.satellite]], dtype=np.int32)
-        #globalAttrs["sensor"] = np.array([wmo_instid[self.sensor]], dtype=np.int32)
-
         # set dimension lengths in the writer since we are bypassing
         # ExtractObsData
         DimDict['Location'] = nlocs
@@ -1843,17 +1830,12 @@ class Ozone(BaseGSI):
         outdata[varDict[vname]['errKey']] = obserr
         outdata[varDict[vname]['qcKey']] = obsqc
 
-#>>emily
         # create a GSI effective QC variable (group)
         gsiqcname = vname, 'GsiEffectiveQC'
         errname = vname, 'GsiFinalObsError'
         gsiqc = np.zeros_like(outdata[varDict[vname]['valKey']])
         gsiqc[outdata[errname] > 1e8] = 1
         outdata[gsiqcname] = gsiqc.astype(np.int32)
-#<<emily
-
-        #globalAttrs["platform"] = np.array([wmo_satid[self.satellite]], dtype=np.int32)
-        #globalAttrs["sensor"] = np.array([wmo_instid[self.sensor]], dtype=np.int32)
 
         # set dimension lengths in the writer since we are bypassing
         # ExtractObsData

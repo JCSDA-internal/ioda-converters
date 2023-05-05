@@ -7,8 +7,8 @@ import argparse
 import ioda_obs_space as ios
 from collections import defaultdict, OrderedDict
 
-import ioda_conv_engines as iconv
-from orddicts import DefaultOrderedDict
+import lib_python.ioda_conv_engines as iconv
+from lib_python.orddicts import DefaultOrderedDict
 
 # these are the variables that can be used to match up locations
 loc_vars = [
@@ -159,7 +159,6 @@ def combine_obsspace(FileList, OutFile, GeoDir):
 
     # now write out combined GeoVaLs file
     if GeoDir:
-        print('checking GeoDir = ', GeoDir)
         # get list of geoval files
         GeoFileList = []
         GeoVarNames2 = []
@@ -172,9 +171,6 @@ def combine_obsspace(FileList, OutFile, GeoDir):
             inob = f.split('/')[-1]
             ingeo = inob.replace('obs', 'geoval')
             g = GeoDir+'/'+ingeo
-            print('checking GeoDir = ', GeoDir)
-            print('checking ingeo  = ', ingeo)
-            print('checking g      = ', g)
             GeoFileList.append(g)
         # figure out possible variable names
         for f in GeoFileList:
@@ -295,14 +291,10 @@ def combine_obsspace(FileList, OutFile, GeoDir):
             i = inv[ii]
             if GeoVarData31[ii, kk, jj] != nc.default_fillvals['i4'] and GeoVarData31[ii, kk, jj] != np.abs(nc.default_fillvals['f4']):
                 GeoVarUnique31[i, kk, j] = GeoVarData31[ii, kk, jj]
-        print('checking OutFile = ', OutFile) 
-        print('checking replacing obs with geoval for OutFile ...') 
         outgeo = OutFile.split('/')[-1]     #emily
-        print('checking outgeo = ', outgeo) 
 #       OutGeoFile = OutFile.replace('obs', 'geoval')  #orig
         OutGeoFile = outgeo.replace('obs', 'geoval')
         OutGeoFile = GeoDir + '/'+ OutGeoFile 
-        print('checking OutGeoFile = ', OutGeoFile) 
         of = nc.Dataset(OutGeoFile, 'w', format='NETCDF4')
         of.setncattr("date_time", ncf.getncattr("date_time"))
         nlocs = len(GeoVarUnique3)

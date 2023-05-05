@@ -10,8 +10,8 @@ import argparse
 from collections import defaultdict, OrderedDict
 import datetime as dt
 
-import ioda_conv_ncio as iconv
-from orddicts import DefaultOrderedDict
+import lib_python.ioda_conv_ncio as iconv
+from lib_python.orddicts import DefaultOrderedDict
 
 vtypedict = {
     'int32': 'integer',
