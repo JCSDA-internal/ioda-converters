@@ -13,6 +13,10 @@
 #include <string>
 #include <iostream>
 
+#ifdef BUILD_PYTHON_BINDING
+    #include <time.h>
+#endif
+
 #include "Constants.h"
 #include "VectorMath.h"
 
@@ -58,6 +62,70 @@ namespace bufr {
     }
 
 
+#ifdef BUILD_PYTHON_BINDING
+        py::array ResultSet::getNumpyArray(const std::string& fieldName,
+                                           const std::string& groupByFieldName) const
+        {
+            auto dataObj = get(fieldName, groupByFieldName);
+            return dataObj->getNumpyArray();
+        }
+
+        py::array ResultSet::getNumpyDatetimeArray(const std::string& year,
+                                                   const std::string& month,
+                                                   const std::string& day,
+                                                   const std::string& hour,
+                                                   const std::string& minute,
+                                                   const std::string& second,
+                                                   const std::string& groupBy) const
+        {
+            std::shared_ptr<DataObjectBase> yearObj = get(year, groupBy);
+            std::shared_ptr<DataObjectBase> monthObj = get(month, groupBy);
+            std::shared_ptr<DataObjectBase> dayObj = get(day, groupBy);
+            std::shared_ptr<DataObjectBase> hourObj = get(hour, groupBy);
+
+            std::shared_ptr<DataObjectBase> minuteObj = nullptr;
+            std::shared_ptr<DataObjectBase> secondObj = nullptr;
+
+            if (!minute.empty())
+            {
+                std::shared_ptr<DataObjectBase> minuteObj = get(minute, groupBy);
+            }
+
+            if (!second.empty())
+            {
+                std::shared_ptr<DataObjectBase> secondObj = get(second, groupBy);
+            }
+
+            // make strides array
+            std::vector<ssize_t> strides(yearObj->getDims().size());
+            strides[0] = sizeof(int64_t);
+            for (size_t i = 1; i < yearObj->getDims().size(); ++i)
+            {
+                strides[i] = sizeof(int64_t) * yearObj->getDims()[i];
+            }
+
+            auto array = py::array(py::dtype("datetime64[s]"), yearObj->getDims(), strides);
+            auto arrayPtr = static_cast<int64_t*>(array.mutable_data());
+
+            for (size_t i = 0; i < yearObj->size(); ++i)
+            {
+                std::tm time;
+                time.tm_year = yearObj->getAsInt(i) - 1900;
+                time.tm_mon = monthObj->getAsInt(i) - 1;
+                time.tm_mday = dayObj->getAsInt(i);
+                time.tm_hour = hourObj->getAsInt(i);
+                time.tm_min = minuteObj ? minuteObj->getAsInt(i) : 0;
+                time.tm_sec = secondObj ? secondObj->getAsInt(i) : 0;
+                time.tm_isdst = 0;
+
+                arrayPtr[i] = static_cast<int64_t>(timegm(&time));
+            }
+
+            return array;
+        }
+#endif
+
+
     DataFrame& ResultSet::nextDataFrame()
     {
         dataFrames_.push_back(DataFrame(names_.size()));
@@ -71,51 +139,51 @@ namespace bufr {
                                  std::vector<Query>& dimPaths,
                                  TypeInfo& info) const
     {
-        // Find the dims based on the largest sequence counts in the fields
+        if (dataFrames_.empty())
+        {
+            throw eckit::BadValue("This ResultSet is empty (doesn't contain any data).");
+        }
 
+        // Find the dims based on the largest sequence counts in the fields
         // Compute Dims
         std::vector<int> dimsList;
         std::vector<int> exportDims;
         int groupbyIdx = 0;
         int totalGroupbyElements = 0;
 
-        int targetFieldIdx = 0;
         int groupByFieldIdx = 0;
-        if (dataFrames_.size() > 0)
+        int targetFieldIdx = dataFrames_[0].fieldIndexForNodeNamed(fieldName);
+
+        if (groupByField != "")
         {
-            targetFieldIdx = dataFrames_[0].fieldIndexForNodeNamed(fieldName);
+            groupByFieldIdx = dataFrames_[0].fieldIndexForNodeNamed(groupByField);
 
-            if (groupByField != "")
+            // Validate that the groupByField and the targetField share a common path
+            auto &groupByFieldElement = dataFrames_[0].fieldAtIdx(groupByFieldIdx);
+            auto &groupByPath = groupByFieldElement.target->dimPaths.back();
+            auto &targetPath =
+                dataFrames_[0].fieldAtIdx(targetFieldIdx).target->dimPaths.back();
+            auto groupByPathComps = splitPath(groupByPath.str());
+            auto targetPathComps = splitPath(targetPath.str());
+
+            for (size_t i = 1;
+                 i < std::min(groupByPathComps.size(), targetPathComps.size());
+                 i++)
             {
-                groupByFieldIdx = dataFrames_[0].fieldIndexForNodeNamed(groupByField);
-
-                // Validate that the groupByField and the targetField share a common path
-                auto& groupByFieldElement = dataFrames_[0].fieldAtIdx(groupByFieldIdx);
-                auto& groupByPath = groupByFieldElement.target->dimPaths.back();
-                auto& targetPath =
-                    dataFrames_[0].fieldAtIdx(targetFieldIdx).target->dimPaths.back();
-                auto groupByPathComps = splitPath(groupByPath.str());
-                auto targetPathComps = splitPath(targetPath.str());
-
-                for (size_t i = 1;
-                     i < std::min(groupByPathComps.size(), targetPathComps.size());
-                     i++)
+                if (targetPathComps[i] != groupByPathComps[i])
                 {
-                    if (targetPathComps[i] != groupByPathComps[i])
-                    {
-                        std::ostringstream errStr;
-                        errStr << "The GroupBy and Target Fields do not share a common path.\n";
-                        errStr << "GroupByField path: " << groupByPath.str()<< std::endl;
-                        errStr << "TargetField path: " << targetPath.str() << std::endl;
-                        throw eckit::BadParameter(errStr.str());
-                    }
+                    std::ostringstream errStr;
+                    errStr << "The GroupBy and Target Fields do not share a common path.\n";
+                    errStr << "GroupByField path: " << groupByPath.str() << std::endl;
+                    errStr << "TargetField path: " << targetPath.str() << std::endl;
+                    throw eckit::BadParameter(errStr.str());
                 }
             }
-
-            auto& targetField = dataFrames_[0].fieldAtIdx(targetFieldIdx);
-            dimPaths = targetField.target->dimPaths;
-            exportDims = targetField.target->exportDimIdxs;
         }
+
+        auto& targetField = dataFrames_[0].fieldAtIdx(targetFieldIdx);
+        dimPaths = targetField.target->dimPaths;
+        exportDims = targetField.target->exportDimIdxs;
 
         for (auto& dataFrame : dataFrames_)
         {
@@ -283,10 +351,7 @@ namespace bufr {
 
         // Convert dims per data frame to dims for all the collected data.
         dims[0] = totalRows;
-        if (dataFrames_.size() > 0)
-        {
-            dims = slice(dims, exportDims);
-        }
+        dims = slice(dims, exportDims);
     }
 
 //    subroutine result_set__get_rows_for_field(self, target_field, data_rows, dims, groupby_idx)

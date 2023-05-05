@@ -22,7 +22,6 @@ namespace bufr {
         File() = delete;
 
         File(const std::string& filename,
-             bool isWmoFormat = false,
              const std::string& wmoTablePath = "");
 
         /// \brief Execute the queries given in the query set over the BUFR file and accumulate the

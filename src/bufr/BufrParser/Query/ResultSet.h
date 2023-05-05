@@ -14,6 +14,15 @@
 #include <utility>
 #include <vector>
 
+#ifdef BUILD_PYTHON_BINDING
+    #include <pybind11/pybind11.h>
+    #include <pybind11/numpy.h>
+    #include <pybind11/stl.h>
+    #include <pybind11/stl_bind.h>
+
+    namespace py = pybind11;
+#endif
+
 #include "DataProvider/DataProvider.h"
 #include "DataObject.h"
 #include "Target.h"
@@ -105,6 +114,32 @@ namespace bufr {
         get(const std::string& fieldName,
             const std::string& groupByFieldName = "",
             const std::string& overrideType = "") const;
+
+#ifdef BUILD_PYTHON_BINDING
+        /// \brief Gets a numpy array for the resulting data for a specific field with a given
+        /// name grouped by the optional groupByFieldName.
+        /// \param fieldName The name of the field to get the data for.
+        /// \param groupByFieldName The name of the field to group the data by.
+        py::array getNumpyArray(const std::string& fieldName,
+                                const std::string& groupByFieldName = "") const;
+
+        /// \brief Gets a numpy array of datetime objects for the resulting data for a specific
+        /// field with a given name grouped by the optional groupByFieldName.
+        /// \param year The name of the field to use for the year.
+        /// \param month The name of the field to use for the month.
+        /// \param day The name of the field to use for the day.
+        /// \param hour The name of the field to use for the hour.
+        /// \param minute (Optional) The name of the field to use for the minute.
+        /// \param second (Optional) The name of the field to use for the second.
+        /// \param groupBy (Optional) The name of the field to group the data by.
+        py::array getNumpyDatetimeArray(const std::string& year,
+                                        const std::string& month,
+                                        const std::string& day,
+                                        const std::string& hour,
+                                        const std::string& minute = "",
+                                        const std::string& second = "",
+                                        const std::string& groupBy = "") const;
+#endif
 
         /// \brief Adds a new DataFrame to the ResultSet and returns a reference to it.
         /// \return A reference to the new DataFrame.
