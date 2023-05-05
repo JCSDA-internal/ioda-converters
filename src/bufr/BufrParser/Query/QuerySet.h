@@ -11,6 +11,7 @@
 #include <vector>
 #include <set>
 #include <string>
+#include <map>
 
 #include "QueryParser.h"
 
@@ -25,6 +26,7 @@ namespace bufr
     class QuerySet
     {
      public:
+        QuerySet();
         explicit QuerySet(const std::vector<std::string>& subsets);
         ~QuerySet() = default;
 

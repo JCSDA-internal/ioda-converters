@@ -7,25 +7,25 @@
 # FLAGS COMMON TO ALL BUILD TYPES
 ####################################################################
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14 -g -Wall -Wno-c++11-extensions")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -g -Wall -Wno-c++14-extensions")
 
 ####################################################################
 # RELEASE FLAGS
 ####################################################################
 
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3")
 
 ####################################################################
 # DEBUG FLAGS
 ####################################################################
 
-set(CMAKE_CXX_FLAGS_DEBUG "-O0")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -O0")
 
 ####################################################################
 # BIT REPRODUCIBLE FLAGS
 ####################################################################
 
-set(CMAKE_CXX_FLAGS_BIT "-O2")
+set(CMAKE_CXX_FLAGS_BIT "${CMAKE_CXX_FLAGS} -O2 -ffp-model=strict")
 
 ####################################################################
 # LINK FLAGS
