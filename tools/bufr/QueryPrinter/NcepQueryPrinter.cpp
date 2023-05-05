@@ -78,7 +78,7 @@ namespace bufr {
             subsets.insert(dataProvider->getSubsetVariant());
         };
 
-        dataProvider_->run(QuerySet({}),
+        dataProvider_->run(QuerySet(),
                            [](){},
                            processMsg);
 

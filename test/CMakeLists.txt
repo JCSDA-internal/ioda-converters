@@ -263,6 +263,8 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_ncep_lgycld_rrfs.yaml
     testinput/bufr_ncep_prepbufr_adpsfc_cloud_rrfs.yaml
     testinput/atms_beamwidth.txt
+    testinput/bufr_query_python_test.py
+    testinput/bufr_query_python_to_ioda_test.py
   )
 
   list( APPEND test_output
@@ -317,6 +319,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/rrfs.t06z.lgycld.bufr.nc
     testoutput/rrfs.t06z.adpsfc.prepbufr.nc
     testoutput/bufr_query_filtering.nc
+    testoutput/bufr_query_python_to_ioda_test.nc
   )
 endif()
 
@@ -432,7 +435,15 @@ set(IODA_CONV_COMP_TOL "0.5e-4")
 #        )
 #  Dom's fix to get right path
 #set(IODACONV_PYTHONPATH "$<TARGET_FILE_DIR:_ioda_python>/../:$ENV{PYTHONPATH}")
-set(IODACONV_PYTHONPATH "${CMAKE_CURRENT_SOURCE_DIR}/../src:$<TARGET_FILE_DIR:_ioda_python>/../:$ENV{PYTHONPATH}")
+
+list(APPEND python_path
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src"
+  "${CMAKE_BINARY_DIR}/lib/pyiodaconv"
+  "$<TARGET_FILE_DIR:_ioda_python>/../"
+  "$ENV{PYTHONPATH}")
+
+string(REPLACE ";" ":" python_path_str "${python_path}")
+set(IODACONV_PYTHONPATH "${python_path_str}")
 
 #===============================================================================
 # Marine converters
@@ -1640,6 +1651,25 @@ if(iodaconv_bufr_ENABLED)
 #                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/vadwinds_wmoBUFR2ioda.yaml"
 #                    vadwinds_wmo_multi.nc ${IODA_CONV_COMP_TOL_ZERO}
 #                    DEPENDS bufr2ioda.x )
+endif()
+
+if ( iodaconv_bufr_python_ENABLED )
+
+    ecbuild_add_test( TARGET  test_iodaconv_bufr_query_python_test
+                      TYPE    SCRIPT
+                      ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                      COMMAND "${Python3_EXECUTABLE}"
+                      ARGS "${PROJECT_SOURCE_DIR}/test/testinput/bufr_query_python_test.py" )
+
+    ecbuild_add_test( TARGET  test_iodaconv_bufr_query_python_to_ioda_test
+                      TYPE    SCRIPT
+                      ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                      COMMAND bash
+                      ARGS ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                      netcdf
+                      "${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/testinput/bufr_query_python_to_ioda_test.py"
+                      bufr_query_python_to_ioda_test.nc ${IODA_CONV_COMP_TOL_ZERO})
+
 endif()
 
 
