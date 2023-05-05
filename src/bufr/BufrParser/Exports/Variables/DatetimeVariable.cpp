@@ -15,7 +15,10 @@
 #include <vector>
 
 #include "eckit/exception/Exceptions.h"
-#include "oops/util/Logger.h"
+
+#ifdef BUILD_IODA_BINDING
+    #include "oops/util/Logger.h"
+#endif
 
 #include "DataObject.h"
 #include "DatetimeVariable.h"
@@ -143,10 +146,19 @@ namespace Ingester
                 auto thisTime = std::mktime(&tm);
                 if (thisTime < 0)
                 {
+#ifdef BUILD_IODA_BINDING
                      oops::Log::warning() << "Caution, date suspicious date (year, month, day): "
                                           << year << ", "
                                           << month << ", "
                                           << day << std::endl;
+#endif
+
+#ifndef BUILD_IODA_BINDING
+                    std::cout << "Caution, date suspicious date (year, month, day): "
+                              << year << ", "
+                              << month << ", "
+                              << day << std::endl;
+#endif
                 }
 
                 diff_time = static_cast<int64_t>(difftime(thisTime, epochDt)
