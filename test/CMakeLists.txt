@@ -157,11 +157,13 @@ list( APPEND test_output
 if( iodaconv_gnssro_ENABLED )
   list( APPEND test_input
     testinput/gnssro_3prof_2022090100.bufr
+    testinput/gnssro_refractivityRetrieval_metop_romsaf_2401.0011_metopc-G32-202108020112.nc
     testinput/gnssaro_N49T_20210120_00Z.nc
   )
 
   list( APPEND test_output
     testoutput/gnssro_obs_3prof_2022090100.nc4
+    testoutput/gnssro_obs_awsopendata_2021080200.nc4
     testoutput/gnssaro_obs_2021012000.nc
   )
 endif()
@@ -191,6 +193,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/gdas.t12z.adpupa_nc002103.tm00.bufr_d
     testinput/bufr_mhs.yaml
     testinput/bufr_hrs.yaml
+    testinput/bufr_query_filtering.yaml
     testinput/bufr_filtering.yaml
     testinput/bufr_splitting.yaml
     testinput/bufr_filter_split.yaml
@@ -259,6 +262,8 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_ncep_lgycld_rrfs.yaml
     testinput/bufr_ncep_prepbufr_adpsfc_cloud_rrfs.yaml
     testinput/atms_beamwidth.txt
+    testinput/bufr_query_python_test.py
+    testinput/bufr_query_python_to_ioda_test.py
   )
 
   list( APPEND test_output
@@ -312,6 +317,8 @@ if( iodaconv_bufr_ENABLED )
     testoutput/bufr_specifying_subsets.nc
     testoutput/rrfs.t06z.lgycld.bufr.nc
     testoutput/rrfs.t06z.adpsfc.prepbufr.nc
+    testoutput/bufr_query_filtering.nc
+    testoutput/bufr_query_python_to_ioda_test.nc
   )
 endif()
 
@@ -427,7 +434,15 @@ set(IODA_CONV_COMP_TOL "0.5e-4")
 #        )
 #  Dom's fix to get right path
 #set(IODACONV_PYTHONPATH "$<TARGET_FILE_DIR:_ioda_python>/../:$ENV{PYTHONPATH}")
-set(IODACONV_PYTHONPATH "${CMAKE_CURRENT_SOURCE_DIR}/../src:$<TARGET_FILE_DIR:_ioda_python>/../:$ENV{PYTHONPATH}")
+
+list(APPEND python_path
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src"
+  "${CMAKE_BINARY_DIR}/lib/pyiodaconv"
+  "$<TARGET_FILE_DIR:_ioda_python>/../"
+  "$ENV{PYTHONPATH}")
+
+string(REPLACE ";" ":" python_path_str "${python_path}")
+set(IODACONV_PYTHONPATH "${python_path_str}")
 
 #===============================================================================
 # Marine converters
@@ -1024,6 +1039,18 @@ if( iodaconv_gnssro_ENABLED )
                             gnssro_obs_3prof_2022090100.nc4  ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS gnssro_bufr2ioda)
 
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gnssro_AWSopendataNetcdf_conv
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/gnssro_AWSopendataNetcdf2ioda.py
+                            -i testinput/gnssro_refractivityRetrieval_metop_romsaf_2401.0011_metopc-G32-202108020112.nc
+                            -o testrun/gnssro_obs_awsopendata_2021080200.nc4
+                            -d 2021080200"
+                            gnssro_obs_awsopendata_2021080200.nc4 ${IODA_CONV_COMP_TOL_ZERO})
+
   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gnssaro_netcdf_conv
                     TYPE    SCRIPT
                     ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
@@ -1203,6 +1230,15 @@ if(iodaconv_bufr_ENABLED)
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_hrs.yaml"
                             gdas.t00z.1bhrs4.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_query_filtering
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_query_filtering.yaml"
+                    bufr_query_filtering.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_filtering
@@ -1614,6 +1650,25 @@ if(iodaconv_bufr_ENABLED)
 #                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/vadwinds_wmoBUFR2ioda.yaml"
 #                    vadwinds_wmo_multi.nc ${IODA_CONV_COMP_TOL_ZERO}
 #                    DEPENDS bufr2ioda.x )
+endif()
+
+if ( iodaconv_bufr_python_ENABLED )
+
+    ecbuild_add_test( TARGET  test_iodaconv_bufr_query_python_test
+                      TYPE    SCRIPT
+                      ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                      COMMAND "${Python3_EXECUTABLE}"
+                      ARGS "${PROJECT_SOURCE_DIR}/test/testinput/bufr_query_python_test.py" )
+
+    ecbuild_add_test( TARGET  test_iodaconv_bufr_query_python_to_ioda_test
+                      TYPE    SCRIPT
+                      ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                      COMMAND bash
+                      ARGS ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                      netcdf
+                      "${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/testinput/bufr_query_python_to_ioda_test.py"
+                      bufr_query_python_to_ioda_test.nc ${IODA_CONV_COMP_TOL_ZERO})
+
 endif()
 
 

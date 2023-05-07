@@ -64,19 +64,6 @@ namespace bufr {
                     const DataProviderType& dataProvider);
         void accumulate();
 
-        Targets getTargets()
-        {
-            Targets targets;
-            for (auto& subset : targetCache_)
-            {
-                for (auto& target : subset.second)
-                {
-                    targets.push_back(target);
-                }
-            }
-            return targets;
-        }
-
      private:
         const QuerySet querySet_;
         ResultSet& resultSet_;
@@ -96,28 +83,10 @@ namespace bufr {
                          std::shared_ptr<__details::ProcessingMasks>& masks);
 
 
-        /// \brief Find the target associated with a specific user provided query string.
-        /// \param[in] targetName The name specified for the target.
-        /// \param[in] query The query string to use.
-        std::shared_ptr<Target> findTarget(const std::string &targetName,
-                                           const Query& query) const;
-
-
         /// \brief Does the node idx correspond to an element you'd find in a query string (repeat
         /// or binary sequence)?
         /// \param[in] nodeIdx The node index to check.
         bool isQueryNode(int nodeIdx) const;
-
-
-        /// \brief Get the dimensional information for the query with the given branches.
-        /// \param[in] branches The branches to use.
-        /// \param[in] mnemonicCursor The current position in the subset tree.
-        /// \param[in, out] dimPaths The list of dimensioning query sub-paths
-        /// \param[in, out] dimIdxs The idxs of the dimensioning elements in the query.
-        void getDimInfo(const std::vector<int>& branches,
-                        int mnemonicCursor,
-                        std::vector<std::string>& dimPaths,
-                        std::vector<int>& dimIdxs) const;
 
 
         /// \brief Accumulate the data for the currently open BUFR message subset.
@@ -127,6 +96,36 @@ namespace bufr {
         void collectData(Targets& targets,
                          std::shared_ptr<__details::ProcessingMasks> masks,
                          ResultSet& resultSet) const;
+
+
+        /// \brief Given data counts and a filter specification this function creates the resulting
+        ///        data vector.
+        /// \param[in] srcData The source data vector.
+        /// \param[in] origCounts The original data counts.
+        /// \param[in] filter The filter specification.
+        /// \return The resulting data vector after the filter is applied.
+        std::vector<double> makeFilteredData(const std::vector<double>& srcData,
+                                             const SeqCounts &origCounts,
+                                             const std::vector<std::vector<size_t>> &filter)
+                                                  const;
+
+        /// \brief Recursive function that does the actual work of creating the filtered data
+        ///        vector.
+        /// \param[in] srcData The source data vector.
+        /// \param[in] origCounts The original data counts.
+        /// \param[in] filters The filter specification.
+        /// \param[in, out] data The resulting data vector.
+        /// \param[in, out] offset The current offset into the resulting data vector.
+        /// \param[in] depth The current depth of the recursion.
+        /// \param[in] skipResult If true, the result of the current recursion is not stored in the
+        ///                       resulting data vector. This data is being filtered out.
+        void _makeFilteredData(const std::vector<double>& srcData,
+                               const SeqCounts& origCounts,
+                               const std::vector<std::vector<size_t>>& filters,
+                               std::vector<double>& data,
+                               size_t& offset,
+                               size_t depth,
+                               bool skipResult = false) const;
     };
 }  // namespace bufr
 }  // namespace Ingester

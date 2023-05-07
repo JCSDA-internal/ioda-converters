@@ -26,17 +26,19 @@ namespace Ingester {
     BufrParser::BufrParser(const BufrDescription &description) :
             description_(description),
             file_(bufr::File(description_.filepath(),
-                             description_.isWmoFormat(),
                              description_.tablepath()))
     {
+        // print message
+        oops::Log::info() << "BufrParser: Parsing file " << description_.filepath() << std::endl;
     }
 
-    BufrParser::BufrParser(const eckit::Configuration &conf) :
+    BufrParser::BufrParser(const eckit::LocalConfiguration &conf) :
             description_(BufrDescription(conf)),
             file_(bufr::File(description_.filepath(),
-                             description_.isWmoFormat(),
                              description_.tablepath()))
     {
+        // print message
+        oops::Log::info() << "BufrParser: Parsing file " << description_.filepath() << std::endl;
     }
 
     BufrParser::~BufrParser()

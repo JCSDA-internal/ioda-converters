@@ -37,6 +37,8 @@ DimDict = {
 
 VarDims = {
     'carbonmonoxideTotal': ['Location'],
+    'averagingKernel': ['Location', 'Layer'],
+    'pressureVertice': ['Location', 'Vertice']
 }
 
 # constants
@@ -155,20 +157,19 @@ class mopitt(object):
 
             flg = np.logical_and(qaf, tsf)
 
+            # flip stuff for ufo conventions: top -> bottom
+            ak_tc_dimless = np.flip(ak_tc_dimless, axis=1)
+            pr_gd = np.flip(pr_gd, axis=1)
+
             if first:
                 # add metadata variables
                 self.outdata[('dateTime', 'MetaData')] = times[flg]
                 self.outdata[('latitude', 'MetaData')] = lats[flg]
                 self.outdata[('longitude', 'MetaData')] = lons[flg]
-                self.outdata[('apriori_term', 'RtrvlAncData')] = ap_tc[flg]
-                for k in range(nlevs):
-                    varname_ak = ('averaging_kernel_level_'+str(k+1), 'RtrvlAncData')
-                    self.outdata[varname_ak] = ak_tc_dimless[:, k][flg]
-                # add top vertice in IODA file, here it is 0hPa but can be different
-                # for other obs stream
-                for k in range(nlevs+1):
-                    varname_pr = ('pressure_level_'+str(k+1), 'RtrvlAncData')
-                    self.outdata[varname_pr] = hPa2Pa * pr_gd[:, k][flg]
+
+                self.outdata[('aprioriTerm', 'RetrievalAncillaryData')] = ap_tc[flg]
+                self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = ak_tc_dimless[flg]
+                self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = hPa2Pa * pr_gd[flg]
 
                 self.outdata[self.varDict[iodavar]['valKey']] = xr_tc[flg]
                 self.outdata[self.varDict[iodavar]['errKey']] = er_tc[flg]
@@ -181,35 +182,39 @@ class mopitt(object):
                     self.outdata[('latitude', 'MetaData')], lats[flg]))
                 self.outdata[('longitude', 'MetaData')] = np.concatenate((
                     self.outdata[('longitude', 'MetaData')], lons[flg]))
-                self.outdata[('apriori_term', 'RtrvlAncData')] = np.concatenate((
-                    self.outdata[('apriori_term', 'RtrvlAncData')], ap_tc[flg]))
-                for k in range(nlevs):
-                    varname_ak = ('averaging_kernel_level_'+str(k+1), 'RtrvlAncData')
-                    self.outdata[varname_ak] = np.concatenate(
-                        (self.outdata[varname_ak], ak_tc_dimless[:, k][flg]))
-                # add top vertice in IODA file, here it is 0hPa but can be different
-                # for other obs stream
-                for k in range(nlevs+1):
-                    varname_pr = ('pressure_level_'+str(k+1), 'RtrvlAncData')
-                    self.outdata[varname_pr] = np.concatenate(
-                        (self.outdata[varname_pr], hPa2Pa * pr_gd[:, k][flg]))
 
-                    self.outdata[self.varDict[iodavar]['valKey']] = np.concatenate(
-                        (self.outdata[self.varDict[iodavar]['valKey']], xr_tc[flg]))
-                    self.outdata[self.varDict[iodavar]['errKey']] = np.concatenate(
-                        (self.outdata[self.varDict[iodavar]['errKey']], er_tc[flg]))
-                    self.outdata[self.varDict[iodavar]['qcKey']] = np.concatenate(
-                        (self.outdata[self.varDict[iodavar]['qcKey']], qa[flg]))
+                self.outdata[('aprioriTerm', 'RetrievalAncillaryData')] = np.concatenate((
+                    self.outdata[('aprioriTerm', 'RetrievalAncillaryData')], ap_tc[flg]))
+                self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = np.concatenate((
+                    self.outdata[('averagingKernel', 'RetrievalAncillaryData')], ak_tc_dimless[flg]))
+                self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = np.concatenate((
+                    self.outdata[('pressureVertice', 'RetrievalAncillaryData')], hPa2Pa * pr_gd[flg]))
+
+                self.outdata[self.varDict[iodavar]['valKey']] = np.concatenate(
+                    (self.outdata[self.varDict[iodavar]['valKey']], xr_tc[flg]))
+                self.outdata[self.varDict[iodavar]['errKey']] = np.concatenate(
+                    (self.outdata[self.varDict[iodavar]['errKey']], er_tc[flg]))
+                self.outdata[self.varDict[iodavar]['qcKey']] = np.concatenate(
+                    (self.outdata[self.varDict[iodavar]['qcKey']], qa[flg]))
+
             first = False
 
         DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
         AttrData['Location'] = np.int32(DimDict['Location'])
+        DimDict['Layer'] = nlevs
+        AttrData['Layer'] = np.int32(DimDict['Layer'])
+        DimDict['Vertice'] = nlevs + 1
+        AttrData['Vertice'] = np.int32(DimDict['Vertice'])
 
-        for k in range(nlevs):
-            varname = 'averaging_kernel_level_'+str(k+1)
-            vkey = (varname, 'RtrvlAncData')
-            self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
-            self.varAttrs[vkey]['units'] = ''
+        varname = 'pressureVertice'
+        vkey = (varname, 'RetrievalAncillaryData')
+        self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
+        self.varAttrs[vkey]['units'] = 'Pa'
+
+        varname = 'averagingKernel'
+        vkey = (varname, 'RetrievalAncillaryData')
+        self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
+        self.varAttrs[vkey]['units'] = ''
 
 
 def main():

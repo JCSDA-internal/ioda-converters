@@ -11,10 +11,10 @@
 #include <iostream>
 #include <memory>
 #include <unordered_map>
+#include <unordered_set>
 #include <sstream>
 
 #include "eckit/exception/Exceptions.h"
-#include "bufr_interface.h"
 
 #include "../../../src/bufr/BufrParser/Query/DataProvider/WmoDataProvider.h"
 #include "../../../src/bufr/BufrParser/Query/SubsetTable.h"
@@ -26,40 +26,46 @@ namespace bufr {
     {
     }
 
-    std::vector<QueryData> WmoQueryPrinter::getQueries(const SubsetVariant& variant)
+    SubsetTableType WmoQueryPrinter::getTable(const SubsetVariant& variant)
     {
         if (dataProvider_->isFileOpen())
         {
             std::ostringstream errStr;
-            errStr << "Tried to call QueryPrinter::getQueries, but the file is already open!";
+            errStr << "Tried to call QueryPrinter::getTable, but the file is already open!";
             throw eckit::BadParameter(errStr.str());
         }
 
         dataProvider_->open();
 
-        std::unordered_map<SubsetVariant, std::vector<QueryData>> dataMap;
+        std::unordered_map<SubsetVariant, BufrNodeVector> dataMap;
 
+        std::unordered_set<std::string> knownQueries;
+
+        size_t maxLeaves = 0;
+        std::shared_ptr<SubsetTable> subsetTable;
         auto& dataProvider = dataProvider_;
-        auto processSubset = [&variant, &dataMap, &dataProvider]() mutable
+        auto processSubset = [&variant, &subsetTable, &maxLeaves, &dataProvider]() mutable
         {
             auto subsetVariant = dataProvider->getSubsetVariant();
             if (subsetVariant == variant)
             {
-                dataMap.insert({variant,SubsetTable(dataProvider).allQueryData()});
+                auto thisTable = std::make_shared<SubsetTable>(dataProvider);
+                auto leaves = thisTable->getLeaves();
+
+                // Unfortunately the subsets for a variant are sometimes inconsistent
+                // (have more queries than others) so we need to pick the largest one.
+                if (leaves.size() > maxLeaves)
+                {
+                    maxLeaves = leaves.size();
+                    subsetTable = thisTable;
+                }
             }
         };
 
         dataProvider_->run(QuerySet({variant.subset}), processSubset);
-
-        std::vector<QueryData> queryData;
-        for (const auto& queryObjs : dataMap)
-        {
-            queryData.insert(queryData.end(), queryObjs.second.begin(), queryObjs.second.end());
-        }
-
         dataProvider_->close();
 
-        return queryData;
+        return subsetTable;
     }
 
     std::set<SubsetVariant> WmoQueryPrinter::getSubsetVariants() const
@@ -81,7 +87,7 @@ namespace bufr {
             variants.insert(dataProvider->getSubsetVariant());
         };
 
-        dataProvider_->run(QuerySet({}), processSubset);
+        dataProvider_->run(QuerySet(), processSubset);
 
         dataProvider_->close();
 

@@ -14,6 +14,15 @@
 #include <utility>
 #include <vector>
 
+#ifdef BUILD_PYTHON_BINDING
+    #include <pybind11/pybind11.h>
+    #include <pybind11/numpy.h>
+    #include <pybind11/stl.h>
+    #include <pybind11/stl_bind.h>
+
+    namespace py = pybind11;
+#endif
+
 #include "DataProvider/DataProvider.h"
 #include "DataObject.h"
 #include "Target.h"
@@ -21,6 +30,9 @@
 
 namespace Ingester {
 namespace bufr {
+
+    typedef std::vector<std::vector<int>> SeqCounts;
+
     /// \brief Represents a single BUFR data element (a element from one message subset). It
     /// contains both the data value(s) and the associated metadata that is used to construct the
     /// results data.
@@ -28,7 +40,7 @@ namespace bufr {
     {
         std::shared_ptr<Target> target;
         std::vector<double> data;
-        std::vector<std::vector<int>> seqCounts;
+        SeqCounts seqCounts;
     };
 
     /// \brief Container for a "row" of data (all the collected data for a message subset)., with a
@@ -103,6 +115,32 @@ namespace bufr {
             const std::string& groupByFieldName = "",
             const std::string& overrideType = "") const;
 
+#ifdef BUILD_PYTHON_BINDING
+        /// \brief Gets a numpy array for the resulting data for a specific field with a given
+        /// name grouped by the optional groupByFieldName.
+        /// \param fieldName The name of the field to get the data for.
+        /// \param groupByFieldName The name of the field to group the data by.
+        py::array getNumpyArray(const std::string& fieldName,
+                                const std::string& groupByFieldName = "") const;
+
+        /// \brief Gets a numpy array of datetime objects for the resulting data for a specific
+        /// field with a given name grouped by the optional groupByFieldName.
+        /// \param year The name of the field to use for the year.
+        /// \param month The name of the field to use for the month.
+        /// \param day The name of the field to use for the day.
+        /// \param hour The name of the field to use for the hour.
+        /// \param minute (Optional) The name of the field to use for the minute.
+        /// \param second (Optional) The name of the field to use for the second.
+        /// \param groupBy (Optional) The name of the field to group the data by.
+        py::array getNumpyDatetimeArray(const std::string& year,
+                                        const std::string& month,
+                                        const std::string& day,
+                                        const std::string& hour,
+                                        const std::string& minute = "",
+                                        const std::string& second = "",
+                                        const std::string& groupBy = "") const;
+#endif
+
         /// \brief Adds a new DataFrame to the ResultSet and returns a reference to it.
         /// \return A reference to the new DataFrame.
         DataFrame& nextDataFrame();
@@ -127,7 +165,7 @@ namespace bufr {
                           const std::string& groupByField,
                           std::vector<double>& data,
                           std::vector<int>& dims,
-                          std::vector<std::string>& dimPaths,
+                          std::vector<Query>& dimPaths,
                           TypeInfo& info) const;
 
         /// \brief Retrieves the data for the specified target field, one row per message subset.
@@ -163,7 +201,7 @@ namespace bufr {
                                 const std::string& overrideType,
                                 const std::vector<double> data,
                                 const std::vector<int> dims,
-                                const std::vector<std::string> dimPaths) const;
+                                const std::vector<Query> dimPaths) const;
 
         /// \brief Make an appropriate DataObject for data with the TypeInfo
         /// \param info The meta data for the element.

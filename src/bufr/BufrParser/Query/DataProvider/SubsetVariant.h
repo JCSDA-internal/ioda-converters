@@ -19,6 +19,14 @@ namespace bufr {
         size_t variantId;
         bool otherVariantsExist = false;
 
+        SubsetVariant() = default;
+        SubsetVariant(const std::string& subset, size_t varientId, bool otherVariantsExist = false):
+            subset(subset),
+            variantId(varientId),
+            otherVariantsExist(otherVariantsExist)
+        {
+        }
+
         std::string str() const
         {
             if (otherVariantsExist)

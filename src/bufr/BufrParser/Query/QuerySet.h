@@ -11,18 +11,22 @@
 #include <vector>
 #include <set>
 #include <string>
+#include <map>
 
 #include "QueryParser.h"
 
 namespace Ingester {
 namespace bufr
 {
+    struct Query;
+
     typedef std::set<std::string> Subsets;
 
     /// \brief Manages a collection of queries.
     class QuerySet
     {
      public:
+        QuerySet();
         explicit QuerySet(const std::vector<std::string>& subsets);
         ~QuerySet() = default;
 
@@ -42,7 +46,10 @@ namespace bufr
         /// \return A vector of the names of all the queries.
         bool includesSubset(const std::string& subset) const;
 
-        std::vector<Query> queriesFor(const std::string& name) const { return queryMap_.at(name); }
+        /// \brief Get list of queries for query with name
+        /// \param[in] name The name of the query.
+        /// \return A vector of queries.
+        std::vector<Query> queriesFor(const std::string& name) const;
 
      private:
         std::unordered_map<std::string, std::vector<Query>> queryMap_;

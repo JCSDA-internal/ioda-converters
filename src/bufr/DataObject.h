@@ -7,24 +7,41 @@
 
 #pragma once
 
+#include <algorithm>
 #include <set>
 #include <string>
 #include <memory>
 #include <type_traits>
 #include <iostream>
 #include <numeric>
+#include <limits>
+#include <math.h>
 
 #include "eckit/exception/Exceptions.h"
-#include "ioda/ObsGroup.h"
-#include "ioda/defs.h"
+
+#ifdef BUILD_IODA_BINDING
+    #include "ioda/ObsGroup.h"
+    #include "ioda/defs.h"
+#endif
+
+#ifdef BUILD_PYTHON_BINDING
+    #include <pybind11/pybind11.h>
+    #include <pybind11/numpy.h>
+    #include <pybind11/stl.h>
+
+    namespace py = pybind11;
+#endif
+
 
 #include "BufrParser/Query/Constants.h"
+#include "BufrParser/Query/QueryParser.h"
 
 namespace Ingester
 {
     typedef std::vector<int> Dimensions;
     typedef Dimensions Location;
 
+#ifdef BUILD_IODA_BINDING
     struct DimensionDataBase
     {
         virtual ~DimensionDataBase() = default;
@@ -66,6 +83,7 @@ namespace Ingester
             return std::string("");
         }
     };
+#endif
 
     /// \brief Abstract base class for intermediate data object that bridges the Parsers with the
     /// IodaEncoder.
@@ -76,7 +94,7 @@ namespace Ingester
                                 const std::string& groupByFieldName,
                                 const Dimensions& dims,
                                 const std::string& query,
-                                const std::vector<std::string>& dimPaths) :
+                                const std::vector<bufr::Query>& dimPaths):
 
             fieldName_(fieldName),
             groupByFieldName_(groupByFieldName),
@@ -93,7 +111,8 @@ namespace Ingester
         void setGroupByFieldName(const std::string& fieldName) { groupByFieldName_ = fieldName; }
         void setDims(const std::vector<int> dims) { dims_ = dims; }
         void setQuery(const std::string& query) { query_ = query; }
-        void setDimPaths(const std::vector<std::string>& dimPaths) { dimPaths_ = dimPaths; }
+        void setDimPaths(const std::vector<bufr::Query>& dimPaths)
+            { dimPaths_ = dimPaths; }
         virtual void setData(const std::vector<double>& data, double dataMissingValue) = 0;
 
         // Getters
@@ -101,7 +120,12 @@ namespace Ingester
         std::string getGroupByFieldName() const { return groupByFieldName_; }
         Dimensions getDims() const { return dims_; }
         std::string getPath() const { return query_; }
-        std::vector<std::string> getDimPaths() const { return dimPaths_; }
+        std::vector<bufr::Query> getDimPaths() const { return dimPaths_; }
+
+#ifdef BUILD_PYTHON_BINDING
+       /// \brief Return a numpy array of the data.
+       virtual py::array getNumpyArray() const = 0;
+#endif
 
         bool hasSamePath(const std::shared_ptr<DataObjectBase>& dataObject);
 
@@ -140,6 +164,7 @@ namespace Ingester
         /// \return Data size.
         virtual size_t size() const = 0;
 
+#ifdef BUILD_IODA_BINDING
         /// \brief Makes an ioda::Variable and adds it to the given ioda::ObsGroup
         /// \param obsGroup Obsgroup where to add the variable
         /// \param name The name to associate with the variable (ex "latitude@MetaData")
@@ -166,6 +191,7 @@ namespace Ingester
         virtual std::shared_ptr<DimensionDataBase> createEmptyDimension(
                                                                   const std::string& name,
                                                                   std::size_t dimIdx) const = 0;
+#endif
 
         /// \brief Slice the data object given a vector of row indices.
         /// \param slice The indices to slice.
@@ -186,7 +212,7 @@ namespace Ingester
         std::string groupByFieldName_;
         Dimensions dims_;
         std::string query_;
-        std::vector<std::string> dimPaths_;
+        std::vector<bufr::Query> dimPaths_;
     };
 
 
@@ -206,7 +232,7 @@ namespace Ingester
                    const std::string& group_by_field_name,
                    const Dimensions& dimensions,
                    const std::string& query,
-                   const std::vector<std::string>& dimPaths) :
+                   const std::vector<bufr::Query>& dimPaths) :
             DataObjectBase(field_name, group_by_field_name, dimensions, query, dimPaths),
             data_(data)
         {};
@@ -225,6 +251,72 @@ namespace Ingester
             _setData(data, dataMissingValue);
         }
 
+#ifdef BUILD_PYTHON_BINDING
+        /// \brief Return a numpy array of the data.
+        py::array getNumpyArray() const final
+        {
+            return _getNumpyArray();
+        }
+
+        template<typename U = void>
+        py::array _getNumpyArray(
+            typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr) const
+        {
+            // Create the data array
+            py::array_t<T> data(dims_);
+            T* dataPtr = static_cast<T*>(data.mutable_data());
+            std::copy(data_.begin(), data_.end(), dataPtr);
+
+            // Create the mask array
+            py::array_t<bool> mask(dims_);
+            bool* maskPtr = static_cast<bool*>(mask.mutable_data());
+            for (size_t idx = 0; idx < data_.size(); idx++)
+            {
+                maskPtr[idx] = isMissing(idx);
+            }
+
+            // Create a masked array from the data and mask arrays
+            py::object numpyModule = py::module::import("numpy");
+            py::array maskedArray = numpyModule.attr("ma").attr("masked_array")(data, mask);
+            numpyModule.attr("ma").attr("set_fill_value")(maskedArray, missingValue());
+
+            return maskedArray;
+        }
+
+        template<typename U = void>
+        py::array _getNumpyArray(
+            typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr) const
+        {
+            py::list pyStrList(data_.size());
+
+            // Convert the std::vector<std::string> into a list of Python Unicode strings
+            for (size_t i = 0; i < data_.size(); ++i)
+            {
+                pyStrList[i] = py::str(data_[i]);
+            }
+
+            // Create a NumPy array of Python Unicode strings with the correct dimensions
+            py::object numpyModule = py::module::import("numpy");
+            py::array data = numpyModule.attr("array")(pyStrList, py::dtype("O"));
+            data = data.attr("reshape")(dims_);
+
+            // Create the mask array
+            py::array_t<bool> mask(dims_);
+            bool* maskPtr = static_cast<bool*>(mask.mutable_data());
+            for (size_t idx = 0; idx < data_.size(); idx++)
+            {
+                maskPtr[idx] = isMissing(idx);
+            }
+
+            // Create a masked array from the data and mask arrays
+            py::array maskedArray = numpyModule.attr("ma").attr("masked_array")(data, mask);
+            numpyModule.attr("ma").attr("set_fill_value")(maskedArray, missingValue());
+
+            return maskedArray;
+        }
+#endif
+
+#ifdef BUILD_IODA_BINDING
         /// \brief Makes an ioda::Variable and adds it to the given ioda::ObsGroup
         /// \param obsGroup Obsgroup were to add the variable
         /// \param name The name to associate with the variable (ex "latitude@MetaData")
@@ -284,6 +376,7 @@ namespace Ingester
             dimData->dimScale = ioda::NewDimensionScale<int>(name, getDims()[dimIdx]);
             return dimData;
         }
+#endif
 
         /// \brief Print the data object to a output stream.
         void print(std::ostream &out) const final
@@ -420,6 +513,7 @@ namespace Ingester
      private:
         std::vector<T> data_;
 
+#ifdef BUILD_IODA_BINDING
         /// \brief Make the variable creation parameters.
         /// \param chunks The chunk sizes
         /// \param compressionLevel The compression level
@@ -451,6 +545,7 @@ namespace Ingester
             return params;
         }
 
+
         /// \brief Make the variable creation parameters for string data.
         /// \param chunks The chunk sizes
         /// \param compressionLevel The compression level
@@ -469,6 +564,7 @@ namespace Ingester
 
             return params;
         }
+#endif
 
         /// \brief Get the data at the location as a float for numeric data.
         /// \return Float data.

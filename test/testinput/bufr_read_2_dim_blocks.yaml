@@ -22,28 +22,28 @@ observations:
             query: "*/OGCE"
 
           pressure:
-            query: "*/QCPRMS/GNAP[1]"
+            query: "*/QCPRMS[1]/GNAP"
 
           windDirection:
-            query: "*/QCPRMS/GNAP[2]"
+            query: "*/QCPRMS[2]/GNAP"
 
           windSpeed:
-            query: "*/QCPRMS/GNAP[3]"
+            query: "*/QCPRMS[3]/GNAP"
 
           coldClusterTemperature:
-            query: "*/QCPRMS/GNAP[4]"
+            query: "*/QCPRMS[4]/GNAP"
 
           percentConfidencePressure:
-            query: "*/QCPRMS/PCCF[1]"
+            query: "*/QCPRMS[1]/PCCF"
 
           percentConfidenceWindDirection:
-            query: "*/QCPRMS/PCCF[2]"
+            query: "*/QCPRMS[2]/PCCF"
 
           percentConfidenceWindSpeed:
-            query: "*/QCPRMS/PCCF[3]"
+            query: "*/QCPRMS[3]/PCCF"
 
           percentConfidenceColdClusterTemperature:
-            query: "*/QCPRMS/PCCF[4]"
+            query: "*/QCPRMS[4]/PCCF"
 
     ioda:
       backend: netcdf
@@ -52,7 +52,10 @@ observations:
       dimensions:
         - name: "Confidence"
           paths:
-            - "*/QCPRMS"
+            - "*/QCPRMS[1]"
+            - "*/QCPRMS[2]"
+            - "*/QCPRMS[3]"
+            - "*/QCPRMS[4]"
 
       variables:
         - name: "MetaData/latitude"

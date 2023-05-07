@@ -22,6 +22,10 @@ list( APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake )
 include( iodaconv_extra_macros )
 include( iodaconv_compiler_flags )
 
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 # Location of .pycodestyle for norm checking within IODA-converters
 set( IODACONV_PYLINT_CFG_DIR ${CMAKE_CURRENT_SOURCE_DIR} )
 
@@ -35,6 +39,7 @@ set( PYIODACONV_INSTALL_LIBDIR ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/$
 ## Dependencies
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+find_package( pybind11 QUIET)
 
 find_package( Eigen3 QUIET NO_MODULE HINTS
     $ENV{Eigen3_ROOT} $ENV{EIGEN3_ROOT} $ENV{Eigen_ROOT} $ENV{EIGEN_ROOT}
@@ -118,6 +123,26 @@ else()
         message(STATUS "NOT-Found: bufr - BUFR converter disabled")
     endif()
     message(STATUS "Disabled Component: bufr")
+endif()
+
+if( eckit_FOUND AND bufr_FOUND AND pybind11_FOUND )
+    set(iodaconv_bufr_python_ENABLED True)
+    message(STATUS "Found: eckit")
+    message(STATUS "Found: bufr")
+    message(STATUS "Found: pybind11")
+    message(STATUS "Enabled Component: bufr python")
+else()
+    set(iodaconv_bufr_python_ENABLED False)
+    if(NOT eckit_FOUND)
+        message(STATUS "NOT-Found: eckit - BUFR python disabled")
+    endif()
+    if(NOT bufr_FOUND)
+        message(STATUS "NOT-Found: bufr - BUFR python disabled")
+    endif()
+    if(NOT pybind11_FOUND)
+        message(STATUS "NOT-Found: pybind11 - BUFR python disabled")
+    endif()
+    message(STATUS "Disabled Component: bufr python")
 endif()
 
 if( eckit_FOUND AND oops_FOUND AND ioda_FOUND )
