@@ -106,28 +106,28 @@ wmo_instid = {
 # LocKeyList = { 'gsiname':('IODAname','dtype')}
 all_LocKeyList = {
     'Station_ID': ('stationIdentification', 'string'),
-    'Time': ('dateTime', 'string'), 
-    'time': ('time', 'string'),   
+    'Time': ('dateTime', 'string'),
+    'time': ('time', 'string'),
     'ascending_flag': ('satelliteAscendingFlag', 'integer'),
     'earth_radius_of_curvature': ('earthRadiusCurvature', 'float'),
     'reference_sat_id': ('satelliteTransmitterId', 'integer'),
-    'occulting_sat_id': ('satelliteIdentifier', 'integer'),  
+    'occulting_sat_id': ('satelliteIdentifier', 'integer'),
     'Observation_Subtype': ('sequenceNumber', 'integer'),
     'geoid_height_above_reference_ellipsoid': ('geoidUndulation', 'float'),
-    'gnss_sat_class': ('satelliteConstellationRO', 'string'), 
-    'impact_height': ('impactHeightRO', 'float'), 
+    'gnss_sat_class': ('satelliteConstellationRO', 'string'),
+    'impact_height': ('impactHeightRO', 'float'),
     'impact_parameter': ('impactParameterRO', 'float'),
     'Latitude': ('latitude', 'float'),
     'Longitude': ('longitude', 'float'),
     'Station_Elevation': ('stationElevation', 'float'),
     'Pressure': ('pressure', 'float'),
-    'Height': ('height', 'float'),                  
-    'Impact_Height': ('impactHeightRO', 'float'),   
+    'Height': ('height', 'float'),
+    'Impact_Height': ('impactHeightRO', 'float'),
     'Observation_Type': ('satelliteIdentifier', 'integer'),
-    'height': ('height', 'float'),                  
+    'height': ('height', 'float'),
     'qfro': ('qualityFlags', 'integer'),
     'pccf': ('pccf', 'float'),
-    'occulting_sat': ('satelliteInstrument', 'integer'),  
+    'occulting_sat': ('satelliteInstrument', 'integer'),
     'Sensor_Azimuth_Angle': ('sensorAzimuthAngle', 'float'),
     'Sat_Constellation': ('satelliteConstellationRO', 'integer'),
     'process_center': ('dataProviderOrigin', 'integer'),
@@ -149,7 +149,7 @@ all_LocKeyList = {
     'BottomLevelPressure': ('bottom_level_pressure', 'float'),
     'Total_Ozone_Error_Flag': ('total_ozone_error_flag', 'float'),
     'Profile_Ozone_Error_Flag': ('profile_ozone_error_flag', 'float'),
-    'Algorithm_Flag_For_Best_Ozone':('bestOzoneAlgorithmFlag', 'float'),
+    'Algorithm_Flag_For_Best_Ozone': ('bestOzoneAlgorithmFlag', 'float'),
     'XoverR': ('radar_azimuth', 'float'),
     'YoverR': ('radar_tilt', 'float'),
     'ZoverR': ('radar_dir3', 'float'),
@@ -169,9 +169,9 @@ all_LocKeyList = {
     'expected_error': ('expectedError', 'float'),
     'expected_error': ('expectedError', 'float'),
     'coefficient_of_variation': ('coefficientOfVariation', 'float'),
-    'Cloud_Frac': ('cloud_frac','float'),
-    'cloudAmountInSegment': ('cloudAmount','float'),
-    'amountSegmentCloudFree': ('cloudFree','float'),
+    'Cloud_Frac': ('cloud_frac', 'float'),
+    'cloudAmountInSegment': ('cloudAmount', 'float'),
+    'amountSegmentCloudFree': ('cloudFree', 'float'),
     'SSMIS_ScatteringIndexPred9': ('SIPred9', 'float'),
     'SSMIS_ScatteringIndexPred10': ('SIPred10', 'float'),
     'SSMIS_ScatteringIndexPred11': ('SIPred11', 'float'),
@@ -735,7 +735,7 @@ class Conv(BaseGSI):
             print(self.obstype + " is not currently supported. Exiting.")
             return
         # loop through obsvariables and platforms to do processing
-        
+
         for v in self.obsvars:
             for p in platforms:
                 outname = OutDir + '/' + p + '_' + v + '_geoval_' + \
@@ -794,10 +794,10 @@ class Conv(BaseGSI):
                         "ninterfaces", self.df.dimensions["atmosphere_pressure_coordinate_interface_arr_dim"].size)
                 dimname = "Station_ID_maxstrlen"
                 ncout.createDimension(dimname, self.df.dimensions[dimname].size)
-                
+
                 dimname = "Observation_Class_maxstrlen"
                 ncout.createDimension(dimname, self.df.dimensions[dimname].size)
-               
+
                 for var in self.df.variables.values():
                     vname = var.name
 
@@ -815,7 +815,7 @@ class Conv(BaseGSI):
                             else:
                                 var_out[...] = vdata[idx, ...]
                         if vname in geovals_vars.keys():
-                            
+
                             if (len(var.dimensions) == 1):
                                 dims = ("nlocs",)
                             else:
@@ -824,9 +824,9 @@ class Conv(BaseGSI):
                                     dims = ("nlocs", "ninterfaces")
                                 else:
                                     dims = ("nlocs", "nlevs")
-                            
+
                             var_out = ncout.createVariable(geovals_vars[vname], vdata.dtype, dims)
-                            
+
                             if v == 'bend':
                                 var_out[...] = vdata[idx_sorted, ...]
                             else:
@@ -919,7 +919,7 @@ class Conv(BaseGSI):
                     idx_id = idx_tuples[0]
                     idx_sorted = [idx_id[ksort] for ksort in id_recordnum_sort]
                     idx = idx_sorted
-                     
+
                 for o in range(len(outvars)):
                     obsdata = self.var(conv_gsivarnames[v][o])[idx]
                     if outvars[o] == 'stationPressure':
@@ -946,7 +946,7 @@ class Conv(BaseGSI):
                     except BaseException:
                         obsqc = np.ones_like(obsdata) * 2
                     if v == 'bend':
-                       obsqc = self.var('Setup_QC_Mark')[idx]
+                        obsqc = self.var('Setup_QC_Mark')[idx]
                     if (v == 'uv'):
                         gsivars = gsi_add_vars_uv
                     else:
@@ -1207,7 +1207,6 @@ class Radiances(BaseGSI):
         # other dims
         ncout.createDimension("nlevs", self.df.dimensions["air_temperature_arr_dim"].size)
         ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
-
 
         for var in self.df.variables.values():
             vname = var.name

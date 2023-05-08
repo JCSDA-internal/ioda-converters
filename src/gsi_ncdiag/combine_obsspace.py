@@ -291,10 +291,9 @@ def combine_obsspace(FileList, OutFile, GeoDir):
             i = inv[ii]
             if GeoVarData31[ii, kk, jj] != nc.default_fillvals['i4'] and GeoVarData31[ii, kk, jj] != np.abs(nc.default_fillvals['f4']):
                 GeoVarUnique31[i, kk, j] = GeoVarData31[ii, kk, jj]
-        outgeo = OutFile.split('/')[-1]     #emily
-#       OutGeoFile = OutFile.replace('obs', 'geoval')  #orig
+        outgeo = OutFile.split('/')[-1]
         OutGeoFile = outgeo.replace('obs', 'geoval')
-        OutGeoFile = GeoDir + '/'+ OutGeoFile 
+        OutGeoFile = GeoDir + '/' + OutGeoFile
         of = nc.Dataset(OutGeoFile, 'w', format='NETCDF4')
         of.setncattr("date_time", ncf.getncattr("date_time"))
         nlocs = len(GeoVarUnique3)
