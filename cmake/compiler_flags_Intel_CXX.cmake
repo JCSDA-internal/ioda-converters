@@ -7,31 +7,31 @@
 # FLAGS COMMON TO ALL BUILD TYPES
 ####################################################################
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14 -g -traceback")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -g -traceback")
 
 ####################################################################
 # RELEASE FLAGS
 ####################################################################
 
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3")
 
 ####################################################################
 # DEBUG FLAGS
 ####################################################################
 
-set(CMAKE_CXX_FLAGS_DEBUG "-O0 -fp-trap=common")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -O0 -fp-trap=common")
 
 ####################################################################
 # RELEASE WITH DEBUG INFO (DEFAULT)
 ####################################################################
 
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -O2 -DNDEBUG")
 
 ####################################################################
 # BIT REPRODUCIBLE FLAGS
 ####################################################################
 
-set(CMAKE_CXX_FLAGS_BIT "-O2")
+set(CMAKE_CXX_FLAGS_BIT "${CMAKE_CXX_FLAGS} -O2")
 
 ####################################################################
 # LINK FLAGS
