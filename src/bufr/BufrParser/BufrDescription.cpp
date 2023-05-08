@@ -19,7 +19,6 @@ namespace
     namespace ConfKeys
     {
         const char* Filename = "obsdatain";
-        const char* IsWmoFormat = "isWmoFormat";
         const char* TablePath = "tablepath";
         const char* Exports = "exports";
     }  // namespace ConfKeys
@@ -31,15 +30,6 @@ namespace Ingester
         export_(Export(conf.getSubConfiguration(ConfKeys::Exports)))
     {
         setFilepath(conf.getString(ConfKeys::Filename));
-
-        if (conf.has(ConfKeys::IsWmoFormat) && conf.getBool(ConfKeys::IsWmoFormat))
-        {
-            setIsWmoFormat(true);
-        }
-        else
-        {
-            setIsWmoFormat(false);
-        }
 
         if (conf.has(ConfKeys::TablePath))
         {

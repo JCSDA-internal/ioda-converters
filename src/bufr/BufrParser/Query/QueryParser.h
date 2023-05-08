@@ -38,11 +38,11 @@ namespace bufr {
         }
 
         /// \brief Parse a subset component from a token.
-        static auto parse(std::vector<std::shared_ptr<Token>> tokens)
+        static std::shared_ptr<QueryComponent> parse(std::vector<std::shared_ptr<Token>> tokens)
         {
             const auto& token = tokens[0];
 
-            auto component = std::make_shared<SubsetComponent>();;
+            auto component = std::make_shared<SubsetComponent>();
             component->name = token->str();
             if (std::dynamic_pointer_cast<AnySubset>(token))
             {
@@ -71,7 +71,8 @@ namespace bufr {
     /// \brief A component of a query string that represents a part of a path.
     struct PathComponent : public QueryComponent
     {
-        static auto parse(const std::vector<std::shared_ptr<Token>> tokens)
+        static std::shared_ptr<QueryComponent>
+            parse(const std::vector<std::shared_ptr<Token>> tokens)
         {
             if (tokens.size() < 1 && tokens.size() > 2)
             {
