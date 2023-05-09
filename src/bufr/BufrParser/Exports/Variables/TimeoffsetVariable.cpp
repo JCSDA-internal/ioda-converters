@@ -135,6 +135,7 @@ namespace Ingester
             QueryInfo info;
             info.name = getExportKey(ConfKeys::Timeoffset);
             info.query = conf_.getString(ConfKeys::Timeoffset);
+            info.groupByField = groupByField_;
             queries.push_back(info);
         }
 
