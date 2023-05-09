@@ -406,7 +406,7 @@ geovals_vars = {
     'surface_temperature': 'surface_temperature',
     'sea_surface_temperature': 'sea_surface_temperature',
     'surface_roughness': 'surface_roughness_length',
-    'surface_height': 'surface_geopotential_height',
+    'surface_height': 'surface_geometric_height',
     'surface_geopotential_height': 'surface_geopotential_height',
     'surface_altitude': 'surface_altitude',
     'surface_geometric_height': 'surface_geometric_height',
@@ -468,6 +468,8 @@ geovals_vars = {
     'upward_air_velocity': 'upward_air_velocity',
     'dup_kx_vector': 'dup_kx_vector',
 }
+#   Note: Copy surface_geopotential_height to surface_geometric_height in conventional
+#   and radiance geoval files.
 
 obsdiag_vars = {
     'Jacobian_Surface_Temperature': 'brightness_temperature_jacobian_surface_temperature',
@@ -756,6 +758,9 @@ class Conv(BaseGSI):
                     if ncv in geovals_vars:
                         OutVars.append(geovals_vars[ncv])
                         InVars.append(ncv)
+                        if ncv == "surface_geopotential_height":
+                            OutVars.append("surface_height")
+                            InVars.append("surface_height")
 
                 idx = grabobsidx(self.df, p, v)
                 if (np.sum(idx) == 0):
@@ -831,6 +836,15 @@ class Conv(BaseGSI):
                                 var_out[...] = vdata[idx_sorted, ...]
                             else:
                                 var_out[...] = vdata[idx, ...]
+                            if vname == "surface_geopotential_height":
+                                # Copy surface_geopotential_height to surface_geometric_height
+                                var_out = ncout.createVariable(geovals_vars["surface_height"],
+                                                               var.dtype, dims)
+                                if v == 'bend':
+                                    var_out[...] = vdata[idx_sorted, ...]
+                                else:
+                                    var_out[...] = vdata[idx, ...]
+
                 ncout.close()
 
     def toIODAobs(self, OutDir, clobber=True, platforms=None):
@@ -1193,6 +1207,9 @@ class Radiances(BaseGSI):
             if ncv in geovals_vars:
                 OutVars.append(geovals_vars[ncv])
                 InVars.append(ncv)
+                if ncv == "Sfc_Height":
+                    OutVars.append("surface_height")
+                    InVars.append("surface_height")
 
         # set up output file
         ncout = nc.Dataset(outname, 'w', format='NETCDF4')
@@ -1227,6 +1244,12 @@ class Radiances(BaseGSI):
                 vdata = var[...]
                 vdata = vdata[::self.nchans, ...]
                 var_out[...] = vdata
+                if vname == "Sfc_Height":
+                    # Copy surface_geopotential_height to surface_geometric_height
+                    var_out = ncout.createVariable(geovals_vars["surface_height"], var.dtype, dims)
+                    vdata = var[...]
+                    vdata = vdata[::self.nchans, ...]
+                    var_out[...] = vdata
             else:
                 pass
         ncout.close()
