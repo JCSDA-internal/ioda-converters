@@ -20,7 +20,7 @@ Note, you will need to add the following to your `$PYTHONPATH` in order to run t
 
 ```
 export PYTHONPATH=$PYTHONPATH:/<path_to_ioda-bundle_build>/lib/pyiodaconv
-export PYTHONPATH=$PYTHONPATH:/<path_to_iodaconv_src>/iodaconv/src
+export PYTHONPATH=$PYTHONPATH:/<path_to_ioda-bundle>/iodaconv/src
 ```
 
 ## gsi_ncdiag
