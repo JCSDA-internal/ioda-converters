@@ -437,7 +437,7 @@ set(IODA_CONV_COMP_TOL "0.5e-4")
 
 list(APPEND python_path
   "${CMAKE_CURRENT_SOURCE_DIR}/../src"
-  "${CMAKE_BINARY_DIR}/lib/pyiodaconv"
+  "${PYIODACONV_LIB_DIR}"
   "$<TARGET_FILE_DIR:_ioda_python>/../"
   "$ENV{PYTHONPATH}")
 
