@@ -16,6 +16,13 @@ make -j4
 ctest
 ```
 
+Currently, you will need to add the following to your `$PYTHONPATH` in order to run the converters. 
+
+```
+export PYTHONPATH=$PYTHONPATH:/<path_to_ioda-bundle_build>/lib/pyiodaconv
+export PYTHONPATH=$PYTHONPATH:/<path_to_iodaconv_src>/iodaconv/src
+```
+
 ## gsi_ncdiag
 These scripts use classes defined in the gsincdiag Python library to convert output from GSI netCDF diag files into
 IODA observation files and GeoVaLs for UFO. To run GSI and produce the necessary files, see the feature/files_for_jedi
