@@ -16,7 +16,7 @@ make -j4
 ctest
 ```
 
-Currently, you will need to add the following to your `$PYTHONPATH` in order to run the converters. 
+Note, you will need to add the following to your `$PYTHONPATH` in order to run the converters. 
 
 ```
 export PYTHONPATH=$PYTHONPATH:/<path_to_ioda-bundle_build>/lib/pyiodaconv
