@@ -232,7 +232,7 @@ def get_data_noaa_class(f, g, obs_data, add_qc=True):
     # obs_time_utc is not available in all files
     # obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(g['obs_time_utc']), dtype='int64')
     obs_scan_epoch = np.array(g['All_Data']['ATMS-SDR-GEO_All']['StartTime'][:]/1.e6 - IET_AND_UNIX_TIME_OFFSET, dtype='int64')
-    obs_data[('dateTime', metaDataName)] = np.repeat(obs_scan_epoch,nbeam_pos)
+    obs_data[('dateTime', metaDataName)] = np.repeat(obs_scan_epoch, nbeam_pos)
 
     # example: dimension ( 180, 96, 22 ) == dimension( nscan, nbeam_pos, nchannel )
     nchans = len(obs_data[('sensorChannelNumber', metaDataName)])
