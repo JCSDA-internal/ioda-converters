@@ -96,7 +96,7 @@ class IodaWriter(object):
                 dims = GeoVarDims[VarName]
             else:
                 # assume it is just nlocs
-                dims = ['Location']
+                dims = ['nlocs']
             fillval = get_default_fill_val(Vvals.dtype, isinstance(Vvals[0], dt.datetime))
             # get fill value
             if VarName in GeoVarAttrs.keys():
