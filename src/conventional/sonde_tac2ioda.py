@@ -27,7 +27,7 @@ from copy import deepcopy as dcop
 import lib_python.ioda_conv_engines as iconv
 import lib_python.meteo_utils as meteo_utils
 import lib_python.meteo_sounding_utils as meteo_sounding_utils
-from   lib_python.orddicts import DefaultOrderedDict
+from lib_python.orddicts import DefaultOrderedDict
 from collections import defaultdict
 
 os.environ["TZ"] = "UTC"
