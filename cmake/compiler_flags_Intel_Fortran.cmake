@@ -1,4 +1,5 @@
-# (C) Copyright 2009-2016 ECMWF.
+# (C) Copyright 2020-2020 NOAA/NWS/NCEP/EMC
+# (C) Copyright 2020-2023 JCSD
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -10,7 +11,7 @@
 # FLAGS COMMON TO ALL BUILD TYPES
 ####################################################################
 
-set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -D_REAL8_")
+set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g")
 
 ####################################################################
 # RELEASE FLAGS
