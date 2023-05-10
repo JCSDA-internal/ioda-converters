@@ -76,6 +76,20 @@ namespace bufr {
 
         std::shared_ptr<Targets> getTargets() const { return targets_; }
 
+        size_t getTargetIdx(std::string name) const
+        {
+            size_t idx = 0;
+            for (const auto& target : *targets_)
+            {
+                if (target->name == name) { break; }
+                ++idx;
+            }
+
+            return idx;
+        }
+
+        std::shared_ptr<Target>& targetAtIdx(size_t idx) const { return targets_->at(idx); }
+
      private:
         const std::shared_ptr<Targets> targets_;
         LookupTable lookupTable_;
