@@ -29,8 +29,7 @@ namespace
         const char* ScanStep = "scanStep";
     }  // namespace ConfKeys
 
-    const std::vector<std::string> FieldNames = {ConfKeys::FieldOfViewNumber,
-                                                };
+    const std::vector<std::string> FieldNames = {ConfKeys::FieldOfViewNumber };
 }  // namespace
 
 
