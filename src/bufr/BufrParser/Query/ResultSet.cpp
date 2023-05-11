@@ -20,216 +20,58 @@
 namespace Ingester {
 namespace bufr {
 
-    typedef SubsetLookupTable Frame;
-    typedef std::vector<Frame> Frames;
-
-    struct PipelineData
-    {
-    };
-
-
-    class Step
-    {
-        void run();
-    };
-
-    typedef std::vector<std::shared_ptr<Step>> Steps;
-
-    // Preprocessing Pipeline Steps
-
-    struct PreprocessingData : public PipelineData
-    {
-        Target& target;
-        Frame& frame;
-    };
-
-    class ResolveDims : public Step
-    {
-        void run(PipelineData& data);
-    };
-
-    class CheckJagged : public Step
-    {
-     public:
-        void run(PipelineData& data);
-        bool isJagged() { return jagged_; }
-
-     private:
-        bool jagged_;
-    };
-
-    class CollectDims : public Step
-    {
-        void run(PipelineData& data);
-    };
-
-    class CollectMissingFrames : public Step
-    {
-        CollectMissingFrames(size_t size) { missing_.resize(size); }
-
-        void run(PipelineData& data);
-
-     private:
-        std::vector<char> missing_;
-
-    };
-
-    class ResolveTypeInfo : public Step
-    {
-        void run(PipelineData& data);
-    };
-
-    class ResolveDimPath : public Step
-    {
-        void run(PipelineData& data);
-    };
-
-    // Assembly Pipeline Steps
-
-    class ResultPipeline
-
-    {
-    public:
-        ResultPipeline(const Frames& frames, const Steps& steps) :
-            frames_(frames),
-            steps_(steps)
-        {
-
-        }
-
-        void execute(PipelineData& data)
-        {
-            for (const auto& frame : frames_)
-            {
-                for (auto& step : steps_)
-                {
-                    step->run(data);
-                }
-            }
-        }
-
-    private:
-        const Frames& frames_;
-        const Steps steps_;
-    };
-
-s
-
-    ResultSet::ResultSet()
-    {
-    }
-
-    ResultSet::~ResultSet()
-    {
-    }
-
     std::shared_ptr<Ingester::DataObjectBase>
         ResultSet::get(const std::string& fieldName,
                        const std::string& groupByFieldName,
                        const std::string& overrideType) const
     {
-
-
-
-
-        // Pre-Processing
-        auto resolveDims = std::make_shared<ResolveDims>();
-        auto checkJagged = std::make_shared<CheckJagged>();
-        auto collectMissingFrames = std::make_shared<CollectMissingFrames>(frames_.size());
-        auto resolveTypeInfo = std::make_shared<ResolveTypeInfo>();
-        auto resolveDimPaths = std::make_shared<ResolveDimPath>();
-
-        auto processingPipeline = ResultPipeline({ resolveDims,
-                                             checkJagged,
-                                             collectMissingFrames,
-                                             resolveTypeInfo,
-                                             resolveDimPaths });
-
-        processingPipeline.execute(pipelineData);
-
-
-//        // Assemble Result Data
-//        auto assembleSteps = std::vector<std::shared_ptr<Step>>{};
-//        if (checkJagged->isJagged())
-//        {
-//            assembleSteps.push_back(std::make_shared<AssembleJaggedData>());
-//        }
-//        else
-//        {
-//            assembleSteps.push_back(std::make_shared<AssembleData>());
-//        }
-//
-//        assembleSteps.push_back(std::make_shared<ApplyQueryFilters>());
-//        assembleSteps.push_back(std::make_shared<ApplyGroupBy>());
-//
-//        auto assemblePipeline = ResultPipeline(assembleSteps);
-//        assemblePipeline.execute(pipelineData);
-
-
-
-
-//        std::vector<double> data;
-//        std::vector<int> dims;
-//        std::vector<Query> dimPaths;
-//        TypeInfo info;
-
-//        getRawValues(fieldName,
-//                     groupByFieldName,
-//                     data,
-//                     dims,
-//                     dimPaths,
-//                     info);
-
-        auto object = makeDataObject(fieldName,
-                                     groupByFieldName,
-                                     resolveTypeInfo.getInfo(),
-                                     overrideType,
-                                     pipelineData.data,
-                                     resolveDims.getDims(),
-                                     resolveDimPaths.getDimPaths());
-
-        return object;
-    }
-
-    void ResultSet::getRawValues(const std::string& fieldName,
-                                 const std::string& groupByField,
-                                 std::vector<double>& data,
-                                 std::vector<int>& dims,
-                                 std::vector<Query>& dimPaths,
-                                 TypeInfo& info) const
-    {
-        // Make sure we have accumulated frames
+        // Make sure we have accumulated frames otherwise somethings wrong.
         if (frames_.size() == 0)
         {
             throw eckit::BadValue("Result has no data.");
         }
 
-        // The indices for targets are the same in all the frames. Get them, so we can quickly index
-        // into the target arrays for all the frames.
-        const bool hasGroupBy = !groupByField.empty();
-        const size_t targetIdx = frames_.front().getTargetIdx(fieldName);
-        const size_t groupByIdx = hasGroupBy ? frames_.front().getTargetIdx(groupByField) : 0;
+        // Get the metadata for the targets
+        auto targetMetaData = analyzeTarget(fieldName);
+
+        // Assemble Result Data
+        const auto data = assembleData(targetMetaData);
+
+
+        auto object = makeDataObject(fieldName,
+                                     groupByFieldName,
+                                     targetMetaData.typeInfo,
+                                     overrideType,
+                                     data,
+                                     targetMetaData.dims,
+                                     targetMetaData.dimPaths);
+
+        return object;
+    }
+
+    details::TargetMetaData ResultSet::analyzeTarget(const std::string& name) const
+    {
+        details::TargetMetaData metaData;
+        metaData.targetIdx = frames_.front().getTargetIdx(name);
+        metaData.missingFrames.resize(frames_.size(), false);
 
         // Loop through the frames to determine the overall parameters for the result data. We will
         // want to find the dimension information and determine if the array could be jagged which
         // means we will need to do extra work later (otherwise we can quickly copy the data).
-        bool jagged = false;
-        dims = {0};  // Includes dims from binary repeats
-        std::vector<char> missingFrame(frames_.size(), false);
-
         size_t frameIdx = 0;
         for (const auto& frame : frames_)
         {
-            const auto &target = frame.targetAtIdx(targetIdx);
+            const auto &target = frame.targetAtIdx(metaData.targetIdx);
 
             // Resize the dims if necessary
-            if (target->exportDimIdxs.size() > dims.size())
+            // Jagged if the dims need a resize (skip first one)
+            if (target->exportDimIdxs.size() > metaData.dims.size())
             {
-                dims.resize(target->exportDimIdxs.size());
+                metaData.dims.resize(target->exportDimIdxs.size());
 
                 if (&frame != &frames_.front())
                 {
-                    jagged = true;
+                    metaData.jagged = true;
                 }
             }
 
@@ -240,7 +82,7 @@ s
             {
                 if (frame[p->nodeId].counts.empty())
                 {
-                    missingFrame[frameIdx] = true;
+                    metaData.missingFrames[frameIdx] = true;
                     break;
                 }
 
@@ -250,115 +92,72 @@ s
                     continue;
                 }
 
-                const auto newDimVal = std::max(dims[exportIdxIdx], max(frame[p->nodeId].counts));
+                const auto newDimVal = std::max(metaData.dims[exportIdxIdx], max(frame[p->nodeId].counts));
 
-                if (!jagged)
+                if (!metaData.jagged)
                 {
-                    jagged = !allEqual(frame[p->nodeId].counts);
+                    metaData.jagged = !allEqual(frame[p->nodeId].counts);
 
-                    if (!jagged && dims[exportIdxIdx] != 0)
+                    if (!metaData.jagged && metaData.dims[exportIdxIdx] != 0)
                     {
-                        jagged = (dims[exportIdxIdx] != newDimVal);
+                        metaData.jagged = (metaData.dims[exportIdxIdx] != newDimVal);
                     }
                 }
 
-                dims[exportIdxIdx] = newDimVal;
+                metaData.dims[exportIdxIdx] = newDimVal;
                 pathIdx++;
                 exportIdxIdx++;
             }
 
-            if (missingFrame[frameIdx]) { continue; }
+            if (metaData.missingFrames[frameIdx]) { continue; }
 
             // Fill in the type information
-            info.reference = std::min(info.reference, target->typeInfo.reference);
-            info.bits = std::max(info.bits, target->typeInfo.bits);
+            metaData.typeInfo.reference =
+                std::min(metaData.typeInfo.reference, target->typeInfo.reference);
+            metaData.typeInfo.bits = std::max(metaData.typeInfo.bits, target->typeInfo.bits);
 
-            if (std::abs(target->typeInfo.scale) > info.scale)
+            if (std::abs(target->typeInfo.scale) > metaData.typeInfo.scale)
             {
-                info.scale = target->typeInfo.scale;
+                metaData.typeInfo.scale = target->typeInfo.scale;
             }
 
-            if (info.unit.empty()) info.unit = target->typeInfo.unit;
+            if (metaData.typeInfo.unit.empty()) metaData.typeInfo.unit = target->typeInfo.unit;
 
 
             // Fill in the dimPaths data
             if (!target->dimPaths.empty() &&
-                dimPaths.size() < target->dimPaths.size())
+                metaData.dimPaths.size() < target->dimPaths.size())
             {
-                dimPaths = target->dimPaths;
+                metaData.dimPaths = target->dimPaths;
             }
 
             ++frameIdx;
         }
 
-//        // print dims to std::cout
-//        std::cout << "dims: ";
-//        for (auto& d : dims)
-//        {
-//            std::cout << d << " ";
-//        }
-//        std::cout << std::endl;
+        return metaData;
+    }
 
-
-
-
-//        // If groupByTarget exists check that is shares a common path with the target
-//        if (groupByTarget)
-//        {
-//            auto groupByPathComps = splitPath(groupByTarget->dimPaths.back().str());
-//            auto targetPathComps = splitPath(target->dimPaths.back().str());
-//
-//            for (size_t i = 1;
-//                 i < std::min(groupByPathComps.size(), targetPathComps.size());
-//                 i++)
-//            {
-//                if (targetPathComps[i] != groupByPathComps[i])
-//                {
-//                    std::ostringstream errStr;
-//                    errStr << "The groupByField " << groupByField << " and the targetField "
-//                           << fieldName << " do not share a common path. The groupByField path is "
-//                           << groupByTarget->dimPaths.back().str() << " and the targetField path is"
-//                           << " " << target->dimPaths.back().str();
-//                    throw eckit::BadValue(errStr.str());
-//                }
-//            }
-//        }
-//
-//        auto allDims = dimsList;
-//        dims = dimsList;
-//
-//        // If there is absolutely no data for a field you will have the problem were the
-//        // size of some dimensions are zero. We need to have at least 1 element in each
-//        // dimension to make room for the missing value. This if statement makes sure there
-//        // is at least 1 element in each dimension.
-//        for (size_t dimIdx = 0; dimIdx < allDims.size(); ++dimIdx)
-//        {
-//            if (allDims[dimIdx] == 0)
-//            {
-//                allDims[dimIdx] = 1;
-//            }
-//        }
-//
-//
+    details::Data ResultSet::assembleData(details::TargetMetaData& metaData) const
+    {
         int rowLength = 1;
-        for (size_t dimIdx = 1; dimIdx < dims.size(); ++dimIdx)
+        for (size_t dimIdx = 1; dimIdx < metaData.dims.size(); ++dimIdx)
         {
-            rowLength *= dims[dimIdx];
+            rowLength *= metaData.dims[dimIdx];
         }
 
         // Allocate the output data
         auto totalRows = frames_.size();
-        data.resize(totalRows * rowLength, MissingValue);
+        auto data = details::Data(totalRows * rowLength, MissingValue);
 
         // Copy the data fragments from the frames into the output data
-        std::vector<std::vector<int>> inserts(dims.size());
+        std::vector<std::vector<int>> inserts(metaData.dims.size());
         for (size_t frameIdx=0; frameIdx < frames_.size(); ++frameIdx)
         {
             const auto& frame = frames_[frameIdx];
-            const auto& target = frame.targetAtIdx(targetIdx);
+            const auto& target = frame.targetAtIdx(metaData.targetIdx);
             const auto& fragment = frame[target->nodeIdx].data;
 
-            if (jagged)
+            if (metaData.jagged)
             {
                 std::cout << "Found Jagged Array " << std::endl;
 
@@ -368,28 +167,28 @@ s
                     idxs[i] = i;
                 }
 
-                for (size_t i = 0; i < dims.size(); ++i) { inserts[i] = {0}; }
+                for (size_t i = 0; i < metaData.dims.size(); ++i) { inserts[i] = {0}; }
 
                 // Compute insert array
                 for (size_t repIdx = 0;
-                     repIdx < std::min(dims.size(), target->path.size());
+                     repIdx < std::min(metaData.dims.size(), target->path.size());
                      ++repIdx)
                 {
-                    inserts[repIdx] = product<int>(dims.begin() + repIdx, dims.end()) -
+                    inserts[repIdx] = product<int>(metaData.dims.begin() + repIdx, metaData.dims.end()) -
                                       frame[target->path[repIdx].nodeId].counts *
-                                      product<int>(dims.begin() + repIdx + 1, dims.end());
+                                      product<int>(metaData.dims.begin() + repIdx + 1, metaData.dims.end());
                 }
 
                 // Inflate the data, compute the idxs for each data element in the result array
-                for (int dim_idx = dims.size() - 1; dim_idx >= 0; --dim_idx)
+                for (int dim_idx = metaData.dims.size() - 1; dim_idx >= 0; --dim_idx)
                 {
                     for (size_t insert_idx = 0; insert_idx < inserts[dim_idx].size(); ++insert_idx)
                     {
                         size_t num_inserts = inserts[dim_idx][insert_idx];
                         if (num_inserts > 0)
                         {
-                            int data_idx = product<int>(dims.begin() + dim_idx, dims.end()) *
-                                           insert_idx + product<int>(dims.begin() + dim_idx, dims.end())
+                            int data_idx = product<int>(metaData.dims.begin() + dim_idx, metaData.dims.end()) *
+                                           insert_idx + product<int>(metaData.dims.begin() + dim_idx,metaData.dims.end())
                                            - num_inserts - 1;
 
                             for (size_t i = 0; i < idxs.size(); ++i)
@@ -414,10 +213,11 @@ s
             }
         }
 
-        // Convert dims per data frame to dims for all the collected data.
-        dims[0] = totalRows;
-    }
+        // Update the dims to reflect the actual size of the data
+        metaData.dims[0] = totalRows;
 
+        return data;
+    }
 
     void ResultSet::padJaggedArray(std::shared_ptr<Target> target,
                                     std::vector<double>& data,

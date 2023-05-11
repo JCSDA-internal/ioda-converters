@@ -145,6 +145,7 @@ namespace bufr {
         }
     };
 
-    typedef std::vector<std::shared_ptr<Target>> Targets;
+    typedef std::shared_ptr<Target> TargetPtr;
+    typedef std::vector<TargetPtr> Targets;
 }  // namespace bufr
 }  // namespace Ingester

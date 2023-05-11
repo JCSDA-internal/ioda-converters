@@ -23,6 +23,23 @@
 namespace Ingester {
 namespace bufr {
 
+namespace details
+{
+    typedef std::vector<double> Data;
+
+    struct TargetMetaData
+    {
+        size_t targetIdx;
+        TypeInfo typeInfo;
+        std::vector<int> dims = {0};
+        std::vector<char> missingFrames;
+        std::vector<Query> dimPaths;
+        bool jagged = false;
+    };
+}  // details
+    typedef SubsetLookupTable Frame;
+    typedef std::vector<Frame> Frames;
+
     /// \brief This class acts as the container for all the data that is collected during the
     /// the BUFR querying process. Internally it arranges the data as DataFrames for each message
     /// subset observation. Each DataFrame contains a list of DataFields, one for each named element
@@ -40,8 +57,8 @@ namespace bufr {
     class ResultSet
     {
      public:
-        explicit ResultSet();
-        ~ResultSet();
+        explicit ResultSet() = default;
+        ~ResultSet() = default;
 
         /// \brief Gets the resulting data for a specific field with a given name grouped by the
         /// optional groupByFieldName.
@@ -57,40 +74,16 @@ namespace bufr {
 
         /// \brief Move a new frame into the ResultSet.
         /// \param frame The NodeLookupTable to std::move.
-        void addFrame(SubsetLookupTable&& frame)
+        void addFrame(Frame&& frame)
         {
             frames_.push_back(std::move(frame));
         }
 
      private:
-        std::vector<SubsetLookupTable> frames_;
+        Frames frames_;
 
-        /// \brief Computes the data for a specific field with a given name grouped by the
-        /// groupByField. It determines the required dimensions for the field and then uses
-        /// getRowsForField to get the relevant data from each DataFrame.
-        /// \param fieldName The name of the field to get the data for.
-        /// \param groupByFieldName The name of the field to group the data by.
-        /// \param dims The size of the dimensions of the result data (any number of dimensions).
-        /// \param dimPaths The dimensioning sub-query path strings.
-        /// \param info The meta data for the element.
-        void getRawValues(const std::string& fieldName,
-                          const std::string& groupByField,
-                          std::vector<double>& data,
-                          std::vector<int>& dims,
-                          std::vector<Query>& dimPaths,
-                          TypeInfo& info) const;
-
-//        /// \brief Retrieves the data for the specified target field, one row per message subset.
-//        /// The dims are used to determine the filling pattern so that that the resulting data can
-//        /// be reshaped to the dimensions specified.
-//        /// \param[in] targetField The target field to retrieve.
-//        /// \param[out] dataRows The data.
-//        /// \param[in] dims Vector of dimension sizes.
-//        /// \param[in] groupbyIdx Idx of the group by field (which query component).
-//        void getRowsForField(const DataField& targetField,
-//                             std::vector<std::vector<double>>& dataRows,
-//                             const std::vector<int>& dims,
-//                             int groupbyIdx) const;
+        details::TargetMetaData analyzeTarget(const std::string& name) const;
+        details::Data assembleData(details::TargetMetaData& targetMetaData) const;
 
         void padJaggedArray(std::shared_ptr<Target> target,
                             std::vector<double>& data,
