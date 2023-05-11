@@ -25,8 +25,6 @@ namespace bufr {
 
 namespace details
 {
-    typedef std::vector<double> Data;
-
     struct TargetMetaData
     {
         size_t targetIdx;
@@ -36,6 +34,15 @@ namespace details
         std::vector<Query> dimPaths;
         bool jagged = false;
     };
+
+    struct Data
+    {
+        std::vector<double> buffer;
+        std::vector<int> dims;
+    };
+
+    typedef std::shared_ptr<TargetMetaData> TargetMetaDataPtr;
+
 }  // details
     typedef SubsetLookupTable Frame;
     typedef std::vector<Frame> Frames;
@@ -82,12 +89,14 @@ namespace details
      private:
         Frames frames_;
 
-        details::TargetMetaData analyzeTarget(const std::string& name) const;
-        details::Data assembleData(details::TargetMetaData& targetMetaData) const;
+        details::TargetMetaDataPtr analyzeTarget(const std::string& name) const;
+        details::Data assembleData(const details::TargetMetaDataPtr& targetMetaData) const;
 
-        void padJaggedArray(std::shared_ptr<Target> target,
-                            std::vector<double>& data,
-                            size_t rowLength) const;
+        void copyJaggedData(details::Data& data,
+                            const Frame& frame,
+                            const TargetPtr& target,
+                            size_t offset,
+                            size_t dimIdx) const;
 
         /// \brief Is the field a string field?
         /// \param fieldName The name of the field.
@@ -106,7 +115,7 @@ namespace details
         std::shared_ptr<DataObjectBase> makeDataObject(
                                 const std::string& fieldName,
                                 const std::string& groupByFieldName,
-                                TypeInfo& info,
+                                const TypeInfo& info,
                                 const std::string& overrideType,
                                 const std::vector<double> data,
                                 const std::vector<int> dims,
@@ -115,7 +124,7 @@ namespace details
         /// \brief Make an appropriate DataObject for data with the TypeInfo
         /// \param info The meta data for the element.
         /// \return A Result DataObject containing the data.
-        std::shared_ptr<DataObjectBase> objectByTypeInfo(TypeInfo& info) const;
+        std::shared_ptr<DataObjectBase> objectByTypeInfo(const TypeInfo& info) const;
 
         /// \brief Make an appropriate DataObject for data with the override type
         /// \param overrideType The meta data for the element.
