@@ -75,7 +75,7 @@ conv_bufrtypes = {
     "rass": [126],
     "sfcship": [180, 183],
     "sfc": [181, 187],
-    "gps": [3, 4, 5, 42, 43, 44, 745, 750, 751, 752, 753, 825],
+    "gps": [3, 4, 5, 42, 43, 44, 66, 265, 266, 267, 268, 269, 745, 750, 751, 752, 753, 754, 755, 803, 804, 825],
     "sst": [181, 182, 183, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202],
     # 132 are dropsondes
 }
@@ -97,6 +97,7 @@ wmo_instid = {
     'amsua': 570,
     'atms': 621,
     'iasi': 221,
+    'cris-fsr': 202,
     'abi': 617,
     'omps': 947,
     'sbuv': 956,
@@ -111,7 +112,7 @@ all_LocKeyList = {
     'earth_radius_of_curvature': ('earthRadiusCurvature', 'float'),
     'reference_sat_id': ('satelliteTransmitterId', 'integer'),
     'occulting_sat_id': ('satelliteIdentifier', 'integer'),
-    'record_number': ('sequenceNumber', 'integer'),
+    'Observation_Subtype': ('sequenceNumber', 'integer'),
     'geoid_height_above_reference_ellipsoid': ('geoidUndulation', 'float'),
     'gnss_sat_class': ('satelliteConstellationRO', 'string'),
     'impact_height': ('impactHeightRO', 'float'),
@@ -121,6 +122,15 @@ all_LocKeyList = {
     'Station_Elevation': ('stationElevation', 'float'),
     'Pressure': ('pressure', 'float'),
     'Height': ('height', 'float'),
+    'Impact_Height': ('impactHeightRO', 'float'),
+    'Observation_Type': ('satelliteIdentifier', 'integer'),
+    'height': ('height', 'float'),
+    'qfro': ('qualityFlags', 'integer'),
+    'pccf': ('pccf', 'float'),
+    'occulting_sat': ('satelliteInstrument', 'integer'),
+    'Sensor_Azimuth_Angle': ('sensorAzimuthAngle', 'float'),
+    'Sat_Constellation': ('satelliteConstellationRO', 'integer'),
+    'process_center': ('dataProviderOrigin', 'integer'),
     'Elevation': ('heightOfSurface', 'float'),
     'Obs_Time': ('dateTime', 'string'),
     'Scan_Position': ('sensorScanPosition', 'float'),
@@ -139,6 +149,7 @@ all_LocKeyList = {
     'BottomLevelPressure': ('bottom_level_pressure', 'float'),
     'Total_Ozone_Error_Flag': ('total_ozone_error_flag', 'float'),
     'Profile_Ozone_Error_Flag': ('profile_ozone_error_flag', 'float'),
+    'Algorithm_Flag_For_Best_Ozone': ('bestOzoneAlgorithmFlag', 'float'),
     'XoverR': ('radar_azimuth', 'float'),
     'YoverR': ('radar_tilt', 'float'),
     'ZoverR': ('radar_dir3', 'float'),
@@ -150,6 +161,20 @@ all_LocKeyList = {
     'QI_without_FC': ('percentConfidenceWithoutForecast', 'float'),
     'Data_Vertical_Velocity': ('windUpward', 'float'),
     'LaunchTime': ('releaseTime', 'float'),
+    'wind_computation_method': ('windComputationMethod', 'integer'),
+    'satellite_zenith_angle': ('satelliteZenithAngle', 'float'),
+    'satellite_identifier': ('satelliteIdentifier', 'integer'),
+    'QI_without_forecast_info': ('qualityInformationWithoutForecast', 'float'),
+    'QI_with_forecast_info': ('qualityInformationWithForecast', 'float'),
+    'expected_error': ('expectedError', 'float'),
+    'expected_error': ('expectedError', 'float'),
+    'coefficient_of_variation': ('coefficientOfVariation', 'float'),
+    'Cloud_Frac': ('cloud_frac', 'float'),
+    'cloudAmountInSegment': ('cloudAmount', 'float'),
+    'amountSegmentCloudFree': ('cloudFree', 'float'),
+    'SSMIS_ScatteringIndexPred9': ('SIPred9', 'float'),
+    'SSMIS_ScatteringIndexPred10': ('SIPred10', 'float'),
+    'SSMIS_ScatteringIndexPred11': ('SIPred11', 'float'),
 }
 
 checkuv = {
@@ -186,6 +211,8 @@ gsi_add_vars_allsky = {
     'Nonlinear_QC_Rel_Wgt': 'GsiQCWeight',
     'Errinv_Adjust': 'GsiAdjustObsError',
     'Errinv_Final': 'GsiFinalObsError',
+    'TotalBias': 'GsiObsBias',
+    'Forecast_unadjusted': 'GsiHofX',
     'Forecast_adjusted': 'GsiHofXBc',
     'Forecast_unadjusted': 'GsiHofX',
     'Forecast_unadjusted_clear': 'GsiHofXClr',
@@ -193,9 +220,11 @@ gsi_add_vars_allsky = {
     'Obs_Minus_Forecast_unadjusted': 'GsiHofX',
     'Obs_Minus_Forecast_unadjusted_clear': 'GsiHofX',
     'Inverse_Observation_Error': 'GsiFinalObsError',
+    'Input_Observation_Error': 'GsiInputObsError',
     'Bias_Correction': 'GsiBc',
     'hxdbz': 'GsiHofX',
     'hxrw': 'GsiHofX',
+    'standard_deviation_clear_bt': 'ClearSkyStdDev',
 }
 
 gsi_add_qcvars_allsky = {
@@ -225,10 +254,13 @@ gsi_add_vars = {
     'Obs_Minus_Forecast_unadjusted': 'GsiHofX',
     'Forecast_adjusted': 'GsiHofXBc',
     'Forecast_unadjusted': 'GsiHofX',
+    'TotalBias': 'GsiObsBias',
     'Inverse_Observation_Error': 'GsiFinalObsError',
+    'Input_Observation_Error': 'GsiInputObsError',
     'Bias_Correction': 'GsiBc',
     'hxdbz': 'GsiHofX',
     'hxrw': 'GsiHofX',
+    'standard_deviation_clear_bt': 'ClearSkyStdDev',
 }
 
 gsi_add_qcvars = {
@@ -244,6 +276,17 @@ gsi_add_qcvars = {
     'Inverse_Observation_Error_after_clddet': 'GsiObsError_after_clddet',
     'Inverse_Observation_Error_after_nsstret': 'GsiObsError_after_nsstret',
     'Inverse_Observation_Error_after_jsfcchk': 'GsiObsError_after_jsfcchk',
+    'Inverse_Observation_Error_after_grossroutinechk_ocean': 'GsiObsError_after_grossroutinechk_ocean',
+    'Inverse_Observation_Error_after_grossroutinechk': 'GsiObsError_after_grossroutinechk',
+    'Inverse_Observation_Error_after_grosschk': 'GsiObsError_after_grosschk',
+    'Inverse_Observation_Error_after_topochk': 'GsiObsError_after_topochk',
+    'Inverse_Observation_Error_after_sfcchk': 'GsiObsError_after_sfcchk',
+    'Inverse_Observation_Error_after_ch2chk': 'GsiObsError_after_ch2chk',
+    'Inverse_Observation_Error_after_scatteringchk': 'GsiObsError_after_scatteringchk',
+    'Inverse_Observation_Error_after_sfcterrianchk': 'GsiObsError_after_sfcterrianchk',
+    'Inverse_Observation_Error_after_stdchk': 'GsiObsError_after_stdchk',
+    'Inverse_Observation_Error_after_stdadj': 'GsiObsError_after_stdadj',
+    'Inverse_Observation_Error_after_clrfracchk': 'GsiObsError_after_clrfracchk',
 }
 
 gsi_add_vars_uv = {
@@ -356,6 +399,7 @@ geovals_vars = {
     'geopotential_height': 'geopotential_height',
     'geometric_height': 'geometric_height',
     'height': 'height_above_mean_sea_level',
+    'Model_Elevation': 'surface_altitude',
     'tropopause_pressure': 'tropopause_pressure',
     'surface_pressure': 'surface_pressure',
     'surface_air_pressure': 'surface_pressure',
@@ -693,6 +737,7 @@ class Conv(BaseGSI):
             print(self.obstype + " is not currently supported. Exiting.")
             return
         # loop through obsvariables and platforms to do processing
+
         for v in self.obsvars:
             for p in platforms:
                 outname = OutDir + '/' + p + '_' + v + '_geoval_' + \
@@ -724,7 +769,7 @@ class Conv(BaseGSI):
                 print("Platform:%s Var:%s #Obs:%d" % (p, v, np.sum(idx)))
                 if v == 'bend':
                     # sort record_number
-                    record_number = self.var('record_number')[idx]
+                    record_number = self.var('Observation_Subtype')[idx]
                     id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
                     print("Sorting ", v, " obs referring to record_number")
                     # record_number_sorted = [ record_number[ksort] for ksort in id_recordnum_sort ]
@@ -745,19 +790,22 @@ class Conv(BaseGSI):
                         self.validtime.strftime("%Y%m%d%H")))
                 # get nlocs
                 nlocs = np.sum(idx)
-                ncout.createDimension("Location", nlocs)
+                ncout.createDimension("nlocs", nlocs)
                 # other dims
                 if (v != "sst"):
                     ncout.createDimension(
-                        "Layer", self.df.dimensions["atmosphere_pressure_coordinate_arr_dim"].size)
+                        "nlevs", self.df.dimensions["atmosphere_pressure_coordinate_arr_dim"].size)
                     ncout.createDimension(
                         "ninterfaces", self.df.dimensions["atmosphere_pressure_coordinate_interface_arr_dim"].size)
                 dimname = "Station_ID_maxstrlen"
                 ncout.createDimension(dimname, self.df.dimensions[dimname].size)
+
                 dimname = "Observation_Class_maxstrlen"
                 ncout.createDimension(dimname, self.df.dimensions[dimname].size)
+
                 for var in self.df.variables.values():
                     vname = var.name
+
                     if (vname in geovals_metadata_dict.keys()) or (
                             vname in geovals_vars.keys()):
                         vdata = var[...].data
@@ -765,22 +813,25 @@ class Conv(BaseGSI):
                         vdata = np.frombuffer(vdata, dtype=var.dtype)
                         vdata = np.reshape(vdata, dims)
                         if vname in geovals_metadata_dict.keys():
-                            dims = ("Location",) + var.dimensions[1:]
+                            dims = ("nlocs",) + var.dimensions[1:]
                             var_out = ncout.createVariable(geovals_metadata_dict[vname], vdata.dtype, dims)
                             if v == 'bend':
                                 var_out[...] = vdata[idx_sorted, ...]
                             else:
                                 var_out[...] = vdata[idx, ...]
                         if vname in geovals_vars.keys():
+
                             if (len(var.dimensions) == 1):
-                                dims = ("Location",)
+                                dims = ("nlocs",)
                             else:
                                 if (vname == "atmosphere_pressure_coordinate_interface") or (
                                         vname == "geopotential_height_levels"):
-                                    dims = ("Location", "ninterfaces")
+                                    dims = ("nlocs", "ninterfaces")
                                 else:
-                                    dims = ("Location", "Layer")
+                                    dims = ("nlocs", "nlevs")
+
                             var_out = ncout.createVariable(geovals_vars[vname], vdata.dtype, dims)
+
                             if v == 'bend':
                                 var_out[...] = vdata[idx_sorted, ...]
                             else:
@@ -824,6 +875,7 @@ class Conv(BaseGSI):
                     if (os.path.exists(outname)):
                         print("File exists. Skipping and not overwriting: %s" % outname)
                         continue
+
                 LocKeyList = []
                 TestKeyList = []
                 LocVars = []
@@ -866,7 +918,7 @@ class Conv(BaseGSI):
 
                 if v == 'bend':
                     # sort record_number
-                    record_number = self.var('record_number')[idx]
+                    record_number = self.var('Observation_Subtype')[idx]
                     id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
                     print("Sorting ", v, " obs referring to record_number")
                     # record_number_sorted = [ record_number[ksort] for ksort in id_recordnum_sort ]
@@ -884,7 +936,7 @@ class Conv(BaseGSI):
 
                 for o in range(len(outvars)):
                     obsdata = self.var(conv_gsivarnames[v][o])[idx]
-                    if outvars[o] == 'surface_pressure':
+                    if outvars[o] == 'stationPressure':
                         if np.median(obsdata) < 1100.:
                             obsdata = obsdata * 100.  # convert to Pa from hPa
                         obsdata[obsdata > 4e8] = self.FLOAT_FILL  # 1e11 is fill value for surface_pressure
@@ -900,12 +952,15 @@ class Conv(BaseGSI):
                         # obserr[mask] = self.FLOAT_FILL
                         # obserr[obserr > 4e8] = self.FLOAT_FILL
                     # convert surface_pressure error to Pa from hPa
+
                     if v == 'ps' and np.nanmin(obserr) < 10:
                         obserr = obserr * 100
                     try:
                         obsqc = self.var('Prep_QC_Mark')[idx]
                     except BaseException:
                         obsqc = np.ones_like(obsdata) * 2
+                    if v == 'bend':
+                        obsqc = self.var('Setup_QC_Mark')[idx]
                     if (v == 'uv'):
                         gsivars = gsi_add_vars_uv
                     else:
@@ -986,7 +1041,7 @@ class Conv(BaseGSI):
                         tmp = self.var(lvar)[idx]
                         StationIDs = [bytes((b''.join(tmp[a])).decode('iso-8859-1').encode('utf8')) for a in range(len(tmp))]
                         outdata[(loc_mdata_name, 'MetaData')] = np.array(StationIDs, dtype=object)
-                    elif lvar == 'Time' or lvar == 'time':  # need to process into time stamp strings #"%Y-%m-%dT%H:%M:%SZ"
+                    elif (lvar == 'Time') or (lvar == 'time'):  # need to process into time stamp strings #"%Y-%m-%dT%H:%M:%SZ"
                         tmp = self.var(lvar)[idx]
                         obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                         obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
@@ -1164,27 +1219,27 @@ class Radiances(BaseGSI):
 
         # get nlocs
         nlocs = int(self.nobs / self.nchans)
-        ncout.createDimension("Location", nlocs)
+        ncout.createDimension("nlocs", nlocs)
 
         # other dims
-        ncout.createDimension("Layer", self.df.dimensions["air_temperature_arr_dim"].size)
-        ncout.createDimension("Level", self.df.dimensions["air_pressure_levels_arr_dim"].size)
+        ncout.createDimension("nlevs", self.df.dimensions["air_temperature_arr_dim"].size)
+        ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
 
         for var in self.df.variables.values():
             vname = var.name
             if vname in geovals_metadata_dict.keys():
-                dims = ("Location",)
+                dims = ("nlocs",)
                 var_out = ncout.createVariable(geovals_metadata_dict[vname], var.dtype, dims)
                 vdata = var[:]
                 vdata = vdata[::self.nchans]
                 var_out[:] = vdata
             elif vname in geovals_vars.keys():
                 if (len(var.dimensions) == 1):
-                    dims = ("Location",)
+                    dims = ("nlocs",)
                 elif "_levels" in vname:
-                    dims = ("Location", "Level")
+                    dims = ("nlocs", "nlevsp1")
                 else:
-                    dims = ("Location", "Level")
+                    dims = ("nlocs", "nlevs")
                 var_out = ncout.createVariable(geovals_vars[vname], var.dtype, dims)
                 vdata = var[...]
                 vdata = vdata[::self.nchans, ...]
@@ -1229,13 +1284,13 @@ class Radiances(BaseGSI):
 
         # get nlocs
         nlocs = int(self.nobs / self.nchans)
-        ncout.createDimension("Location", nlocs)
+        ncout.createDimension("nlocs", nlocs)
 
         # other dims
-        Layer = self.df.dimensions["air_pressure_arr_dim"].size
-        Level = self.df.dimensions["air_pressure_levels_arr_dim"].size
+        nlevs = self.df.dimensions["air_pressure_arr_dim"].size
+        nlevsp1 = self.df.dimensions["air_pressure_levels_arr_dim"].size
 
-        ncout.createDimension("Layer", self.df.dimensions["air_pressure_arr_dim"].size)
+        ncout.createDimension("nlevs", self.df.dimensions["air_pressure_arr_dim"].size)
 
         # get channel info and list
         chan_number = self.darr('sensor_chan')
@@ -1249,7 +1304,7 @@ class Radiances(BaseGSI):
         for var in self.df.variables.values():
             vname = var.name
             if vname in obsdiag_metadata_dict.keys():
-                dims = ("Location",)
+                dims = ("nlocs",)
                 var_out = ncout.createVariable(obsdiag_metadata_dict[vname], var.dtype, dims)
                 vdata = var[:]
                 vdata = vdata[::self.nchans]
@@ -1257,7 +1312,7 @@ class Radiances(BaseGSI):
             elif vname in obsdiag_vars.keys():
                 # print("toObsdiag: var.shape = ", var.shape)
                 if (len(var.dimensions) == 1):
-                    dims = ("Location",)
+                    dims = ("nlocs",)
                     for c in range(len(chanlist)):
                         var_name = obsdiag_vars[vname]+"_"+"{:d}".format(chanlist[c])
                         idx = chan_indx == c+1
@@ -1269,9 +1324,9 @@ class Radiances(BaseGSI):
                         vdata = vdata[idx]
                         var_out[:] = vdata
                 elif "_levels" in vname:
-                    dims = ("Location", "Level")
+                    dims = ("nlocs", "nlevsp1")
                 else:
-                    dims = ("Location", "Level")
+                    dims = ("nlocs", "nlevs")
                     for c in range(len(chanlist)):
                         var_name = obsdiag_vars[vname]+"_"+"{:d}".format(chanlist[c])
                         idx = chan_indx == c+1
@@ -1377,10 +1432,11 @@ class Radiances(BaseGSI):
                 ibc += 1
         obsdata = self.var('Observation')
         try:
-            obserr = self.var('Input_Observation_Error')
+            obserr = self.var('Input_Observation_Error').astype(np.float32)
         except IndexError:
             # obserr = 1./self.var('Inverse_Observation_Error')
-            obserr = np.repeat(self.var('error_variance'), nlocs, axis=0)
+            obserr = np.repeat(self.var('error_variance').astype(np.float32), nlocs, axis=0)
+        obserr[:] = self.FLOAT_FILL  # commented this line so the obserr stores initial obs error
         obsqc = self.var('QC_Flag').astype(np.int32)
         if (ObsBias):
             nametbc = [
@@ -1591,10 +1647,6 @@ class Radiances(BaseGSI):
             except IndexError:
                 pass
 
-        # global attributes
-        globalAttrs["platform"] = np.array([wmo_satid[self.satellite]], dtype=np.int32)
-        globalAttrs["sensor"] = np.array([wmo_instid[self.sensor]], dtype=np.int32)
-
         # set dimension lengths in the writer since we are bypassing
         # ExtractObsData
         DimDict['Location'] = nlocs
@@ -1674,12 +1726,12 @@ class Ozone(BaseGSI):
 
         # get nlocs
         nlocs = self.nobs
-        ncout.createDimension("Location", nlocs)
+        ncout.createDimension("nlocs", nlocs)
 
         # other dims
-        ncout.createDimension("Layer", self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
+        ncout.createDimension("nlevs", self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
         if (self.sensor in oz_lay_sensors):
-            ncout.createDimension("Level", self.df.dimensions["air_pressure_levels_arr_dim"].size)
+            ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
         for var in self.df.variables.values():
             vname = var.name
             if vname in geovals_metadata_dict.keys():
@@ -1689,11 +1741,11 @@ class Ozone(BaseGSI):
                 var_out[:] = vdata
             elif vname in geovals_vars.keys():
                 if (len(var.dimensions) == 1):
-                    dims = ("Location",)
+                    dims = ("nlocs",)
                 elif "_levels" in vname:
-                    dims = ("Location", "Level")
+                    dims = ("nlocs", "nlevsp1")
                 else:
-                    dims = ("Location", "Layer")
+                    dims = ("nlocs", "nlevs")
                 var_out = ncout.createVariable(geovals_vars[vname], var.dtype, dims)
                 vdata = var[...]
                 var_out[...] = vdata
@@ -1725,9 +1777,9 @@ class Ozone(BaseGSI):
                 LocVars.append(ncv)
 
         nlocs = self.nobs
-        vname = "integrated_layer_ozone_in_air"
+        vname = "ozoneTotal"
         if (self.sensor in oz_lay_sensors):
-            vname = "mole_fraction_of_ozone_in_air"
+            vname = "ozoneLayer"
         varDict[vname]['valKey'] = vname, iconv.OvalName()
         varDict[vname]['errKey'] = vname, iconv.OerrName()
         varDict[vname]['qcKey'] = vname, iconv.OqcName()
@@ -1752,6 +1804,7 @@ class Ozone(BaseGSI):
         tmp[tmp < self.EPSILON] = 0
         obserr = tmp
         obserr[np.isinf(obserr)] = self.FLOAT_FILL
+        obserr[:] = self.FLOAT_FILL  # commented out this line so obserr stores the initial obs error
         obsqc = self.var('Analysis_Use_Flag').astype(np.int32)
         for lvar in LocVars:
             loc_mdata_name = all_LocKeyList[lvar][0]
@@ -1793,13 +1846,18 @@ class Ozone(BaseGSI):
                 outdata[gvname] = tmp
                 if vname in units_values.keys():
                     varAttrs[gvname]['units'] = units_values[vname]
+
         # observation data
         outdata[varDict[vname]['valKey']] = obsdata
         outdata[varDict[vname]['errKey']] = obserr
         outdata[varDict[vname]['qcKey']] = obsqc
 
-        globalAttrs["platform"] = np.array([wmo_satid[self.satellite]], dtype=np.int32)
-        globalAttrs["sensor"] = np.array([wmo_instid[self.sensor]], dtype=np.int32)
+        # create a GSI effective QC variable (group)
+        gsiqcname = vname, 'GsiEffectiveQC'
+        errname = vname, 'GsiFinalObsError'
+        gsiqc = np.zeros_like(outdata[varDict[vname]['valKey']])
+        gsiqc[outdata[errname] > 1e8] = 1
+        outdata[gsiqcname] = gsiqc.astype(np.int32)
 
         # set dimension lengths in the writer since we are bypassing
         # ExtractObsData
@@ -1873,24 +1931,24 @@ class Radar(BaseGSI):
         ncout.setncattr("date_time", np.int32(self.validtime.strftime("%Y%m%d%H")))
         # get nlocs
         nlocs = self.nobs
-        ncout.createDimension("Location", nlocs)
+        ncout.createDimension("nlocs", nlocs)
         # other dims
-        ncout.createDimension("Layer", self.df.dimensions["Layer"].size)
+        ncout.createDimension("nlevs", self.df.dimensions["nlevs"].size)
         # ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
         for var in self.df.variables.values():
             vname = var.name
             if vname in geovals_metadata_dict.keys():
-                dims = ("Location",)
+                dims = ("nlocs",)
                 var_out = ncout.createVariable(geovals_metadata_dict[vname], var.dtype, dims)
                 vdata = var[:]
                 var_out[:] = vdata
             elif vname in geovals_vars.keys():
                 if (len(var.dimensions) == 1):
-                    dims = ("Location",)
+                    dims = ("nlocs",)
                 elif "_levels" in vname:
-                    dims = ("Location", "Level")
+                    dims = ("nlocs", "nlevsp1")
                 else:
-                    dims = ("Location", "Layer")
+                    dims = ("nlocs", "nlevs")
                 var_out = ncout.createVariable(geovals_vars[vname], var.dtype, dims)
                 vdata = var[...]
                 var_out[...] = vdata
@@ -1950,6 +2008,7 @@ class Radar(BaseGSI):
             qcvarname = radar_qc[key]
             obserr = self.var(errvarname)
             obserr[np.isinf(obserr)] = self.FLOAT_FILL
+            obserr[:] = self.FLOAT_FILL
             obsqc = self.var(qcvarname).astype(np.int32)
             # observation data
             outdata[varDict[value]['valKey']] = obsdata
