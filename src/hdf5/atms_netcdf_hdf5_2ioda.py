@@ -24,6 +24,9 @@ NOAA20_WMO_sat_ID = 225
 NOAA21_WMO_sat_ID = 226
 ATMS_WMO_sensor_ID = 621
 
+# Number of seconds between 1958 Jan 1,00Z and 1970 Jan 1, 00Z.
+IET_AND_UNIX_TIME_OFFSET = 378691200
+
 float_missing_value = iconv.get_default_fill_val(np.float32)
 int_missing_value = iconv.get_default_fill_val(np.int32)
 long_missing_value = iconv.get_default_fill_val(np.int64)
@@ -215,19 +218,21 @@ def get_data_noaa_class(f, g, obs_data, add_qc=True):
 
     nscans = np.shape(g['All_Data']['ATMS-SDR-GEO_All']['Latitude'])[0]
     nbeam_pos = np.shape(g['All_Data']['ATMS-SDR-GEO_All']['Latitude'])[1]
-    obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(np.shape(g['All_Data']['ATMS-SDR_All']['BrightnessTemperature'])[2])+1, dtype='int32')
+    obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(np.shape(f['All_Data']['ATMS-SDR_All']['BrightnessTemperature'])[2])+1, dtype='int32')
     obs_data[('sensorScanPosition', metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='float32') + 1, (nscans, 1)).flatten()
     obs_data[('solarZenithAngle', metaDataName)] = np.array(g['All_Data']['ATMS-SDR-GEO_All']['SolarZenithAngle'][:, :].flatten(), dtype='float32')
     obs_data[('solarAzimuthAngle', metaDataName)] = np.array(g['All_Data']['ATMS-SDR-GEO_All']['SolarAzimuthAngle'][:, :].flatten(), dtype='float32')
     obs_data[('sensorZenithAngle', metaDataName)] = np.array(g['All_Data']['ATMS-SDR-GEO_All']['SatelliteZenithAngle'][:, :].flatten(), dtype='float32')
     obs_data[('sensorAzimuthAngle', metaDataName)] = np.array(g['All_Data']['ATMS-SDR-GEO_All']['SatelliteAzimuthAngle'][:, :].flatten(), dtype='float32')
     # put in approximate
-    # scanang = (real(ibeam) - 1.0) * 1.11 -  52.726
-    obs_data[('sensorViewAngle', metaDataName)] = (obs_data[('scan_position', metaDataName)] - 1.0) * 1.11 - 52.726
+    obs_data[('sensorViewAngle', metaDataName)] = (obs_data[('sensorScanPosition', metaDataName)] - 1.0) * 1.11 - 52.726
 
     nlocs = len(obs_data[('latitude', metaDataName)])
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
-    obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(g['obs_time_utc']), dtype='int64')
+    # obs_time_utc is not available in all files
+    # obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(g['obs_time_utc']), dtype='int64')
+    obs_scan_epoch = np.array(g['All_Data']['ATMS-SDR-GEO_All']['StartTime'][:]/1.e6 - IET_AND_UNIX_TIME_OFFSET, dtype='int64')
+    obs_data[('dateTime', metaDataName)] = np.repeat(obs_scan_epoch, nbeam_pos)
 
     # example: dimension ( 180, 96, 22 ) == dimension( nscan, nbeam_pos, nchannel )
     nchans = len(obs_data[('sensorChannelNumber', metaDataName)])
