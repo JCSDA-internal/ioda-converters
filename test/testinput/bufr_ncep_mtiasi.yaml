@@ -118,7 +118,7 @@ observations:
 
         - name: "platformLongDescription"
           type: string
-          value: "MTYP 021-027 PROCESSED MHS Tb"
+          value: "MTYP 021-241 IASI 1C RADIANCES (VARIABLE CHNS) (METOP)"
 
       variables:
 
