@@ -92,6 +92,7 @@ namespace bufr {
         std::vector<int> seqPath;
 
         bool hasDelayedRepeats = false;
+        bool usesFilters = false;
 
         Target() = default;
 
@@ -130,6 +131,11 @@ namespace bufr {
                     }
 
                     exportDimIdxs.emplace_back(componentIdx);
+
+                    if (component.queryComponent->filter.size() > 1)
+                    {
+                        usesFilters = true;
+                    }
                 }
 
                 if (component.type == TargetComponent::Type::Repeat ||

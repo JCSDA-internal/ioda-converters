@@ -29,7 +29,9 @@ namespace details
     {
         size_t targetIdx;
         TypeInfo typeInfo;
-        std::vector<int> dims = {0};
+        std::vector<int> rawDims = {0};
+        std::vector<int> filteredDims = {};
+        std::vector<int> groupedDims = {};
         std::vector<char> missingFrames;
         std::vector<Query> dimPaths;
         bool jagged = false;
@@ -44,6 +46,7 @@ namespace details
     typedef std::shared_ptr<TargetMetaData> TargetMetaDataPtr;
 
 }  // details
+
     typedef SubsetLookupTable Frame;
     typedef std::vector<Frame> Frames;
 
@@ -97,6 +100,17 @@ namespace details
                             const TargetPtr& target,
                             size_t offset,
                             size_t dimIdx) const;
+
+        void validateGroupByField(const details::TargetMetaDataPtr& targetMetaData,
+                                  const details::TargetMetaDataPtr& groupByMetaData) const;
+
+        void copyFilteredData(details::Data& data,
+                              const Frame& frame,
+                              const TargetPtr& target,
+                              size_t& inputOffset,
+                              size_t& outputOffset,
+                              size_t depth,
+                              bool skipResult) const;
 
         /// \brief Is the field a string field?
         /// \param fieldName The name of the field.

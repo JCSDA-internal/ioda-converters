@@ -25,18 +25,31 @@ namespace bufr {
                        const std::string& groupByFieldName,
                        const std::string& overrideType) const
     {
-        // Make sure we have accumulated frames otherwise somethings wrong.
+        // Make sure we have accumulated frames otherwise something is wrong.
         if (frames_.size() == 0)
         {
-            throw eckit::BadValue("Result has no data.");
+            throw eckit::BadValue("ResultSet has no data.");
         }
 
-        // Get the metadata for the targets
+        // Get the metadata for the target
         const auto targetMetaData = analyzeTarget(fieldName);
 
         // Assemble Result Data
         const auto data = assembleData(targetMetaData);
 
+//        // Apply groupby
+//        if (!groupByFieldName.empty())
+//        {
+//            const auto groupByMetaData = analyzeTarget(groupByFieldName);
+//            validateGroupByField(targetMetaData, groupByMetaData);
+//
+//            if (groupByMetaData->dims.size() > targetMetaData->dims.size())
+//            {
+//            }
+//            else if (groupByMetaData->dims.size() < targetMetaData->dims.size())
+//            {
+//            }
+//        }
 
         auto object = makeDataObject(fieldName,
                                      groupByFieldName,
@@ -63,11 +76,18 @@ namespace bufr {
         {
             const auto &target = frame.targetAtIdx(metaData->targetIdx);
 
+            if (target->path.size() == 0)
+            {
+                metaData->missingFrames[frameIdx] = true;
+                ++frameIdx;
+                continue;
+            }
+
             // Resize the dims if necessary
             // Jagged if the dims need a resize (skip first one)
-            if (target->exportDimIdxs.size() > metaData->dims.size())
+            if (target->exportDimIdxs.size() > metaData->rawDims.size())
             {
-                metaData->dims.resize(target->exportDimIdxs.size());
+                metaData->rawDims.resize(target->exportDimIdxs.size());
 
                 if (&frame != &frames_.front())
                 {
@@ -92,19 +112,20 @@ namespace bufr {
                     continue;
                 }
 
-                const auto newDimVal = std::max(metaData->dims[exportIdxIdx], max(frame[p->nodeId].counts));
+                const auto newDimVal = std::max(metaData->rawDims[exportIdxIdx],
+                                                std::max(max(frame[p->nodeId].counts), 1));
 
                 if (!metaData->jagged)
                 {
                     metaData->jagged = !allEqual(frame[p->nodeId].counts);
 
-                    if (!metaData->jagged && metaData->dims[exportIdxIdx] != 0)
+                    if (!metaData->jagged && metaData->rawDims[exportIdxIdx] != 0)
                     {
-                        metaData->jagged = (metaData->dims[exportIdxIdx] != newDimVal);
+                        metaData->jagged = (metaData->rawDims[exportIdxIdx] != newDimVal);
                     }
                 }
 
-                metaData->dims[exportIdxIdx] = newDimVal;
+                metaData->rawDims[exportIdxIdx] = newDimVal;
                 pathIdx++;
                 exportIdxIdx++;
             }
@@ -140,25 +161,38 @@ namespace bufr {
     details::Data ResultSet::assembleData(const details::TargetMetaDataPtr& metaData) const
     {
         int rowLength = 1;
-        for (size_t dimIdx = 1; dimIdx < metaData->dims.size(); ++dimIdx)
+        for (size_t dimIdx = 1; dimIdx < metaData->rawDims.size(); ++dimIdx)
         {
-            rowLength *= metaData->dims[dimIdx];
+            rowLength *= metaData->rawDims[dimIdx];
         }
 
         // Allocate the output data
         auto totalRows = frames_.size();
         auto data = details::Data();
         data.buffer.resize(totalRows * rowLength, MissingValue);
-        data.dims = metaData->dims;
+        data.dims = metaData->rawDims;
 
-        // Copy the data fragments from the frames into the output data
+        // Update the dims to reflect the actual size of the data
+        data.dims[0] = totalRows;
+
+        bool needsFiltering = false;
+
+        // Copy the data fragments into the raw data array.
         for (size_t frameIdx=0; frameIdx < frames_.size(); ++frameIdx)
         {
+            if (metaData->missingFrames[frameIdx])
+            {
+                continue;
+            }
+
             const auto& frame = frames_[frameIdx];
             const auto& target = frame.targetAtIdx(metaData->targetIdx);
 
             if (metaData->jagged)
             {
+//                auto inputOffset = frameIdx * rowLength;
+//                size_t outputOffset = 0;
+//                copyFilteredData(data, frame, target, inputOffset, outputOffset, 0, false);
                 copyJaggedData(data, frame, target, frameIdx * rowLength, 0);
             }
             else
@@ -168,10 +202,33 @@ namespace bufr {
                           fragment.end(),
                           data.buffer.begin() + frameIdx * rowLength);
             }
+
+            if (target->usesFilters) needsFiltering = true;
         }
 
-        // Update the dims to reflect the actual size of the data
-        data.dims[0] = totalRows;
+//        if (needsFiltering)
+//        {
+//            int filteredRowLength = 1;
+//            for (size_t dimIdx = 1; dimIdx < metaData->filteredDims.size(); ++dimIdx)
+//            {
+//                filteredRowLength *= metaData->filteredDims[dimIdx];
+//            }
+//
+//            for (size_t frameIdx=0; frameIdx < frames_.size(); ++frameIdx)
+//            {
+//                const auto &frame = frames_[frameIdx];
+//                const auto &target = frame.targetAtIdx(metaData->targetIdx);
+//
+//            }
+//
+//            auto filteredData = details::Data();
+//            filteredData.buffer.resize(totalRows * filteredRowLength, MissingValue);
+//            data.dims = metaData->filteredDims;
+//
+//            data = std::move(filteredData);
+//        }
+
+
 
         return data;
     }
@@ -182,13 +239,15 @@ namespace bufr {
                                    size_t offset,
                                    size_t dimIdx) const
     {
-        if (dimIdx >= data.dims.size()) return;
-
         size_t totalDimSize = 1;
         for (size_t i = dimIdx + 1; i < data.dims.size(); ++i)
         {
             totalDimSize *= data.dims[i];
         }
+
+        if (!totalDimSize ||
+            dimIdx >= data.dims.size() ||
+            frame[target->nodeIdx].data.size() == 0) return;
 
         size_t fragStartIdx = 0;
         const auto pathIdx = target->exportDimIdxs[dimIdx];
@@ -202,9 +261,11 @@ namespace bufr {
             if (dimIdx == data.dims.size() - 1)
             {
                 const auto& fragment = frame[target->nodeIdx].data;
-                const auto count = frame[target->path[pathIdx].nodeId].counts[countIdx];
+                const auto count = static_cast<size_t>
+                    (frame[target->path[pathIdx].nodeId].counts[countIdx]);
+
                 std::copy(fragment.begin() + fragStartIdx,
-                          fragment.begin() + fragStartIdx + count,
+                          fragment.begin() + fragStartIdx + count + std::min(count, fragment.size() - fragStartIdx),
                           data.buffer.begin() + offset);
 
                 fragStartIdx += count;
@@ -213,6 +274,93 @@ namespace bufr {
             offset += totalDimSize;
         }
     }
+
+    void ResultSet::validateGroupByField(const details::TargetMetaDataPtr& targetMetaData,
+                                         const details::TargetMetaDataPtr& groupByMetaData) const
+    {
+        // Validate the groupby field is in the same path as the field
+        auto& groupByPath = groupByMetaData->dimPaths.back();
+        auto& targetPath = targetMetaData->dimPaths.back();
+
+        auto groupByPathComps = splitPath(groupByPath.str());
+        auto targetPathComps = splitPath(targetPath.str());
+
+        for (size_t i = 1;
+             i < std::min(groupByPathComps.size(), targetPathComps.size());
+             i++)
+        {
+            if (targetPathComps[i] != groupByPathComps[i])
+            {
+                std::ostringstream errStr;
+                errStr << "The GroupBy and Target Fields do not share a common path.\n";
+                errStr << "GroupByField path: " << groupByPath.str()<< std::endl;
+                errStr << "TargetField path: " << targetPath.str() << std::endl;
+                throw eckit::BadParameter(errStr.str());
+            }
+        }
+    }
+
+    void ResultSet:: copyFilteredData(details::Data& data,
+                                      const Frame& frame,
+                                      const TargetPtr& target,
+                                      size_t& inputOffset,
+                                      size_t& outputOffset,
+                                      size_t depth,
+                                      bool skipResult) const
+    {
+
+        if (inputOffset >= frame[target->path.back().nodeId].data.size())
+        {
+            return;
+        }
+
+        if (depth > target->path.size() - 1)
+        {
+            if (!skipResult)
+            {
+                data.buffer[outputOffset] = frame[target->path.back().nodeId].data[inputOffset];
+                outputOffset++;
+            }
+
+            inputOffset++;
+
+            return;
+        }
+
+        auto& layerCounts = frame[target->path[depth].nodeId].counts;
+        auto& layerFilter = target->path[depth].queryComponent->filter;
+
+        if (layerFilter.empty())
+        {
+            for (size_t countIdx = 0; countIdx < layerCounts.size(); countIdx++)
+            {
+                copyFilteredData(
+                    data, frame, target, inputOffset, outputOffset, depth + 1, skipResult);
+            }
+        }
+        else
+        {
+            for (size_t countIdx = 0; countIdx < layerCounts.size(); countIdx++)
+            {
+                for (size_t count = 1; count <= static_cast<size_t>(layerCounts[countIdx]); count++)
+                {
+                    bool skip = skipResult;
+
+                    if (!skip)
+                    {
+                        skip = std::find(layerFilter.begin(),
+                                         layerFilter.end(),
+                                         count) == layerFilter.end();
+                    }
+
+                    copyFilteredData(
+                        data, frame, target, inputOffset, outputOffset, depth + 1, skip);
+                }
+            }
+        }
+    }
+
+
 
     std::string ResultSet::unit(const std::string& fieldName) const
     {

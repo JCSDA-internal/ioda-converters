@@ -184,6 +184,17 @@ namespace bufr {
             return queryStr_;
         }
 
+        /// \brief Does this query contain any filters?
+        /// \return True if the query contains filters, false otherwise.
+        bool hasFilters() const
+        {
+            for (const auto& pathComponent : path)
+            {
+                if (!pathComponent->filter.empty()) return true;
+            }
+            return false;
+        }
+
      private:
         std::string queryStr_;
     };
