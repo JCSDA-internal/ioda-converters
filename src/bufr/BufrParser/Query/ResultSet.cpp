@@ -190,9 +190,6 @@ namespace bufr {
 
             if (metaData->jagged)
             {
-//                auto inputOffset = frameIdx * rowLength;
-//                size_t outputOffset = 0;
-//                copyFilteredData(data, frame, target, inputOffset, outputOffset, 0, false);
                 copyJaggedData(data, frame, target, frameIdx * rowLength, 0);
             }
             else
@@ -265,7 +262,7 @@ namespace bufr {
                     (frame[target->path[pathIdx].nodeId].counts[countIdx]);
 
                 std::copy(fragment.begin() + fragStartIdx,
-                          fragment.begin() + fragStartIdx + count + std::min(count, fragment.size() - fragStartIdx),
+                          fragment.begin() + fragStartIdx + count,
                           data.buffer.begin() + offset);
 
                 fragStartIdx += count;
