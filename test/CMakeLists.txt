@@ -266,6 +266,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/atms_beamwidth.txt
     testinput/bufr_query_python_test.py
     testinput/bufr_query_python_to_ioda_test.py
+    testinput/bufr_query_fieldname_validation.py
   )
 
   list( APPEND test_output
@@ -1666,13 +1667,13 @@ endif()
 
 if ( iodaconv_bufr_python_ENABLED )
 
-    ecbuild_add_test( TARGET  test_iodaconv_bufr_query_python_test
+    ecbuild_add_test( TARGET  test_iodaconv_bufr_query_python
                       TYPE    SCRIPT
                       ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                       COMMAND "${Python3_EXECUTABLE}"
                       ARGS "${PROJECT_SOURCE_DIR}/test/testinput/bufr_query_python_test.py" )
 
-    ecbuild_add_test( TARGET  test_iodaconv_bufr_query_python_to_ioda_test
+    ecbuild_add_test( TARGET  test_iodaconv_bufr_query_python_to_ioda
                       TYPE    SCRIPT
                       ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                       COMMAND bash
@@ -1680,6 +1681,12 @@ if ( iodaconv_bufr_python_ENABLED )
                       netcdf
                       "${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/testinput/bufr_query_python_to_ioda_test.py"
                       bufr_query_python_to_ioda_test.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+    ecbuild_add_test( TARGET  test_iodaconv_bufr_query_fieldname_validation
+                      TYPE    SCRIPT
+                      ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                      COMMAND "${Python3_EXECUTABLE}"
+                      ARGS "${PROJECT_SOURCE_DIR}/test/testinput/bufr_query_fieldname_validation.py" )
 
 endif()
 
