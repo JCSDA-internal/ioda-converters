@@ -39,6 +39,8 @@ def test_bufr_to_ioda():
     pfloat.setFillValue.float(rad.fill_value)
     pfloat.compressWithGZIP()
 
+    # Create a separate paremeter for each type you need to use
+
     # pint = ioda.VariableCreationParameters()
     # pint.setFillValue.int(int_var.fill_value)
     # pint.compressWithGZIP()
