@@ -79,6 +79,13 @@ namespace bufr {
             return result;
         }
 
+        /// \brief Check the availability of the field with the given name.
+        /// \param name The name of the field to check.
+        bool hasFieldNamed(const std::string& name) const
+        {
+            return fieldIndexForNodeNamed(name) != -1;
+        }
+
      private:
         std::vector<DataField> fields_;
     };

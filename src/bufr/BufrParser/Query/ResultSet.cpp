@@ -38,6 +38,23 @@ namespace bufr {
                        const std::string& groupByFieldName,
                        const std::string& overrideType) const
     {
+        if (dataFrames_.empty())
+        {
+            throw eckit::BadValue("This ResultSet is empty (doesn't contain any data).");
+        }
+
+        if (!dataFrames_[0].hasFieldNamed(fieldName))
+        {
+            throw eckit::BadValue("This ResultSet does not contain a field named " +
+                                  fieldName);
+        }
+
+        if (!groupByFieldName.empty() && !dataFrames_[0].hasFieldNamed(groupByFieldName))
+        {
+            throw eckit::BadValue("This ResultSet does not contain a field named " +
+                                  groupByFieldName);
+        }
+
         std::vector<double> data;
         std::vector<int> dims;
         std::vector<Query> dimPaths;
@@ -139,11 +156,6 @@ namespace bufr {
                                  std::vector<Query>& dimPaths,
                                  TypeInfo& info) const
     {
-        if (dataFrames_.empty())
-        {
-            throw eckit::BadValue("This ResultSet is empty (doesn't contain any data).");
-        }
-
         // Find the dims based on the largest sequence counts in the fields
         // Compute Dims
         std::vector<int> dimsList;
