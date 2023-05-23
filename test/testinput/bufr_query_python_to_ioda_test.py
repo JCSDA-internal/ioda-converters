@@ -31,6 +31,21 @@ def test_bufr_to_ioda():
 
 
     # Write the data to an IODA file
+
+    # Create the variable creation parameters. Make sure to set the fill value and set one on
+    # each variable. Otherwise, the "missing" will be set to 0.0.
+
+    pfloat = ioda.VariableCreationParameters()
+    pfloat.setFillValue.float(rad.fill_value)
+    pfloat.compressWithGZIP()
+
+    # Create a separate paremeter for each type you need to use
+
+    # pint = ioda.VariableCreationParameters()
+    # pint.setFillValue.int(int_var.fill_value)
+    # pint.compressWithGZIP()
+
+
     g = ioda.Engines.HH.createFile(name=OUTPUT_PATH,
                                    mode=ioda.Engines.BackendCreateModes.Truncate_If_Exists)
 
@@ -45,21 +60,17 @@ def test_bufr_to_ioda():
     dim_channel.scales.setIsScale('Channel')
 
     # Create the variables
-    longitude = g.vars.create('MetaData/Longitude', ioda.Types.float, scales=[dim_location])
+    longitude = g.vars.create('MetaData/Longitude', ioda.Types.float, scales=[dim_location], params=pfloat)
     longitude.atts.create('valid_range', ioda.Types.float, [2]).writeVector.float([-180, 180])
     longitude.atts.create('units', ioda.Types.str).writeVector.str(['degrees_east'])
     longitude.atts.create('long_name', ioda.Types.str).writeVector.str(['Longitude'])
 
-    latitude = g.vars.create('MetaData/Latitude', ioda.Types.float,  scales=[dim_location])
+    latitude = g.vars.create('MetaData/Latitude', ioda.Types.float,  scales=[dim_location], params=pfloat)
     latitude.atts.create('valid_range', ioda.Types.float, [2]).writeVector.float([-90, 90])
     latitude.atts.create('units', ioda.Types.str).writeVector.str(['degrees_north'])
     latitude.atts.create('long_name', ioda.Types.str).writeVector.str(['Latitude'])
 
-    p1 = ioda.VariableCreationParameters()
-    p1.setFillValue.float(rad.fill_value)
-    p1.compressWithGZIP()
-
-    tb = g.vars.create('ObsValue/brightnessTemperature', ioda.Types.float, scales=[dim_location, dim_channel], params=p1)
+    tb = g.vars.create('ObsValue/brightnessTemperature', ioda.Types.float, scales=[dim_location, dim_channel], params=pfloat)
     tb.atts.create('valid_range', ioda.Types.float, [2]).writeVector.float([100, 500])
     tb.atts.create('units', ioda.Types.str).writeVector.str(['K'])
     tb.atts.create('long_name', ioda.Types.str).writeVector.str(['ATMS Observed (Uncorrected) Brightness Temperature'])
