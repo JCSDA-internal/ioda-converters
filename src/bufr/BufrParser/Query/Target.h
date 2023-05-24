@@ -113,6 +113,12 @@ namespace bufr {
             {
                 queryComponents.push_back(component.queryComponent);
 
+                if (component.type == TargetComponent::Type::Repeat &&
+                    !component.queryComponent->filter.empty())
+                {
+                    usesFilters = true;
+                }
+
                 if (component.addsDimension())
                 {
                     numDimensions++;
@@ -131,11 +137,6 @@ namespace bufr {
                     }
 
                     exportDimIdxs.emplace_back(componentIdx);
-
-                    if (component.queryComponent->filter.size() > 1)
-                    {
-                        usesFilters = true;
-                    }
                 }
 
                 if (component.type == TargetComponent::Type::Repeat ||

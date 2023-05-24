@@ -29,8 +29,9 @@ namespace details
     {
         size_t targetIdx;
         TypeInfo typeInfo;
+        std::vector<int> dims = {0};
         std::vector<int> rawDims = {0};
-        std::vector<int> filteredDims = {};
+        std::vector<int> filteredDims = {0};
         std::vector<int> groupedDims = {};
         std::vector<char> missingFrames;
         std::vector<Query> dimPaths;
@@ -41,6 +42,7 @@ namespace details
     {
         std::vector<double> buffer;
         std::vector<int> dims;
+        std::vector<int> rawDims;
     };
 
     typedef std::shared_ptr<TargetMetaData> TargetMetaDataPtr;
@@ -104,8 +106,8 @@ namespace details
         void validateGroupByField(const details::TargetMetaDataPtr& targetMetaData,
                                   const details::TargetMetaDataPtr& groupByMetaData) const;
 
-        void copyFilteredData(details::Data& data,
-                              const Frame& frame,
+        void copyFilteredData(details::Data& resData,
+                              const details::Data& srcData,
                               const TargetPtr& target,
                               size_t& inputOffset,
                               size_t& outputOffset,

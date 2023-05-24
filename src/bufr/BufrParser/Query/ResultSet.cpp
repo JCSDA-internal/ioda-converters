@@ -83,11 +83,14 @@ namespace bufr {
                 continue;
             }
 
+            metaData->rawDims.resize(target->path.size() -  1);
+
             // Resize the dims if necessary
             // Jagged if the dims need a resize (skip first one)
-            if (target->exportDimIdxs.size() > metaData->rawDims.size())
+            if (target->exportDimIdxs.size() > metaData->dims.size())
             {
-                metaData->rawDims.resize(target->exportDimIdxs.size());
+                metaData->dims.resize(target->exportDimIdxs.size());
+                metaData->filteredDims.resize(target->exportDimIdxs.size(), 0);
 
                 if (&frame != &frames_.front())
                 {
@@ -106,26 +109,38 @@ namespace bufr {
                     break;
                 }
 
+                metaData->rawDims[pathIdx] = std::max(metaData->rawDims[pathIdx],
+                                                      std::max(max(frame[p->nodeId].counts), 1));
+
                 if (target->exportDimIdxs[exportIdxIdx] != pathIdx)
                 {
                     ++pathIdx;
                     continue;
                 }
 
-                const auto newDimVal = std::max(metaData->rawDims[exportIdxIdx],
+                const auto newDimVal = std::max(metaData->dims[exportIdxIdx],
                                                 std::max(max(frame[p->nodeId].counts), 1));
 
                 if (!metaData->jagged)
                 {
                     metaData->jagged = !allEqual(frame[p->nodeId].counts);
 
-                    if (!metaData->jagged && metaData->rawDims[exportIdxIdx] != 0)
+                    if (!metaData->jagged && metaData->dims[exportIdxIdx] != 0)
                     {
-                        metaData->jagged = (metaData->rawDims[exportIdxIdx] != newDimVal);
+                        metaData->jagged = (metaData->dims[exportIdxIdx] != newDimVal);
                     }
                 }
 
-                metaData->rawDims[exportIdxIdx] = newDimVal;
+                metaData->dims[exportIdxIdx] = newDimVal;
+
+                // Capture the filtered dimension information
+                if (!p->queryComponent->filter.empty())
+                {
+                    metaData->filteredDims[exportIdxIdx] =
+                        std::max(metaData->filteredDims[exportIdxIdx],
+                        static_cast<int> (p->queryComponent->filter.size()));
+                }
+
                 pathIdx++;
                 exportIdxIdx++;
             }
@@ -155,6 +170,15 @@ namespace bufr {
             ++frameIdx;
         }
 
+        // Fill the filtered dims array with the raw dims for elements that are not filtered
+        for (size_t dimIdx = 0; dimIdx < metaData->filteredDims.size(); ++dimIdx)
+        {
+            if (metaData->filteredDims[dimIdx] == 0)
+            {
+                metaData->filteredDims[dimIdx] = metaData->dims[dimIdx];
+            }
+        }
+
         return metaData;
     }
 
@@ -170,10 +194,12 @@ namespace bufr {
         auto totalRows = frames_.size();
         auto data = details::Data();
         data.buffer.resize(totalRows * rowLength, MissingValue);
-        data.dims = metaData->rawDims;
+        data.dims = metaData->dims;
+        data.rawDims = metaData->rawDims;
 
         // Update the dims to reflect the actual size of the data
         data.dims[0] = totalRows;
+        data.rawDims[0] = totalRows;
 
         bool needsFiltering = false;
 
@@ -203,29 +229,36 @@ namespace bufr {
             if (target->usesFilters) needsFiltering = true;
         }
 
-//        if (needsFiltering)
-//        {
-//            int filteredRowLength = 1;
-//            for (size_t dimIdx = 1; dimIdx < metaData->filteredDims.size(); ++dimIdx)
-//            {
-//                filteredRowLength *= metaData->filteredDims[dimIdx];
-//            }
-//
-//            for (size_t frameIdx=0; frameIdx < frames_.size(); ++frameIdx)
-//            {
-//                const auto &frame = frames_[frameIdx];
-//                const auto &target = frame.targetAtIdx(metaData->targetIdx);
-//
-//            }
-//
-//            auto filteredData = details::Data();
-//            filteredData.buffer.resize(totalRows * filteredRowLength, MissingValue);
-//            data.dims = metaData->filteredDims;
-//
-//            data = std::move(filteredData);
-//        }
+        if (needsFiltering)
+        {
+            int filteredRowLength = 1;
+            for (size_t dimIdx = 1; dimIdx < metaData->filteredDims.size(); ++dimIdx)
+            {
+                filteredRowLength *= metaData->filteredDims[dimIdx];
+            }
 
+            auto filteredData = details::Data();
+            filteredData.buffer.resize(totalRows * filteredRowLength, MissingValue);
 
+            size_t outputOffset = 0;
+            for (size_t frameIdx = 0; frameIdx < frames_.size(); ++frameIdx)
+            {
+                const auto &frame = frames_[frameIdx];
+                const auto &target = frame.targetAtIdx(metaData->targetIdx);
+
+                size_t inputOffset = frameIdx * rowLength;
+                copyFilteredData(filteredData, data, target, inputOffset, outputOffset, 1, false);
+            }
+
+            filteredData.dims.resize(metaData->filteredDims.size());
+            filteredData.dims[0] = data.dims[0];
+            for (size_t dimIdx = 1; dimIdx < metaData->filteredDims.size(); ++dimIdx)
+            {
+                filteredData.dims[dimIdx] = metaData->filteredDims[dimIdx];
+            }
+
+            data = std::move(filteredData);
+        }
 
         return data;
     }
@@ -297,25 +330,28 @@ namespace bufr {
         }
     }
 
-    void ResultSet:: copyFilteredData(details::Data& data,
-                                      const Frame& frame,
+    void ResultSet:: copyFilteredData(details::Data& resData,
+                                      const details::Data& srcData,
                                       const TargetPtr& target,
                                       size_t& inputOffset,
                                       size_t& outputOffset,
                                       size_t depth,
                                       bool skipResult) const
     {
-
-        if (inputOffset >= frame[target->path.back().nodeId].data.size())
-        {
-            return;
-        }
-
-        if (depth > target->path.size() - 1)
+        if (depth == target->path.size() - 1)
         {
             if (!skipResult)
             {
-                data.buffer[outputOffset] = frame[target->path.back().nodeId].data[inputOffset];
+//                std::cout << outputOffset << " " << srcData.buffer[inputOffset] << std::endl;
+//                //print srcData::buffer to std::cout
+//
+//                for (size_t i = 0; i < srcData.buffer.size(); i++)
+//                {
+//                    std::cout << srcData.buffer[i] << " ";
+//                }
+//                std::cout << std::endl;
+
+                resData.buffer[outputOffset] = srcData.buffer[inputOffset];
                 outputOffset++;
             }
 
@@ -324,35 +360,32 @@ namespace bufr {
             return;
         }
 
-        auto& layerCounts = frame[target->path[depth].nodeId].counts;
         auto& layerFilter = target->path[depth].queryComponent->filter;
 
         if (layerFilter.empty())
         {
-            for (size_t countIdx = 0; countIdx < layerCounts.size(); countIdx++)
+            for (size_t countIdx = 0; countIdx < srcData.rawDims.size(); countIdx++)
             {
                 copyFilteredData(
-                    data, frame, target, inputOffset, outputOffset, depth + 1, skipResult);
+                    resData, srcData, target, inputOffset, outputOffset, depth + 1, skipResult);
             }
         }
         else
         {
-            for (size_t countIdx = 0; countIdx < layerCounts.size(); countIdx++)
+//            std::cout << depth << " " << srcData.rawDims[0] << " " << srcData.rawDims[1] << std::endl;
+            for (size_t count = 1; count <= static_cast<size_t>(srcData.rawDims[depth]); count++)
             {
-                for (size_t count = 1; count <= static_cast<size_t>(layerCounts[countIdx]); count++)
+                bool skip = skipResult;
+
+                if (!skip)
                 {
-                    bool skip = skipResult;
-
-                    if (!skip)
-                    {
-                        skip = std::find(layerFilter.begin(),
-                                         layerFilter.end(),
-                                         count) == layerFilter.end();
-                    }
-
-                    copyFilteredData(
-                        data, frame, target, inputOffset, outputOffset, depth + 1, skip);
+                    skip = std::find(layerFilter.begin(),
+                                     layerFilter.end(),
+                                     count) == layerFilter.end();
                 }
+
+                copyFilteredData(
+                    resData, srcData, target, inputOffset, outputOffset, depth + 1, skip);
             }
         }
     }
