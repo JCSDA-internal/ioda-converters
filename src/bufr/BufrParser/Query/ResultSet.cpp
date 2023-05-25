@@ -83,7 +83,10 @@ namespace bufr {
                 continue;
             }
 
-            metaData->rawDims.resize(target->path.size() -  1);
+            if (target->path.size() - 1 > metaData->rawDims.size())
+            {
+                metaData->rawDims.resize(target->path.size() -  1);
+            }
 
             // Resize the dims if necessary
             // Jagged if the dims need a resize (skip first one)

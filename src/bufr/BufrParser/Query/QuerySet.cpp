@@ -39,7 +39,7 @@ namespace bufr {
         {
             if (limitSubsets_.empty())
             {
-                includesAllSubsets_ = query.subset->isAnySubset;
+                includesAllSubsets_ = includesAllSubsets_ | query.subset->isAnySubset;
                 presentSubsets_.insert(query.subset->name);
             }
             else

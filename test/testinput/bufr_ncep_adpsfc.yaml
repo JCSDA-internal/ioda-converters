@@ -110,13 +110,13 @@ observations:
           path: "*/CLDSQ1"
         - name: MaxMinTemperatureSequence
           path: "*/MTTPSQ"
-        - name: SynopticWindSequence 
+        - name: SynopticWindSequence
           path: "*/BSYWND2"
         - name: PresentWeatherSequence
           path: "*/MTRPRW"
 
       variables:
-
+#
         # MetaData
         - name: "MetaData/dateTime"
           coordinates: "longitude latitude"
