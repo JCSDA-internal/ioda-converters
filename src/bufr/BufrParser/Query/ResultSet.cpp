@@ -173,6 +173,11 @@ namespace bufr {
             ++frameIdx;
         }
 
+        if (metaData->dimPaths.empty())
+        {
+            metaData->dimPaths = {Query()};
+        }
+
         // Fill the filtered dims array with the raw dims for elements that are not filtered
         for (size_t dimIdx = 0; dimIdx < metaData->filteredDims.size(); ++dimIdx)
         {
