@@ -81,9 +81,10 @@ namespace bufr {
 
 #ifdef BUILD_PYTHON_BINDING
         py::array ResultSet::getNumpyArray(const std::string& fieldName,
-                                           const std::string& groupByFieldName) const
+                                           const std::string& groupByFieldName,
+                                           const std::string& overrideType) const
         {
-            auto dataObj = get(fieldName, groupByFieldName);
+            auto dataObj = get(fieldName, groupByFieldName, overrideType);
             return dataObj->getNumpyArray();
         }
 
@@ -567,11 +568,11 @@ namespace bufr {
         {
             object = std::make_shared<DataObject<int32_t>>();
         }
-        else if (overrideType == "float")
+        else if (overrideType == "float" || overrideType == "float32")
         {
             object = std::make_shared<DataObject<float>>();
         }
-        else if (overrideType == "double")
+        else if (overrideType == "double" || overrideType == "float64")
         {
             object = std::make_shared<DataObject<double>>();
         }
@@ -582,6 +583,14 @@ namespace bufr {
         else if (overrideType == "int64")
         {
             object = std::make_shared<DataObject<int64_t>>();
+        }
+        else if (overrideType == "uint64")
+        {
+            object = std::make_shared<DataObject<uint64_t>>();
+        }
+        else if (overrideType == "uint32" || overrideType == "uint")
+        {
+            object = std::make_shared<DataObject<uint32_t>>();
         }
         else
         {
