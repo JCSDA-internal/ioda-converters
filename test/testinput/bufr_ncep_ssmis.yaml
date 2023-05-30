@@ -1,4 +1,4 @@
-# (C) Copyright 2022 NOAA/NWS/NCEP/EMC
+# (C) Copyright 2023 NOAA/NWS/NCEP/EMC
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -29,36 +29,16 @@ observations:
           satelliteIdentifier:
             query: "*/SAID"
 
-          # The type should be integer.  
-          # However, UFO/CRTM requred this variable to be float
           fieldOfViewNumber:
             query: "*/FOVN"
-            type: float
-
-          scanLineNumber:
-            query: "*/SLNM"
-
-          heightOfStation:
-            query: "*/SATEPHEM/SELV"
-
-#         sensorZenithAngle:
-#           query: "*/SAZA"
-
-          sensorAzimuthAngle:
-            query: "*/SCLINGEO/BEARAZ"
-
-          sensorScanAngle:
-            sensorScanAngle:
-              fieldOfViewNumber: "*/FOVN"
-              scanStart: 45.0
-              scanStep: 0.000 
+            type: float # The type should be integer. However, UFO/CRTM required this variable to be float.
 
           sensorChannelNumber:
             query: "*/SSMISCHN/CHNM"
 
           # ObsValue
           # Brightness Temperature
-          brightnessTemperature: 
+          brightnessTemperature:
             query: "*/SSMISCHN/TMBR"
             obsTime:
               year: "*/YEAR"
@@ -73,10 +53,10 @@ observations:
             category:
               variable: satelliteIdentifier
               map:
-                _249: f16 
-                _285: f17 
-                _286: f18 
-                _287: f19 
+                _249: f16
+                _285: f17
+                _286: f18
+                _287: f19
 
     ioda:
       backend: netcdf
@@ -84,7 +64,7 @@ observations:
 
       dimensions:
         - name: Channel
-          source: variables/sensorChannelNumber  
+          source: variables/sensorChannelNumber
           path: "*/SSMISCHN"
 
       globals:
@@ -94,14 +74,14 @@ observations:
 
         - name: "platformLongDescription"
           type: string
-          value: "Special Sensor Microwave Imager Sounder ATENNA/BRIGHTNESS TEMPERATURE DATA"
+          value: "Special Sensor Microwave - Imager/Sounder ANTENNA/BRIGHTNESS TEMPERATURE DATA"
 
       variables:
         # MetaData
         - name: "MetaData/dateTime"
           source: variables/timestamp
           longName: "Datetime"
-          units: "seconds since 1970-01-01T00:00:00Z" 
+          units: "seconds since 1970-01-01T00:00:00Z"
 
         - name: "MetaData/latitude"
           source: variables/latitude
@@ -121,32 +101,6 @@ observations:
         - name: "MetaData/sensorScanPosition"
           source: variables/fieldOfViewNumber
           longName: "Field of View Number"
-
-        - name: "MetaData/sensorScanLine"
-          source: variables/scanLineNumber
-          longName: "Scan Line Number"
-
-        - name: "MetaData/sensorViewAngle"
-          source: variables/sensorScanAngle
-          longName: "Sensor View Angle"
-          units: "degree"
-
-        - name: "MetaData/heightOfStation"
-          source: variables/heightOfStation
-          longName: "Altitude of Satellite"
-          units: "m"
-
-#       - name: "MetaData/sensorZenithAngle"
-#         source: variables/sensorZenithAngle
-#         longName: "Sensor Zenith Angle"
-#         units: "degree"
-#         range: [0, 90]
-
-        - name: "MetaData/sensorAzimuthAngle"
-          source: variables/sensorAzimuthAngle
-          longName: "Sensor Azimuth Angle"
-          units: "degree"
-          range: [0, 360]
 
         - name: "MetaData/sensorChannelNumber"
           source: variables/sensorChannelNumber
