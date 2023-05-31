@@ -85,14 +85,14 @@ namespace bufr {
 
             if (target->path.size() - 1 > metaData->rawDims.size())
             {
-                metaData->rawDims.resize(target->path.size() -  1);
+                metaData->rawDims.resize(target->path.size() -  1, 0);
             }
 
             // Resize the dims if necessary
             // Jagged if the dims need a resize (skip first one)
             if (target->exportDimIdxs.size() > metaData->dims.size())
             {
-                metaData->dims.resize(target->exportDimIdxs.size());
+                metaData->dims.resize(target->exportDimIdxs.size(), 1);
                 metaData->filteredDims.resize(target->exportDimIdxs.size(), 0);
 
                 if (&frame != &frames_.front())
@@ -148,8 +148,6 @@ namespace bufr {
                 exportIdxIdx++;
             }
 
-            if (metaData->missingFrames[frameIdx]) { continue; }
-
             // Fill in the type information
             metaData->typeInfo.reference =
                 std::min(metaData->typeInfo.reference, target->typeInfo.reference);
@@ -161,7 +159,6 @@ namespace bufr {
             }
 
             if (metaData->typeInfo.unit.empty()) metaData->typeInfo.unit = target->typeInfo.unit;
-
 
             // Fill in the dimPaths data
             if (!target->dimPaths.empty() &&
@@ -198,6 +195,9 @@ namespace bufr {
             rowLength *= metaData->rawDims[dimIdx];
         }
 
+        // need to preserve one spot for the MissingValue even if there is no data
+        rowLength = std::max(rowLength, 1);
+
         // Allocate the output data
         auto totalRows = frames_.size();
         auto data = details::Data();
@@ -224,7 +224,7 @@ namespace bufr {
 
             if (metaData->jagged)
             {
-                copyJaggedData(data, frame, target, frameIdx * rowLength, 0);
+                copyJaggedData(data, frame, target, frameIdx * rowLength);
             }
             else
             {
@@ -274,42 +274,83 @@ namespace bufr {
     void ResultSet::copyJaggedData(details::Data& data,
                                    const Frame& frame,
                                    const TargetPtr& target,
-                                   size_t offset,
-                                   size_t dimIdx) const
+                                   size_t outputOffset) const
+    {
+        size_t inputOffset = 0;
+        size_t dimIdx = 1;
+        size_t countNumber = 1;
+        size_t countOffset = 0;
+
+        _copyJaggedData(data,
+                        frame,
+                        target,
+                        outputOffset,
+                        inputOffset,
+                        dimIdx,
+                        countNumber,
+                        countOffset);
+    }
+
+    void ResultSet::_copyJaggedData(details::Data& data,
+                                   const Frame& frame,
+                                   const TargetPtr& target,
+                                   size_t& outputOffset,
+                                   size_t& inputOffset,
+                                   const size_t dimIdx,
+                                   const size_t countNumber,
+                                   const size_t countOffset) const
     {
         size_t totalDimSize = 1;
-        for (size_t i = dimIdx + 1; i < data.dims.size(); ++i)
+        for (size_t i = dimIdx; i < data.rawDims.size(); ++i)
         {
-            totalDimSize *= data.dims[i];
+            totalDimSize *= data.rawDims[i];
         }
 
         if (!totalDimSize ||
-            dimIdx >= data.dims.size() ||
+            dimIdx > data.rawDims.size() - 1 ||
             frame[target->nodeIdx].data.size() == 0) return;
 
-        size_t fragStartIdx = 0;
-        const auto pathIdx = target->exportDimIdxs[dimIdx];
-        for (size_t countIdx = 0;
-             countIdx < frame[target->path[pathIdx].nodeId].counts.size();
-             ++countIdx)
+        if (frame[target->path[dimIdx].nodeId].counts.empty())
         {
-            copyJaggedData(data, frame, target, offset, dimIdx + 1);
+            outputOffset += totalDimSize;
+            return;
+        }
 
-            // When we reach the last layer of counts then copy the data
-            if (dimIdx == data.dims.size() - 1)
+        size_t newOffset = 0;
+        for (size_t countIdx = 0; countIdx < countNumber; ++countIdx)
+        {
+            auto count = frame[target->path[dimIdx].nodeId].counts[countIdx + countOffset];
+            if (count == 0)
             {
-                const auto& fragment = frame[target->nodeIdx].data;
-                const auto count = static_cast<size_t>
-                    (frame[target->path[pathIdx].nodeId].counts[countIdx]);
-
-                std::copy(fragment.begin() + fragStartIdx,
-                          fragment.begin() + fragStartIdx + count,
-                          data.buffer.begin() + offset);
-
-                fragStartIdx += count;
+                outputOffset += totalDimSize;
+                continue;
             }
 
-            offset += totalDimSize;
+            // When we reach the last layer of counts then copy the data
+            if (dimIdx == data.rawDims.size() - 1)
+            {
+                const auto& fragment = frame[target->nodeIdx].data;
+
+                std::copy(fragment.begin() + inputOffset,
+                          fragment.begin() + inputOffset + count,
+                          data.buffer.begin() + outputOffset);
+
+                inputOffset += count;
+                outputOffset += totalDimSize;
+            }
+            else
+            {
+                _copyJaggedData(data,
+                                frame,
+                                target,
+                                outputOffset,
+                                inputOffset,
+                                dimIdx + 1,
+                                count,
+                                newOffset);
+            }
+
+            newOffset++;
         }
     }
 

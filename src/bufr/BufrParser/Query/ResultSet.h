@@ -100,8 +100,16 @@ namespace details
         void copyJaggedData(details::Data& data,
                             const Frame& frame,
                             const TargetPtr& target,
-                            size_t offset,
-                            size_t dimIdx) const;
+                            size_t outputOffset) const;
+
+        void _copyJaggedData(details::Data& data,
+                             const Frame& frame,
+                             const TargetPtr& target,
+                             size_t& outputOffset,
+                             size_t& inputOffset,
+                             const size_t dimIdx,
+                             const size_t countNumber,
+                             const size_t countOffset) const;
 
         void validateGroupByField(const details::TargetMetaDataPtr& targetMetaData,
                                   const details::TargetMetaDataPtr& groupByMetaData) const;
