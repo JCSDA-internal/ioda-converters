@@ -277,7 +277,7 @@ namespace bufr {
                                    size_t outputOffset) const
     {
         size_t inputOffset = 0;
-        size_t dimIdx = 1;
+        size_t dimIdx = 0;
         size_t countNumber = 1;
         size_t countOffset = 0;
 
@@ -301,7 +301,7 @@ namespace bufr {
                                    const size_t countOffset) const
     {
         size_t totalDimSize = 1;
-        for (size_t i = dimIdx; i < data.rawDims.size(); ++i)
+        for (size_t i = dimIdx + 1; i < data.rawDims.size(); ++i)
         {
             totalDimSize *= data.rawDims[i];
         }
@@ -327,7 +327,7 @@ namespace bufr {
             }
 
             // When we reach the last layer of counts then copy the data
-            if (dimIdx == data.rawDims.size() - 1)
+            if (dimIdx == target->exportDimIdxs.size() - 1)
             {
                 const auto& fragment = frame[target->nodeIdx].data;
 
