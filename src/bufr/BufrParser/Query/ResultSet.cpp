@@ -128,7 +128,7 @@ namespace bufr {
                 {
                     metaData->jagged = !allEqual(frame[p->nodeId].counts);
 
-                    if (!metaData->jagged && metaData->dims[exportIdxIdx] != 0)
+                    if (!metaData->jagged && metaData->dims[exportIdxIdx] > 1)
                     {
                         metaData->jagged = (metaData->dims[exportIdxIdx] != newDimVal);
                     }
