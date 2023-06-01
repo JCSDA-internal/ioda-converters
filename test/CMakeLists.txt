@@ -233,6 +233,8 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_sfcshp.yaml
     testinput/bufr_ncep_adpupa.yaml
     testinput/bufr_ncep_prepbufr_adpupa.yaml
+    testinput/prepbufr_adpsfc_api.py
+    testinput/prepbufr_sfcshp_api.py
     testinput/adpupa_prepbufr.yaml
     testinput/aircar_BUFR2ioda.yaml
     testinput/gdas.aircar.t00z.20210801.bufr
