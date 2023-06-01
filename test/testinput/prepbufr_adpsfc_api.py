@@ -4,13 +4,6 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 
 import sys
-
-sys.path.append('/work2/noaa/da/nesposito/ioda-bundle_featurequery/build/lib/')
-#Still need these until PR 1239 is merged
-#https://github.com/JCSDA-internal/ioda-converters/pull/1239
-sys.path.append('/work2/noaa/da/nesposito/ioda-bundle_featurequery/build/lib/pyiodaconv/')
-sys.path.append('/work2/noaa/da/nesposito/ioda-bundle_featurequery/build/lib/python3.9/pyioda/')
-
 import numpy as np
 import numpy.ma as ma
 import bufr
