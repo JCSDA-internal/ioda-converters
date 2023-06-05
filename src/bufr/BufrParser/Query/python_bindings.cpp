@@ -13,9 +13,12 @@
 #include "File.h"
 #include "ResultSet.h"
 
-using namespace Ingester;
-using namespace Ingester::bufr;
-    namespace py = pybind11;
+
+namespace py = pybind11;
+
+using Ingester::bufr::ResultSet;
+using Ingester::bufr::QuerySet;
+using Ingester::bufr::File;
 
     PYBIND11_MODULE(bufr, m)
     {
