@@ -79,6 +79,13 @@ namespace bufr {
             return result;
         }
 
+        /// \brief Check the availability of the field with the given name.
+        /// \param name The name of the field to check.
+        bool hasFieldNamed(const std::string& name) const
+        {
+            return fieldIndexForNodeNamed(name) != -1;
+        }
+
      private:
         std::vector<DataField> fields_;
     };
@@ -120,8 +127,11 @@ namespace bufr {
         /// name grouped by the optional groupByFieldName.
         /// \param fieldName The name of the field to get the data for.
         /// \param groupByFieldName The name of the field to group the data by.
+        /// \param type The name of the type to convert the data to. Possible values are int, uint,
+        /// int32, uint32, int64, uint64, float, double
         py::array getNumpyArray(const std::string& fieldName,
-                                const std::string& groupByFieldName = "") const;
+                                const std::string& groupByFieldName = "",
+                                const std::string& overrideType = "") const;
 
         /// \brief Gets a numpy array of datetime objects for the resulting data for a specific
         /// field with a given name grouped by the optional groupByFieldName.

@@ -49,8 +49,10 @@ using Ingester::bufr::File;
             .def("get", &ResultSet::getNumpyArray,
                         py::arg("field_name"),
                         py::arg("group_by") = std::string(""),
+                        py::arg("type") = std::string(""),
                         "Get a numpy array of the specified field name. If the group_by "
-                        "field is specified, the array is grouped by the specified field.")
+                        "field is specified, the array is grouped by the specified field."
+                        "It is also possible to specify a type to override the default type.")
             .def("get_datetime", &ResultSet::getNumpyDatetimeArray,
                         py::arg("year"),
                         py::arg("month"),
