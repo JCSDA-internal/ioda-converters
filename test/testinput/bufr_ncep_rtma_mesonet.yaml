@@ -1,0 +1,229 @@
+# (C) Copyright 2023 NOAA/NWS/NCEP/EMC
+# 
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+observations:
+  - obs space:
+      name: bufr
+
+      obsdatain: "./testinput/rtma_ru.t00z.msonet.tm00.bufr_d"
+
+      exports:
+        subsets:
+          - NC255002
+        variables:
+          # MetaData
+          timestamp:
+            datetime:
+              year: "*/YEAR"
+              month: "*/MNTH"
+              day: "*/DAYS"
+              hour: "*/HOUR"
+              minute: "*/MINU"
+          stationIdentification:
+            query: "*/RPID"
+          latitude:
+            query: "*/CLATH"
+          longitude:
+            query: "*/CLONH"
+          stationElevation:
+            query: "*/SELV"
+          height:
+            query: "*/HSMSL"
+          dataProviderRestricted:
+            query: "*/RSRD"
+          dataRestrictedExpiration:
+            query: "*/EXPRSRD"
+
+
+          # ObsValue/Pressure
+          pressure:
+            query: "*/MNPRESSQ/PRES"
+          altimeterSetting:
+            query: "*/MNALSESQ/ALSE"
+          snowWaterEquivalentRate:
+            query: "*/MNREQVSQ/REQV"
+
+          # ObsValue/Temperature
+          airTemperature:
+            query: "*/MNTMDBSQ/TMDB"
+          dewPointTemperature:
+            query: "*/MNTMDPSQ/TMDP"
+
+          # ObsValue/Wind
+          windDirection:
+            query: "*/MNWDIRSQ/WDIR"
+          windSpeed:
+            query: "*/MNWSPDSQ/WSPD"
+          maximumWindGustDirection:
+            query: "*/MNGUSTSQ/MXGD"
+          maximumWindGustSpeed:
+            query: "*/MNGUSTSQ/MXGS"
+
+          # ObsValue/Humidity
+          totalPrecipitation:
+            query: "*/TOPC"
+
+          # ObsValue/Visibility
+          horizontalVisibility:
+            query: "*/MNHOVISQ/HOVI"
+
+
+          # QualityMarker
+          pressureQM:
+            query: "*/QMPR"
+          airTemperatureQM:
+            query: "*/QMAT"
+          dewPointTemperatureQM:
+            query: "*/QMDD"
+          windSpeedQM:
+            query: "*/QMWN"
+
+
+    ioda:
+      backend: netcdf
+      obsdataout: "./testrun/rtma_ru.t00z.msonet.tm00.nc"
+
+
+      variables:
+        # MetaData
+        - name: "MetaData/dateTime"
+          coordinates: "longitude latitude"
+          source: variables/timestamp
+          longName: "Datetime"
+          units: "seconds since 1970-01-01T00:00:00Z"
+
+        - name: "MetaData/stationIdentification"
+          coordinates: "longitude latitude"
+          source: variables/stationIdentification
+          longName: "Station Identification"
+
+        - name: "MetaData/latitude"
+          coordinates: "longitude latitude"
+          source: variables/latitude
+          longName: "Latitude"
+          units: "degree_north"
+          range: [-90, 90]
+
+        - name: "MetaData/longitude"
+          coordinates: "longitude latitude"
+          source: variables/longitude
+          longName: "Longitude"
+          units: "degree_east"
+          range: [-180, 180]
+
+        - name: "MetaData/stationElevation"
+          coordinates: "longitude latitude"
+          source: variables/stationElevation
+          longName: "Elevation of Observing Location"
+          units: "m"
+
+        - name: "MetaData/height"
+          coordinates: "longitude latitude"
+          source: variables/height
+          longName: "Height Above Mean Sea Level"
+          units: "m"
+
+        - name: "MetaData/dataProviderRestricted"
+          coordinates: "longitude latitude"
+          source: variables/dataProviderRestricted
+          longName: "Restrictions On Data Redistribution"
+
+        - name: "MetaData/dataRestrictedExpiration"
+          coordinates: "longitude latitude"
+          source: variables/dataRestrictedExpiration
+          longName: "Expiration Of Restrictions On Data Redistribution"
+
+        # ObsValue/Pressure
+        - name: "ObsValue/pressure"
+          coordinates: "longitude latitude"
+          source: variables/pressure
+          longName: "Pressure"
+          units: "Pa"
+
+        - name: "ObsValue/altimeterSetting"
+          coordinates: "longitude latitude"
+          source: variables/altimeterSetting
+          longName: "Altimeter Setting"
+          units: "Pa"
+  
+        - name: "ObsValue/snowWaterEquivalentRate"
+          coordinates: "longitude latitude"
+          source: variables/snowWaterEquivalentRate
+          longName: "Snow Water Equivalent Rate"
+          units: "kg m-2 s-1"
+
+        # ObsValue/Temperature
+        - name: "ObsValue/airTemperature"
+          coordinates: "longitude latitude"
+          source: variables/airTemperature
+          longName: "Air Temperature"
+          units: "K"
+
+        - name: "ObsValue/dewPointTemperature"
+          coordinates: "longitude latitude"
+          source: variables/dewPointTemperature
+          longName: "Dewpoint Temperature"
+          units: "K"
+
+        # ObsValue/Wind
+        - name: "ObsValue/windDirection"
+          coordinates: "longitude latitude"
+          source: variables/windDirection
+          longName: "Wind Direction"
+          units: "degree"
+
+        - name: "ObsValue/windSpeed"
+          coordinates: "longitude latitude"
+          source: variables/windSpeed
+          longName: "Wind Speed"
+          units: "m s-1"
+
+        - name: "ObsValue/maximumWindGustDirection"
+          coordinates: "longitude latitude"
+          source: variables/maximumWindGustDirection
+          longName: "Maximum Wind Gust Direction"
+          units: "degree"
+
+        - name: "ObsValue/maximumWindGustSpeed"
+          coordinates: "longitude latitude"
+          source: variables/maximumWindGustSpeed
+          longName: "Maximum Wind Gust Speed"
+          units: "m s-1"
+
+        # ObsValue/Humidity
+        - name: "ObsValue/totalPrecipitation"
+          coordinates: "longitude latitude"
+          source: variables/totalPrecipitation
+          longName: "Total Precipitation"
+          units: "kg m-2"
+
+        # ObsValue/Visibility
+        - name: "ObsValue/horizontalVisibility"
+          coordinates: "longitude latitude"
+          source: variables/horizontalVisibility
+          longName: "Horizontal Visibility"
+          units: "m"
+
+        # QualityMarker
+        - name: "QualityMarker/pressure"
+          coordinates: "longitude latitude"
+          source: variables/pressureQM
+          longName: "Quality Indicator for Pressure"
+
+        - name: "QualityMarker/airTemperature"
+          coordinates: "longitude latitude"
+          source: variables/airTemperatureQM
+          longName: "Quality Indicator for Temperature"
+
+        - name: "QualityMarker/dewPointTemperature"
+          coordinates: "longitude latitude"
+          source: variables/dewPointTemperature
+          longName: "Quality Indicator for Moisture"
+
+        - name: "QualityMarker/windSpeed"
+          coordinates: "longitude latitude"
+          source: variables/windSpeedQM
+          longName: "Quality Indicator for Wind"
+

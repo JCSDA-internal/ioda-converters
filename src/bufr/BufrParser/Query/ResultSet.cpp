@@ -38,6 +38,23 @@ namespace bufr {
                        const std::string& groupByFieldName,
                        const std::string& overrideType) const
     {
+        if (dataFrames_.empty())
+        {
+            throw eckit::BadValue("This ResultSet is empty (doesn't contain any data).");
+        }
+
+        if (!dataFrames_[0].hasFieldNamed(fieldName))
+        {
+            throw eckit::BadValue("This ResultSet does not contain a field named " +
+                                  fieldName);
+        }
+
+        if (!groupByFieldName.empty() && !dataFrames_[0].hasFieldNamed(groupByFieldName))
+        {
+            throw eckit::BadValue("This ResultSet does not contain a field named " +
+                                  groupByFieldName);
+        }
+
         std::vector<double> data;
         std::vector<int> dims;
         std::vector<Query> dimPaths;
@@ -64,9 +81,10 @@ namespace bufr {
 
 #ifdef BUILD_PYTHON_BINDING
         py::array ResultSet::getNumpyArray(const std::string& fieldName,
-                                           const std::string& groupByFieldName) const
+                                           const std::string& groupByFieldName,
+                                           const std::string& overrideType) const
         {
-            auto dataObj = get(fieldName, groupByFieldName);
+            auto dataObj = get(fieldName, groupByFieldName, overrideType);
             return dataObj->getNumpyArray();
         }
 
@@ -139,11 +157,6 @@ namespace bufr {
                                  std::vector<Query>& dimPaths,
                                  TypeInfo& info) const
     {
-        if (dataFrames_.empty())
-        {
-            throw eckit::BadValue("This ResultSet is empty (doesn't contain any data).");
-        }
-
         // Find the dims based on the largest sequence counts in the fields
         // Compute Dims
         std::vector<int> dimsList;
@@ -555,11 +568,11 @@ namespace bufr {
         {
             object = std::make_shared<DataObject<int32_t>>();
         }
-        else if (overrideType == "float")
+        else if (overrideType == "float" || overrideType == "float32")
         {
             object = std::make_shared<DataObject<float>>();
         }
-        else if (overrideType == "double")
+        else if (overrideType == "double" || overrideType == "float64")
         {
             object = std::make_shared<DataObject<double>>();
         }
@@ -570,6 +583,14 @@ namespace bufr {
         else if (overrideType == "int64")
         {
             object = std::make_shared<DataObject<int64_t>>();
+        }
+        else if (overrideType == "uint64")
+        {
+            object = std::make_shared<DataObject<uint64_t>>();
+        }
+        else if (overrideType == "uint32" || overrideType == "uint")
+        {
+            object = std::make_shared<DataObject<uint32_t>>();
         }
         else
         {

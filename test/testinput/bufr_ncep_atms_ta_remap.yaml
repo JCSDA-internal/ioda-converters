@@ -1,4 +1,4 @@
-# (C) Copyright 2021 NOAA/NWS/NCEP/EMC
+# (C) Copyright 2022 NOAA/NWS/NCEP/EMC
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -6,7 +6,7 @@
 observations:
   - obs space:
       name: bufr
-      obsdatain: "./testinput/gdas.t12z.esamua.tm00.bufr_d"
+      obsdatain: "./testinput/gdas.t00z.atms.tm00.bufr_d"
 
       exports:
         variables:
@@ -18,6 +18,7 @@ observations:
               day: "*/DAYS"
               hour: "*/HOUR"
               minute: "*/MINU"
+              second: "*/SECO"
 
           latitude:
             query: "*/CLATH"
@@ -28,20 +29,17 @@ observations:
           satelliteIdentifier:
             query: "*/SAID"
 
-          satelliteAntennaCorrectionsVersionNumber:
-            query: "*/SACV"
+          satelliteInstrument:
+            query: "*/SIID"
 
-          orbitNumber:
-            query: "*/ORBN"
-
-          scanLineNumber:
-            query: "*/SLNM"
-
+          # The type should be integer.  
+          # However, UFO/CRTM requred this variable to be float
           fieldOfViewNumber:
             query: "*/FOVN"
+            type: float
 
           heightOfStation:
-            query: "*/SELV"
+            query: "*/HMSL"
 
           solarZenithAngle:
             query: "*/SOZA"
@@ -58,53 +56,61 @@ observations:
           sensorScanAngle:
             sensorScanAngle:
               fieldOfViewNumber: "*/FOVN"
-              heightOfStation: "*/HMSL"
-              scanStart: -48.333
-              scanStep: 3.333
+              scanStart: -52.725
+              scanStep: 1.110 
 
           sensorChannelNumber:
-            query: "*/ATCHV/INCN" 
+            query: "*/ATMSCH/CHNM"
 
-          # ObsValue 
-          brightnessTemperature:
-            query: "*/ATCHV/TMBRST"
-
+          # ObsValue
+          # Remapped Brightness Temperature (TMBR)
+          # Remapped Antenna Temperature (TMANT)
+          remappedBT:
+            remappedBrightnessTemperature:
+              fieldOfViewNumber: "*/FOVN"
+              sensorChannelNumber: "*/ATMSCH/CHNM"
+              brightnessTemperature: "*/ATMSCH/TMANT"
+              obsTime:
+                year: "*/YEAR"
+                month: "*/MNTH"
+                day: "*/DAYS"
+                hour: "*/HOUR"
+                minute: "*/MINU"
+                second: "*/SECO"
+ 
         splits:
           satId:
             category:
               variable: satelliteIdentifier
               map:
-                _3: metop-b
-                _4: metop-a
-                _5: metop-c
-#               _206: n15
-                _209: n18
-                _223: n19
+                _224: npp 
+                _225: n20 
+                _226: n21 
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/gdas.t12z.esamua_{splits/satId}.tm00.nc"
+      obsdataout: "./testrun/gdas.t00z.atms_{splits/satId}_ta_remap.tm00.nc"
 
       dimensions:
-        - name: Channel 
-          source: variables/sensorChannelNumber
-          path: "*/ATCHV"
+        - name: Channel
+          source: variables/sensorChannelNumber  
+          path: "*/ATMSCH"
 
       globals:
         - name: "platformCommonName"
           type: string
-          value: "AMSUA"
+          value: "ATMS"
 
         - name: "platformLongDescription"
           type: string
-          value: "MTYP 021-033 RARS(EARS,AP,SA) AMSU-A 1C Tb DATA)"
+          value: "MTYP 021-203 ATMS ATENNA/BRIGHTNESS TEMPERATURE DATA"
 
       variables:
         # MetaData
         - name: "MetaData/dateTime"
           source: variables/timestamp
           longName: "Datetime"
-          units: "seconds since 1970-01-01T00:00:00Z"
+          units: "seconds since 1970-01-01T00:00:00Z" 
 
         - name: "MetaData/latitude"
           source: variables/latitude
@@ -116,27 +122,23 @@ observations:
           source: variables/longitude
           longName: "Longitude"
           units: "degree_east"
-          range: [-180, 180]
 
         - name: "MetaData/satelliteIdentifier"
           source: variables/satelliteIdentifier
           longName: "Satellite Identifier"
 
-        - name: "MetaData/satelliteAntennaCorrectionsVersionNumber"
-          source: variables/satelliteAntennaCorrectionsVersionNumber
-          longName: "Satellite Antenna Corrections Version Number"
+        - name: "MetaData/satelliteInstrument"
+          source: variables/satelliteInstrument
+          longName: "Satellite Instrument"
 
-        - name: "MetaData/fieldOfViewNumber"
+        - name: "MetaData/sensorScanPosition"
           source: variables/fieldOfViewNumber
-          longName: "Field Of View Number"
+          longName: "Field of View Number"
 
-        - name: "MetaData/orbitNumber"
-          source: variables/orbitNumber
-          longName: "Orbit Number"
-
-        - name: "MetaData/scanLineNumber"
-          source: variables/scanLineNumber
-          longName: "Scan Line Number"
+        - name: "MetaData/sensorViewAngle"
+          source: variables/sensorScanAngle
+          longName: "Sensor View Angle"
+          units: "degree"
 
         - name: "MetaData/heightOfStation"
           source: variables/heightOfStation
@@ -167,21 +169,15 @@ observations:
           units: "degree"
           range: [0, 360]
 
-        - name: "MetaData/sensorViewAngle"
-          source: variables/sensorScanAngle
-          longName: "Sensor View Angle"
-          units: "degree"
-
         - name: "MetaData/sensorChannelNumber"
           source: variables/sensorChannelNumber
           longName: "Sensor Channel Number"
 
-        # ObsValue 
+        # ObsValue
+        # Remapped Antenna Temperature (Ta)
+        # For now, Ta is stored as brightnessTemperature 
         - name: "ObsValue/brightnessTemperature"
-          coordinates: "longitude latitude Channel"
-          source: variables/brightnessTemperature
-          longName: "Brightness Temperature"
+          source: variables/remappedBT
+          longName: "3-by-3 Averaged Antenna Temperature"
           units: "K"
-          range: [100, 500]
-          chunks: [1000, 15]
-          compressionLevel: 4
+          chunks: [10000, 22]
