@@ -15,6 +15,11 @@
 
 #ifdef BUILD_PYTHON_BINDING
     #include <time.h>
+    #include <pybind11/pybind11.h>
+    #include <pybind11/numpy.h>
+    #include <pybind11/stl.h>
+
+    namespace py = pybind11;
 #endif
 
 #include "Constants.h"
@@ -105,12 +110,12 @@ namespace bufr {
 
             if (!minute.empty())
             {
-                std::shared_ptr<DataObjectBase> minuteObj = get(minute, groupBy);
+                minuteObj = get(minute, groupBy);
             }
 
             if (!second.empty())
             {
-                std::shared_ptr<DataObjectBase> secondObj = get(second, groupBy);
+                secondObj = get(second, groupBy);
             }
 
             // make strides array
@@ -138,7 +143,27 @@ namespace bufr {
                 arrayPtr[i] = static_cast<int64_t>(timegm(&time));
             }
 
-            return array;
+            // Create the mask array
+            py::object numpyModule = py::module::import("numpy");
+
+            // Create the mask array
+            py::array_t<bool> mask(yearObj->getDims());
+            bool* maskPtr = static_cast<bool*>(mask.mutable_data());
+            for (size_t idx = 0; idx < yearObj->size(); idx++)
+            {
+                maskPtr[idx] = yearObj->isMissing(idx) |
+                               monthObj->isMissing(idx) |
+                               dayObj->isMissing(idx) |
+                               hourObj->isMissing(idx) |
+                               (minuteObj ? minuteObj->isMissing(idx) : false) |
+                               (secondObj ? secondObj->isMissing(idx) : false);
+            }
+
+            // Create a masked array from the data and mask arrays
+            py::array maskedArray = numpyModule.attr("ma").attr("masked_array")(array, mask);
+            numpyModule.attr("ma").attr("set_fill_value")(maskedArray, 0);
+
+            return maskedArray;
         }
 #endif
 

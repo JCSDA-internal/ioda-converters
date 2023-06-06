@@ -38,7 +38,8 @@ def test_basic_query():
     assert len(rad_all.shape) == 2
 
     datetimes = r.get_datetime('year', 'month', 'day', 'hour', 'minute', 'second')
-    assert datetimes[5] == np.datetime64('2020-10-26T21:00:00')
+    assert datetimes[5] == np.datetime64('2020-10-26T21:00:01')
+    assert datetimes.fill_value == np.datetime64('1970-01-01T00:00:00')
 
 
 def test_string_field():
