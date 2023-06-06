@@ -60,6 +60,31 @@ def test_string_field():
     assert (np.all(borg[0][0:3] == ['KWBC', 'KWBC', 'KAWN']))
 
 
+def test_type_override():
+    DATA_PATH = './testinput/gdas.t00z.1bhrs4.tm00.bufr_d'
+
+    # Make the QuerySet for all the data we want
+    q = bufr.QuerySet()
+    q.add('day', '*/DAYS')
+    q.add('longitude', '*/CLAT')
+
+    # Open the BUFR file and execute the QuerySet
+    with bufr.File(DATA_PATH) as f:
+        r = f.execute(q)
+
+    day = r.get('day')
+    day_float = r.get('day', type='float')
+
+    assert day.dtype == 'int32'
+    assert day_float.dtype == 'float32'
+
+    lat = r.get('longitude')
+    lat_int = r.get('longitude', type='int')
+
+    assert lat.dtype == 'float32'
+    assert lat_int.dtype == 'int32'
+    assert lat_int.fill_value == 2147483647  # the max int32 value
+
 def test_invalid_query():
     q = bufr.QuerySet()
 
@@ -71,7 +96,9 @@ def test_invalid_query():
     assert False, "Didn't throw exception for invalid query."
 
 
+
 if __name__ == '__main__':
     test_basic_query()
     test_string_field()
+    test_type_override()
     test_invalid_query()
