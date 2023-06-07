@@ -18,7 +18,7 @@ import calendar
 import time
 
 DATA_PATH = '../testinput/gdas.t12z.sfcshp.tm00.prepbufr'
-OUTPUT_PATH = '../testoutput/prepbufr_sfcshp_api.nc'
+OUTPUT_PATH = '../testrun/prepbufr_sfcshp_api.nc'
 
 def test_bufr_to_ioda():
    # Make the QuerySet for all the data we want
