@@ -17,8 +17,8 @@ from multiprocessing import Pool
 import os
 from pathlib import Path
 
-import lib_python.ioda_conv_engines as iconv
-from lib_python.orddicts import DefaultOrderedDict
+import pyiodaconv.ioda_conv_engines as iconv
+from pyiodaconv.orddicts import DefaultOrderedDict
 
 os.environ["TZ"] = "UTC"
 # The setting of basetime is temporary as it will get modified in the data reading routine.

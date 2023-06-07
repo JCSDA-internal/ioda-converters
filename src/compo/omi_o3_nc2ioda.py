@@ -15,8 +15,8 @@ import numpy as np
 from datetime import datetime, timedelta
 from collections import defaultdict, OrderedDict
 
-from lib_python.orddicts import DefaultOrderedDict
-import lib_python.ioda_conv_engines as iconv
+from pyiodaconv.orddicts import DefaultOrderedDict
+import pyiodaconv.ioda_conv_engines as iconv
 
 # Global Dictionaries.
 

@@ -18,8 +18,8 @@ import netCDF4 as nc
 import numpy as np
 from datetime import datetime
 
-import lib_python.ioda_conv_ncio as iconv
-from lib_python.orddicts import DefaultOrderedDict
+import pyiodaconv.ioda_conv_ncio as iconv
+from pyiodaconv.orddicts import DefaultOrderedDict
 
 os.environ["TZ"] = "UTC"
 

@@ -15,7 +15,7 @@ from pathlib import Path
 import numpy as np
 import netCDF4 as nc
 
-import lib_python.ioda_conv_ncio as iconio
+import pyiodaconv.ioda_conv_ncio as iconio
 
 
 class Giirs2Ioda:
