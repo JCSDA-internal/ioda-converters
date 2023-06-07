@@ -4,6 +4,12 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 
 import sys
+sys.path.append('/work2/noaa/da/nesposito/ioda-bundle_featurequery/build/lib/')
+#Still need these until PR 1239 is merged
+#https://github.com/JCSDA-internal/ioda-converters/pull/1239
+sys.path.append('/work2/noaa/da/nesposito/ioda-bundle_featurequery/build/lib/pyiodaconv/')
+sys.path.append('/work2/noaa/da/nesposito/ioda-bundle_featurequery/build/lib/python3.9/pyioda/')
+
 import numpy as np
 import numpy.ma as ma
 import bufr
@@ -12,7 +18,7 @@ import calendar
 import time
 
 DATA_PATH = '../testinput/gdas.t12z.sfcshp.tm00.prepbufr'
-OUTPUT_PATH = '../testrun/prepbufr_sfcshp_api.nc'
+OUTPUT_PATH = '../testoutput/prepbufr_sfcshp_api.nc'
 
 def test_bufr_to_ioda():
    # Make the QuerySet for all the data we want
@@ -31,6 +37,7 @@ def test_bufr_to_ioda():
    q.add('windNorthward', '*/W___INFO/W__EVENT{1}/VOB')
    q.add('windEastward', '*/W___INFO/W__EVENT{1}/UOB')
    q.add('specificHumidity', '*/Q___INFO/Q__EVENT{1}/QOB')
+   q.add('seaSurfaceTemperature', '*/SST_INFO/SSTEVENT{1}/SST1')
 #QualityMark
    q.add('stationPressureQM', '*/P___INFO/P__EVENT{1}/PQM')
    q.add('airTemperatureQM', '*/T___INFO/T__EVENT{1}/TQM') 
@@ -38,7 +45,8 @@ def test_bufr_to_ioda():
    q.add('specificHumidityQM', '*/Q___INFO/Q__EVENT{1}/QQM')
    q.add('windNorthwardQM', '*/W___INFO/W__EVENT{1}/WQM')
    q.add('windEastwardQM', '*/W___INFO/W__EVENT{1}/WQM')
-   
+   q.add('seaSurfaceTemperatureQM', '*/SST_INFO/SSTEVENT{1}/SSTQM')
+
    # Open the BUFR file and execute the QuerySet
    with bufr.File(DATA_PATH) as f:
       print("execute")
@@ -73,6 +81,7 @@ def test_bufr_to_ioda():
    print("humidity")
    qob = r.get('specificHumidity', type='float')
    qob *= 0.000001
+   sst1 = r.get('seaSurfaceTemperature')
 
 #Quality Marker group
    tobqm = r.get('airTemperatureQM')
@@ -81,6 +90,7 @@ def test_bufr_to_ioda():
    qobqm = r.get('specificHumidityQM')
    uobqm = r.get('windEastwardQM')
    vobqm = r.get('windNorthwardQM')
+   sstqm = r.get('seaSurfaceTemperatureQM')
 
    # Write the data to an IODA file
    g = ioda.Engines.HH.createFile(name=OUTPUT_PATH,
@@ -158,6 +168,10 @@ def test_bufr_to_ioda():
    specifichumidity.atts.create('units', ioda.Types.str).writeVector.str(['kg kg-1'])
    specifichumidity.atts.create('long_name', ioda.Types.str).writeVector.str(['Specific Humidity'])   
 
+   seasurfacetemperature = g.vars.create('ObsValue/seaSurfaceTemperature', ioda.Types.float, scales=[dim_location],params=pfloat)
+   seasurfacetemperature.atts.create('units', ioda.Types.str).writeVector.str(['K'])
+   seasurfacetemperature.atts.create('long_name', ioda.Types.str).writeVector.str(['Sea Surface Temperature'])
+
    print("Create Quality Marker group")
    airtemperatureqm = g.vars.create('QualityMarker/airTemperature', ioda.Types.int, scales=[dim_location], params=pint)
    airtemperatureqm.atts.create('units', ioda.Types.str).writeVector.str(['1'])
@@ -183,6 +197,9 @@ def test_bufr_to_ioda():
    windeastwardqm.atts.create('units', ioda.Types.str).writeVector.str(['1'])
    windeastwardqm.atts.create('long_name', ioda.Types.str).writeVector.str(['Eastward Wind Quality Marker'])
 
+   seasurfacetemperatureqm = g.vars.create('QualityMarker/seaSurfaceTemperature', ioda.Types.int, scales=[dim_location],params=pint)
+   seasurfacetemperatureqm.atts.create('units', ioda.Types.str).writeVector.str(['1'])
+   seasurfacetemperatureqm.atts.create('long_name', ioda.Types.str).writeVector.str(['Sea Surface Temperature Quality Marker'])
 
    # Write the data to the variables
    print("Write data to variables")
@@ -199,6 +216,7 @@ def test_bufr_to_ioda():
    windnorthward.writeNPArray.float(vob.flatten())
    windeastward.writeNPArray.float(uob.flatten())
    specifichumidity.writeNPArray.float(qob.flatten())
+   seasurfacetemperature.writeNPArray.float(sst1.flatten())
 
    airtemperatureqm.writeNPArray.int(tobqm.flatten())
    virtualtemperatureqm.writeNPArray.int(tvoqm.flatten())
@@ -206,6 +224,7 @@ def test_bufr_to_ioda():
    specifichumidityqm.writeNPArray.int(qobqm.flatten())
    windeastwardqm.writeNPArray.int(uobqm.flatten())
    windnorthwardqm.writeNPArray.int(vobqm.flatten())
+   seasurfacetemperatureqm.writeNPArray.int(sstqm.flatten())
 
    print("end")
 
