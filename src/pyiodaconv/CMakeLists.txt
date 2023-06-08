@@ -17,7 +17,7 @@ list( APPEND programs
 set_targets_deps( "${libs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
                    ${PYIODACONV_BUILD_LIBDIR}
-                   lib_python_scripts_deps)
+                   pyiodaconv_scripts_deps)
 
 # Create a target representing this "library", add it to the default "all" target
 # and set its dependency to the ioda python module.
@@ -40,7 +40,7 @@ conf_targets_deps( "${programs}"
 
 install( PROGRAMS ${install_bin_python_scripts_deps} DESTINATION ${CMAKE_INSTALL_BINDIR} )
 
-install( FILES ${lib_python_scripts_deps} DESTINATION $(PYIOODACONV_INSTALL_LIBDIR) )
+install( FILES ${pyiodaconv_scripts_deps} DESTINATION $(PYIOODACONV_INSTALL_LIBDIR) )
 
 ecbuild_add_test( TARGET  ${PROJECT_NAME}_lib-python_coding_norms
                   TYPE    SCRIPT

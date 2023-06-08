@@ -18,8 +18,8 @@ import os
 from itertools import repeat
 import netCDF4 as nc
 
-import lib_python.ioda_conv_engines as iconv
-from lib_python.orddicts import DefaultOrderedDict
+import pyiodaconv.ioda_conv_engines as iconv
+from pyiodaconv.orddicts import DefaultOrderedDict
 
 from eccodes import *
 

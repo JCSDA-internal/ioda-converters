@@ -15,8 +15,8 @@ import h5py
 import numpy as np
 
 from apply_BG.apply_BG import apply_BG_class
-import lib_python.ioda_conv_engines as iconv
-from lib_python.orddicts import DefaultOrderedDict
+import pyiodaconv.ioda_conv_engines as iconv
+from pyiodaconv.orddicts import DefaultOrderedDict
 
 # globals
 SNPP_WMO_sat_ID = 224
