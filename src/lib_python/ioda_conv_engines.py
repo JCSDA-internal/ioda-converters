@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import datetime as dt
-from pyioda import ioda_obs_space as ioda_os
+# from pyioda import ioda_obs_space as ioda_os
+import ioda_obs_space as ioda_os
 import numpy as np
 from collections import OrderedDict
 
