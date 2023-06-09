@@ -62,14 +62,14 @@ else()
     set( iodaconv_pygrib_ENABLED False)
 endif()
 
-find_package( eccodes REQUIRED QUIET )
+find_package( eccodes QUIET)
 
 if ( eccodes_FOUND )
         message(STATUS "eccodes found")
         set( iodaconv_eccodes_ENABLED True)
 endif()
 
-find_package( cartopy REQUIRED QUIET )
+find_package( cartopy QUIET )
 
 if ( cartopy_FOUND )
         message(STATUS "cartopy found")
