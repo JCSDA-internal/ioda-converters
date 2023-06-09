@@ -15,6 +15,11 @@
 
 #ifdef BUILD_PYTHON_BINDING
     #include <time.h>
+    #include <pybind11/pybind11.h>
+    #include <pybind11/numpy.h>
+    #include <pybind11/stl.h>
+
+    namespace py = pybind11;
 #endif
 
 #include "Constants.h"
@@ -81,9 +86,10 @@ namespace bufr {
 
 #ifdef BUILD_PYTHON_BINDING
         py::array ResultSet::getNumpyArray(const std::string& fieldName,
-                                           const std::string& groupByFieldName) const
+                                           const std::string& groupByFieldName,
+                                           const std::string& overrideType) const
         {
-            auto dataObj = get(fieldName, groupByFieldName);
+            auto dataObj = get(fieldName, groupByFieldName, overrideType);
             return dataObj->getNumpyArray();
         }
 
@@ -105,12 +111,12 @@ namespace bufr {
 
             if (!minute.empty())
             {
-                std::shared_ptr<DataObjectBase> minuteObj = get(minute, groupBy);
+                minuteObj = get(minute, groupBy);
             }
 
             if (!second.empty())
             {
-                std::shared_ptr<DataObjectBase> secondObj = get(second, groupBy);
+                secondObj = get(second, groupBy);
             }
 
             // make strides array
@@ -138,7 +144,27 @@ namespace bufr {
                 arrayPtr[i] = static_cast<int64_t>(timegm(&time));
             }
 
-            return array;
+            // Create the mask array
+            py::object numpyModule = py::module::import("numpy");
+
+            // Create the mask array
+            py::array_t<bool> mask(yearObj->getDims());
+            bool* maskPtr = static_cast<bool*>(mask.mutable_data());
+            for (size_t idx = 0; idx < yearObj->size(); idx++)
+            {
+                maskPtr[idx] = yearObj->isMissing(idx) |
+                               monthObj->isMissing(idx) |
+                               dayObj->isMissing(idx) |
+                               hourObj->isMissing(idx) |
+                               (minuteObj ? minuteObj->isMissing(idx) : false) |
+                               (secondObj ? secondObj->isMissing(idx) : false);
+            }
+
+            // Create a masked array from the data and mask arrays
+            py::array maskedArray = numpyModule.attr("ma").attr("masked_array")(array, mask);
+            numpyModule.attr("ma").attr("set_fill_value")(maskedArray, 0);
+
+            return maskedArray;
         }
 #endif
 
@@ -567,11 +593,11 @@ namespace bufr {
         {
             object = std::make_shared<DataObject<int32_t>>();
         }
-        else if (overrideType == "float")
+        else if (overrideType == "float" || overrideType == "float32")
         {
             object = std::make_shared<DataObject<float>>();
         }
-        else if (overrideType == "double")
+        else if (overrideType == "double" || overrideType == "float64")
         {
             object = std::make_shared<DataObject<double>>();
         }
@@ -582,6 +608,14 @@ namespace bufr {
         else if (overrideType == "int64")
         {
             object = std::make_shared<DataObject<int64_t>>();
+        }
+        else if (overrideType == "uint64")
+        {
+            object = std::make_shared<DataObject<uint64_t>>();
+        }
+        else if (overrideType == "uint32" || overrideType == "uint")
+        {
+            object = std::make_shared<DataObject<uint32_t>>();
         }
         else
         {
