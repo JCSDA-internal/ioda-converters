@@ -13,7 +13,7 @@ Python code to ingest hdf5 AMSR/2 data
 """
 
 import argparse
-from datetime import datetime
+from datetime import datetime, timedelta
 import os.path
 import sys
 
@@ -142,24 +142,30 @@ def get_data(f, obs_data):
     # WMO_sat_ID = get_WMO_satellite_ID(f.attrs['ShortName'].decode("utf-8"))
     sensor = f.attrs['SensorShortName'].item()
     WMO_sat_ID = get_wmo_id(f.attrs['PlatformShortName'].item())
-    nscans = np.shape(f['Latitude of Observation Point for 89A'])[0]
-    nbeam_pos = np.shape(f['Latitude of Observation Point for 89A'])[1]
+    nscans = np.shape(f['Latitude of Observation Point for 89A'][:,::2])[0]
+    nbeam_pos = np.shape(f['Latitude of Observation Point for 89A'][:,::2])[1]
     nchans = 14
     # beam position or sampling across scan 243 for lower frequencies 486 for 89GHz
-    obs_data[('latitude', metaDataName)] = np.array(f['Latitude of Observation Point for 89A'], dtype='float32').flatten()
-    obs_data[('longitude', metaDataName)] = np.array(f['Longitude of Observation Point for 89A'], dtype='float32').flatten()
+    obs_data[('latitude', metaDataName)] = np.array(f['Latitude of Observation Point for 89A'][:,::2], dtype='float32').flatten()
+    obs_data[('longitude', metaDataName)] = np.array(f['Longitude of Observation Point for 89A'][:,::2], dtype='float32').flatten()
     # start at channel 5 as lowest frequencies are not included
     obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(nchans), dtype='int32')
     k = 'sensorScanPosition'
     obs_data[(k, metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='float32')+1, (nscans, 1)).flatten()
     k = 'sensorZenithAngle'   # ~55.2 incidence angle
-    obs_data[(k, metaDataName)] = np.array(f['S2']['incidenceAngle'], dtype='float32').flatten()
+    obs_data[(k, metaDataName)] = np.array(f['Earth Incidence'], dtype='float32').flatten()
     instr_scan_ang = obs_data[(k, metaDataName)]
+    k = 'sensorAzimuthAngle'
+    obs_data[(k, metaDataName)] = np.array(f['Earth Azimuth'], dtype='float32').flatten()
+    # k = 'solarZenithAngle'  ??? compute
+    # obs_data[(k, metaDataName)] = np.array(f['Sun Elevation'], dtype='float32').flatten()
+    k = 'solarAzimuthAngle'
+    obs_data[(k, metaDataName)] = np.array(f['Sun Azimuth'], dtype='float32').flatten()
     # compute view angle
     sat_altitude = np.empty_like(instr_scan_ang)
-    sat_altitude[:] = f.attrs['SatelliteAltitude'].item()
+    sat_altitude[:] = f.attrs['SatelliteAltitude'].item().strip('km')
     orbit_direction = f.attrs['OrbitDirection'].item()
-    iasc = get_asc_dsc(f.filename)
+    iasc = get_asc_dsc(orbit_direction)
     obs_data[('sensorViewAngle', metaDataName)] = compute_scan_angle(
         instr_scan_ang,
         sat_altitude,
@@ -167,9 +173,7 @@ def get_data(f, obs_data):
 
     nlocs = len(obs_data[('latitude', metaDataName)])
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
-    obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f), dtype='int64')
-    # obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f.attrs['ObservationStartDateTime'].item()), dtype='int64')
-
+    obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f, nbeam_pos), dtype='int64')
 
     nlocs = len(obs_data[('latitude', metaDataName)])
     k = 'brightnessTemperature'
@@ -187,8 +191,8 @@ def get_data(f, obs_data):
                                    np.array(f['Brightness Temperature (23.8GHz,V)'], dtype='float32').flatten(),
                                    np.array(f['Brightness Temperature (36.5GHz,H)'], dtype='float32').flatten(),
                                    np.array(f['Brightness Temperature (36.5GHz,V)'], dtype='float32').flatten(),
-                                   np.array(f['Brightness Temperature (89.0GHz-A,H)'], dtype='float32').flatten(),
-                                   np.array(f['Brightness Temperature (89.0GHz-A,V)'], dtype='float32').flatten() ))
+                                   np.array(f['Brightness Temperature (89.0GHz-A,H)'][:,::2], dtype='float32').flatten(),
+                                   np.array(f['Brightness Temperature (89.0GHz-A,V)'][:,::2], dtype='float32').flatten() ))
     obs_data[(k, "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
     obs_data[(k, "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
 
@@ -201,44 +205,24 @@ def get_data(f, obs_data):
     obs_data[('longitude', metaDataName)][chk_geolocation] = float_missing_value
     obs_data[('sensorZenithAngle', metaDataName)][chk_geolocation] = float_missing_value
 
-    obs_key = (k, "ObsValue")
-    obs_data = set_missing_value(f, obs_key, obs_data)
+    obs_key = ("brightnessTemperature", "ObsValue")
+    # need to reformulate
+    # obs_data = set_missing_value(f, obs_key, obs_data)
 
     return obs_data
 
 
 def set_missing_value(f, obs_key, obs_data):
 
-    # 0 Good
-    # 1 Warning – Possible sun glint, 0 <= sunGlintAngle < 20 degrees.
-    # 2 Warning – Possible radio frequency interference.
-    # 3 Warning – Degraded geolocation data.
-    # 4 Warning – Data corrected for warm load intrusion.
-    # -1 Error – Data are missing from file or are unreadable.
-    # -2 Error – Invalid Tb or nonphysical brightness temperature (Tb < 40K or Tb > 350K).
-    # -3 Error – Error in geolocation data.
-    # -4 Error – Data are missing in one channel.
-    # -5 Error – Data are missing in multiple channels.
-    # -6 Error – Latitude/longitude values are out of range.
-    # -7 Error – Non-normal status modes.
+    # <HDF5 dataset "Scan Data Quality": shape (2035, 512), type "|u1">
+    # f['Scan Data Quality'][0,:]
 
     # use quality word to set missing values
-    chk_ob = np.array(f['S1']['Quality']).flatten() != 0
-    obs_data[obs_key][:, 0][chk_ob] = float_missing_value
-    obs_data[obs_key][:, 1][chk_ob] = float_missing_value
-    chk_ob = np.array(f['S2']['Quality']).flatten() != 0
-    obs_data[obs_key][:, 2][chk_ob] = float_missing_value
-    obs_data[obs_key][:, 3][chk_ob] = float_missing_value
-    chk_ob = np.array(f['S3']['Quality']).flatten() != 0
-    obs_data[obs_key][:, 4][chk_ob] = float_missing_value
-    obs_data[obs_key][:, 5][chk_ob] = float_missing_value
-    chk_ob = np.array(f['S4']['Quality']).flatten() != 0
-    obs_data[obs_key][:, 6][chk_ob] = float_missing_value
-    obs_data[obs_key][:, 7][chk_ob] = float_missing_value
-    chk_ob = np.array(f['S5']['Quality'][:,1::2]).flatten() != 0
-    obs_data[obs_key][:, 8][chk_ob] = float_missing_value
-    obs_data[obs_key][:, 9][chk_ob] = float_missing_value
+    chk_ob = np.array(f['Scan Data Quality']).flatten()
+    for ich in nchan:
+        obs_data[obs_key][:, ich][chk_ob] = float_missing_value
 
+    # now reduce size if channels are flagged
     tb_key = 'brightnessTemperature'
     good = (obs_data[(tb_key, obsValName)][:, 0] != float_missing_value) & \
         (obs_data[(tb_key, obsValName)][:, 2] != float_missing_value) & \
@@ -254,24 +238,20 @@ def set_missing_value(f, obs_key, obs_data):
     return obs_data
 
 
-def get_asc_dsc(filename)
-    # get ascending/descending ugh
+def get_asc_dsc(orbitDirection):
     # from JAXA gportal files formatted like so
-    # GW1AM2_202202160040_188D_L1SGBTBR_2220220.h5
+    # f.attrs['OrbitDirection'].item()
     try:
-        satSensor, dtg, orbit, prod, _ = os.path.split(f.filename)[-1].split('_')
-    except:
-        print(f' ... WARNING ... can not determine ascending or descending from filename')
-        iasc = None
-
-    try:
-        if orbit[-1:] == 'A':
+        if orbitDirection == 'Ascending':
             iasc = 1
-        elif orbit[-1:] == 'D':
+        elif orbitDirection == 'Descending':
             iasc = 0
         else:
-            print(f' ... WARNING ... can not determine ascending or descending from filename')
+            print(f' ... WARNING ... can not determine ascending or descending from file attribute')
             iasc = None
+    except:
+        print(f' ... WARNING ... can not determine ascending or descending')
+        iasc = None
 
 
 def get_wmo_id(platform):
@@ -283,32 +263,20 @@ def get_wmo_id(platform):
     return WMO_sat_ID
 
 
-def get_epoch_time(f):
+def get_epoch_time(f, nbeam_pos):
 
     # k: ObservationStartDateTime item: 2022-02-16T00:40:51.967Z
     # isoformat            '2015-02-04T20:55:08.914461+00:00'
-    dtgObj = datetime.datetime.fromisoformat(f.attrs['ObservationStartDateTime'].item()[:-1])
-    nbeam_pos = np.shape(f['S1']['Latitude'])[1]
-    year = dtgObj.year
-    month = dtgObj.month
-    day = dtgObj.day
-    hour = dtgObj.hour
-    minute = dtgObj.minute
-    second = dtgObj.second
+    # dtgObj = datetime.datetime.fromisoformat(f.attrs['ObservationStartDateTime'].item()[:-1])
 
-    # following examples here could be written better potentially
-    iterables = [year, month, day, hour, minute, second]
-    # ensure the year is plausible (65535 appears in some data) if not set to 01Jan1900 (revisit)
-    this_datetime = [datetime(adate[0], adate[1], adate[2], adate[3], adate[4], adate[5])
-                     if adate[0] < 2200 else datetime(2200, 1, 1, 0, 0, 0)
-                     for adate in zip(*iterables)]
-
-    time_offset_short = [round((adatetime - epoch).total_seconds()) for adatetime in this_datetime]
+    # why 1993 JAXA
+    base_date = datetime(1993, 1, 1)
+    time_offset_short = [base_date + timedelta(seconds=isec) for isec in f['Scan Time']]
     time_offset = []
     for adate in time_offset_short:
         # need to add replication by nbeam_pos
         for _ in range(nbeam_pos):
-            time_offset.append(adate)
+            time_offset.append(adate.timestamp())
 
     return time_offset
 
