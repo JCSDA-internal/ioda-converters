@@ -66,7 +66,7 @@ find_package( eccodes QUIET)
 
 if ( eccodes_FOUND )
         message(STATUS "Found: eccodes")
-        set( iodaconv_eccodes_ENABLED True)
+        set(iodaconv_eccodes_ENABLED True)
 endif()
 
 find_package( cartopy QUIET )
