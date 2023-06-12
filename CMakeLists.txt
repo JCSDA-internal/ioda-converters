@@ -73,7 +73,7 @@ find_package( cartopy QUIET )
 
 if ( cartopy_FOUND )
         message(STATUS "cartopy found")
-        set( iodaconv_cartopy_ENABLED True)
+        set(iodaconv_cartopy_ENABLED True)
 endif()
 
 find_package( gsl-lite HINTS $ENV{gsl_lite_DIR} )
