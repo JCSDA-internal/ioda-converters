@@ -72,7 +72,7 @@ endif()
 find_package( cartopy QUIET )
 
 if ( cartopy_FOUND )
-        message(STATUS "cartopy found")
+        message(STATUS "Found: cartopy")
         set(iodaconv_cartopy_ENABLED True)
 endif()
 
