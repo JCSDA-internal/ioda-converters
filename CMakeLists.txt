@@ -37,7 +37,7 @@ set(PYDIR ${pyver}/pyiodaconv)
 
 # Location of installed python iodaconv libraries
 set( PYIODACONV_BUILD_LIBDIR   ${CMAKE_BINARY_DIR}/lib/${PYDIR} )
-set( PYIODACONV_INSTALL_LIBDIR ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/lib/${PYDIR} )
+set( PYIODACONV_INSTALL_LIBDIR ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/${PYDIR} )
 
 ## Dependencies
 
