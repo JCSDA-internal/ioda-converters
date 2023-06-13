@@ -6,8 +6,10 @@
 import sys
 import numpy as np
 import numpy.ma as ma
-import bufr
-import ioda
+import pyiodaconv.ioda_conv_engines as iconv
+import pyiodaconv.ioda_conv_ncio as iconio
+#import bufr
+#import ioda
 import calendar
 import time
 

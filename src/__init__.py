@@ -5,7 +5,7 @@ from .goes import *
 from .gsi_ncdiag import *
 from .hdf5 import *
 from .land import *
-from .lib_python import *
+from .pyiodaconv import *
 from .marine import *
 from .ncep import *
 from .orig import *
