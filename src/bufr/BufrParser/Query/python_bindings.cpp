@@ -13,12 +13,9 @@
 #include "File.h"
 #include "ResultSet.h"
 
-
-namespace py = pybind11;
-
-using Ingester::bufr::ResultSet;
-using Ingester::bufr::QuerySet;
-using Ingester::bufr::File;
+namespace Ingester {
+namespace bufr {
+    namespace py = pybind11;
 
     PYBIND11_MODULE(bufr, m)
     {
@@ -68,6 +65,6 @@ using Ingester::bufr::File;
                         "specified, the datetime objects are grouped by the specified "
                         "field.");
     }
-//}  // namespace bufr
-//}  // namespace Ingester
+}  // namespace bufr
+}  // namespace Ingester
 
