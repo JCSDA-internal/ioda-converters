@@ -443,9 +443,9 @@ set(IODA_CONV_COMP_TOL "0.5e-4")
 
 list(APPEND python_path
   "${PYIODACONV_BUILD_LIBDIR}"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src"
   "${PYIODACONV_INSTALL_LIBDIR}"
-  "$<TARGET_FILE_DIR:_ioda_python>/../"
-  "$ENV{PYTHONPATH}")
+  "$<TARGET_FILE_DIR:_ioda_python>/../")
 
 string(REPLACE ";" ":" python_path_str "${python_path}")
 set(IODACONV_PYTHONPATH "${python_path_str}")
