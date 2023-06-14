@@ -444,7 +444,7 @@ set(IODA_CONV_COMP_TOL "0.5e-4")
 list(APPEND python_path
   "${PYIODACONV_BUILD_LIBDIR}"
   "${PYIODACONV_INSTALL_LIBDIR}"
-  "$<TARGET_FILE_DIR:_ioda_python>/../"
+  "$<TARGET_FILE_DIR:_ioda_python>/../../"
   "$ENV{PYTHONPATH}")
 
 string(REPLACE ";" ":" python_path_str "${python_path}")
