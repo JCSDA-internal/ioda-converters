@@ -442,8 +442,8 @@ set(IODA_CONV_COMP_TOL "0.5e-4")
 #  Dom's fix to get right path
 
 list(APPEND python_path
-  "${PYIODACONV_BUILD_LIBDIR}"
-  "${PYIODACONV_INSTALL_LIBDIR}"
+  "${PYIODACONV_BUILD_LIBDIR}/../"
+  "${PYIODACONV_INSTALL_LIBDIR}/../"
   "$<TARGET_FILE_DIR:_ioda_python>/../../"
   "$ENV{PYTHONPATH}")
 
