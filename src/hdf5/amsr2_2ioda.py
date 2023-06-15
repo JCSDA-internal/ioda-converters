@@ -40,8 +40,7 @@ GPM_WMO_sat_ID = 288
 GlobalAttrs = {
     "platformCommonName": "AMSR2",
     "platformLongDescription": "AMSR-2 Brightness Temperature Data",
-    "sensorCentralFrequency": "[10.65V, 10.65H, 18.7V, 18.7H, 23.8V, 23.8H, 36.5V, 36.5H, 89.0V (A), 89.0H (A)]"
-#   "sensorCentralFrequency": "[6.925V, 6.925H, 7.3V, 7.3H, 10.65V, 10.65H, 18.7V, 18.7H, 23.8V, 23.8H, 36.5V, 36.5H, 89.0V (A), 89.0H (A), 89.0V (B), 89.0H (B)]"
+    "sensorCentralFrequency": "[6.925V, 6.925H, 7.3V, 7.3H, 10.65V, 10.65H, 18.7V, 18.7H, 23.8V, 23.8H, 36.5V, 36.5H, 89.0V, 89.0H]"
 }
 
 locationKeyList = [
@@ -142,12 +141,12 @@ def get_data(f, obs_data):
     # WMO_sat_ID = get_WMO_satellite_ID(f.attrs['ShortName'].decode("utf-8"))
     sensor = f.attrs['SensorShortName'].item()
     WMO_sat_ID = get_wmo_id(f.attrs['PlatformShortName'].item())
-    nscans = np.shape(f['Latitude of Observation Point for 89A'][:,::2])[0]
-    nbeam_pos = np.shape(f['Latitude of Observation Point for 89A'][:,::2])[1]
+    nscans = np.shape(f['Latitude of Observation Point for 89A'][:, ::2])[0]
+    nbeam_pos = np.shape(f['Latitude of Observation Point for 89A'][:, ::2])[1]
     nchans = 14
     # beam position or sampling across scan 243 for lower frequencies 486 for 89GHz
-    obs_data[('latitude', metaDataName)] = np.array(f['Latitude of Observation Point for 89A'][:,::2], dtype='float32').flatten()
-    obs_data[('longitude', metaDataName)] = np.array(f['Longitude of Observation Point for 89A'][:,::2], dtype='float32').flatten()
+    obs_data[('latitude', metaDataName)] = np.array(f['Latitude of Observation Point for 89A'][:, ::2], dtype='float32').flatten()
+    obs_data[('longitude', metaDataName)] = np.array(f['Longitude of Observation Point for 89A'][:, ::2], dtype='float32').flatten()
     # start at channel 5 as lowest frequencies are not included
     obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(nchans), dtype='int32')
     k = 'sensorScanPosition'
@@ -165,7 +164,7 @@ def get_data(f, obs_data):
     sat_altitude = np.empty_like(instr_scan_ang)
     sat_altitude[:] = f.attrs['SatelliteAltitude'].item().strip('km')
     orbit_direction = f.attrs['OrbitDirection'].item()
-    iasc = get_asc_dsc(orbit_direction)
+    obs_data[('satelliteAscendingFlag', metaDataName)] = np.full((nlocs), get_asc_dsc(orbit_direction), dtype='int32')
     obs_data[('sensorViewAngle', metaDataName)] = compute_scan_angle(
         instr_scan_ang,
         sat_altitude,
@@ -179,20 +178,20 @@ def get_data(f, obs_data):
     k = 'brightnessTemperature'
     # have to reorder the channel axis to be last then merge ( nscans x nspots = nlocs )
     obs_data[(k, "ObsValue")] = np.transpose(
-                                 ( np.array(f['Brightness Temperature (6.9GHz,H)'], dtype='float32').flatten(),
-                                   np.array(f['Brightness Temperature (6.9GHz,V)'], dtype='float32').flatten(),
-                                   np.array(f['Brightness Temperature (7.3GHz,H)'], dtype='float32').flatten(),
-                                   np.array(f['Brightness Temperature (7.3GHz,V)'], dtype='float32').flatten(),
-                                   np.array(f['Brightness Temperature (10.7GHz,H)'], dtype='float32').flatten(),
-                                   np.array(f['Brightness Temperature (10.7GHz,V)'], dtype='float32').flatten(),
-                                   np.array(f['Brightness Temperature (18.7GHz,H)'], dtype='float32').flatten(),
-                                   np.array(f['Brightness Temperature (18.7GHz,V)'], dtype='float32').flatten(),
-                                   np.array(f['Brightness Temperature (23.8GHz,H)'], dtype='float32').flatten(),
-                                   np.array(f['Brightness Temperature (23.8GHz,V)'], dtype='float32').flatten(),
-                                   np.array(f['Brightness Temperature (36.5GHz,H)'], dtype='float32').flatten(),
-                                   np.array(f['Brightness Temperature (36.5GHz,V)'], dtype='float32').flatten(),
-                                   np.array(f['Brightness Temperature (89.0GHz-A,H)'][:,::2], dtype='float32').flatten(),
-                                   np.array(f['Brightness Temperature (89.0GHz-A,V)'][:,::2], dtype='float32').flatten() ))
+        (np.array(f['Brightness Temperature (6.9GHz,H)'], dtype='float32').flatten(),
+         np.array(f['Brightness Temperature (6.9GHz,V)'], dtype='float32').flatten(),
+         np.array(f['Brightness Temperature (7.3GHz,H)'], dtype='float32').flatten(),
+         np.array(f['Brightness Temperature (7.3GHz,V)'], dtype='float32').flatten(),
+         np.array(f['Brightness Temperature (10.7GHz,H)'], dtype='float32').flatten(),
+         np.array(f['Brightness Temperature (10.7GHz,V)'], dtype='float32').flatten(),
+         np.array(f['Brightness Temperature (18.7GHz,H)'], dtype='float32').flatten(),
+         np.array(f['Brightness Temperature (18.7GHz,V)'], dtype='float32').flatten(),
+         np.array(f['Brightness Temperature (23.8GHz,H)'], dtype='float32').flatten(),
+         np.array(f['Brightness Temperature (23.8GHz,V)'], dtype='float32').flatten(),
+         np.array(f['Brightness Temperature (36.5GHz,H)'], dtype='float32').flatten(),
+         np.array(f['Brightness Temperature (36.5GHz,V)'], dtype='float32').flatten(),
+         np.array(f['Brightness Temperature (89.0GHz-A,H)'][:, ::2], dtype='float32').flatten(),
+         np.array(f['Brightness Temperature (89.0GHz-A,V)'][:, ::2], dtype='float32').flatten()))
     obs_data[(k, "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
     obs_data[(k, "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
 
@@ -241,16 +240,12 @@ def set_missing_value(f, obs_key, obs_data):
 def get_asc_dsc(orbitDirection):
     # from JAXA gportal files formatted like so
     # f.attrs['OrbitDirection'].item()
-    try:
-        if orbitDirection == 'Ascending':
-            iasc = 1
-        elif orbitDirection == 'Descending':
-            iasc = 0
-        else:
-            print(f' ... WARNING ... can not determine ascending or descending from file attribute')
-            iasc = None
-    except:
-        print(f' ... WARNING ... can not determine ascending or descending')
+    if orbitDirection == 'Ascending':
+        iasc = 1
+    elif orbitDirection == 'Descending':
+        iasc = 0
+    else:
+        print(f' ... WARNING ... can not determine ascending or descending from file attribute')
         iasc = None
 
 
@@ -292,13 +287,13 @@ def init_obs_loc():
         ('longitude', metaDataName): [],
         ('dateTime', metaDataName): [],
         ('sensorScanPosition', metaDataName): [],
-#       ('solarZenithAngle', metaDataName): [],
-#       ('solarAzimuthAngle', metaDataName): [],
         ('sensorZenithAngle', metaDataName): [],
-#       ('sensorAzimuthAngle', metaDataName): [],
+        ('sensorAzimuthAngle', metaDataName): [],
         ('sensorViewAngle', metaDataName): [],
-#       ('satelliteAscendingFlag', metaDataName): [],
+        ('solarAzimuthAngle', metaDataName): [],
+        ('satelliteAscendingFlag', metaDataName): [],
     }
+# ('solarZenithAngle', metaDataName): [],
 
     return obs
 
