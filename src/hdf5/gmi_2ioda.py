@@ -148,7 +148,7 @@ def get_data(f, obs_data):
     nscans = np.shape(f['S1']['Latitude'])[0]
     nbeam_pos = np.shape(f['S1']['Latitude'])[1]
     nchans = 12
-    # Two-swaths covering 10.65 to 183 Ghz 
+    # Two-swaths covering 10.65 to 183 GHz
     obs_data[('latitude', metaDataName)] = np.array(f['S1']['Latitude'], dtype='float32').flatten()
     obs_data[('longitude', metaDataName)] = np.array(f['S1']['Longitude'], dtype='float32').flatten()
     # start at channel 5 as lowest frequencies are not included
@@ -174,19 +174,19 @@ def get_data(f, obs_data):
     k = 'brightnessTemperature'
     # have to reorder the channel axis to be last then merge ( nscans x nspots = nlocs )
     obs_data[(k, "ObsValue")] = np.transpose(
-                                 ( np.array(f['S1']['Tc'][:,:,0], dtype='float32').flatten(),
-                                   np.array(f['S1']['Tc'][:,:,1], dtype='float32').flatten(),
-                                   np.array(f['S1']['Tc'][:,:,2], dtype='float32').flatten(),
-                                   np.array(f['S1']['Tc'][:,:,3], dtype='float32').flatten(),
-                                   np.array(f['S1']['Tc'][:,:,4], dtype='float32').flatten(),
-                                   np.array(f['S1']['Tc'][:,:,5], dtype='float32').flatten(),
-                                   np.array(f['S1']['Tc'][:,:,6], dtype='float32').flatten(),
-                                   np.array(f['S1']['Tc'][:,:,7], dtype='float32').flatten(),
-                                   np.array(f['S1']['Tc'][:,:,8], dtype='float32').flatten(),
-                                   np.array(f['S2']['Tc'][:,:,0], dtype='float32').flatten(),
-                                   np.array(f['S2']['Tc'][:,:,1], dtype='float32').flatten(),
-                                   np.array(f['S2']['Tc'][:,:,2], dtype='float32').flatten(),
-                                   np.array(f['S2']['Tc'][:,:,3], dtype='float32').flatten() ))
+        (np.array(f['S1']['Tc'][:, :, 0], dtype='float32').flatten(),
+         np.array(f['S1']['Tc'][:, :, 1], dtype='float32').flatten(),
+         np.array(f['S1']['Tc'][:, :, 2], dtype='float32').flatten(),
+         np.array(f['S1']['Tc'][:, :, 3], dtype='float32').flatten(),
+         np.array(f['S1']['Tc'][:, :, 4], dtype='float32').flatten(),
+         np.array(f['S1']['Tc'][:, :, 5], dtype='float32').flatten(),
+         np.array(f['S1']['Tc'][:, :, 6], dtype='float32').flatten(),
+         np.array(f['S1']['Tc'][:, :, 7], dtype='float32').flatten(),
+         np.array(f['S1']['Tc'][:, :, 8], dtype='float32').flatten(),
+         np.array(f['S2']['Tc'][:, :, 0], dtype='float32').flatten(),
+         np.array(f['S2']['Tc'][:, :, 1], dtype='float32').flatten(),
+         np.array(f['S2']['Tc'][:, :, 2], dtype='float32').flatten(),
+         np.array(f['S2']['Tc'][:, :, 3], dtype='float32').flatten()))
 
     obs_data[(k, "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
     obs_data[(k, "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
@@ -286,13 +286,13 @@ def init_obs_loc():
         ('longitude', metaDataName): [],
         ('dateTime', metaDataName): [],
         ('sensorScanPosition', metaDataName): [],
-#       ('solarZenithAngle', metaDataName): [],
-#       ('solarAzimuthAngle', metaDataName): [],
         ('sensorZenithAngle', metaDataName): [],
-#       ('sensorAzimuthAngle', metaDataName): [],
         ('sensorViewAngle', metaDataName): [],
-#       ('satelliteAscendingFlag', metaDataName): [],
     }
+# ('solarZenithAngle', metaDataName): [],
+# ('solarAzimuthAngle', metaDataName): [],
+# ('sensorAzimuthAngle', metaDataName): [],
+# ('satelliteAscendingFlag', metaDataName): [],
 
     return obs
 
