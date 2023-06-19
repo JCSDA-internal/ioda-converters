@@ -71,8 +71,7 @@ namespace Ingester
         }
         else
         {
-            throw eckit::BadParameter("Missing required parameters: scan starting angle and step "
-                                      "Check your configuration.");
+            throw eckit::BadParameter("Missing required parameters: scan starting angle and step Check your configuration.");
         }
 
         if (conf_.has(ConfKeys::ScanStepAdjust) & sensor == "iasi" )
@@ -82,8 +81,7 @@ namespace Ingester
         }
         else
         {
-            throw eckit::BadParameter("Missing required parameters: scan step adjust and sensor "
-                                      "Check your configuration.");
+            throw eckit::BadParameter("Missing required parameters: scan step adjust and sensor Check your configuration.");
         }
        
 

@@ -64,7 +64,7 @@ namespace Ingester
 
         // Declare and initialize scanline array
         // scanline has the same dimension as fovn
-        std::vector<float> scanpos(fovnObj->size(), DataObject<int>::missingValue());
+        std::vector<float> scanpos(fovnObj->size(), DataObject<float>::missingValue());
 
         // Get field-of-view number
         std::vector<int> fovn(fovnObj->size(), DataObject<int>::missingValue());
