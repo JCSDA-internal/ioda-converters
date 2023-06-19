@@ -298,7 +298,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/NC005031.nc
     testoutput/NC005066.nc
     testoutput/gdas.t18z.satwnd_avhrr.tm00.nc
-    testoutput/gdas.t12z.mtiasi.metop-c.tm00.nc
+    testoutput/gdas.t12z.mtiasi_metop-c.tm00.nc
     testoutput/bufr_simple_groupby.nc
     testoutput/bufr_empty_fields.nc
     testoutput/bufr_sfcshp.nc
@@ -1435,7 +1435,7 @@ if(iodaconv_bufr_ENABLED)
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_mtiasi.yaml"
-                    gdas.t12z.mtiasi.metop-c.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    gdas.t12z.mtiasi_metop-c.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_atms
