@@ -6,7 +6,8 @@
 observations:
   - obs space:
       name: bufr
-      obsdatain: "./testinput/gdas.t12z.mtiasi.tm00.bufr_d"
+      obsdatain: "./testinput/gdas.t12z.mtiasi.tm00.bufr_d" 
+
       exports:
         variables:
           # MetaData
@@ -17,6 +18,7 @@ observations:
               day: "*/DAYS"
               hour: "*/HOUR"
               minute: "*/MINU"
+              second: "*/SECO"
 
           latitude:
             query: "*/CLATH"
@@ -38,7 +40,6 @@ observations:
 
           fieldOfViewNumber:
             query: "*/FOVN"
-            type: float 
 
           sensorScanPosition:
             sensorScanPosition:
@@ -57,20 +58,20 @@ observations:
           sensorAzimuthAngle:
             query: "*/BEARAZ"
 
-          heightOfStation:
+          stationElevation:
             query: "*/SELV"
+            type: float 
 
           sensorViewAngle:
             sensorScanAngle:
               fieldOfViewNumber: "*/FOVN"
-              heightOfStation: "*/SELV"
               scanStart: -48.330
               scanStep: 3.334
               scanStepAdjust: 0.625 
               sensor: iasi
 
-          fractionOfClearPixelsInFov:
-            query: "*/IASIL1CS/FCPH"
+          fractionOfClearPixelsInFOV:
+            query: "*/IASIL1CS{1}/FCPH"
             type: float
             transforms:
                - scale: 0.01
@@ -114,11 +115,35 @@ observations:
       globals:
         - name: "platformCommonName"
           type: string
-          value: "IASI"
+          value: "Meteorological Operational Satellite"
 
         - name: "platformLongDescription"
           type: string
+          value: "EUMETSAT Polar System in sunsynchronous orbit"
+
+        - name: "source"
+          type: string
           value: "MTYP 021-241 IASI 1C RADIANCES (VARIABLE CHNS) (METOP)"
+
+        - name: "sourceFiles"
+          type: string
+          value: "gdas.t00z.mtiasi.tm00.bufr_d"
+
+        - name: "datetimeReference"
+          type: string
+          value: "2021-08-01T00:00:00Z"
+
+        - name: "sensor"
+          type: string
+          value: "IASI"
+
+        - name: "processingLevel"
+          type: string
+          value: "Level-1C"
+
+        - name: "converter"
+          type: string
+          value: "BUFR"
 
       variables:
 
@@ -131,13 +156,13 @@ observations:
         - name: "MetaData/latitude"
           source: variables/latitude
           longName: "Latitude"
-          units: "degree_north"
+          units: "degrees_north"
           range: [ -90, 90 ]
 
         - name: "MetaData/longitude"
           source: variables/longitude
           longName: "Longitude"
-          units: "degree_east"
+          units: "degrees_east"
           range: [ -180, 180 ]
 
         - name: "MetaData/satelliteIdentifier"
@@ -193,8 +218,8 @@ observations:
           longName: "Sensor View Angle"
           units: "degree"
 
-        - name: "MetaData/heightOfStation"
-          source: variables/heightOfStation
+        - name: "MetaData/stationElevation"
+          source: variables/stationElevation
           longName: "Altitude of Satellite"
           units: "m"
 
@@ -202,14 +227,15 @@ observations:
           source: variables/sensorChannelNumber
           longName: "Sensor Channel Number"
 
-        - name: "MetaData/fractionOfClearPixelsInFov"
-          source: variables/fractionOfClearPixelsInFov
+        - name: "MetaData/fractionOfClearPixelsInFOV"
+          source: variables/fractionOfClearPixelsInFOV
           longName: "Fraction of Clear Pixels in a Field of View"
           units: "1"
           range: [0, 1]
 
-        - name: "ObsValue/radiance"
+#       The unit from BUFR is W m-2 sr-1 m -- this is radiance per wavenumber
+        - name: "ObsValue/spectralRadiance"
           source: variables/spectralRadiance
           longName: "IASI Spectral Radiance"
-          units: "mW m-2 sr-1 m"
+          units: "W m-2 sr-1 m-1"
 

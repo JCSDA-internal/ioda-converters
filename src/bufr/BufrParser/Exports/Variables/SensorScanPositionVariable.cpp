@@ -75,7 +75,7 @@ namespace Ingester
               scanpos[idx] = static_cast<float>((fovnObj->getAsInt(idx) - 1) / 2 + 1);
            }
         }
-        else 
+        else
         {
            for (size_t idx = 0; idx < fovnObj->size(); idx++)
            {

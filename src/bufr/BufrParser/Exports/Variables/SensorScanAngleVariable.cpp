@@ -57,7 +57,7 @@ namespace Ingester
         }
         else
         {
-            throw eckit::BadParameter("Missing required parameters: sensor"
+            throw eckit::BadParameter("Missing required parameters: sensor. "
                                       "Check your configuration.");
         }
 
@@ -71,7 +71,8 @@ namespace Ingester
         }
         else
         {
-            throw eckit::BadParameter("Missing required parameters: scan starting angle and step Check your configuration.");
+            throw eckit::BadParameter("Missing required parameters: scan starting angle and step. "
+                                      "Check your configuration.");
         }
 
         if (conf_.has(ConfKeys::ScanStepAdjust) & sensor == "iasi" )
@@ -79,11 +80,6 @@ namespace Ingester
              sensor = conf_.getString(ConfKeys::Sensor);
              stepAdj = conf_.getFloat(ConfKeys::ScanStepAdjust);
         }
-        else
-        {
-            throw eckit::BadParameter("Missing required parameters: scan step adjust and sensor Check your configuration.");
-        }
-       
 
         // Read the variables from the map
 
@@ -123,11 +119,10 @@ namespace Ingester
            // Calculate sensor scan angle
            for (size_t idx = 0; idx < fovnObj->size(); idx++)
            {
-              if (scanpos[idx] % 2 == 1) 
-              { 
-                 tmp = stepAdj; 
-
-              } 
+              if (scanpos[idx] % 2 == 1)
+              {
+                 tmp = stepAdj;
+              }
               scanang[idx] = start + static_cast<float>((fovn[idx]-1)/4) * step + tmp;
            }
         }
@@ -137,7 +132,6 @@ namespace Ingester
            {
               scanang[idx] = start + static_cast<float>(fovn[idx]-1) * step;
            }
-
         }
 
         // Export sensor scan angle (view angle)
