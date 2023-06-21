@@ -54,7 +54,7 @@ def combine_obsspace(FileList, OutFile, GeoDir):
     # global attributes will come from the first file only in case of conflicts
     obsspace = ios.ObsSpace(FileList[0])
     for attr in obsspace.attrs:
-        if attr not in ['_ioda_layout']:
+        if attr not in ['_ioda_layout', '_ioda_layout_version']:
             globalAttrs[attr] = obsspace.read_attr(attr)
     # add a new global attribute
     globalAttrs['input_files'] = ';'.join(FileList)
