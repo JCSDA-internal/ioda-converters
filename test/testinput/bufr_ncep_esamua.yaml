@@ -55,6 +55,13 @@ observations:
           sensorAzimuthAngle:
             query: "*/BEARAZ"
 
+          sensorScanAngle:
+            sensorScanAngle:
+              fieldOfViewNumber: "*/FOVN"
+              heightOfStation: "*/HMSL"
+              scanStart: -48.333
+              scanStep: 3.333
+
           sensorChannelNumber:
             query: "*/ATCHV/INCN" 
 
@@ -70,16 +77,17 @@ observations:
                 _3: metop-b
                 _4: metop-a
                 _5: metop-c
-#               _206: noaa-15
-                _209: noaa-18
-                _223: noaa-19
+#               _206: n15
+                _209: n18
+                _223: n19
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/gdas.t12z.esamua.{splits/satId}.tm00.nc"
+      obsdataout: "./testrun/gdas.t12z.esamua_{splits/satId}.tm00.nc"
 
       dimensions:
         - name: Channel 
+          source: variables/sensorChannelNumber
           path: "*/ATCHV"
 
       globals:
@@ -158,6 +166,11 @@ observations:
           longName: "Sensor Azimuth Angle"
           units: "degree"
           range: [0, 360]
+
+        - name: "MetaData/sensorViewAngle"
+          source: variables/sensorScanAngle
+          longName: "Sensor View Angle"
+          units: "degree"
 
         - name: "MetaData/sensorChannelNumber"
           source: variables/sensorChannelNumber

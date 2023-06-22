@@ -129,7 +129,7 @@ namespace bufr {
         if (tableCache_.empty())
         {
             open();
-            run(QuerySet({}), []() {});
+            run(QuerySet(), []() {});
             close();
         }
     }
