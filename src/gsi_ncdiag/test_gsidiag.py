@@ -2,7 +2,7 @@
 # script to run to test if the GSI ncdiag converters are still working
 import argparse
 
-from pyiodaconv import gsi_ncdiag.gsi_ncdiag as gsid
+from pyiodaconv import gsi_ncdiag as gsid
 
 parser = argparse.ArgumentParser(
     description=('Test for GSI netCDF diag file to IODA Obs/GeoVaLs files converters'))
