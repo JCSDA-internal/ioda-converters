@@ -51,7 +51,7 @@ if( ecbuild_VERSION VERSION_LESS 3.4 )
   find_package( oops QUIET )
 else()
   ecbuild_find_package( eckit VERSION 1.13.0 QUIET )
-  ecbuild_find_package( oops VERSION 1.0.0 QUIET )
+  ecbuild_find_package( oops QUIET )
 endif()
 # Optional: pygrib for python for GRIB1/GRIB2 input files
 if ( USE_PYGRIB )
