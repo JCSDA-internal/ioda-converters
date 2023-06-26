@@ -5,8 +5,6 @@
 
 import sys
 sys.path.append('/work2/noaa/da/nesposito/ioda-bundle_apifix/build/lib/python3.9/')
-#Still need these until PR 1239 is merged
-#https://github.com/JCSDA-internal/ioda-converters/pull/1239
 sys.path.append('/work2/noaa/da/nesposito/ioda-bundle_apifix/build/lib/python3.9/pyiodaconv/')
 sys.path.append('/work2/noaa/da/nesposito/ioda-bundle_apifix/build/lib/python3.9/pyioda/')
 
@@ -17,8 +15,8 @@ import ioda
 import calendar
 import time
 
-DATA_PATH = '../testinput/gdas.t00z.sfcshp.prepbufr'
-OUTPUT_PATH = '../testoutput/prepbufr_sfcshp_api.nc'
+DATA_PATH = './testinput/gdas.t00z.sfcshp.prepbufr'
+OUTPUT_PATH = './testrun/prepbufr_sfcshp_api.nc'
 
 def test_bufr_to_ioda():
    # Make the QuerySet for all the data we want

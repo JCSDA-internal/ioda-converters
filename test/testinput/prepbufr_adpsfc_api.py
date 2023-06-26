@@ -4,12 +4,16 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 
 import sys
+sys.path.append('/work2/noaa/da/nesposito/ioda-bundle_apifix/build/lib/python3.9/')
+sys.path.append('/work2/noaa/da/nesposito/ioda-bundle_apifix/build/lib/python3.9/pyiodaconv/')
+sys.path.append('/work2/noaa/da/nesposito/ioda-bundle_apifix/build/lib/python3.9/pyioda/')
+
 import numpy as np
 import numpy.ma as ma
-import pyiodaconv.ioda_conv_engines as iconv
-import pyiodaconv.ioda_conv_ncio as iconio
+import pyiodaconv as iconv
+import pyiodaconv as iconio
 from pyiodaconv import bufr
-#import ioda
+import ioda
 import calendar
 import time
 
