@@ -9,7 +9,7 @@ https://github.com/JunUMD/BG_AdaptiveWindow_v1
 """
 from pathlib import Path
 import os, glob, time
-import pickle, sys
+import sys
 import h5py
 import numpy as np
 import statistics

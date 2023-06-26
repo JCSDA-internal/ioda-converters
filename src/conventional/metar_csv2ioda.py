@@ -19,10 +19,10 @@ import csv
 import netCDF4
 import logging
 
-import lib_python.ioda_conv_engines as iconv
+import pyiodaconv.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
-from lib_python.orddicts import DefaultOrderedDict
-import lib_python.meteo_utils as meteo_utils
+from pyiodaconv.orddicts import DefaultOrderedDict
+import pyiodaconv.meteo_utils as meteo_utils
 
 os.environ["TZ"] = "UTC"
 

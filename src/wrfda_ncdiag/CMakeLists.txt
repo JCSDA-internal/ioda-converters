@@ -28,7 +28,7 @@ conf_targets_deps( "${programs}"
 
 install( PROGRAMS ${install_bin_wrfda_ncdiag_scripts_deps} DESTINATION ${CMAKE_INSTALL_BINDIR} )
 
-install( FILES ${wrfda_ncdiag_scripts_deps} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pyiodaconv )
+install( FILES ${wrfda_ncdiag_scripts_deps} DESTINATION ${PYIODACONV_INSTALL_LIBDIR} )
 
 ecbuild_add_test( TARGET  ${PROJECT_NAME}_wrfda_ncdiag_coding_norms
                   TYPE    SCRIPT
