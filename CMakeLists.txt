@@ -30,16 +30,17 @@ set(CMAKE_FORTRAN_STANDARD 08)
 # Location of .pycodestyle for norm checking within IODA-converters
 set( IODACONV_PYLINT_CFG_DIR ${CMAKE_CURRENT_SOURCE_DIR} )
 
+find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+
 set(pyver python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR})
-set(PYDIR ${pyvers}/pyiodaconv)
+set(PYDIR ${pyver}/pyiodaconv)
 
 # Location of installed python iodaconv libraries
 set( PYIODACONV_BUILD_LIBDIR   ${CMAKE_BINARY_DIR}/lib/${PYDIR} )
-set( PYIODACONV_INSTALL_LIBDIR ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/${PYDIR} )
+set( PYIODACONV_INSTALL_LIBDIR ${CMAKE_INSTALL_PREFIX}/lib/${PYDIR} )
 
 ## Dependencies
 
-find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
 find_package( pybind11 QUIET)
 
 find_package( Eigen3 QUIET NO_MODULE HINTS
@@ -51,7 +52,7 @@ if( ecbuild_VERSION VERSION_LESS 3.4 )
   find_package( oops QUIET )
 else()
   ecbuild_find_package( eckit VERSION 1.13.0 QUIET )
-  ecbuild_find_package( oops VERSION 1.0.0 QUIET )
+  ecbuild_find_package( oops QUIET )
 endif()
 # Optional: pygrib for python for GRIB1/GRIB2 input files
 if ( USE_PYGRIB )

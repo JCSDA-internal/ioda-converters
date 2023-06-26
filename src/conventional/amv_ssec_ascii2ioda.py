@@ -10,9 +10,9 @@ import netCDF4 as nc
 import logging
 
 # These modules need the path to lib-python modules
-import lib_python.ioda_conv_engines as iconv
-import lib_python.meteo_utils as meteo_utils
-from lib_python.orddicts import DefaultOrderedDict
+import pyiodaconv.ioda_conv_engines as iconv
+import pyiodaconv.meteo_utils as meteo_utils
+from pyiodaconv.orddicts import DefaultOrderedDict
 
 os.environ["TZ"] = "UTC"
 

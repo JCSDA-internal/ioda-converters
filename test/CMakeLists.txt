@@ -440,12 +440,11 @@ set(IODA_CONV_COMP_TOL "0.5e-4")
 #        ...
 #        )
 #  Dom's fix to get right path
-#set(IODACONV_PYTHONPATH "$<TARGET_FILE_DIR:_ioda_python>/../:$ENV{PYTHONPATH}")
 
 list(APPEND python_path
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src"
-  "${CMAKE_BINARY_DIR}/lib/pyiodaconv"
-  "$<TARGET_FILE_DIR:_ioda_python>/../"
+  "${PYIODACONV_BUILD_LIBDIR}/../"
+  "${PYIODACONV_INSTALL_LIBDIR}/../"
+  "$<TARGET_FILE_DIR:_ioda_python>/../../"
   "$ENV{PYTHONPATH}")
 
 string(REPLACE ";" ":" python_path_str "${python_path}")

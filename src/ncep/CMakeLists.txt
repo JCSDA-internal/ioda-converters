@@ -32,9 +32,9 @@ conf_targets_deps( "${programs}"
 
 install( PROGRAMS ${install_bin_ncep_scripts_deps} DESTINATION ${CMAKE_INSTALL_BINDIR} )
 
-install( FILES ${ncep_scripts_deps} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pyiodaconv )
+install( FILES ${ncep_scripts_deps} DESTINATION ${PYIODACONV_INSTALL_LIBDIR} )
 
-install( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/config DESTINATION ${CMAKE_INSTALL_LIBDIR}/pyiodaconv )
+install( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/config DESTINATION ${PYIODACONV_INSTALL_LIBDIR} )
 
 ecbuild_add_test( TARGET  ${PROJECT_NAME}_ncep_coding_norms
                   TYPE    SCRIPT
