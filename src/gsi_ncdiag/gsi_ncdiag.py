@@ -1568,8 +1568,6 @@ class Radiances(BaseGSI):
                     tmp = self.var(key1) - self.var(gsivar)
                     # Save GsiHofXBc from "Forecast_adjusted" if some of "Obs_Minus_Forecast_adjusted" are
                     # missing values, which results in the above tmp = zero.   
-                    print('JJJ min=', min(tmp))
-                    print('JJJ max=', max(tmp))
                     if min(tmp) < 1.0 and 'Forecast_adjusted' in self.df.variables:
                         tmp = self.var('Forecast_adjusted')
                 else:
