@@ -75,9 +75,9 @@ conv_bufrtypes = {
     "rass": [126],
     "sfcship": [180, 183],
     "sfc": [181, 187],
-    "gps": [  3,   4,   5,  41,  42,  43,  44, 265, 269, 421, 440, 
+    "gps": [  3,   4,   5,  41,  42,  43,  44,  66, 265, 266,267,268, 269, 421, 440,
             722, 723, 740, 741, 742, 743, 744, 745,
-            750, 751, 752, 753, 754, 755, 786, 820, 821, 825],
+            750, 751, 752, 753, 754, 755, 786, 803, 804, 820, 821, 825],
     "sst": [181, 182, 183, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202],
     # 132 are dropsondes
 }
@@ -215,7 +215,6 @@ gsi_add_vars_allsky = {
     'Errinv_Final': 'GsiFinalObsError',
     'TotalBias': 'GsiObsBias',
     'Forecast_unadjusted': 'GsiHofX',
-    'Forecast_adjusted': 'GsiHofXBc',
     'Forecast_unadjusted': 'GsiHofX',
     'Forecast_unadjusted_clear': 'GsiHofXClr',
     'Obs_Minus_Forecast_adjusted': 'GsiHofXBc',
@@ -254,7 +253,7 @@ gsi_add_vars = {
     'Dupobs_Factor': 'Dupobs_Factor',
     'Obs_Minus_Forecast_adjusted': 'GsiHofXBc',
     'Obs_Minus_Forecast_unadjusted': 'GsiHofX',
-    'Forecast_adjusted': 'GsiHofXBc',
+#   'Forecast_adjusted': 'GsiHofXBc',
     'Forecast_unadjusted': 'GsiHofX',
     'TotalBias': 'GsiObsBias',
     'Inverse_Observation_Error': 'GsiFinalObsError',
@@ -1559,8 +1558,6 @@ class Radiances(BaseGSI):
                     tmp[~mask] = 1.0 / tmp[~mask]
                     tmp[mask] = self.FLOAT_FILL
                 elif "Obs_Minus_" in gsivar:
-                    if 'Forecast_adjusted' in self.df.variables:
-                        continue
                     key1 = 'Observation'
                     tmp = self.var(key1) - self.var(gsivar)
                 else:
