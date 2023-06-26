@@ -8,6 +8,14 @@
 #
 
 import numpy as np
+import pyiodaconv.ioda_conv_engines as iconv
+
+metaDataName = iconv.MetaDataName()
+obsValName = iconv.OvalName()
+
+float_missing_value = iconv.get_default_fill_val(np.float32)
+int_missing_value = iconv.get_default_fill_val(np.int32)
+long_missing_value = iconv.get_default_fill_val(np.int64)
 
 
 def concat_obs_dict(obs_data, append_obs_data):
