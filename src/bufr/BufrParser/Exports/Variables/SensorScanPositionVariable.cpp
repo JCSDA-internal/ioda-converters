@@ -17,7 +17,7 @@
 #include "oops/util/Logger.h"
 
 #include "DataObject.h"
-#include "SensorScanAngleVariable.h"
+#include "SensorScanPositionVariable.h"
 
 
 namespace
@@ -25,19 +25,17 @@ namespace
     namespace ConfKeys
     {
         const char* FieldOfViewNumber = "fieldOfViewNumber";
-        const char* ScanStart = "scanStart";
-        const char* ScanStep = "scanStep";
-        const char* ScanStepAdjust = "scanStepAdjust";
         const char* Sensor = "sensor";
     }  // namespace ConfKeys
 
-    const std::vector<std::string> FieldNames = {ConfKeys::FieldOfViewNumber };
+    const std::vector<std::string> FieldNames = {ConfKeys::FieldOfViewNumber,
+                                                };
 }  // namespace
 
 
 namespace Ingester
 {
-    SensorScanAngleVariable::SensorScanAngleVariable(const std::string& exportName,
+    SensorScanPositionVariable::SensorScanPositionVariable(const std::string& exportName,
                                                      const std::string& groupByField,
                                                      const eckit::LocalConfiguration &conf) :
       Variable(exportName, groupByField, conf)
@@ -45,11 +43,11 @@ namespace Ingester
         initQueryMap();
     }
 
-    std::shared_ptr<DataObjectBase> SensorScanAngleVariable::exportData(const BufrDataMap& map)
+    std::shared_ptr<DataObjectBase> SensorScanPositionVariable::exportData(const BufrDataMap& map)
     {
         checkKeys(map);
 
-        // Get input parameters for sensor scan angle calculation
+        // Get input parameters for sensor scan position calculation
         std::string sensor;
         if (conf_.has(ConfKeys::Sensor) )
         {
@@ -57,85 +55,36 @@ namespace Ingester
         }
         else
         {
-            throw eckit::BadParameter("Missing required parameters: sensor. "
+            throw eckit::BadParameter("Missing required parameters: sensor"
                                       "Check your configuration.");
-        }
-
-        float start;
-        float step;
-        float stepAdj;
-        if (conf_.has(ConfKeys::ScanStart) && conf_.has(ConfKeys::ScanStep))
-        {
-             start = conf_.getFloat(ConfKeys::ScanStart);
-             step = conf_.getFloat(ConfKeys::ScanStep);
-        }
-        else
-        {
-            throw eckit::BadParameter("Missing required parameters: scan starting angle and step. "
-                                      "Check your configuration.");
-        }
-
-        if (conf_.has(ConfKeys::ScanStepAdjust) & sensor == "iasi" )
-        {
-             sensor = conf_.getString(ConfKeys::Sensor);
-             stepAdj = conf_.getFloat(ConfKeys::ScanStepAdjust);
         }
 
         // Read the variables from the map
-
         auto& fovnObj = map.at(getExportKey(ConfKeys::FieldOfViewNumber));
 
         // Declare and initialize scanline array
         // scanline has the same dimension as fovn
-        std::vector<float> scanang(fovnObj->size(), DataObject<float>::missingValue());
-        std::vector<int> scanpos(fovnObj->size(), DataObject<int>::missingValue());
+        std::vector<float> scanpos(fovnObj->size(), DataObject<float>::missingValue());
 
         // Get field-of-view number
         std::vector<int> fovn(fovnObj->size(), DataObject<int>::missingValue());
-        for (size_t idx = 0; idx < fovnObj->size(); idx++)
-        {
-           fovn[idx] = fovnObj->getAsInt(idx);
-        }
-
         if (sensor == "iasi")
         {
            for (size_t idx = 0; idx < fovnObj->size(); idx++)
            {
-              scanpos[idx] = (fovnObj->getAsInt(idx) - 1) / 2 + 1;
+              scanpos[idx] = static_cast<float>((fovnObj->getAsInt(idx) - 1) / 2 + 1);
            }
         }
         else
         {
            for (size_t idx = 0; idx < fovnObj->size(); idx++)
            {
-              scanpos[idx] = fovnObj->getAsInt(idx);
-           }
-        }
-
-        if (sensor == "iasi")
-        {
-           float tmp;
-           tmp = -stepAdj;
-           // Calculate sensor scan angle
-           for (size_t idx = 0; idx < fovnObj->size(); idx++)
-           {
-              if (scanpos[idx] % 2 == 1)
-              {
-                 tmp = stepAdj;
-              }
-              scanang[idx] = start + static_cast<float>((fovn[idx]-1)/4) * step + tmp;
-           }
-        }
-        else
-        {
-           for (size_t idx = 0; idx < fovnObj->size(); idx++)
-           {
-              scanang[idx] = start + static_cast<float>(fovn[idx]-1) * step;
+              scanpos[idx] = static_cast<float>(fovnObj->getAsInt(idx));
            }
         }
 
         // Export sensor scan angle (view angle)
-        return std::make_shared<DataObject<float>>(scanang,
+        return std::make_shared<DataObject<float>>(scanpos,
                                                    getExportName(),
                                                    groupByField_,
                                                    fovnObj->getDims(),
@@ -143,7 +92,7 @@ namespace Ingester
                                                    fovnObj->getDimPaths());
     }
 
-    void SensorScanAngleVariable::checkKeys(const BufrDataMap& map)
+    void SensorScanPositionVariable::checkKeys(const BufrDataMap& map)
     {
         std::vector<std::string> requiredKeys;
         for (const auto& fieldName : FieldNames)
@@ -168,7 +117,7 @@ namespace Ingester
             }
         }
 
-        errStr << " could not be found during export of scanang object.";
+        errStr << " could not be found during export of scanpos object.";
 
         if (isKeyMissing)
         {
@@ -176,7 +125,7 @@ namespace Ingester
         }
     }
 
-    QueryList SensorScanAngleVariable::makeQueryList() const
+    QueryList SensorScanPositionVariable::makeQueryList() const
     {
         auto queries = QueryList();
 
@@ -194,7 +143,7 @@ namespace Ingester
         return queries;
     }
 
-    std::string SensorScanAngleVariable::getExportKey(const std::string& name) const
+    std::string SensorScanPositionVariable::getExportKey(const std::string& name) const
     {
         return getExportName() + "_" + name;
     }

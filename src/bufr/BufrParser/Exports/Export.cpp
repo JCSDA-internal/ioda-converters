@@ -21,6 +21,7 @@
 #include "Variables/AircraftAltitudeVariable.h"
 #include "Variables/TimeoffsetVariable.h"
 #include "Variables/SensorScanAngleVariable.h"
+#include "Variables/SensorScanPositionVariable.h"
 #include "ObjectFactory.h"
 
 
@@ -42,6 +43,7 @@ namespace
             const char* Timeoffset = "timeoffset";
             const char* AircraftAltitude = "aircraftAltitude";
             const char* SensorScanAngle = "sensorScanAngle";
+            const char* SensorScanPosition = "sensorScanPosition";
             const char* Query = "query";
         }  // namespace Variable
 
@@ -132,6 +134,8 @@ namespace Ingester
             (ConfKeys::Variable::RemappedBrightnessTemperature);
         variableFactory.registerObject<SensorScanAngleVariable>
             (ConfKeys::Variable::SensorScanAngle);
+        variableFactory.registerObject<SensorScanPositionVariable>
+            (ConfKeys::Variable::SensorScanPosition);
 
         if (conf.keys().size() == 0)
         {
