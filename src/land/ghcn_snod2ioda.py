@@ -12,9 +12,9 @@ import pandas as pd
 from datetime import datetime
 from dateutil.parser import parse
 
-import lib_python.ioda_conv_engines as iconv
+import pyiodaconv.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
-from lib_python.orddicts import DefaultOrderedDict
+from pyiodaconv.orddicts import DefaultOrderedDict
 
 locationKeyList = [
     ("latitude", "float"),

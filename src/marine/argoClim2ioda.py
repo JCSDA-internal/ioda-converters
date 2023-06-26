@@ -15,8 +15,8 @@ import netCDF4 as nc4
 import numpy as np
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
-import lib_python.ioda_conv_engines as iconv
-from lib_python.orddicts import DefaultOrderedDict
+import pyiodaconv.ioda_conv_engines as iconv
+from pyiodaconv.orddicts import DefaultOrderedDict
 
 
 class argoClim(object):

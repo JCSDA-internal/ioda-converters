@@ -14,8 +14,8 @@ from datetime import datetime, timedelta
 import numpy as np
 import numpy.matlib
 
-import lib_python.ioda_conv_engines as iconv
-from lib_python.orddicts import DefaultOrderedDict
+import pyiodaconv.ioda_conv_engines as iconv
+from pyiodaconv.orddicts import DefaultOrderedDict
 
 vName = [
     "waterTemperature",

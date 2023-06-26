@@ -14,8 +14,8 @@ from datetime import datetime
 import os
 import numpy as np
 
-import lib_python.ioda_conv_engines as iconv
-from lib_python.orddicts import DefaultOrderedDict
+import pyiodaconv.ioda_conv_engines as iconv
+from pyiodaconv.orddicts import DefaultOrderedDict
 
 
 vName = {
