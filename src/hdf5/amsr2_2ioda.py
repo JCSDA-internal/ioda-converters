@@ -25,10 +25,8 @@ from pyiodaconv.orddicts import DefaultOrderedDict
 from pyiodaconv.def_jedi_utils import set_metadata_attributes, set_obspace_attributes
 from pyiodaconv.def_jedi_utils import compute_scan_angle
 from pyiodaconv.def_jedi_utils import concat_obs_dict
-
-float_missing_value = iconv.get_default_fill_val(np.float32)
-int_missing_value = iconv.get_default_fill_val(np.int32)
-long_missing_value = iconv.get_default_fill_val(np.int64)
+from pyiodaconv.def_jedi_utils import iso8601_string
+from pyiodaconv.def_jedi_utils import float_missing_value, int_missing_value, long_missing_value
 
 metaDataName = iconv.MetaDataName()
 obsValName = iconv.OvalName()
@@ -49,7 +47,6 @@ locationKeyList = [
     ("dateTime", "long"),
 ]
 
-iso8601_string = "seconds since 1970-01-01T00:00:00Z"
 epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 
@@ -147,6 +144,8 @@ def get_data(f, obs_data):
     # beam position or sampling across scan 243 for lower frequencies 486 for 89GHz
     obs_data[('latitude', metaDataName)] = np.array(f['Latitude of Observation Point for 89A'][:, ::2], dtype='float32').flatten()
     obs_data[('longitude', metaDataName)] = np.array(f['Longitude of Observation Point for 89A'][:, ::2], dtype='float32').flatten()
+    # use latitude length to define total number of pixels
+    nlocs = len(obs_data[('latitude', metaDataName)])
     # start at channel 5 as lowest frequencies are not included
     obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(nchans), dtype='int32')
     k = 'sensorScanPosition'
@@ -160,18 +159,18 @@ def get_data(f, obs_data):
     # obs_data[(k, metaDataName)] = np.array(f['Sun Elevation'], dtype='float32').flatten()
     k = 'solarAzimuthAngle'
     obs_data[(k, metaDataName)] = np.array(f['Sun Azimuth'], dtype='float32').flatten()
+    orbit_direction = f.attrs['OrbitDirection'].item()
+    iasc = get_asc_dsc(orbit_direction)
+    obs_data[('satelliteAscendingFlag', metaDataName)] = np.full((nlocs), iasc, dtype='int32')
+    obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
     # compute view angle
     sat_altitude = np.empty_like(instr_scan_ang)
     sat_altitude[:] = f.attrs['SatelliteAltitude'].item().strip('km')
-    orbit_direction = f.attrs['OrbitDirection'].item()
-    obs_data[('satelliteAscendingFlag', metaDataName)] = np.full((nlocs), get_asc_dsc(orbit_direction), dtype='int32')
     obs_data[('sensorViewAngle', metaDataName)] = compute_scan_angle(
         instr_scan_ang,
         sat_altitude,
         instr_scan_ang)
 
-    nlocs = len(obs_data[('latitude', metaDataName)])
-    obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
     obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f, nbeam_pos), dtype='int64')
 
     nlocs = len(obs_data[('latitude', metaDataName)])
@@ -240,6 +239,7 @@ def set_missing_value(f, obs_key, obs_data):
 def get_asc_dsc(orbitDirection):
     # from JAXA gportal files formatted like so
     # f.attrs['OrbitDirection'].item()
+    # print(f'   orbitDirection: {orbitDirection}')
     if orbitDirection == 'Ascending':
         iasc = 1
     elif orbitDirection == 'Descending':
@@ -247,6 +247,7 @@ def get_asc_dsc(orbitDirection):
     else:
         print(f' ... WARNING ... can not determine ascending or descending from file attribute')
         iasc = None
+    return iasc
 
 
 def get_wmo_id(platform):
