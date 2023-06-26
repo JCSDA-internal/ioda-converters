@@ -61,6 +61,7 @@ observations:
               fieldOfViewNumber: "*/FOVN"
               scanStart: -48.333
               scanStep: 3.333 
+              sensor: amsua 
 
           sensorChannelNumber:
             query: "*/BRITCSTC/CHNM"
