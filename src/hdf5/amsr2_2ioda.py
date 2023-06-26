@@ -20,11 +20,11 @@ import sys
 import h5py
 import numpy as np
 
-import lib_python.ioda_conv_engines as iconv
-from lib_python.orddicts import DefaultOrderedDict
-from hdf5.atms_netcdf_hdf5_2ioda import set_metadata_attributes, set_obspace_attributes
-from hdf5.cowvr_hdf5_2ioda import compute_scan_angle
-from lib_python.def_jedi_utils import concat_obs_dict
+import pyiodaconv.ioda_conv_engines as iconv
+from pyiodaconv.orddicts import DefaultOrderedDict
+from pyiodaconv.def_jedi_utils import set_metadata_attributes, set_obspace_attributes
+from pyiodaconv.def_jedi_utils import compute_scan_angle
+from pyiodaconv.def_jedi_utils import concat_obs_dict
 
 float_missing_value = iconv.get_default_fill_val(np.float32)
 int_missing_value = iconv.get_default_fill_val(np.int32)
