@@ -76,8 +76,8 @@ conv_bufrtypes = {
     "sfcship": [180, 183],
     "sfc": [181, 187],
     "gps": [3, 4, 5, 41, 42, 43, 44, 66, 265, 266, 267, 268, 269, 421, 440,\
-    722, 723, 740, 741, 742, 743, 744, 745,\
-    750, 751, 752, 753, 754, 755, 786, 803, 804, 820, 821, 825],
+           722, 723, 740, 741, 742, 743, 744, 745,\
+           750, 751, 752, 753, 754, 755, 786, 803, 804, 820, 821, 825],
     "sst": [181, 182, 183, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202],
     # 132 are dropsondes
 }
@@ -395,14 +395,13 @@ geovals_vars = {
     'virtual_temperature': 'virtual_temperature',
     'atmosphere_ln_pressure_coordinate': 'atmosphere_ln_pressure_coordinate',
     'specific_humidity': 'specific_humidity',
-    'Forecast_Saturation_Spec_Hum': 'saturated_specific_humidity',
-    'saturated_specific_humidity_profile': 'saturated_specific_humidity_profile',
     'northward_wind': 'northward_wind',
     'eastward_wind': 'eastward_wind',
     'geopotential_height_levels': 'geopotential_height_levels',
     'geopotential_height': 'geopotential_height',
     'geometric_height': 'geometric_height',
     'height': 'height_above_mean_sea_level',
+    'Model_Elevation': 'surface_altitude',
     'tropopause_pressure': 'tropopause_pressure',
     'surface_pressure': 'surface_pressure',
     'surface_air_pressure': 'surface_pressure',
@@ -772,9 +771,9 @@ class Conv(BaseGSI):
                 print("Platform:%s Var:%s #Obs:%d" % (p, v, np.sum(idx)))
                 if v == 'bend':
                     # sort record_number
-                    record_number = self.var('record_number')[idx]
+                    record_number = self.var('Observation_Subtype')[idx]
                     id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
-                    print("Sorting ", v, " obs referring to record_number in geovals")
+                    print("Sorting ", v, " obs referring to record_number")
                     # record_number_sorted = [ record_number[ksort] for ksort in id_recordnum_sort ]
 
                     # Shuffle idx referring to sorted record_number's subscripts "id_recordnum_sort".
@@ -921,7 +920,7 @@ class Conv(BaseGSI):
 
                 if v == 'bend':
                     # sort record_number
-                    record_number = self.var('record_number')[idx]
+                    record_number = self.var('Observation_Subtype')[idx]
                     id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
                     print("Sorting ", v, " obs referring to record_number")
                     # record_number_sorted = [ record_number[ksort] for ksort in id_recordnum_sort ]
