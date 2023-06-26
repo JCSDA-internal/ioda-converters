@@ -14,9 +14,9 @@ import pandas as pd
 import sys
 import warnings
 
-import lib_python.ioda_conv_engines as iconv
+import pyiodaconv.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
-from lib_python.orddicts import DefaultOrderedDict
+from pyiodaconv.orddicts import DefaultOrderedDict
 
 arg_parse_description = (
     """Reads snow OWP observations in CSV files and converts

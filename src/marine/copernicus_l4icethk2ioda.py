@@ -17,14 +17,9 @@ from pathlib import Path
 from subprocess import call
 import pandas as pd
 
-IODA_CONV_PATH = Path(__file__).parent/"../lib/pyiodaconv"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
-
-import ioda_conv_engines as iconv
+import pyiodaconv.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
-from orddicts import DefaultOrderedDict
+from pyiodaconv.orddicts import DefaultOrderedDict
 
 locationKeyList = [
     ("latitude", "float"),
