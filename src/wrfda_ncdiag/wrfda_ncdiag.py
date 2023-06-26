@@ -8,10 +8,10 @@
 from collections import defaultdict, OrderedDict
 import datetime as dt
 import errno
-import lib_python.ioda_conv_ncio as iconio
+import pyiodaconv.ioda_conv_ncio as iconio
 import netCDF4 as nc
 import numpy as np
-from lib_python.orddicts import DefaultOrderedDict
+from pyiodaconv.orddicts import DefaultOrderedDict
 import os
 import sys
 

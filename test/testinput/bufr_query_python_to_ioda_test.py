@@ -6,8 +6,8 @@
 
 import numpy as np
 
-import bufr
-import ioda
+from pyiodaconv import bufr
+from pyioda import ioda
 
 DATA_PATH = './testinput/gdas.t00z.1bhrs4.tm00.bufr_d'
 OUTPUT_PATH = './testrun/bufr_query_python_to_ioda_test.nc'
