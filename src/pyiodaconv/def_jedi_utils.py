@@ -13,6 +13,7 @@ import pyiodaconv.ioda_conv_engines as iconv
 metaDataName = iconv.MetaDataName()
 obsValName = iconv.OvalName()
 
+iso8601_string = "seconds since 1970-01-01T00:00:00Z"
 float_missing_value = iconv.get_default_fill_val(np.float32)
 int_missing_value = iconv.get_default_fill_val(np.int32)
 long_missing_value = iconv.get_default_fill_val(np.int64)
