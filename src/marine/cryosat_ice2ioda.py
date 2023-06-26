@@ -16,8 +16,8 @@ import numpy as np
 import subprocess
 import os
 
-from lib_python.orddicts import DefaultOrderedDict
-import lib_python.ioda_conv_engines as iconv
+from pyiodaconv.orddicts import DefaultOrderedDict
+import pyiodaconv.ioda_conv_engines as iconv
 
 
 class Observation(object):

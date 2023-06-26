@@ -16,9 +16,9 @@ import pandas as pd
 from datetime import datetime
 from builtins import str
 
-import lib_python.ioda_conv_engines as iconv
+import pyiodaconv.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
-from lib_python.orddicts import DefaultOrderedDict
+from pyiodaconv.orddicts import DefaultOrderedDict
 
 
 def dateparse(x):

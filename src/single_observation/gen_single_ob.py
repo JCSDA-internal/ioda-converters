@@ -8,8 +8,8 @@
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import yaml
 
-import lib_python.ioda_conv_ncio as iconio
-from lib_python.orddicts import DefaultOrderedDict
+import pyiodaconv.ioda_conv_ncio as iconio
+from pyiodaconv.orddicts import DefaultOrderedDict
 
 
 class singleob(object):
