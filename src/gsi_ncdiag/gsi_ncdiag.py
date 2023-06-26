@@ -395,13 +395,14 @@ geovals_vars = {
     'virtual_temperature': 'virtual_temperature',
     'atmosphere_ln_pressure_coordinate': 'atmosphere_ln_pressure_coordinate',
     'specific_humidity': 'specific_humidity',
+    'Forecast_Saturation_Spec_Hum': 'saturated_specific_humidity',
+    'saturated_specific_humidity_profile': 'saturated_specific_humidity_profile',
     'northward_wind': 'northward_wind',
     'eastward_wind': 'eastward_wind',
     'geopotential_height_levels': 'geopotential_height_levels',
     'geopotential_height': 'geopotential_height',
     'geometric_height': 'geometric_height',
     'height': 'height_above_mean_sea_level',
-    'Model_Elevation': 'surface_altitude',
     'tropopause_pressure': 'tropopause_pressure',
     'surface_pressure': 'surface_pressure',
     'surface_air_pressure': 'surface_pressure',
@@ -771,9 +772,9 @@ class Conv(BaseGSI):
                 print("Platform:%s Var:%s #Obs:%d" % (p, v, np.sum(idx)))
                 if v == 'bend':
                     # sort record_number
-                    record_number = self.var('Observation_Subtype')[idx]
+                    record_number = self.var('record_number')[idx]
                     id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
-                    print("Sorting ", v, " obs referring to record_number")
+                    print("Sorting ", v, " obs referring to record_number in geovals")
                     # record_number_sorted = [ record_number[ksort] for ksort in id_recordnum_sort ]
 
                     # Shuffle idx referring to sorted record_number's subscripts "id_recordnum_sort".
@@ -920,7 +921,7 @@ class Conv(BaseGSI):
 
                 if v == 'bend':
                     # sort record_number
-                    record_number = self.var('Observation_Subtype')[idx]
+                    record_number = self.var('record_number')[idx]
                     id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
                     print("Sorting ", v, " obs referring to record_number")
                     # record_number_sorted = [ record_number[ksort] for ksort in id_recordnum_sort ]
@@ -1551,6 +1552,9 @@ class Radiances(BaseGSI):
         # check for additional GSI output for each variable
         for gsivar, iodavar in gsi_add_radvars.items():
             if gsivar in self.df.variables:
+                if gsivar == 'Forecast_adjusted':
+                    # Not to save it if GsiHofx can be from "Obs_Minus_Forecast_adjusted"
+                    continue
                 if "Inverse" in gsivar:
                     tmp = self.var(gsivar)
                     # fix for if some reason 1/small does not result in inf but zero
@@ -1558,10 +1562,16 @@ class Radiances(BaseGSI):
                     tmp[~mask] = 1.0 / tmp[~mask]
                     tmp[mask] = self.FLOAT_FILL
                 elif "Obs_Minus_" in gsivar:
-                    if 'Forecast_adjusted' in self.df.variables:
+                    if "Forecast_unadjusted" in gsivar:
                         continue
                     key1 = 'Observation'
                     tmp = self.var(key1) - self.var(gsivar)
+                    # Save GsiHofXBc from "Forecast_adjusted" if some of "Obs_Minus_Forecast_adjusted" are
+                    # missing values, which results in the above tmp = zero.   
+                    print('JJJ min=', min(tmp))
+                    print('JJJ max=', max(tmp))
+                    if min(tmp) < 1.0 and 'Forecast_adjusted' in self.df.variables:
+                        tmp = self.var('Forecast_adjusted')
                 else:
                     tmp = self.var(gsivar)
                 if gsivar in gsiint:
@@ -1586,7 +1596,7 @@ class Radiances(BaseGSI):
         gsiqcname = value, 'GsiEffectiveQC'
         errname = value, 'GsiFinalObsError'
         gsiqc = np.zeros_like(outdata[varDict[value]['valKey']])
-        gsiqc[outdata[errname] > 1e8] = 1
+        gsiqc[outdata[errname] > 1.0e8] = 1
         gsiqc[np.reshape(self.var('QC_Flag'), (nlocs, nchans)) < 0] = 1
         outdata[gsiqcname] = gsiqc.astype(np.int32)
 
