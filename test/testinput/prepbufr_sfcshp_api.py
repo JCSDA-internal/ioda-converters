@@ -12,7 +12,7 @@ sys.path.append('/work2/noaa/da/nesposito/ioda-bundle_featurequery/build/lib/pyt
 
 import numpy as np
 import numpy.ma as ma
-import bufr
+from pyiodaconv import bufr
 import ioda
 import calendar
 import time
