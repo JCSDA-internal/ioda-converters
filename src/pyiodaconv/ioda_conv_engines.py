@@ -239,7 +239,7 @@ def ExtractObsData(ObsData, loc_key_list):
             defaultval = get_default_fill_val(np.int32)
             defaultvaltype = np.int32
         elif (VarType in [str, np.str_]):
-            defaultval = get_default_fill_val(np.str)
+            defaultval = get_default_fill_val(str)
             defaultvaltype = np.object_
         elif (VarType in [np.ma.core.MaskedConstant]):
             # If we happened to pick an invalid value (inf, nan, etc.) from
