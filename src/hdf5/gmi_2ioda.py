@@ -25,12 +25,8 @@ from pyiodaconv.orddicts import DefaultOrderedDict
 from pyiodaconv.def_jedi_utils import set_metadata_attributes, set_obspace_attributes
 from pyiodaconv.def_jedi_utils import compute_scan_angle
 from pyiodaconv.def_jedi_utils import concat_obs_dict
-
-import pdb
-
-float_missing_value = iconv.get_default_fill_val(np.float32)
-int_missing_value = iconv.get_default_fill_val(np.int32)
-long_missing_value = iconv.get_default_fill_val(np.int64)
+from pyiodaconv.def_jedi_utils import iso8601_string
+from pyiodaconv.def_jedi_utils import float_missing_value, int_missing_value, long_missing_value
 
 metaDataName = iconv.MetaDataName()
 obsValName = iconv.OvalName()
@@ -51,7 +47,6 @@ locationKeyList = [
     ("dateTime", "long"),
 ]
 
-iso8601_string = "seconds since 1970-01-01T00:00:00Z"
 epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 
