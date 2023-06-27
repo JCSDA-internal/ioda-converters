@@ -33,6 +33,8 @@ if ( iodaconv_bufr_ENABLED )
     BufrParser/Exports/Variables/RemappedBrightnessTemperatureVariable.cpp
     BufrParser/Exports/Variables/SensorScanAngleVariable.h
     BufrParser/Exports/Variables/SensorScanAngleVariable.cpp
+    BufrParser/Exports/Variables/SensorScanPositionVariable.h
+    BufrParser/Exports/Variables/SensorScanPositionVariable.cpp
     BufrParser/Exports/Variables/AircraftAltitudeVariable.h
     BufrParser/Exports/Variables/AircraftAltitudeVariable.cpp
     BufrParser/Exports/Variables/TimeoffsetVariable.h
