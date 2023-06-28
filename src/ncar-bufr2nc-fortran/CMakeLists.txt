@@ -13,6 +13,7 @@ list(APPEND bufr2nc_source
   netcdf_mod.f90
   prepbufr_mod.f90
   radiance_mod.f90
+  satwnd_mod.f90
   ufo_variables_mod.F90
   utils_mod.f90
   )
