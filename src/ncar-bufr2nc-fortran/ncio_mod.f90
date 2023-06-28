@@ -78,11 +78,11 @@ contains
          xdata(ityp, itim)%max_datetime = xdata(ityp, itim)%xinfo_char(imax_datetime(1), iv)
 
          if (write_opt == write_nc_conv) then
-            ncfname = trim(outdir)//trim(obtype_list(ityp))//'_obs_'//trim(filedate)//'.h5'
+            ncfname = trim(outdir)//trim(obtype_list(ityp))//'_obs_'//trim(filedate)//'.nc4'
          else if (write_opt == write_nc_radiance) then
-            ncfname = trim(outdir)//trim(inst_list(ityp))//'_obs_'//trim(filedate)//'.h5'
+            ncfname = trim(outdir)//trim(inst_list(ityp))//'_obs_'//trim(filedate)//'.nc4'
          else if (write_opt == write_nc_radiance_geo) then
-            ncfname = trim(outdir)//trim(geoinst_list(ityp))//'_obs_'//trim(filedate)//'.h5'
+            ncfname = trim(outdir)//trim(geoinst_list(ityp))//'_obs_'//trim(filedate)//'.nc4'
          end if
          if (write_opt == write_nc_radiance .or. write_opt == write_nc_radiance_geo) then
             iv = ufo_vars_getindex(name_sen_info, 'sensor_channel')

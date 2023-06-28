@@ -121,7 +121,7 @@ contains
       call w3fs21(iadate5, mincy)
       write (anatime, '(i10)') idate
 
-      write (outfile, '(a,i10.10,a)') trim(outdir)//'gnssro_obs_', idate, '.h5'
+      write (outfile, '(a,i10.10,a)') trim(outdir)//'gnssro_obs_', idate, '.nc4'
 
 ! loop over all message to estimate maxobs
       do while (ireadmg(lnbufr, subset, idate) == 0)
