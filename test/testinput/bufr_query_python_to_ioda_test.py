@@ -49,18 +49,17 @@ def test_bufr_to_ioda():
     obsspace.write_attr('MyGlobal_int', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
 
     # Create the variables
-    obsspace.create_var('MetaData/Timestamp', dtype=np.int64, fillval=datetime.fill_value.astype('int64')) \
-        .write_attr('units', 'seconds_since_epoch') \
+    obsspace.create_var('MetaData/timestamp', dtype=datetime.dtype, fillval=datetime.fill_value) \
         .write_attr('long_name', 'Timestamp') \
-        .write_data(datetime.astype('int64'))
+        .write_data(datetime)
 
-    obsspace.create_var('MetaData/Latitude', dtype=lat.dtype, fillval=lat.fill_value) \
+    obsspace.create_var('MetaData/latitude', dtype=lat.dtype, fillval=lat.fill_value) \
         .write_attr('units', 'degrees_north') \
         .write_attr('long_name', 'Latitude') \
         .write_attr('valid_range', [-90.0, 90.0]) \
         .write_data(lat)
 
-    obsspace.create_var('MetaData/Longitude', dtype=lon.dtype, fillval=lon.fill_value) \
+    obsspace.create_var('MetaData/longitude', dtype=lon.dtype, fillval=lon.fill_value) \
         .write_attr('units', 'degrees_east') \
         .write_attr('long_name', 'Longitude') \
         .write_attr('valid_range', [-180.0, 180.0]) \
