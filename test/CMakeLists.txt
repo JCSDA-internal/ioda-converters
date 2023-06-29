@@ -298,7 +298,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/NC005031.nc
     testoutput/NC005066.nc
     testoutput/gdas.t18z.satwnd_avhrr.tm00.nc
-    testoutput/gdas.t12z.mtiasi.metop-c.tm00.nc
+    testoutput/gdas.t12z.mtiasi_metop-c.tm00.nc
     testoutput/bufr_simple_groupby.nc
     testoutput/bufr_empty_fields.nc
     testoutput/bufr_sfcshp.nc
@@ -440,12 +440,11 @@ set(IODA_CONV_COMP_TOL "0.5e-4")
 #        ...
 #        )
 #  Dom's fix to get right path
-#set(IODACONV_PYTHONPATH "$<TARGET_FILE_DIR:_ioda_python>/../:$ENV{PYTHONPATH}")
 
 list(APPEND python_path
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src"
-  "${CMAKE_BINARY_DIR}/lib/pyiodaconv"
-  "$<TARGET_FILE_DIR:_ioda_python>/../"
+  "${PYIODACONV_BUILD_LIBDIR}/../"
+  "${PYIODACONV_INSTALL_LIBDIR}/../"
+  "$<TARGET_FILE_DIR:_ioda_python>/../../"
   "$ENV{PYTHONPATH}")
 
 string(REPLACE ";" ":" python_path_str "${python_path}")
@@ -1435,7 +1434,7 @@ if(iodaconv_bufr_ENABLED)
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_mtiasi.yaml"
-                    gdas.t12z.mtiasi.metop-c.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    gdas.t12z.mtiasi_metop-c.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_atms

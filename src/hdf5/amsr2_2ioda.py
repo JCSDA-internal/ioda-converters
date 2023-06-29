@@ -9,11 +9,11 @@
 
 
 """
-Python code to ingest netCDF4 TROPICS data
+Python code to ingest hdf5 AMSR/2 data
 """
 
 import argparse
-from datetime import datetime
+from datetime import datetime, timedelta
 import os.path
 import sys
 
@@ -22,29 +22,23 @@ import numpy as np
 
 import pyiodaconv.ioda_conv_engines as iconv
 from pyiodaconv.orddicts import DefaultOrderedDict
-from hdf5.atms_netcdf_hdf5_2ioda import set_metadata_attributes, set_obspace_attributes
-from hdf5.cowvr_hdf5_2ioda import compute_scan_angle
-from gnssro.gnssro_bufr2ioda import ioda_int_type, ioda_float_type
+from pyiodaconv.def_jedi_utils import set_metadata_attributes, set_obspace_attributes
+from pyiodaconv.def_jedi_utils import compute_scan_angle
 from pyiodaconv.def_jedi_utils import concat_obs_dict
-
-float_missing_value = iconv.get_default_fill_val(np.float32)
-int_missing_value = iconv.get_default_fill_val(np.int32)
-long_missing_value = iconv.get_default_fill_val(np.int64)
+from pyiodaconv.def_jedi_utils import iso8601_string
+from pyiodaconv.def_jedi_utils import float_missing_value, int_missing_value, long_missing_value
 
 metaDataName = iconv.MetaDataName()
 obsValName = iconv.OvalName()
 
 # globals
-TROPICS01_WMO_sat_ID = 691
-TROPICS02_WMO_sat_ID = 895
-TROPICS03_WMO_sat_ID = 896
-TROPICS04_WMO_sat_ID = 897
-TROPICS05_WMO_sat_ID = 898
+GCOMW_WMO_sat_ID = 122
+GPM_WMO_sat_ID = 288
 
 GlobalAttrs = {
-    "platformCommonName": "TROPICS",
-    "platformLongDescription": "TROPICS Brightness Temperature Data",
-    "sensorCentralFrequency": "[91.655,  114.50,  115.95,  116.65,  117.25,  117.80,  118.24,  118.58,  184.41,  186.51,  190.31,  204.80]"
+    "platformCommonName": "AMSR2",
+    "platformLongDescription": "AMSR-2 Brightness Temperature Data",
+    "sensorCentralFrequency": "[6.925V, 6.925H, 7.3V, 7.3H, 10.65V, 10.65H, 18.7V, 18.7H, 23.8V, 23.8H, 36.5V, 36.5H, 89.0V, 89.0H]"
 }
 
 locationKeyList = [
@@ -53,7 +47,6 @@ locationKeyList = [
     ("dateTime", "long"),
 ]
 
-iso8601_string = "seconds since 1970-01-01T00:00:00Z"
 epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 
@@ -140,59 +133,66 @@ def get_data_from_files(afile):
 
 def get_data(f, obs_data):
 
-    WMO_sat_ID = get_WMO_satellite_ID(f.attrs['ShortName'].decode("utf-8"))
-
-    nscans = len(f['scans'])
-    nbeam_pos = len(f['spots'])
-    nchans = len(f['channels'])
-    nbands = len(f['bands'])
-    # Bands_to_Channel = "Band 1 = Ch 1; Band 2 = Ch 2-4; Band 3 = Ch 5-8; Band 4 = Ch 9-11; Band 5 = Ch 12"
-    iband = 0   # at this point arbitrarily select a band
-    obs_data[('latitude', metaDataName)] = np.array(f['losLat_deg'][iband, :, :].flatten(), dtype='float32')
-    obs_data[('longitude', metaDataName)] = np.array(f['losLon_deg'][iband, :, :].flatten(), dtype='float32')
-    obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(nchans)+1, dtype='int32')
+    # f.attrs['FileHeader']
+    # \nSatelliteName=GCOMW1;
+    # WMO_sat_ID = get_WMO_satellite_ID(f.attrs['ShortName'].decode("utf-8"))
+    sensor = f.attrs['SensorShortName'].item()
+    WMO_sat_ID = get_wmo_id(f.attrs['PlatformShortName'].item())
+    nscans = np.shape(f['Latitude of Observation Point for 89A'][:, ::2])[0]
+    nbeam_pos = np.shape(f['Latitude of Observation Point for 89A'][:, ::2])[1]
+    nchans = 14
+    # beam position or sampling across scan 243 for lower frequencies 486 for 89GHz
+    obs_data[('latitude', metaDataName)] = np.array(f['Latitude of Observation Point for 89A'][:, ::2], dtype='float32').flatten()
+    obs_data[('longitude', metaDataName)] = np.array(f['Longitude of Observation Point for 89A'][:, ::2], dtype='float32').flatten()
+    # use latitude length to define total number of pixels
+    nlocs = len(obs_data[('latitude', metaDataName)])
+    # start at channel 5 as lowest frequencies are not included
+    obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(nchans), dtype='int32')
     k = 'sensorScanPosition'
     obs_data[(k, metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='float32')+1, (nscans, 1)).flatten()
-    k = 'solarZenithAngle'
-    obs_data[(k, metaDataName)] = np.array(f['losSolZen_deg'][iband, :, :].flatten(), dtype='float32')
-    k = 'solarAzimuthAngle'
-    obs_data[(k, metaDataName)] = np.array(f['losSolAzi_deg'][iband, :, :].flatten(), dtype='float32')
-    k = 'sensorZenithAngle'
-    obs_data[(k, metaDataName)] = np.array(f['losZen_deg'][iband, :, :].flatten(), dtype='float32')
+    k = 'sensorZenithAngle'   # ~55.2 incidence angle
+    obs_data[(k, metaDataName)] = np.array(f['Earth Incidence'], dtype='float32').flatten()
+    instr_scan_ang = obs_data[(k, metaDataName)]
     k = 'sensorAzimuthAngle'
-    obs_data[(k, metaDataName)] = np.array(f['losAzi_deg'][iband, :, :].flatten(), dtype='float32')
-    instr_scan_ang = np.array(f['losScan_deg'][iband, :, :].flatten(), dtype='float32')
+    obs_data[(k, metaDataName)] = np.array(f['Earth Azimuth'], dtype='float32').flatten()
+    # k = 'solarZenithAngle'  ??? compute
+    # obs_data[(k, metaDataName)] = np.array(f['Sun Elevation'], dtype='float32').flatten()
+    k = 'solarAzimuthAngle'
+    obs_data[(k, metaDataName)] = np.array(f['Sun Azimuth'], dtype='float32').flatten()
+    orbit_direction = f.attrs['OrbitDirection'].item()
+    iasc = get_asc_dsc(orbit_direction)
+    obs_data[('satelliteAscendingFlag', metaDataName)] = np.full((nlocs), iasc, dtype='int32')
+    obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
     # compute view angle
     sat_altitude = np.empty_like(instr_scan_ang)
-    sat_altitude[:] = 550.
+    sat_altitude[:] = f.attrs['SatelliteAltitude'].item().strip('km')
     obs_data[('sensorViewAngle', metaDataName)] = compute_scan_angle(
         instr_scan_ang,
         sat_altitude,
         instr_scan_ang)
 
-    nlocs = len(obs_data[('latitude', metaDataName)])
-    obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
-    # obs_data[('datetime', metaDataName)] = np.array(get_string_dtg(f), dtype=object)
-    obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f), dtype='int64')
+    obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f, nbeam_pos), dtype='int64')
 
     nlocs = len(obs_data[('latitude', metaDataName)])
     k = 'brightnessTemperature'
     # have to reorder the channel axis to be last then merge ( nscans x nspots = nlocs )
-    obs_data[(k, "ObsValue")] = np.array(np.vstack(np.stack(
-        np.where(f['tempBrightE_K'] == f['tempBrightE_K'].fillvalue, float_missing_value, f['tempBrightE_K']), axis=2)), dtype='float32')
+    obs_data[(k, "ObsValue")] = np.transpose(
+        (np.array(f['Brightness Temperature (6.9GHz,H)'], dtype='float32').flatten(),
+         np.array(f['Brightness Temperature (6.9GHz,V)'], dtype='float32').flatten(),
+         np.array(f['Brightness Temperature (7.3GHz,H)'], dtype='float32').flatten(),
+         np.array(f['Brightness Temperature (7.3GHz,V)'], dtype='float32').flatten(),
+         np.array(f['Brightness Temperature (10.7GHz,H)'], dtype='float32').flatten(),
+         np.array(f['Brightness Temperature (10.7GHz,V)'], dtype='float32').flatten(),
+         np.array(f['Brightness Temperature (18.7GHz,H)'], dtype='float32').flatten(),
+         np.array(f['Brightness Temperature (18.7GHz,V)'], dtype='float32').flatten(),
+         np.array(f['Brightness Temperature (23.8GHz,H)'], dtype='float32').flatten(),
+         np.array(f['Brightness Temperature (23.8GHz,V)'], dtype='float32').flatten(),
+         np.array(f['Brightness Temperature (36.5GHz,H)'], dtype='float32').flatten(),
+         np.array(f['Brightness Temperature (36.5GHz,V)'], dtype='float32').flatten(),
+         np.array(f['Brightness Temperature (89.0GHz-A,H)'][:, ::2], dtype='float32').flatten(),
+         np.array(f['Brightness Temperature (89.0GHz-A,V)'][:, ::2], dtype='float32').flatten()))
     obs_data[(k, "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
     obs_data[(k, "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
-
-    # Bit 1: land/undefined
-    # Bit 2: Lunar/solar intrusion
-    # Bit 3: Active Maneuver
-    # Bit 4: Cold Cal. Consistency
-    # Bit 5: Hot Cal. Consistency
-    # Bit 6: Ascending/Descending
-    # Bit 7: Day/Night
-    # Bit 8: Payload forward/aft"
-    quality_word = np.vstack(np.stack(f['calQualityFlag'], axis=2))
-    obs_data[('satelliteAscendingFlag', metaDataName)] = np.array(get_normalized_bit(quality_word[:, 0], bit_index=6), dtype='int32')
 
     # check some global satellite geometry will compress all data using this
     chk_geolocation = (obs_data[('latitude', metaDataName)] > 90) | (obs_data[('latitude', metaDataName)] < -90) | \
@@ -203,31 +203,30 @@ def get_data(f, obs_data):
     obs_data[('longitude', metaDataName)][chk_geolocation] = float_missing_value
     obs_data[('sensorZenithAngle', metaDataName)][chk_geolocation] = float_missing_value
 
-    obs_key = (k, "ObsValue")
-    obs_data = set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data)
+    obs_key = ("brightnessTemperature", "ObsValue")
+    # need to reformulate
+    # obs_data = set_missing_value(f, obs_key, obs_data)
 
     return obs_data
 
 
-def set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data):
-    # use quality word to determine where to set for missing values
-    for jchan in np.arange(nchans):
-        i_land = get_normalized_bit(quality_word[:, jchan], bit_index=1)
-        i_intrusion = get_normalized_bit(quality_word[:, jchan], bit_index=2)
-        i_maneuver = get_normalized_bit(quality_word[:, jchan], bit_index=3)
-        i_cold_cal = get_normalized_bit(quality_word[:, jchan], bit_index=4)
-        i_hot_cal = get_normalized_bit(quality_word[:, jchan], bit_index=5)
-        i_asc = get_normalized_bit(quality_word[:, jchan], bit_index=6)
-        i_day = get_normalized_bit(quality_word[:, jchan], bit_index=7)
-        i_forward = get_normalized_bit(quality_word[:, jchan], bit_index=8)
-        chk_ob = (i_cold_cal + i_hot_cal + i_intrusion + i_maneuver + chk_geolocation) > 0
-        obs_data[obs_key][:, jchan][chk_ob] = float_missing_value
+def set_missing_value(f, obs_key, obs_data):
 
+    # <HDF5 dataset "Scan Data Quality": shape (2035, 512), type "|u1">
+    # f['Scan Data Quality'][0,:]
+
+    # use quality word to set missing values
+    chk_ob = np.array(f['Scan Data Quality']).flatten()
+    for ich in nchan:
+        obs_data[obs_key][:, ich][chk_ob] = float_missing_value
+
+    # now reduce size if channels are flagged
     tb_key = 'brightnessTemperature'
     good = (obs_data[(tb_key, obsValName)][:, 0] != float_missing_value) & \
-        (obs_data[(tb_key, obsValName)][:, 1] != float_missing_value) & \
-        (obs_data[(tb_key, obsValName)][:, 8] != float_missing_value) & \
-        (obs_data[(tb_key, obsValName)][:, 11] != float_missing_value)
+        (obs_data[(tb_key, obsValName)][:, 2] != float_missing_value) & \
+        (obs_data[(tb_key, obsValName)][:, 4] != float_missing_value) & \
+        (obs_data[(tb_key, obsValName)][:, 6] != float_missing_value) & \
+        (obs_data[(tb_key, obsValName)][:, 8] != float_missing_value)
     for k in obs_data:
         if metaDataName in k[1] and 'sensorChannelNumber' not in k[0]:
             obs_data[k] = obs_data[k][good]     # [::24] ## add as skip
@@ -237,85 +236,45 @@ def set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data):
     return obs_data
 
 
-def get_normalized_bit(value, bit_index):
-    return (value >> bit_index) & 1
-
-
-def assign_values(data):
-    if data.dtype == float:
-        data[np.abs(data) >= np.abs(float_missing_value)] = float_missing_value
-        return np.array(data, dtype=ioda_float_type)
-    elif data.dtype == int:
-        data[np.abs(data) >= np.abs(int_missing_value)] = int_missing_value
-        return np.array(data, dtype=ioda_int_type)
-
-
-def get_WMO_satellite_ID(attrs_shortname):
-
-    if 'TROPICS01' in attrs_shortname:
-        WMO_sat_ID = TROPICS01_WMO_sat_ID
-    elif 'TROPICS02' in attrs_shortname:
-        WMO_sat_ID = TROPICS02_WMO_sat_ID
-    elif 'TROPICS03' in attrs_shortname:
-        WMO_sat_ID = TROPICS03_WMO_sat_ID
-    elif 'TROPICS04' in attrs_shortname:
-        WMO_sat_ID = TROPICS04_WMO_sat_ID
-    elif 'TROPICS05' in attrs_shortname:
-        WMO_sat_ID = TROPICS05_WMO_sat_ID
+def get_asc_dsc(orbitDirection):
+    # from JAXA gportal files formatted like so
+    # f.attrs['OrbitDirection'].item()
+    # print(f'   orbitDirection: {orbitDirection}')
+    if orbitDirection == 'Ascending':
+        iasc = 1
+    elif orbitDirection == 'Descending':
+        iasc = 0
     else:
-        WMO_sat_ID = -1
-        print("could not determine satellite from filename: %s" % afile)
-        sys.exit()
+        print(f' ... WARNING ... can not determine ascending or descending from file attribute')
+        iasc = None
+    return iasc
 
+
+def get_wmo_id(platform):
+    if platform == 'GCOM-W1':
+        WMO_sat_ID = GCOMW_WMO_sat_ID
+    else:
+        print(' ... could not find PlatformShortName as file attribute')
+        return None
     return WMO_sat_ID
 
 
-def get_epoch_time(f):
+def get_epoch_time(f, nbeam_pos):
 
-    nbeam_pos = len(f['spots'])
-    # ugh this does not seem generic
-    year = f['Year']
-    month = f['Month']
-    day = f['Day']
-    hour = f['Hour']
-    minute = f['Minute']
-    second = np.zeros_like(minute)
+    # k: ObservationStartDateTime item: 2022-02-16T00:40:51.967Z
+    # isoformat            '2015-02-04T20:55:08.914461+00:00'
+    # dtgObj = datetime.datetime.fromisoformat(f.attrs['ObservationStartDateTime'].item()[:-1])
 
-    # following examples here could be written better potentially
-    iterables = [year, month, day, hour, minute, second]
-    # ensure the year is plausible (65535 appears in some data) if not set to 01Jan1900 (revisit)
-    this_datetime = [datetime(adate[0], adate[1], adate[2], adate[3], adate[4], adate[5])
-                     if adate[0] < 2200 else datetime(2200, 1, 1, 0, 0, 0)
-                     for adate in zip(*iterables)]
-
-    time_offset_short = [round((adatetime - epoch).total_seconds()) for adatetime in this_datetime]
+    # why 1993 JAXA
+    base_date = datetime(1993, 1, 1)
+    time_offset_short = [base_date + timedelta(seconds=isec) for isec in f['Scan Time']]
     time_offset = []
     for adate in time_offset_short:
         # need to add replication by nbeam_pos
         for _ in range(nbeam_pos):
-            time_offset.append(adate)
+            time_offset.append(adate.timestamp())
 
     return time_offset
-
-
-def get_string_dtg(f):
-
-    # for TROPICS data times are per scan line
-    # current IODA needs replication by beam position
-    nbeam_pos = len(f['spots'])
-    year = f['Year']
-    month = f['Month']
-    day = f['Day']
-    hour = f['Hour']
-    minute = f['Minute']
-    dtg = []
-    for i, yyyy in enumerate(year):
-        cdtg = ("%4i-%.2i-%.2iT%.2i:%.2i:00Z" % (yyyy, month[i], day[i], hour[i], minute[i]))
-        # need to add replication by nbeam_pos
-        for _ in range(nbeam_pos):
-            dtg.append(cdtg)
-
-    return dtg
 
 
 def init_obs_loc():
@@ -329,13 +288,13 @@ def init_obs_loc():
         ('longitude', metaDataName): [],
         ('dateTime', metaDataName): [],
         ('sensorScanPosition', metaDataName): [],
-        ('solarZenithAngle', metaDataName): [],
-        ('solarAzimuthAngle', metaDataName): [],
         ('sensorZenithAngle', metaDataName): [],
         ('sensorAzimuthAngle', metaDataName): [],
         ('sensorViewAngle', metaDataName): [],
+        ('solarAzimuthAngle', metaDataName): [],
         ('satelliteAscendingFlag', metaDataName): [],
     }
+# ('solarZenithAngle', metaDataName): [],
 
     return obs
 

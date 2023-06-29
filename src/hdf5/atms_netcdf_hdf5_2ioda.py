@@ -15,8 +15,10 @@ import h5py
 import numpy as np
 
 from apply_BG.apply_BG import apply_BG_class
-import lib_python.ioda_conv_engines as iconv
-from lib_python.orddicts import DefaultOrderedDict
+import pyiodaconv.ioda_conv_engines as iconv
+from pyiodaconv.def_jedi_utils import set_metadata_attributes, set_obspace_attributes
+from pyiodaconv.orddicts import DefaultOrderedDict
+from pyiodaconv.def_jedi_utils import concat_obs_dict
 
 # globals
 SNPP_WMO_sat_ID = 224
@@ -362,40 +364,6 @@ def init_obs_loc():
     }
 
     return obs
-
-
-def concat_obs_dict(obs_data, append_obs_data):
-    # For now we are assuming that the obs_data dictionary has the "golden" list
-    # of variables. If one is missing from append_obs_data, a warning will be issued.
-    append_keys = list(append_obs_data.keys())
-    for gv_key in obs_data.keys():
-        if gv_key in append_keys:
-            obs_data[gv_key] = np.append(obs_data[gv_key], append_obs_data[gv_key], axis=0)
-        else:
-            print("WARNING: ", gv_key, " is missing from append_obs_data dictionary")
-
-
-def set_metadata_attributes(VarAttrs):
-    VarAttrs[('sensorZenithAngle', metaDataName)]['units'] = 'degree'
-    VarAttrs[('sensorViewAngle', metaDataName)]['units'] = 'degree'
-    VarAttrs[('solarZenithAngle', metaDataName)]['units'] = 'degree'
-    VarAttrs[('sensorAzimuthAngle', metaDataName)]['units'] = 'degree'
-    VarAttrs[('solarAzimuthAngle', metaDataName)]['units'] = 'degree'
-    VarAttrs[('dateTime', metaDataName)]['units'] = iso8601_string
-    VarAttrs[('dateTime', metaDataName)]['_FillValue'] = long_missing_value
-
-    return VarAttrs
-
-
-def set_obspace_attributes(VarAttrs):
-    VarAttrs[('brightnessTemperature', obsValName)]['units'] = 'K'
-    VarAttrs[('brightnessTemperature', obsErrName)]['units'] = 'K'
-
-    VarAttrs[('brightnessTemperature', obsValName)]['_FillValue'] = float_missing_value
-    VarAttrs[('brightnessTemperature', obsErrName)]['_FillValue'] = float_missing_value
-    VarAttrs[('brightnessTemperature', qcName)]['_FillValue'] = int_missing_value
-
-    return VarAttrs
 
 
 def remapBG(input_files, add_qc=True):

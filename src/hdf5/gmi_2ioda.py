@@ -9,7 +9,7 @@
 
 
 """
-Python code to ingest netCDF4 TROPICS data
+Python code to ingest hdf5 GMI data
 """
 
 import argparse
@@ -22,29 +22,23 @@ import numpy as np
 
 import pyiodaconv.ioda_conv_engines as iconv
 from pyiodaconv.orddicts import DefaultOrderedDict
-from hdf5.atms_netcdf_hdf5_2ioda import set_metadata_attributes, set_obspace_attributes
-from hdf5.cowvr_hdf5_2ioda import compute_scan_angle
-from gnssro.gnssro_bufr2ioda import ioda_int_type, ioda_float_type
+from pyiodaconv.def_jedi_utils import set_metadata_attributes, set_obspace_attributes
+from pyiodaconv.def_jedi_utils import compute_scan_angle
 from pyiodaconv.def_jedi_utils import concat_obs_dict
-
-float_missing_value = iconv.get_default_fill_val(np.float32)
-int_missing_value = iconv.get_default_fill_val(np.int32)
-long_missing_value = iconv.get_default_fill_val(np.int64)
+from pyiodaconv.def_jedi_utils import iso8601_string
+from pyiodaconv.def_jedi_utils import float_missing_value, int_missing_value, long_missing_value
 
 metaDataName = iconv.MetaDataName()
 obsValName = iconv.OvalName()
 
 # globals
-TROPICS01_WMO_sat_ID = 691
-TROPICS02_WMO_sat_ID = 895
-TROPICS03_WMO_sat_ID = 896
-TROPICS04_WMO_sat_ID = 897
-TROPICS05_WMO_sat_ID = 898
+GCOMW_WMO_sat_ID = 122
+GPM_WMO_sat_ID = 288
 
 GlobalAttrs = {
-    "platformCommonName": "TROPICS",
-    "platformLongDescription": "TROPICS Brightness Temperature Data",
-    "sensorCentralFrequency": "[91.655,  114.50,  115.95,  116.65,  117.25,  117.80,  118.24,  118.58,  184.41,  186.51,  190.31,  204.80]"
+    "platformCommonName": "GMI",
+    "platformLongDescription": "GMI Brightness Temperature Data",
+    "sensorCentralFrequency": "[10.65V, 10.65H, 18.7V, 18.7H, 23.8V, 36.64V, 36.64H, 89.0V, 89.0H, 166.0V, 166.0H, 183.31+/-3V, 183.31+/-7V]"
 }
 
 locationKeyList = [
@@ -53,7 +47,6 @@ locationKeyList = [
     ("dateTime", "long"),
 ]
 
-iso8601_string = "seconds since 1970-01-01T00:00:00Z"
 epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 
@@ -140,31 +133,29 @@ def get_data_from_files(afile):
 
 def get_data(f, obs_data):
 
-    WMO_sat_ID = get_WMO_satellite_ID(f.attrs['ShortName'].decode("utf-8"))
+    # f.attrs['FileHeader']
+    # \nSatelliteName=GCOMW1;
+    # WMO_sat_ID = get_WMO_satellite_ID(f.attrs['ShortName'].decode("utf-8"))
+    WMO_sat_ID = GPM_WMO_sat_ID
+    # pdb.set_trace()
+    # sys.exit()
 
-    nscans = len(f['scans'])
-    nbeam_pos = len(f['spots'])
-    nchans = len(f['channels'])
-    nbands = len(f['bands'])
-    # Bands_to_Channel = "Band 1 = Ch 1; Band 2 = Ch 2-4; Band 3 = Ch 5-8; Band 4 = Ch 9-11; Band 5 = Ch 12"
-    iband = 0   # at this point arbitrarily select a band
-    obs_data[('latitude', metaDataName)] = np.array(f['losLat_deg'][iband, :, :].flatten(), dtype='float32')
-    obs_data[('longitude', metaDataName)] = np.array(f['losLon_deg'][iband, :, :].flatten(), dtype='float32')
+    nscans = np.shape(f['S1']['Latitude'])[0]
+    nbeam_pos = np.shape(f['S1']['Latitude'])[1]
+    nchans = 12
+    # Two-swaths covering 10.65 to 183 GHz
+    obs_data[('latitude', metaDataName)] = np.array(f['S1']['Latitude'], dtype='float32').flatten()
+    obs_data[('longitude', metaDataName)] = np.array(f['S1']['Longitude'], dtype='float32').flatten()
+    # start at channel 5 as lowest frequencies are not included
     obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(nchans)+1, dtype='int32')
     k = 'sensorScanPosition'
     obs_data[(k, metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='float32')+1, (nscans, 1)).flatten()
-    k = 'solarZenithAngle'
-    obs_data[(k, metaDataName)] = np.array(f['losSolZen_deg'][iband, :, :].flatten(), dtype='float32')
-    k = 'solarAzimuthAngle'
-    obs_data[(k, metaDataName)] = np.array(f['losSolAzi_deg'][iband, :, :].flatten(), dtype='float32')
-    k = 'sensorZenithAngle'
-    obs_data[(k, metaDataName)] = np.array(f['losZen_deg'][iband, :, :].flatten(), dtype='float32')
-    k = 'sensorAzimuthAngle'
-    obs_data[(k, metaDataName)] = np.array(f['losAzi_deg'][iband, :, :].flatten(), dtype='float32')
-    instr_scan_ang = np.array(f['losScan_deg'][iband, :, :].flatten(), dtype='float32')
+    k = 'sensorZenithAngle'   # ~52.85 low freq incidence angle (~49.16 higher freq)
+    obs_data[(k, metaDataName)] = np.array(f['S1']['incidenceAngle'], dtype='float32').flatten()
+    instr_scan_ang = obs_data[(k, metaDataName)]
     # compute view angle
     sat_altitude = np.empty_like(instr_scan_ang)
-    sat_altitude[:] = 550.
+    sat_altitude[:] = 407.0
     obs_data[('sensorViewAngle', metaDataName)] = compute_scan_angle(
         instr_scan_ang,
         sat_altitude,
@@ -172,27 +163,28 @@ def get_data(f, obs_data):
 
     nlocs = len(obs_data[('latitude', metaDataName)])
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
-    # obs_data[('datetime', metaDataName)] = np.array(get_string_dtg(f), dtype=object)
     obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f), dtype='int64')
 
     nlocs = len(obs_data[('latitude', metaDataName)])
     k = 'brightnessTemperature'
     # have to reorder the channel axis to be last then merge ( nscans x nspots = nlocs )
-    obs_data[(k, "ObsValue")] = np.array(np.vstack(np.stack(
-        np.where(f['tempBrightE_K'] == f['tempBrightE_K'].fillvalue, float_missing_value, f['tempBrightE_K']), axis=2)), dtype='float32')
+    obs_data[(k, "ObsValue")] = np.transpose(
+        (np.array(f['S1']['Tc'][:, :, 0], dtype='float32').flatten(),
+         np.array(f['S1']['Tc'][:, :, 1], dtype='float32').flatten(),
+         np.array(f['S1']['Tc'][:, :, 2], dtype='float32').flatten(),
+         np.array(f['S1']['Tc'][:, :, 3], dtype='float32').flatten(),
+         np.array(f['S1']['Tc'][:, :, 4], dtype='float32').flatten(),
+         np.array(f['S1']['Tc'][:, :, 5], dtype='float32').flatten(),
+         np.array(f['S1']['Tc'][:, :, 6], dtype='float32').flatten(),
+         np.array(f['S1']['Tc'][:, :, 7], dtype='float32').flatten(),
+         np.array(f['S1']['Tc'][:, :, 8], dtype='float32').flatten(),
+         np.array(f['S2']['Tc'][:, :, 0], dtype='float32').flatten(),
+         np.array(f['S2']['Tc'][:, :, 1], dtype='float32').flatten(),
+         np.array(f['S2']['Tc'][:, :, 2], dtype='float32').flatten(),
+         np.array(f['S2']['Tc'][:, :, 3], dtype='float32').flatten()))
+
     obs_data[(k, "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
     obs_data[(k, "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
-
-    # Bit 1: land/undefined
-    # Bit 2: Lunar/solar intrusion
-    # Bit 3: Active Maneuver
-    # Bit 4: Cold Cal. Consistency
-    # Bit 5: Hot Cal. Consistency
-    # Bit 6: Ascending/Descending
-    # Bit 7: Day/Night
-    # Bit 8: Payload forward/aft"
-    quality_word = np.vstack(np.stack(f['calQualityFlag'], axis=2))
-    obs_data[('satelliteAscendingFlag', metaDataName)] = np.array(get_normalized_bit(quality_word[:, 0], bit_index=6), dtype='int32')
 
     # check some global satellite geometry will compress all data using this
     chk_geolocation = (obs_data[('latitude', metaDataName)] > 90) | (obs_data[('latitude', metaDataName)] < -90) | \
@@ -204,30 +196,44 @@ def get_data(f, obs_data):
     obs_data[('sensorZenithAngle', metaDataName)][chk_geolocation] = float_missing_value
 
     obs_key = (k, "ObsValue")
-    obs_data = set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data)
+    obs_data = set_missing_value(f, obs_key, obs_data)
 
     return obs_data
 
 
-def set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data):
-    # use quality word to determine where to set for missing values
-    for jchan in np.arange(nchans):
-        i_land = get_normalized_bit(quality_word[:, jchan], bit_index=1)
-        i_intrusion = get_normalized_bit(quality_word[:, jchan], bit_index=2)
-        i_maneuver = get_normalized_bit(quality_word[:, jchan], bit_index=3)
-        i_cold_cal = get_normalized_bit(quality_word[:, jchan], bit_index=4)
-        i_hot_cal = get_normalized_bit(quality_word[:, jchan], bit_index=5)
-        i_asc = get_normalized_bit(quality_word[:, jchan], bit_index=6)
-        i_day = get_normalized_bit(quality_word[:, jchan], bit_index=7)
-        i_forward = get_normalized_bit(quality_word[:, jchan], bit_index=8)
-        chk_ob = (i_cold_cal + i_hot_cal + i_intrusion + i_maneuver + chk_geolocation) > 0
-        obs_data[obs_key][:, jchan][chk_ob] = float_missing_value
+def set_missing_value(f, obs_key, obs_data):
+
+    # 0 Good
+    # 1 Warning – Possible sun glint, 0 <= sunGlintAngle < 20 degrees.
+    # 2 Warning – Possible radio frequency interference.
+    # 3 Warning – Degraded geolocation data.
+    # 4 Warning – Data corrected for warm load intrusion.
+    # -1 Error – Data are missing from file or are unreadable.
+    # -2 Error – Invalid Tb or nonphysical brightness temperature (Tb < 40K or Tb > 350K).
+    # -3 Error – Error in geolocation data.
+    # -4 Error – Data are missing in one channel.
+    # -5 Error – Data are missing in multiple channels.
+    # -6 Error – Latitude/longitude values are out of range.
+    # -7 Error – Non-normal status modes.
+
+    # use quality word to set missing values
+    # low frequency
+    chk_ob = np.array(f['S1']['Quality']).flatten() != 0
+    for ich in range(9):
+        obs_data[obs_key][:, ich][chk_ob] = float_missing_value
+    # high frequency
+    chk_ob = np.array(f['S2']['Quality']).flatten() != 0
+    for ich in range(4):
+        obs_data[obs_key][:, 9+ich][chk_ob] = float_missing_value
 
     tb_key = 'brightnessTemperature'
     good = (obs_data[(tb_key, obsValName)][:, 0] != float_missing_value) & \
-        (obs_data[(tb_key, obsValName)][:, 1] != float_missing_value) & \
-        (obs_data[(tb_key, obsValName)][:, 8] != float_missing_value) & \
-        (obs_data[(tb_key, obsValName)][:, 11] != float_missing_value)
+        (obs_data[(tb_key, obsValName)][:, 3] != float_missing_value) & \
+        (obs_data[(tb_key, obsValName)][:, 4] != float_missing_value) & \
+        (obs_data[(tb_key, obsValName)][:, 5] != float_missing_value) & \
+        (obs_data[(tb_key, obsValName)][:, 8] != float_missing_value)
+#       (obs_data[(tb_key, obsValName)][:, 9] != float_missing_value) & \  # upper frequencies are missing more frequently
+#       (obs_data[(tb_key, obsValName)][:, 12] != float_missing_value)
     for k in obs_data:
         if metaDataName in k[1] and 'sensorChannelNumber' not in k[0]:
             obs_data[k] = obs_data[k][good]     # [::24] ## add as skip
@@ -237,49 +243,15 @@ def set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data):
     return obs_data
 
 
-def get_normalized_bit(value, bit_index):
-    return (value >> bit_index) & 1
-
-
-def assign_values(data):
-    if data.dtype == float:
-        data[np.abs(data) >= np.abs(float_missing_value)] = float_missing_value
-        return np.array(data, dtype=ioda_float_type)
-    elif data.dtype == int:
-        data[np.abs(data) >= np.abs(int_missing_value)] = int_missing_value
-        return np.array(data, dtype=ioda_int_type)
-
-
-def get_WMO_satellite_ID(attrs_shortname):
-
-    if 'TROPICS01' in attrs_shortname:
-        WMO_sat_ID = TROPICS01_WMO_sat_ID
-    elif 'TROPICS02' in attrs_shortname:
-        WMO_sat_ID = TROPICS02_WMO_sat_ID
-    elif 'TROPICS03' in attrs_shortname:
-        WMO_sat_ID = TROPICS03_WMO_sat_ID
-    elif 'TROPICS04' in attrs_shortname:
-        WMO_sat_ID = TROPICS04_WMO_sat_ID
-    elif 'TROPICS05' in attrs_shortname:
-        WMO_sat_ID = TROPICS05_WMO_sat_ID
-    else:
-        WMO_sat_ID = -1
-        print("could not determine satellite from filename: %s" % afile)
-        sys.exit()
-
-    return WMO_sat_ID
-
-
 def get_epoch_time(f):
 
-    nbeam_pos = len(f['spots'])
-    # ugh this does not seem generic
-    year = f['Year']
-    month = f['Month']
-    day = f['Day']
-    hour = f['Hour']
-    minute = f['Minute']
-    second = np.zeros_like(minute)
+    nbeam_pos = np.shape(f['S1']['Latitude'])[1]
+    year = f['S1']['ScanTime']['Year']
+    month = f['S1']['ScanTime']['Month']
+    day = f['S1']['ScanTime']['DayOfMonth']
+    hour = f['S1']['ScanTime']['Hour']
+    minute = f['S1']['ScanTime']['Minute']
+    second = f['S1']['ScanTime']['Second']
 
     # following examples here could be written better potentially
     iterables = [year, month, day, hour, minute, second]
@@ -298,26 +270,6 @@ def get_epoch_time(f):
     return time_offset
 
 
-def get_string_dtg(f):
-
-    # for TROPICS data times are per scan line
-    # current IODA needs replication by beam position
-    nbeam_pos = len(f['spots'])
-    year = f['Year']
-    month = f['Month']
-    day = f['Day']
-    hour = f['Hour']
-    minute = f['Minute']
-    dtg = []
-    for i, yyyy in enumerate(year):
-        cdtg = ("%4i-%.2i-%.2iT%.2i:%.2i:00Z" % (yyyy, month[i], day[i], hour[i], minute[i]))
-        # need to add replication by nbeam_pos
-        for _ in range(nbeam_pos):
-            dtg.append(cdtg)
-
-    return dtg
-
-
 def init_obs_loc():
     obs = {
         ('brightnessTemperature', "ObsValue"): [],
@@ -329,13 +281,13 @@ def init_obs_loc():
         ('longitude', metaDataName): [],
         ('dateTime', metaDataName): [],
         ('sensorScanPosition', metaDataName): [],
-        ('solarZenithAngle', metaDataName): [],
-        ('solarAzimuthAngle', metaDataName): [],
         ('sensorZenithAngle', metaDataName): [],
-        ('sensorAzimuthAngle', metaDataName): [],
         ('sensorViewAngle', metaDataName): [],
-        ('satelliteAscendingFlag', metaDataName): [],
     }
+# ('solarZenithAngle', metaDataName): [],
+# ('solarAzimuthAngle', metaDataName): [],
+# ('sensorAzimuthAngle', metaDataName): [],
+# ('satelliteAscendingFlag', metaDataName): [],
 
     return obs
 

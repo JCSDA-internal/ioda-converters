@@ -16,13 +16,9 @@ import dateutil.parser
 import numpy as np
 from pathlib import Path
 
-IODA_CONV_PATH = Path(__file__).parent/"../lib/pyiodaconv"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
 
-import ioda_conv_engines as iconv
-from orddicts import DefaultOrderedDict
+import pyiodaconv.ioda_conv_engines as iconv
+from pyiodaconv.orddicts import DefaultOrderedDict
 
 iso8601_string = 'seconds since 1970-01-01T00:00:00Z'
 epoch = datetime.fromisoformat(iso8601_string[14:-1])

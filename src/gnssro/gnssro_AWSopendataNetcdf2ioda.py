@@ -19,9 +19,9 @@ from pathlib import Path
 from itertools import repeat
 import netCDF4 as nc
 import h5py
-import lib_python.ioda_conv_engines as iconv
-from lib_python.orddicts import DefaultOrderedDict
-from lib_python.def_jedi_utils import concat_obs_dict
+import pyiodaconv.ioda_conv_engines as iconv
+from pyiodaconv.orddicts import DefaultOrderedDict
+from pyiodaconv.def_jedi_utils import concat_obs_dict
 
 # globals
 ioda_int_type = 'int32'
