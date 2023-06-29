@@ -1,8 +1,7 @@
 module netcdf_mod
-
+   use,intrinsic :: iso_fortran_env
    use netcdf
    use define_mod, only: missing_r, missing_i, nstring
-
    implicit none
 
 ! public subroutines
@@ -102,7 +101,7 @@ contains
 
       integer, intent(in) :: fileid, dim1
       character(len=*), intent(in) :: variable
-      real, intent(inout), dimension(dim1)  :: output
+      real(real32), intent(inout), dimension(dim1)  :: output
 
       integer :: ncvarid, ierr
 
@@ -124,7 +123,7 @@ contains
 
       integer, intent(in) :: fileid, dim1
       character(len=*), intent(in) :: variable
-      integer, intent(inout), dimension(dim1)  :: output
+      integer(int32), intent(inout), dimension(dim1)  :: output
 
       integer :: ncvarid, ierr
 
@@ -265,7 +264,7 @@ contains
 
       integer, intent(in) :: fileid
       character(len=*), intent(in) :: variable
-      real, dimension(:), intent(in) :: input
+      real(real32), dimension(:), intent(in) :: input
 
       integer :: ncvarid, ierr
 
@@ -288,7 +287,7 @@ contains
 
       integer, intent(in) :: fileid
       character(len=*), intent(in) :: variable
-      real, dimension(:, :), intent(in) :: input
+      real(real32), dimension(:, :), intent(in) :: input
 
       integer :: ncvarid, ierr
 
@@ -311,7 +310,7 @@ contains
 
       integer, intent(in) :: fileid
       character(len=*), intent(in) :: variable
-      integer, dimension(:), intent(in) :: input
+      integer(int32), dimension(:), intent(in) :: input
 
       integer :: ncvarid, ierr
 
@@ -334,7 +333,7 @@ contains
 
       integer, intent(in) :: fileid
       character(len=*), intent(in) :: variable
-      integer*8, dimension(:), intent(in) :: input
+      integer(int64), dimension(:), intent(in) :: input
 
       integer :: ncvarid, ierr
 
