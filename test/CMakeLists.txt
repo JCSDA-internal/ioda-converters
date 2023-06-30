@@ -79,6 +79,7 @@ list( APPEND test_input
   testinput/sst_ostia.nc
   testinput/2021081612_RAOB_small.txt
   testinput/tropomi_co.nc
+  testinput/gdas.t18z.abias_air
 )
 
 list( APPEND test_output
@@ -152,6 +153,7 @@ list( APPEND test_output
   testoutput/sst_ostia.nc
   testoutput/2021081612_sonde_small.nc
   testoutput/tropomi_co_total.nc
+  testoutput/gdas.t18z.abias_air_ascent.csv
 )
 
 if( iodaconv_gnssro_ENABLED )
