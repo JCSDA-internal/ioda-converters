@@ -124,16 +124,16 @@ module define_mod
                                                    'latitude         ', &
                                                    'longitude        ', &
                                                    'dateTime         ', &
-                                                   'datetime         ', &
+                                                   'LaunchTime       ', &
                                                    'station_id       ', &
                                                    'variable_names   ' &
                                                    /)
 
 ! conv info flags for name_var_info
-! air_pressure, height, station_elevation, latitude, longitude, dateTime, datetime, station_id, variable_names
+! air_pressure, height, station_elevation, latitude, longitude, dateTime, LaunchTime, station_id, variable_names
    integer(i_kind), dimension(nvar_info, nobtype) :: iflag_conv = reshape( &
                                                      (/ &
-                                                     itrue, itrue, itrue, itrue, itrue, itrue, ifalse, itrue, itrue, & ! sonde
+                                                     itrue, itrue, itrue, itrue, itrue, itrue, itrue, itrue, itrue, & ! sonde
                                                      itrue, itrue, itrue, itrue, itrue, itrue, ifalse, itrue, itrue, & ! aircraft
                                                      itrue, itrue, itrue, itrue, itrue, itrue, ifalse, itrue, itrue, & ! sfc
                                                      itrue, itrue, ifalse, itrue, itrue, itrue, ifalse, itrue, itrue, & ! satwind
@@ -143,7 +143,7 @@ module define_mod
                                                      /), (/nvar_info, nobtype/))
 
 ! radiance info flags for name_var_info
-! air_pressure, height, station_elevation, latitude, longitude, dateTime, datetime, station_id, variable_names
+! air_pressure, height, station_elevation, latitude, longitude, dateTime, LaunchTime, station_id, variable_names
    integer(i_kind), dimension(nvar_info) :: iflag_radiance = &
                                             (/ &
                                             ifalse, ifalse, ifalse, itrue, itrue, itrue, ifalse, ifalse, ifalse &
@@ -157,7 +157,7 @@ module define_mod
                                             nf90_float, &
                                             nf90_float, &
                                             nf90_int64, &
-                                            nf90_char, &
+                                            nf90_int64, &
                                             nf90_char, &
                                             nf90_char &
                                             /)
@@ -169,7 +169,7 @@ module define_mod
                                                       'nlocs     ', 'null      ', &
                                                       'nlocs     ', 'null      ', &
                                                       'nlocs     ', 'null      ', &
-                                                      'ndatetime ', 'nlocs     ', &
+                                                      'nlocs     ', 'null      ', &
                                                       'nstring   ', 'nlocs     ', &
                                                       'nstring   ', 'nvars     ' &
                                                       /), (/2, nvar_info/))

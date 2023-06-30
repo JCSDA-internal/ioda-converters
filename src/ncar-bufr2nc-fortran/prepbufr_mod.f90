@@ -836,6 +836,9 @@ contains
                         xdata(ityp, itim)%xinfo_int64(iloc(ityp, itim), i) = plink%epochtime
                      end if
                   end if
+                  if ( trim(name_var_info(i)) == 'LaunchTime' ) then
+                     xdata(ityp,itim)%xinfo_int64(iloc(ityp,itim),i) =plink%epochtime
+                  end if
                end if ! type_var_info
             end do
 
