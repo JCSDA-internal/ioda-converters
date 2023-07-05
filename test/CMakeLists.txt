@@ -233,6 +233,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_ncep_adpupa.yaml
     testinput/bufr_ncep_prepbufr_adpupa.yaml
     testinput/adpupa_prepbufr.yaml
+    testinput/bufr_ncep_prepbufr_adpupa.py
     testinput/aircar_BUFR2ioda.yaml
     testinput/gdas.aircar.t00z.20210801.bufr
     testinput/airep_wmoBUFR2ioda.yaml
@@ -324,6 +325,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/rrfs.t06z.adpsfc.prepbufr.nc
     testoutput/bufr_query_filtering.nc
     testoutput/bufr_ncep_prepbufr_adpupa.nc
+    testoutput/prepbufr_adpupa_api.nc
     testoutput/bufr_query_python_to_ioda_test.nc
     testoutput/rtma_ru.t00z.msonet.tm00.nc
   )
@@ -1490,6 +1492,15 @@ if(iodaconv_bufr_ENABLED)
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_prepbufr_adpupa.yaml"
                     bufr_ncep_prepbufr_adpupa.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_prepbufr_adpupa_api
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    netcdf
+                    "${Python3_EXECUTABLE} testinput/bufr_ncep_prepbufr_adpupa.py"
+                    prepbufr_adpupa_api.nc ${IODA_CONV_COMP_TOL_ZERO} )
                     
   ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_adpupa2ioda
                     TYPE    SCRIPT
