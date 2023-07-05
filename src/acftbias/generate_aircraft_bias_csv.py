@@ -25,7 +25,7 @@ import argparse
 # csv
 #
 def csv_write(csvFileName, coefFileName, coordVariableName, coordVariableType, coordVariableColumn,
-              drawVariableName, drawVariableType, drawVariableColumn)
+              drawVariableName, drawVariableType, drawVariableColumn):
     with open(csvFileName, 'w') as csvFile:
         cwrite = csv.writer(csvFile)
         # write 1st-line header for coordVariableName, drawVariableName
