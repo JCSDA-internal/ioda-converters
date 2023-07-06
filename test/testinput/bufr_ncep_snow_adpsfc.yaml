@@ -42,12 +42,6 @@ observations:
 
           totalSnowDepth:
             query: "[*/SNWSQ1/TOSD, */MTRMSC/TOSD, */STGDSNDM/TOSD]"
-            transforms:
-              - scale: 1000.0
-        filters:
-          - bounding:
-              variable: totalSnowDepth
-              upperBound: 10000000
 
     ioda:
       backend: netcdf
