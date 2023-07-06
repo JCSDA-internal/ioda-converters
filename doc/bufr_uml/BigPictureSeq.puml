@@ -1,0 +1,51 @@
+@startuml
+hide footbox
+skinparam dpi 300
+skinparam SequenceActorBorderThickness 2
+skinparam SequenceActorBorderColor #firebrick
+skinparam ActorBackgroundColor #lightyellow
+skinparam ParticipantBackgroundColor #lightyellow
+skinparam ParticipantBorderThickness 2
+skinparam ParticipantBorderColor #firebrick
+
+actor Main
+participant YAMLConfiguration
+participant BufrParser
+participant DataContainer
+participant IodaEncoder
+
+activate Main
+
+create YAMLConfiguration
+Main -> YAMLConfiguration : YAMLConfiguration(confPath)
+
+create BufrParser
+Main -> BufrParser : BufrParser(conf)
+
+
+Main -> BufrParser : parse
+activate BufrParser
+
+note right
+  See Query Collecting Data sequence.
+end note
+
+create DataContainer
+BufrParser -> DataContainer : DataContainer()
+return dataContainer
+deactivate BufrParser
+
+create IodaEncoder
+Main -> IodaEncoder : IodaEncoder(conf)
+Main -> IodaEncoder : encode(dataContainer)
+activate IodaEncoder
+note right
+  See Query Getting Data sequence.
+end note
+deactivate IodaEncoder
+
+
+deactivate Main
+
+
+@enduml

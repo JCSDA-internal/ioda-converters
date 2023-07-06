@@ -1,0 +1,131 @@
+@startuml
+skinparam dpi 300
+scale 1024 width
+
+package Query <<Folder>> 
+{
+  class File
+  {
+    +execute(const QuerySet &querySet, size_t next) : ResultSet
+    +rewind()
+    +close()
+  }
+
+  class QueryRunner
+  {
+    +QueryRunner(querySet, resultSet, dataProvider)
+    +accumulate()
+    -findTargets(targets, masks)
+    -collectData(targets, masks, resultSet)
+  }
+
+class TargetComponent {
+  - Type
+  - queryComponent: shared_ptr<QueryComponent>
+  - branch: size_t
+  - type: Type
+  + addsDimension(): bool
+  + setType(const Typ&): void
+}
+
+class Target {
+  - name: string
+  - queryStr: string
+  - unit: string
+  - typeInfo: TypeInfo
+  - nodeIdx: size_t
+  - path: TargetComponents
+  - numDimensions: size_t
+  - dimPaths: vector<Query>
+  + setPath(const TargetComponents&): void
+}
+
+  class DataFrame
+  {
+     -vector<DataField> fields_
+
+     +fieldAtIdx(idx) : DataField&
+     +fieldIdxForNodeNamed(name) : int
+  }
+
+  struct DataField
+  {
+    +shared_ptr<Target> target
+    +vector<double> data
+    +vector<vector<int>> seqCounts
+  }
+
+  class ResultSet
+  {
+    +ResultSet(names)
+    +get(fieldName, groupByFieldName)
+    +nextDataFrame() : DataFrame&
+    -getRawValues(fieldName, groupByField, data, dims, dimPaths)
+    -getRowsForField(targetField, dataRows, dims, groupbyIdx)
+  }
+
+  class QuerySet
+  {
+    +add(name, queryStr)
+    +size() : size_t
+    +names() : vector<string>
+    +includesSubset(subset) : bool
+    +queriesFor(name) : vector<Query>
+
+  }
+
+  class DataProvider
+  {
+    + DataProvider(filePath: const std::string)
+    + ~DataProvider()
+    + run(querySet: QuerySet&, processSubset: function<>, processMsg: function<>, continueProcessing: function<>)
+    + open() : void
+    + close() : void
+    + rewind() : void
+    + isFileOpen() : bool
+    + deleteData() :  void
+    + getSubsetVariant() : SubsetVariant
+    + getFilepath() : string
+    + getInode() :  FortranIdx
+    + getNVal() :  FortranIdx
+    + getInv(idx : FortranIdx) : FortranIdx
+    + getVal(idx : FortranIdx) : double
+    + getTypeInfo(idx: FortranIdx) : TypeInfo
+    + getIsc(idx : FortranIdx) : FortranIdx
+    + getLink(idx : FortranIdx) : FortranIdx
+    + getItp(idx : FortranIdx) : FortranIdx
+    + getJmpb(idx : FortranIdx) : FortranIdx
+    + getTyp(idx : FortranIdx) : Typ
+    + getTag(idx : FortranIdx) :  string
+    + variantId() : virtual size_t
+    + hasVariants() : bool
+    + initAllTableData() : void
+  }
+
+  class QueryParser
+  {
+    +parse(query)
+  }
+
+  class Tokenizer
+  {
+    +tokenize(query)
+  }
+
+  File *--> DataProvider
+  
+  File *-> ResultSet
+  QuerySet <-o File
+  File *--> QueryRunner
+  QueryRunner --> Target
+  TargetComponent -right-* Target
+  ResultSet *-> DataFrame
+  DataFrame *-> DataField
+
+
+  QueryParser --> Query
+  QueryParser -.> Tokenizer
+  QueryParser <. QuerySet
+
+@enduml
+

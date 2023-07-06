@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: JCSDA
+    url: https://jcsda.org/
+    about: JCSDA web site
+  - name: Forums
+    url: https://forums.jcsda.org/
+    about: JCSDA user/developer forums

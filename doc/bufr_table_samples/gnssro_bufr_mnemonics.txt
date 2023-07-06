@@ -1,0 +1,139 @@
+
+.------------------------------------------------------------------------------.
+| ------------   USER DEFINITIONS FOR TABLE-A TABLE-B TABLE D   -------------- |
+|------------------------------------------------------------------------------|
+| MNEMONIC | NUMBER | DESCRIPTION                                              |
+|----------|--------|----------------------------------------------------------|
+|          |        |                                                          |
+| MSTTB001 | A54000 | TABLE A MNEMONIC MSTTB001                                |
+|          |        |                                                          |
+| RAOCSEQ  | 310026 | Satellite radio occultation data                         |
+| SIIDSEQ  | 310022 |                                                          |
+| YYMMDD   | 301011 |                                                          |
+| HHMM     | 301012 |                                                          |
+| LOCPLAT  | 304030 | Location of platform                                     |
+| SPDPLAT  | 304031 | Speed of platform                                        |
+| LTLONH   | 301021 |                                                          |
+| RPSEQ001 | 354001 | REPLICATION SEQUENCE 001                                 |
+| RPSEQ002 | 354002 | REPLICATION SEQUENCE 002                                 |
+| RPSEQ003 | 354003 | REPLICATION SEQUENCE 003                                 |
+| RPSEQ004 | 354004 | REPLICATION SEQUENCE 004                                 |
+|          |        |                                                          |
+| SAID     | 001007 | Satellite identifier                                     |
+| SIID     | 002019 | Satellite instruments                                    |
+| OGCE     | 001033 | Identification of originating/generating centre          |
+| PTAG     | 002172 | Product type for retrieved atmospheric gases             |
+| SWID     | 025060 | Software identification                                  |
+| TSIG     | 008021 | Time significance                                        |
+| YEAR     | 004001 | Year                                                     |
+| MNTH     | 004002 | Month                                                    |
+| DAYS     | 004003 | Day                                                      |
+| HOUR     | 004004 | Hour                                                     |
+| MINU     | 004005 | Minute                                                   |
+| SECO     | 004006 | Second                                                   |
+| QFRO     | 033039 | Quality flags for radio occultation data                 |
+| PCCF     | 033007 | Percent confidence                                       |
+| PD00     | 027031 | In direction of 0 degrees longitude, distance from the   |
+| PD90     | 028031 | In direction 90 degrees East, distance from the Earth's  |
+| PDNP     | 010031 | In direction of the North Pole, distance from the Earth  |
+| PS00     | 001041 | Absolute platform velocity - first component             |
+| PS90     | 001042 | Absolute platform velocity - second component            |
+| PSNP     | 001043 | Absolute platform velocity - third component             |
+| SCLF     | 002020 | Satellite classification                                 |
+| PTID     | 001050 | Platform transmitter ID number                           |
+| TISE     | 004016 | Time increment                                           |
+| CLATH    | 005001 | Latitude (high accuracy)                                 |
+| CLONH    | 006001 | Longitude (high accuracy)                                |
+| ELRC     | 010035 | Earth's local radius of curvature                        |
+| BEARAZ   | 005021 | Bearing or azimuth                                       |
+| GEODU    | 010036 | Geoid undulation                                         |
+| MEFR     | 002121 | Mean frequency                                           |
+| IMPP     | 007040 | Impact parameter                                         |
+| BNDA     | 015037 | Bending angle                                            |
+| FOST     | 008023 | First-order statistics                                   |
+| HEIT     | 007007 | Height                                                   |
+| ARFR     | 015036 | Atmospheric refractivity                                 |
+| GPHTST   | 007009 | Geopotential height                                      |
+| PRES     | 010004 | Pressure                                                 |
+| TMDBST   | 012001 | Temperature/dry-bulb temperature                         |
+| SPFH     | 013001 | Specific humidity                                        |
+| VSAT     | 008003 | Vertical significance (satellite observations)           |
+|          |        |                                                          |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SEQUENCE                                                          |
+|----------|-------------------------------------------------------------------|
+|          |                                                                   |
+| MSTTB001 | RAOCSEQ                                                           |
+|          |                                                                   |
+| RAOCSEQ  | SIIDSEQ  SWID  TSIG  YYMMDD  HHMM  201138  202131  SECO  202000   |
+| RAOCSEQ  | 201000  QFRO  PCCF  LOCPLAT  SPDPLAT  SCLF  PTID  202127  LOCPLAT |
+| RAOCSEQ  | 202000  SPDPLAT  201133  202131  TISE  202000  201000  LTLONH     |
+| RAOCSEQ  | LOCPLAT  ELRC  BEARAZ  GEODU  (RPSEQ001)  (RPSEQ003)  (RPSEQ004)  |
+| RAOCSEQ  | VSAT  GPHTST  PRES  FOST  201120  PRES  201000  FOST  PCCF        |
+|          |                                                                   |
+| SIIDSEQ  | SAID  SIID  OGCE  PTAG                                            |
+|          |                                                                   |
+| YYMMDD   | YEAR  MNTH  DAYS                                                  |
+|          |                                                                   |
+| HHMM     | HOUR  MINU                                                        |
+|          |                                                                   |
+| LOCPLAT  | PD00  PD90  PDNP                                                  |
+|          |                                                                   |
+| SPDPLAT  | PS00  PS90  PSNP                                                  |
+|          |                                                                   |
+| LTLONH   | CLATH  CLONH                                                      |
+|          |                                                                   |
+| RPSEQ001 | LTLONH  BEARAZ  {RPSEQ002}  PCCF                                  |
+|          |                                                                   |
+| RPSEQ002 | MEFR  IMPP  BNDA  FOST  201125  BNDA  201000  FOST                |
+|          |                                                                   |
+| RPSEQ003 | HEIT  ARFR  FOST  201123  ARFR  201000  FOST  PCCF                |
+|          |                                                                   |
+| RPSEQ004 | GPHTST  PRES  TMDBST  SPFH  FOST  201120  PRES  201000  201122    |
+| RPSEQ004 | TMDBST  201000  201123  SPFH  201000  FOST  PCCF                  |
+|          |                                                                   |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SCAL | REFERENCE   | BIT | UNITS                    |-------------|
+|----------|------|-------------|-----|--------------------------|-------------|
+|          |      |             |     |                          |-------------|
+| SAID     |    0 |           0 |  10 | CODE TABLE               |-------------|
+| SIID     |    0 |           0 |  11 | CODE TABLE               |-------------|
+| OGCE     |    0 |           0 |   8 | CODE TABLE               |-------------|
+| PTAG     |    0 |           0 |   8 | CODE TABLE               |-------------|
+| SWID     |    0 |           0 |  14 | NUMERIC                  |-------------|
+| TSIG     |    0 |           0 |   5 | CODE TABLE               |-------------|
+| YEAR     |    0 |           0 |  12 | YEAR                     |-------------|
+| MNTH     |    0 |           0 |   4 | MONTH                    |-------------|
+| DAYS     |    0 |           0 |   6 | DAY                      |-------------|
+| HOUR     |    0 |           0 |   5 | HOUR                     |-------------|
+| MINU     |    0 |           0 |   6 | MINUTE                   |-------------|
+| SECO     |    0 |           0 |   6 | S                        |-------------|
+| QFRO     |    0 |           0 |  16 | FLAG TABLE               |-------------|
+| PCCF     |    0 |           0 |   7 | %                        |-------------|
+| PD00     |    2 | -1073741824 |  31 | M                        |-------------|
+| PD90     |    2 | -1073741824 |  31 | M                        |-------------|
+| PDNP     |    2 | -1073741824 |  31 | M                        |-------------|
+| PS00     |    5 | -1073741824 |  31 | M S⁻¹                 |-------------|
+| PS90     |    5 | -1073741824 |  31 | M S⁻¹                 |-------------|
+| PSNP     |    5 | -1073741824 |  31 | M S⁻¹                 |-------------|
+| SCLF     |    0 |           0 |   9 | CODE TABLE               |-------------|
+| PTID     |    0 |           0 |  17 | NUMERIC                  |-------------|
+| TISE     |    0 |       -4096 |  13 | S                        |-------------|
+| CLATH    |    5 |    -9000000 |  25 | DEGREE                   |-------------|
+| CLONH    |    5 |   -18000000 |  26 | DEGREE                   |-------------|
+| ELRC     |    1 |    62000000 |  22 | M                        |-------------|
+| BEARAZ   |    2 |           0 |  16 | DEGREE TRUE              |-------------|
+| GEODU    |    2 |      -15000 |  15 | M                        |-------------|
+| MEFR     |   -8 |           0 |   7 | HZ                       |-------------|
+| IMPP     |    1 |    62000000 |  22 | M                        |-------------|
+| BNDA     |    8 |     -100000 |  23 | RAD                      |-------------|
+| FOST     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| HEIT     |    0 |       -1000 |  17 | M                        |-------------|
+| ARFR     |    3 |           0 |  19 | N UNITS                  |-------------|
+| GPHTST   |    0 |       -1000 |  17 | GPM                      |-------------|
+| PRES     |   -1 |           0 |  14 | PA                       |-------------|
+| TMDBST   |    1 |           0 |  12 | K                        |-------------|
+| SPFH     |    5 |           0 |  14 | KG KG⁻¹               |-------------|
+| VSAT     |    0 |           0 |   6 | CODE TABLE               |-------------|
+|          |      |             |     |                          |-------------|
+`------------------------------------------------------------------------------'

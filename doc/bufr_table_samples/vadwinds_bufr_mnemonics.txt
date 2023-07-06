@@ -1,0 +1,121 @@
+Here is the DX table that was generated:
+
+.------------------------------------------------------------------------------.
+| ------------   USER DEFINITIONS FOR TABLE-A TABLE-B TABLE D   -------------- |
+|------------------------------------------------------------------------------|
+| MNEMONIC | NUMBER | DESCRIPTION                                              |
+|----------|--------|----------------------------------------------------------|
+|          |        |                                                          |
+| MSTTB001 | A54000 | TABLE A MNEMONIC MSTTB001                                |
+| IDTIMLOC | 301032 |                                                          |
+| WMOBLKST | 301001 |                                                          |
+| YYMMDD   | 301011 |                                                          |
+| HHMM     | 301012 |                                                          |
+| LALOLV   | 301024 |                                                          |
+| PROFRASS | 321021 | Basic information (system/site header) on wind profiler  |
+| WNPROFPW | 321022 | Wind profiler: processed-data winds                      |
+| MSTTB002 | A54002 | TABLE A MNEMONIC MSTTB002                                |
+| LTLONHHT | 301022 |                                                          |
+| RPSEQ001 | 354003 | REPLICATION SEQUENCE 001                                 |
+| MSTTB003 | A54004 | TABLE A MNEMONIC MSTTB003                                |
+|          |        |                                                          |
+| RPSEQ002 | 354005 | REPLICATION SEQUENCE 002                                 |
+|          |        |                                                          |
+| WMOB     | 001001 | WMO block number                                         |
+| WMOS     | 001002 | WMO station number                                       |
+| TOST     | 002001 | Type of station                                          |
+| YEAR     | 004001 | Year                                                     |
+| MNTH     | 004002 | Month                                                    |
+| DAYS     | 004003 | Day                                                      |
+| HOUR     | 004004 | Hour                                                     |
+| MINU     | 004005 | Minute                                                   |
+| CLAT     | 005002 | Latitude (coarse accuracy)                               |
+| CLON     | 006002 | Longitude (coarse accuracy)                              |
+| SELV     | 007001 | Height of station                                        |
+| A4ME     | 002003 | Type of measuring equipment used                         |
+| ANTYP    | 002101 | Type of antenna                                          |
+| BEAMW    | 002106 | 3-dB beamwidth                                           |
+| MEFR     | 002121 | Mean frequency                                           |
+| RAGL     | 025001 | Range-gate length                                        |
+| MSPE     | 025020 | Mean speed estimation                                    |
+| WICE     | 025021 | Wind computation enhancement                             |
+| TSIG     | 008021 | Time significance                                        |
+| TPMI     | 004025 | Time period or displacement                              |
+| HEIT     | 007007 | Height                                                   |
+| 204001   | 054001 | Associated field of   1 bits                             |
+| AFSI     | 031021 | Associated field significance                            |
+| WDIR     | 011001 | Wind direction                                           |
+| WSPD     | 011002 | Wind speed                                               |
+| WCMP     | 011006 | w-component                                              |
+| STNR     | 021030 | Signal to noise ratio                                    |
+| CLATH    | 005001 | Latitude (high accuracy)                                 |
+| CLONH    | 006001 | Longitude (high accuracy)                                |
+| QMRK     | 033002 | Quality information                                      |
+|          |        |                                                          |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SEQUENCE                                                          |
+|----------|-------------------------------------------------------------------|
+|          |                                                                   |
+| MSTTB001 | IDTIMLOC  PROFRASS  MSPE  WICE  TSIG  TPMI  {WNPROFPW}            |
+|          |                                                                   |
+| IDTIMLOC | WMOBLKST  TOST  YYMMDD  HHMM  LALOLV                              |
+|          |                                                                   |
+| WMOBLKST | WMOB  WMOS                                                        |
+|          |                                                                   |
+| YYMMDD   | YEAR  MNTH  DAYS                                                  |
+|          |                                                                   |
+| HHMM     | HOUR  MINU                                                        |
+|          |                                                                   |
+| LALOLV   | CLAT  CLON  SELV                                                  |
+|          |                                                                   |
+| PROFRASS | A4ME  ANTYP  201130  BEAMW  201000  201132  202130  MEFR  202000  |
+| PROFRASS | 201000  201133  202129  RAGL  202000  201000                      |
+|          |                                                                   |
+| WNPROFPW | HEIT  AFSI  204001  WDIR  WSPD  AFSI  204001  WCMP  STNR          |
+|          |                                                                   |
+| MSTTB002 | WMOBLKST  YYMMDD  HHMM  LTLONHHT  A4ME  {RPSEQ001}                |
+|          |                                                                   |
+| LTLONHHT | CLATH  CLONH  SELV                                                |
+|          |                                                                   |
+| RPSEQ001 | HEIT  WDIR  WSPD  QMRK                                            |
+|          |                                                                   |
+| MSTTB003 | WMOBLKST  YYMMDD  HHMM  LTLONHHT  A4ME  {RPSEQ002}                |
+|          |                                                                   |
+| RPSEQ002 | HEIT  WDIR  WSPD  QMRK  WCMP  QMRK                                |
+|          |                                                                   |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SCAL | REFERENCE   | BIT | UNITS                    |-------------|
+|----------|------|-------------|-----|--------------------------|-------------|
+|          |      |             |     |                          |-------------|
+| WMOB     |    0 |           0 |   7 | NUMERIC                  |-------------|
+| WMOS     |    0 |           0 |  10 | NUMERIC                  |-------------|
+| TOST     |    0 |           0 |   2 | CODE TABLE               |-------------|
+| YEAR     |    0 |           0 |  12 | YEAR                     |-------------|
+| MNTH     |    0 |           0 |   4 | MONTH                    |-------------|
+| DAYS     |    0 |           0 |   6 | DAY                      |-------------|
+| HOUR     |    0 |           0 |   5 | HOUR                     |-------------|
+| MINU     |    0 |           0 |   6 | MINUTE                   |-------------|
+| CLAT     |    2 |       -9000 |  15 | DEGREE                   |-------------|
+| CLON     |    2 |      -18000 |  16 | DEGREE                   |-------------|
+| SELV     |    0 |        -400 |  15 | M                        |-------------|
+| A4ME     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| ANTYP    |    0 |           0 |   4 | CODE TABLE               |-------------|
+| BEAMW    |    1 |           0 |   6 | DEGREE                   |-------------|
+| MEFR     |   -8 |           0 |   7 | HZ                       |-------------|
+| RAGL     |   -1 |           0 |   6 | M                        |-------------|
+| MSPE     |    0 |           0 |   2 | CODE TABLE               |-------------|
+| WICE     |    0 |           0 |   8 | FLAG TABLE               |-------------|
+| TSIG     |    0 |           0 |   5 | CODE TABLE               |-------------|
+| TPMI     |    0 |       -2048 |  12 | MINUTE                   |-------------|
+| HEIT     |    0 |       -1000 |  17 | M                        |-------------|
+| 204001   |    0 |           0 |   1 | NUMERIC                  |-------------|
+| AFSI     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| WDIR     |    0 |           0 |   9 | DEGREE TRUE              |-------------|
+| WSPD     |    1 |           0 |  12 | M S⁻¹                 |-------------|
+| WCMP     |    2 |       -4096 |  13 | M S⁻¹                 |-------------|
+| STNR     |    0 |         -32 |   8 | DB                       |-------------|
+| CLATH    |    5 |    -9000000 |  25 | DEGREE                   |-------------|
+| CLONH    |    5 |   -18000000 |  26 | DEGREE                   |-------------|
+| QMRK     |    0 |           0 |   2 | CODE TABLE               |-------------|
+|          |      |             |     |                          |-------------|
+`------------------------------------------------------------------------------'

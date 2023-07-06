@@ -1,0 +1,143 @@
+# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+observations:
+  - obs space:
+      name: bufr
+      obsdatain: "./testinput/gdas.t18z.1bmhs.tm00.bufr_d"
+
+      exports:
+        variables:
+          timestamp:
+            datetime:
+              year: "*/YEAR"
+              month: "*/MNTH"
+              day: "*/DAYS"
+              hour: "*/HOUR"
+              minute: "*/MINU"
+              second: "*/SECO"
+          height:
+            query: "*/HMSL"
+            type: float
+          hols:
+            query: "*/HOLS"
+            type: float
+          fovn:
+            query: "*/FOVN"
+          lsql:
+            query: "*/LSQL"
+          longitude:
+            query: "*/CLON"
+            transforms:
+              - offset: 50
+          latitude:
+            query: "*/CLAT"
+          sza:
+            query: "*/SOZA"
+          saz:
+            query: "*/SOLAZI"
+          vza:
+            query: "*/SAZA"
+          vaz:
+            query: "*/BEARAZ"
+          channels:
+            query: "[*/BRITCSTC/CHNM, */BRIT/CHNM]"
+          brightnessTemp:
+            query: "[*/BRITCSTC/TMBR, */BRIT/TMBR]"
+    
+    ioda:
+      backend: netcdf
+      obsdataout: "./testrun/gdas.t18z.1bmhs.tm00.nc"
+
+      dimensions:
+        - name: Channel 
+          paths:
+            - "*/BRIT"
+            - "*/BRITCSTC"
+          source: variables/channels
+
+      globals: 
+
+        - name: "platformCommonName"
+          type: string
+          value: "MHS"
+
+        - name: "platformLongDescription"
+          type: string
+          value: "MTYP 021-027 PROCESSED MHS Tb (NOAA-18-19, METOP-1,2)"
+
+#       - name: "sensorCentralFrequency"
+#         type: floatVector
+#         value: [89.0, 157.0, 183.311, 183.311, 190.311]
+            
+      variables:
+
+        - name: "MetaData/dateTime"
+          source: variables/timestamp
+          longName: "dateTime"
+          units: "seconds since 1970-01-01T00:00:00Z"
+
+        - name: "MetaData/latitude"
+          source: variables/latitude
+          longName: "Latitude"
+          units: "degrees_north"
+          range: [-90, 90]
+
+        - name: "MetaData/longitude"
+          source: variables/longitude
+          longName: "Longitude"
+          units: "degrees_east"
+          range: [-180, 180]
+
+        - name: "MetaData/height"
+          source: variables/height
+          longName: "height"
+          units: "m"
+
+        - name: "MetaData/heightOfSurface"
+          source: variables/hols
+          longName: "Height of Land Surface"
+          units: "m"
+
+        - name: "MetaData/fieldOfViewNumber"
+          source: variables/fovn
+          longName: "Field of View Number"
+
+        - name: "MetaData/landSeaQualifier"
+          source: variables/lsql
+          longName: "Land/Sea Qualifier"
+
+        - name: "MetaData/solarZenithAngle"
+          source: variables/sza
+          longName: "Solar Zenith Angle"
+          units: "degrees"
+          range: [0, 180]
+
+        - name: "MetaData/solarAzimuthAngle"
+          source: variables/saz
+          longName: "Solar Azimuth Angle"
+          units: "degrees"
+          range: [-180, 180]
+
+        - name: "MetaData/sensorZenithAngle"
+          source: variables/vza
+          longName: "Sensor Zenith Angle"
+          units: "degrees"
+          range: [0, 180]
+
+        - name: "MetaData/sensorAzimuthAngle"
+          source: variables/vaz
+          longName: "Sensor Azimuth Angle"
+          units: "degrees"
+          range: [-180, 180]
+
+        - name: "ObsValue/brightnessTemperature"
+          coordinates: "longitude latitude Channel"
+          source: variables/brightnessTemp
+          longName: "Brightness Temperature"
+          units: "K"
+          range: [120, 500]
+          chunks: [1000, 5]
+          compressionLevel: 4

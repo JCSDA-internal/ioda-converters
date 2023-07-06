@@ -1,0 +1,11 @@
+thin: 'True'
+
+lat_sth_HAT10: 2.0
+lat_nth_HAT10: 45.0
+lon_wth_HAT10: -98.0
+lon_eth_HAT10: -8.0
+max_depth: 1000
+
+dxy: 1
+
+dz: 1

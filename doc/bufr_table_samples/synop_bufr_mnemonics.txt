@@ -1,0 +1,242 @@
+.------------------------------------------------------------------------------.
+| ------------   USER DEFINITIONS FOR TABLE-A TABLE-B TABLE D   -------------- |
+|------------------------------------------------------------------------------|
+| MNEMONIC | NUMBER | DESCRIPTION                                              |
+|----------|--------|----------------------------------------------------------|
+|          |        |                                                          |
+| MSTTB001 | A54000 | TABLE A MNEMONIC MSTTB001                                |
+|          |        |                                                          |
+| SYNFLNDS | 307080 | Sequence for representation of synoptic reports from a   |
+| SFIDTIME | 301090 | Surface station identification                           |
+| SFCSTNID | 301004 | Surface station identification                           |
+| YYMMDD   | 301011 | Year, month, day                                         |
+| HHMM     | 301012 | Hour, minute                                             |
+| LTLONH   | 301021 | Latitude/longitude (high accuracy)                       |
+| PRESDATA | 302031 | Pressure information                                     |
+| PRESSQ03 | 302001 | Pressure and 3-hour pressure change                      |
+| SYNOPINS | 302035 | Basic synoptic "instantaneous" data                      |
+| TEHUDATA | 302032 | Temperature and humidity data                            |
+| VISBDATA | 302033 | Visibility data                                          |
+| PRECIP24 | 302034 | Precipitation past 24 hours                              |
+| GENCLOUD | 302004 | General cloud information                                |
+| CLOUDSQ1 | 302005 | Cloud layer                                              |
+| CLOUDBSL | 302036 | Clouds with bases below station level                    |
+| RPSEQ001 | 354001 | REPLICATION SEQUENCE 001                                 |
+| DIRCLDFT | 302047 | Direction of cloud drift                                 |
+| RPSEQ002 | 354002 | REPLICATION SEQUENCE 002                                 |
+| DIRELCLD | 302048 | Direction and elevation of cloud                         |
+| STATEGRD | 302037 | State of ground, snow depth, ground minimum temperature  |
+| SYNOPPRD | 302043 | Basic synoptic "period" data                             |
+| PWEATHER | 302038 | Present and past weather                                 |
+| SUNSHIDA | 302039 | Sunshine data (from 1 hour and 24 hour period)           |
+| PRECMEA2 | 302040 | Precipitation measurement                                |
+| RPSEQ003 | 354003 | REPLICATION SEQUENCE 003                                 |
+| EXTRTEM2 | 302041 | Extreme temperature data                                 |
+| WINDDAT2 | 302042 | Wind data                                                |
+| RPSEQ004 | 354004 | REPLICATION SEQUENCE 004                                 |
+| EVAPDATA | 302044 | Evaporation data                                         |
+| RADNDATA | 302045 | Radiation data (from 1 hour and 24 hour period)          |
+| TEMPCHNG | 302046 | Temperature change                                       |
+|          |        |                                                          |
+| WMOB     | 001001 | WMO block number                                         |
+| WMOS     | 001002 | WMO station number                                       |
+| STSN     | 001015 | Station or site name                                     |
+| TOST     | 002001 | Type of station                                          |
+| YEAR     | 004001 | Year                                                     |
+| MNTH     | 004002 | Month                                                    |
+| DAYS     | 004003 | Day                                                      |
+| HOUR     | 004004 | Hour                                                     |
+| MINU     | 004005 | Minute                                                   |
+| CLATH    | 005001 | Latitude (high accuracy)                                 |
+| CLONH    | 006001 | Longitude (high accuracy)                                |
+| HSMSL    | 007030 | Height of station ground above mean sea level            |
+| HBMSL    | 007031 | Height of barometer above mean sea level                 |
+| PRES     | 010004 | Pressure                                                 |
+| PMSL     | 010051 | Pressure reduced to mean sea level                       |
+| 3HPC     | 010061 | 3-hour pressure change                                   |
+| CHPT     | 010063 | Characteristic of pressure tendency                      |
+| 24PC     | 010062 | 24-hour pressure change                                  |
+| PRLC     | 007004 | Pressure                                                 |
+| GPH10    | 010009 | Geopotential height                                      |
+| HSALG    | 007032 | Height of sensor above local ground (or deck of marine   |
+| TMDB     | 012101 | Temperature/air temperature                              |
+| TMDP     | 012103 | Dewpoint temperature                                     |
+| REHU     | 013003 | Relative humidity                                        |
+| HOVI     | 020001 | Horizontal visibility                                    |
+| TP24     | 013023 | Total precipitation past 24 hours                        |
+| TOCC     | 020010 | Cloud cover (total)                                      |
+| VSSO     | 008002 | Vertical significance (surface observations)             |
+| CLAM     | 020011 | Cloud amount                                             |
+| HOCB     | 020013 | Height of base of cloud                                  |
+| CLTP     | 020012 | Cloud type                                               |
+| HOCT     | 020014 | Height of top of cloud                                   |
+| CTDS     | 020017 | Cloud top description                                    |
+| TDCM     | 020054 | True direction from which a phenomenon or clouds are mo  |
+| BEARAZ   | 005021 | Bearing or azimuth                                       |
+| ELEV     | 007021 | Elevation                                                |
+| SOGR     | 020062 | State of the ground (with or without snow)               |
+| TOSD     | 013013 | Total snow depth                                         |
+| GMITH    | 012113 | Ground minimum temperature, past 12 hours                |
+| PRWE     | 020003 | Present weather                                          |
+| TPHR     | 004024 | Time period or displacement                              |
+| PSW1     | 020004 | Past weather (1)                                         |
+| PSW2     | 020005 | Past weather (2)                                         |
+| TOSS     | 014031 | Total sunshine                                           |
+| TOPC     | 013011 | Total precipitation/total water equivalent               |
+| MXTM     | 012111 | Maximum temperature, at height and over period specifie  |
+| MITM     | 012112 | Minimum temperature, at height and over period specifie  |
+| TIWM     | 002002 | Type of instrumentation for wind measurement             |
+| TSIG     | 008021 | Time significance                                        |
+| TPMI     | 004025 | Time period or displacement                              |
+| WDIR     | 011001 | Wind direction                                           |
+| WSPD     | 011002 | Wind speed                                               |
+| MXGD     | 011043 | Maximum wind gust direction                              |
+| MXGS     | 011041 | Maximum wind gust speed                                  |
+| TIEM     | 002004 | Type of instrumentation for evaporation measurement or   |
+| EVAP1    | 013033 | Evaporation/evapotranspiration                           |
+| LWRAD    | 014002 | Long-wave radiation, integrated over period specified    |
+| SWRAD    | 014004 | Short-wave radiation, integrated over period specified   |
+| NRAD     | 014016 | Net radiation, integrated over period specified          |
+| GSORDH   | 014028 | Global solar radiation (high accuracy), integrated over  |
+| DFSORD   | 014029 | Diffuse solar radiation (high accuracy), integrated ove  |
+| DRSORD   | 014030 | Direct solar radiation (high accuracy), integrated over  |
+| TCPS     | 012049 | Temperature change over specified period                 |
+|          |        |                                                          |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SEQUENCE                                                          |
+|----------|-------------------------------------------------------------------|
+|          |                                                                   |
+| MSTTB001 | SYNFLNDS                                                          |
+|          |                                                                   |
+| SYNFLNDS | SFIDTIME  PRESDATA  SYNOPINS  CLOUDBSL  DIRCLDFT  VSSO  DIRELCLD  |
+| SYNFLNDS | STATEGRD  SYNOPPRD  EVAPDATA  "RADNDATA"2  TEMPCHNG               |
+|          |                                                                   |
+| SFIDTIME | SFCSTNID  YYMMDD  HHMM  LTLONH  HSMSL  HBMSL                      |
+|          |                                                                   |
+| SFCSTNID | WMOB  WMOS  STSN  TOST                                            |
+|          |                                                                   |
+| YYMMDD   | YEAR  MNTH  DAYS                                                  |
+|          |                                                                   |
+| HHMM     | HOUR  MINU                                                        |
+|          |                                                                   |
+| LTLONH   | CLATH  CLONH                                                      |
+|          |                                                                   |
+| PRESDATA | PRESSQ03  24PC  PRLC  GPH10                                       |
+|          |                                                                   |
+| PRESSQ03 | PRES  PMSL  3HPC  CHPT                                            |
+|          |                                                                   |
+| SYNOPINS | TEHUDATA  VISBDATA  PRECIP24  HSALG  GENCLOUD  {CLOUDSQ1}         |
+|          |                                                                   |
+| TEHUDATA | HSALG  TMDB  TMDP  REHU                                           |
+|          |                                                                   |
+| VISBDATA | HSALG  HOVI                                                       |
+|          |                                                                   |
+| PRECIP24 | HSALG  TP24                                                       |
+|          |                                                                   |
+| GENCLOUD | TOCC  VSSO  CLAM  HOCB  CLTP  CLTP  CLTP                          |
+|          |                                                                   |
+| CLOUDSQ1 | VSSO  CLAM  CLTP  HOCB                                            |
+|          |                                                                   |
+| CLOUDBSL | {RPSEQ001}                                                        |
+|          |                                                                   |
+| RPSEQ001 | VSSO  CLAM  CLTP  HOCT  CTDS                                      |
+|          |                                                                   |
+| DIRCLDFT | "RPSEQ002"3                                                       |
+|          |                                                                   |
+| RPSEQ002 | VSSO  TDCM                                                        |
+|          |                                                                   |
+| DIRELCLD | BEARAZ  ELEV  CLTP  BEARAZ  ELEV                                  |
+|          |                                                                   |
+| STATEGRD | SOGR  TOSD  GMITH                                                 |
+|          |                                                                   |
+| SYNOPPRD | PWEATHER  "SUNSHIDA"2  PRECMEA2  EXTRTEM2  WINDDAT2  HSALG        |
+|          |                                                                   |
+| PWEATHER | PRWE  TPHR  PSW1  PSW2                                            |
+|          |                                                                   |
+| SUNSHIDA | TPHR  TOSS                                                        |
+|          |                                                                   |
+| PRECMEA2 | HSALG  "RPSEQ003"2                                                |
+|          |                                                                   |
+| RPSEQ003 | TPHR  TOPC                                                        |
+|          |                                                                   |
+| EXTRTEM2 | HSALG  TPHR  TPHR  MXTM  TPHR  TPHR  MITM                         |
+|          |                                                                   |
+| WINDDAT2 | HSALG  TIWM  TSIG  TPMI  WDIR  WSPD  TSIG  "RPSEQ004"2            |
+|          |                                                                   |
+| RPSEQ004 | TPMI  MXGD  MXGS                                                  |
+|          |                                                                   |
+| EVAPDATA | TPHR  TIEM  EVAP1                                                 |
+|          |                                                                   |
+| RADNDATA | TPHR  LWRAD  SWRAD  NRAD  GSORDH  DFSORD  DRSORD                  |
+|          |                                                                   |
+| TEMPCHNG | TPHR  TPHR  TCPS                                                  |
+|          |                                                                   |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SCAL | REFERENCE   | BIT | UNITS                    |-------------|
+|----------|------|-------------|-----|--------------------------|-------------|
+|          |      |             |     |                          |-------------|
+| WMOB     |    0 |           0 |   7 | NUMERIC                  |-------------|
+| WMOS     |    0 |           0 |  10 | NUMERIC                  |-------------|
+| STSN     |    0 |           0 | 160 | CCITT IA5                |-------------|
+| TOST     |    0 |           0 |   2 | CODE TABLE               |-------------|
+| YEAR     |    0 |           0 |  12 | YEAR                     |-------------|
+| MNTH     |    0 |           0 |   4 | MONTH                    |-------------|
+| DAYS     |    0 |           0 |   6 | DAY                      |-------------|
+| HOUR     |    0 |           0 |   5 | HOUR                     |-------------|
+| MINU     |    0 |           0 |   6 | MINUTE                   |-------------|
+| CLATH    |    5 |    -9000000 |  25 | DEGREE                   |-------------|
+| CLONH    |    5 |   -18000000 |  26 | DEGREE                   |-------------|
+| HSMSL    |    1 |       -4000 |  17 | M                        |-------------|
+| HBMSL    |    1 |       -4000 |  17 | M                        |-------------|
+| PRES     |   -1 |           0 |  14 | PA                       |-------------|
+| PMSL     |   -1 |           0 |  14 | PA                       |-------------|
+| 3HPC     |   -1 |        -500 |  10 | PA                       |-------------|
+| CHPT     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| 24PC     |   -1 |       -1000 |  11 | PA                       |-------------|
+| PRLC     |   -1 |           0 |  14 | PA                       |-------------|
+| GPH10    |    0 |       -1000 |  17 | GPM                      |-------------|
+| HSALG    |    2 |           0 |  16 | M                        |-------------|
+| TMDB     |    2 |           0 |  16 | K                        |-------------|
+| TMDP     |    2 |           0 |  16 | K                        |-------------|
+| REHU     |    0 |           0 |   7 | %                        |-------------|
+| HOVI     |   -1 |           0 |  13 | M                        |-------------|
+| TP24     |    1 |          -1 |  14 | KG M⁻²                |-------------|
+| TOCC     |    0 |           0 |   7 | %                        |-------------|
+| VSSO     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| CLAM     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| HOCB     |   -1 |         -40 |  11 | M                        |-------------|
+| CLTP     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| HOCT     |   -1 |         -40 |  11 | M                        |-------------|
+| CTDS     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| TDCM     |    0 |           0 |   9 | DEGREE TRUE              |-------------|
+| BEARAZ   |    2 |           0 |  16 | DEGREE TRUE              |-------------|
+| ELEV     |    2 |       -9000 |  15 | DEGREE                   |-------------|
+| SOGR     |    0 |           0 |   5 | CODE TABLE               |-------------|
+| TOSD     |    2 |          -2 |  16 | M                        |-------------|
+| GMITH    |    2 |           0 |  16 | K                        |-------------|
+| PRWE     |    0 |           0 |   9 | CODE TABLE               |-------------|
+| TPHR     |    0 |       -2048 |  12 | HOUR                     |-------------|
+| PSW1     |    0 |           0 |   5 | CODE TABLE               |-------------|
+| PSW2     |    0 |           0 |   5 | CODE TABLE               |-------------|
+| TOSS     |    0 |           0 |  11 | MINUTE                   |-------------|
+| TOPC     |    1 |          -1 |  14 | KG M⁻²                |-------------|
+| MXTM     |    2 |           0 |  16 | K                        |-------------|
+| MITM     |    2 |           0 |  16 | K                        |-------------|
+| TIWM     |    0 |           0 |   4 | FLAG TABLE               |-------------|
+| TSIG     |    0 |           0 |   5 | CODE TABLE               |-------------|
+| TPMI     |    0 |       -2048 |  12 | MINUTE                   |-------------|
+| WDIR     |    0 |           0 |   9 | DEGREE TRUE              |-------------|
+| WSPD     |    1 |           0 |  12 | M S⁻¹                 |-------------|
+| MXGD     |    0 |           0 |   9 | DEGREE TRUE              |-------------|
+| MXGS     |    1 |           0 |  12 | M S⁻¹                 |-------------|
+| TIEM     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| EVAP1    |    1 |           0 |  10 | KG M⁻²                |-------------|
+| LWRAD    |   -3 |      -65536 |  17 | J M⁻²                 |-------------|
+| SWRAD    |   -3 |      -65536 |  17 | J M⁻²                 |-------------|
+| NRAD     |   -4 |      -16384 |  15 | J M⁻²                 |-------------|
+| GSORDH   |   -2 |           0 |  20 | J M⁻²                 |-------------|
+| DFSORD   |   -2 |           0 |  20 | J M⁻²                 |-------------|
+| DRSORD   |   -2 |           0 |  20 | J M⁻²                 |-------------|
+| TCPS     |    0 |         -30 |   6 | K                        |-------------|
+|          |      |             |     |                          |-------------|
+`------------------------------------------------------------------------------'

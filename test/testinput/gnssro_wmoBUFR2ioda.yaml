@@ -1,0 +1,198 @@
+# (C) Copyright 2021 UCAR
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+observations:
+  - obs space:
+      name: bufr
+      obsdatain: "./testinput/gnssro_2020-306-2358C2E6.bufr"
+      isWmoFormat: true
+      tablepath: "./testinput/bufr_tables"
+
+      mnemonicSets:
+        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, SECO, CLATH, CLONH]
+        - mnemonics: [HEIT]
+        - mnemonics: [GPHTST, PRES, TMDBST, SPFH, PRES]
+        - mnemonics: [SAID, SIID, OGCE]
+        - mnemonics: [IMPP, BNDA]
+        - mnemonics: [QFRO, PCCF, SCLF, PTID, ELRC, BEARAZ, GEODU]
+        - mnemonics: [ARFR]
+
+      exports:
+        variables:
+          timestamp:
+            datetime:
+              year: YEAR
+              month: MNTH
+              day: DAYS
+              hour: HOUR
+              minute: MINU
+              second: SECO
+          latitude:
+            mnemonic: CLATH
+          longitude:
+            mnemonic: CLONH
+          height:
+            mnemonic: HEIT
+          geopotentialHeight:
+            mnemonic: GPHTST
+          pressure:
+            mnemonic: PRES
+          airTemperature:
+            mnemonic: TMDBST
+          specificHumidity:
+            mnemonic: SPFH
+
+          satelliteIdentifier:
+            mnemonic: SAID
+          instrumentIdentifier:
+            mnemonic: SIID
+          platformTransmitterId:
+            mnemonic: PTID
+          dataProviderOrigin:
+            mnemonic: OGCE
+          qualityFlags:
+            mnemonic: QFRO
+          percentConfidence:
+            mnemonic: PCCF
+          impactParameterRO:
+            mnemonic: IMPP
+          geoidUndulation:
+            mnemonic: GEODU
+          sensorAzimuthAngle:
+            mnemonic: BEARAZ
+          earthRadiusCurvature:
+            mnemonic: ELRC
+
+          bendingAngle:
+            mnemonic: BNDA
+          atmosphericRefractivity:
+            mnemonic: ARFR
+
+    ioda:
+      backend: netcdf
+      obsdataout: "./testrun/gnssro_2020-306-2358C2E6.nc"
+
+      dimensions:
+        - name: "Location"
+          size: variables/latitude.nrows
+
+      variables:
+        - name: "MetaData/dateTime"
+          source: variables/timestamp
+          dimensions: [ "Location" ]
+          longName: "dateTime"
+          units: "seconds since 1970-01-01T00:00:00Z"
+
+        - name: "MetaData/latitude"
+          source: variables/latitude
+          dimensions: [ "Location" ]
+          longName: "Latitude"
+          units: "degrees_north"
+
+        - name: "MetaData/longitude"
+          source: variables/longitude
+          dimensions: [ "Location" ]
+          longName: "Longitude"
+          units: "degrees_east"
+
+        - name: "MetaData/height"
+          source: variables/height
+          dimensions: [ "Location" ]
+          longName: "Height"
+          units: "m"
+
+        - name: "MetaData/geopotentialHeight"
+          source: variables/geopotentialHeight
+          dimensions: [ "Location" ]
+          longName: "Geopotential height"
+          units: "m"
+
+        - name: "MetaData/pressure"
+          source: variables/pressure
+          dimensions: [ "Location" ]
+          longName: "Air pressure"
+          units: "Pa"
+
+        - name: "MetaData/dataProviderOrigin"
+          source: variables/dataProviderOrigin
+          dimensions: [ "Location" ]
+          longName: "Originating center"
+          units: ""
+
+        - name: "MetaData/satelliteIdentifier"
+          source: variables/satelliteIdentifier
+          dimensions: [ "Location" ]
+          longName: "GNSS satellite ID"
+          units: ""
+
+        - name: "MetaData/instrumentIdentifier"
+          source: variables/instrumentIdentifier
+          dimensions: [ "Location" ]
+          longName: "Instrument ID"
+          units: ""
+
+        - name: "MetaData/platformTransmitterId"
+          source: variables/platformTransmitterId
+          dimensions: [ "Location" ]
+          longName: "GNSS platform transmitter ID"
+          units: ""
+
+        - name: "QualityMarker/qualityFlags"
+          source: variables/qualityFlags
+          dimensions: [ "Location" ]
+          longName: "Quality flags"
+          units: ""
+
+        - name: "MetaData/earthRadiusCurvature"
+          source: variables/earthRadiusCurvature
+          dimensions: [ "Location" ]
+          longName: "Earth local radius of curvature"
+          units: "m"
+
+        - name: "MetaData/geoidUndulation"
+          source: variables/geoidUndulation
+          dimensions: [ "Location" ]
+          longName: "Geoid undulation"
+          units: "m"
+
+        - name: "MetaData/impactParameterRO"
+          source: variables/impactParameterRO
+          dimensions: [ "Location" ]
+          longName: "Impact parameter"
+          units: ""
+
+        - name: "MetaData/sensorAzimuthAngle"
+          source: variables/sensorAzimuthAngle
+          dimensions: [ "Location" ]
+          longName: "Sensor azimuth angle"
+          units: "degrees"
+
+        - name: "ObsValue/airTemperature"
+          source: variables/airTemperature
+          coordinates: "longitude latitude"
+          dimensions: [ "Location" ]
+          longName: "Air temperature"
+          units: "K"
+
+        - name: "ObsValue/specificHumidity"
+          source: variables/specificHumidity
+          coordinates: "longitude latitude"
+          dimensions: [ "Location" ]
+          longName: "Specific humidity"
+          units: "kg kg-1"
+
+        - name: "ObsValue/bendingAngle"
+          source: variables/bendingAngle
+          coordinates: "longitude latitude"
+          dimensions: [ "Location" ]
+          longName: "Bending angle"
+          units: "radians"
+
+        - name: "ObsValue/atmosphericRefractivity"
+          source: variables/atmosphericRefractivity
+          coordinates: "longitude latitude"
+          dimensions: [ "Location" ]
+          longName: "Refractivity"
+          units: "INVALID N units"

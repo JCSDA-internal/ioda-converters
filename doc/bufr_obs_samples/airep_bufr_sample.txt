@@ -1,0 +1,398 @@
+
+Found BUFR message #      1
+  
+        Message length:         509
+      Section 0 length:           8
+          BUFR edition:           4
+  
+      Section 1 length:          28
+          Master table:           0
+    Originating center:          69 (= Wellington (RSMC))
+ Originating subcenter:           0 (= No sub-centre)
+ Update sequence numbr:           0
+    Section 2 present?: No
+         Data category:           4 (= Single level upper-air data (other than satellite))
+     Local subcategory:           0
+ Internatl subcategory:           1 (= Manual (AIREP,PIREP))
+  Master table version:          14
+   Local table version:           0
+                  Year:        2021
+                 Month:           2
+                   Day:           1
+                  Hour:          12
+                Minute:           0
+                Second:           0
+  
+ Number of data subsets:          15
+     Data are observed?: Yes
+   Data are compressed?: No
+  Number of descriptors:           1
+        1: 311001
+
+BUFR message #      1 of type MSTTB001 and date 2021020112 contains     15 subsets:
+
+MESSAGE TYPE MSTTB001  
+
+001006  ACID                      ANZ289  ( 8)CCITT IA5                 Aircraft flight number                          
+002061  ACNS                     MISSING  CODE TABLE                    Aircraft navigational system                    
+004001  YEAR                      2021.0  YEAR                          Year                                            
+004002  MNTH                         2.0  MONTH                         Month                                           
+004003  DAYS                         1.0  DAY                           Day                                             
+004004  HOUR                        11.0  HOUR                          Hour                                            
+004005  MINU                        22.0  MINUTE                        Minute                                          
+005001  CLATH                  -36.70000  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                  174.10000  DEGREE                        Longitude (high accuracy)                       
+008004  POAF                     MISSING  CODE TABLE                    Phase of aircraft flight                        
+007002  HMSL                      4320.0  M                             Height or altitude                              
+012001  TMDBST                     271.1  K                             Temperature/dry-bulb temperature                
+011001  WDIR                         2.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         7.7  M S⁻¹                      Wind speed                                      
+011031  DGOT                     MISSING  CODE TABLE                    Degree of turbulence                            
+011032  HBOT                     MISSING  M                             Height of base of turbulence                    
+011033  HTOT                     MISSING  M                             Height of top of turbulence                     
+020041  AFIC                     MISSING  CODE TABLE                    Airframe icing                                  
+
+ >>> END OF SUBSET <<< 
+
+
+MESSAGE TYPE MSTTB001  
+
+001006  ACID                      ANZ289  ( 8)CCITT IA5                 Aircraft flight number                          
+002061  ACNS                     MISSING  CODE TABLE                    Aircraft navigational system                    
+004001  YEAR                      2021.0  YEAR                          Year                                            
+004002  MNTH                         2.0  MONTH                         Month                                           
+004003  DAYS                         1.0  DAY                           Day                                             
+004004  HOUR                        11.0  HOUR                          Hour                                            
+004005  MINU                        37.0  MINUTE                        Minute                                          
+005001  CLATH                  -35.40000  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                  172.40000  DEGREE                        Longitude (high accuracy)                       
+008004  POAF                     MISSING  CODE TABLE                    Phase of aircraft flight                        
+007002  HMSL                     10420.0  M                             Height or altitude                              
+012001  TMDBST                     230.1  K                             Temperature/dry-bulb temperature                
+011001  WDIR                       350.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         7.2  M S⁻¹                      Wind speed                                      
+011031  DGOT                     MISSING  CODE TABLE                    Degree of turbulence                            
+011032  HBOT                     MISSING  M                             Height of base of turbulence                    
+011033  HTOT                     MISSING  M                             Height of top of turbulence                     
+020041  AFIC                     MISSING  CODE TABLE                    Airframe icing                                  
+
+ >>> END OF SUBSET <<< 
+
+
+MESSAGE TYPE MSTTB001  
+
+001006  ACID                      ANZ289  ( 8)CCITT IA5                 Aircraft flight number                          
+002061  ACNS                     MISSING  CODE TABLE                    Aircraft navigational system                    
+004001  YEAR                      2021.0  YEAR                          Year                                            
+004002  MNTH                         2.0  MONTH                         Month                                           
+004003  DAYS                         1.0  DAY                           Day                                             
+004004  HOUR                        11.0  HOUR                          Hour                                            
+004005  MINU                        52.0  MINUTE                        Minute                                          
+005001  CLATH                  -34.20000  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                  170.40000  DEGREE                        Longitude (high accuracy)                       
+008004  POAF                     MISSING  CODE TABLE                    Phase of aircraft flight                        
+007002  HMSL                     10970.0  M                             Height or altitude                              
+012001  TMDBST                     228.1  K                             Temperature/dry-bulb temperature                
+011001  WDIR                       257.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                         8.7  M S⁻¹                      Wind speed                                      
+011031  DGOT                     MISSING  CODE TABLE                    Degree of turbulence                            
+011032  HBOT                     MISSING  M                             Height of base of turbulence                    
+011033  HTOT                     MISSING  M                             Height of top of turbulence                     
+020041  AFIC                     MISSING  CODE TABLE                    Airframe icing                                  
+
+ >>> END OF SUBSET <<< 
+
+
+MESSAGE TYPE MSTTB001  
+
+001006  ACID                     FJI1810  ( 8)CCITT IA5                 Aircraft flight number                          
+002061  ACNS                     MISSING  CODE TABLE                    Aircraft navigational system                    
+004001  YEAR                      2021.0  YEAR                          Year                                            
+004002  MNTH                         2.0  MONTH                         Month                                           
+004003  DAYS                         1.0  DAY                           Day                                             
+004004  HOUR                        11.0  HOUR                          Hour                                            
+004005  MINU                         2.0  MINUTE                        Minute                                          
+005001  CLATH                  -12.80000  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                 -174.80000  DEGREE                        Longitude (high accuracy)                       
+008004  POAF                     MISSING  CODE TABLE                    Phase of aircraft flight                        
+007002  HMSL                     11270.0  M                             Height or altitude                              
+012001  TMDBST                     228.1  K                             Temperature/dry-bulb temperature                
+011001  WDIR                       202.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        22.6  M S⁻¹                      Wind speed                                      
+011031  DGOT                     MISSING  CODE TABLE                    Degree of turbulence                            
+011032  HBOT                     MISSING  M                             Height of base of turbulence                    
+011033  HTOT                     MISSING  M                             Height of top of turbulence                     
+020041  AFIC                     MISSING  CODE TABLE                    Airframe icing                                  
+
+ >>> END OF SUBSET <<< 
+
+
+MESSAGE TYPE MSTTB001  
+
+001006  ACID                     FJI1810  ( 8)CCITT IA5                 Aircraft flight number                          
+002061  ACNS                     MISSING  CODE TABLE                    Aircraft navigational system                    
+004001  YEAR                      2021.0  YEAR                          Year                                            
+004002  MNTH                         2.0  MONTH                         Month                                           
+004003  DAYS                         1.0  DAY                           Day                                             
+004004  HOUR                        11.0  HOUR                          Hour                                            
+004005  MINU                        17.0  MINUTE                        Minute                                          
+005001  CLATH                  -11.30000  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                 -173.10000  DEGREE                        Longitude (high accuracy)                       
+008004  POAF                     MISSING  CODE TABLE                    Phase of aircraft flight                        
+007002  HMSL                     11270.0  M                             Height or altitude                              
+012001  TMDBST                     227.1  K                             Temperature/dry-bulb temperature                
+011001  WDIR                       191.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        19.0  M S⁻¹                      Wind speed                                      
+011031  DGOT                     MISSING  CODE TABLE                    Degree of turbulence                            
+011032  HBOT                     MISSING  M                             Height of base of turbulence                    
+011033  HTOT                     MISSING  M                             Height of top of turbulence                     
+020041  AFIC                     MISSING  CODE TABLE                    Airframe icing                                  
+
+ >>> END OF SUBSET <<< 
+
+
+MESSAGE TYPE MSTTB001  
+
+001006  ACID                     FJI1810  ( 8)CCITT IA5                 Aircraft flight number                          
+002061  ACNS                     MISSING  CODE TABLE                    Aircraft navigational system                    
+004001  YEAR                      2021.0  YEAR                          Year                                            
+004002  MNTH                         2.0  MONTH                         Month                                           
+004003  DAYS                         1.0  DAY                           Day                                             
+004004  HOUR                        11.0  HOUR                          Hour                                            
+004005  MINU                        32.0  MINUTE                        Minute                                          
+005001  CLATH                   -9.70000  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                 -171.50000  DEGREE                        Longitude (high accuracy)                       
+008004  POAF                     MISSING  CODE TABLE                    Phase of aircraft flight                        
+007002  HMSL                     11270.0  M                             Height or altitude                              
+012001  TMDBST                     227.1  K                             Temperature/dry-bulb temperature                
+011001  WDIR                       188.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        20.0  M S⁻¹                      Wind speed                                      
+011031  DGOT                     MISSING  CODE TABLE                    Degree of turbulence                            
+011032  HBOT                     MISSING  M                             Height of base of turbulence                    
+011033  HTOT                     MISSING  M                             Height of top of turbulence                     
+020041  AFIC                     MISSING  CODE TABLE                    Airframe icing                                  
+
+ >>> END OF SUBSET <<< 
+
+
+MESSAGE TYPE MSTTB001  
+
+001006  ACID                     FJI1810  ( 8)CCITT IA5                 Aircraft flight number                          
+002061  ACNS                     MISSING  CODE TABLE                    Aircraft navigational system                    
+004001  YEAR                      2021.0  YEAR                          Year                                            
+004002  MNTH                         2.0  MONTH                         Month                                           
+004003  DAYS                         1.0  DAY                           Day                                             
+004004  HOUR                        11.0  HOUR                          Hour                                            
+004005  MINU                        47.0  MINUTE                        Minute                                          
+005001  CLATH                   -8.10000  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                 -170.00000  DEGREE                        Longitude (high accuracy)                       
+008004  POAF                     MISSING  CODE TABLE                    Phase of aircraft flight                        
+007002  HMSL                     11270.0  M                             Height or altitude                              
+012001  TMDBST                     227.1  K                             Temperature/dry-bulb temperature                
+011001  WDIR                       178.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        22.1  M S⁻¹                      Wind speed                                      
+011031  DGOT                     MISSING  CODE TABLE                    Degree of turbulence                            
+011032  HBOT                     MISSING  M                             Height of base of turbulence                    
+011033  HTOT                     MISSING  M                             Height of top of turbulence                     
+020041  AFIC                     MISSING  CODE TABLE                    Airframe icing                                  
+
+ >>> END OF SUBSET <<< 
+
+
+MESSAGE TYPE MSTTB001  
+
+001006  ACID                     ANZ1005  ( 8)CCITT IA5                 Aircraft flight number                          
+002061  ACNS                     MISSING  CODE TABLE                    Aircraft navigational system                    
+004001  YEAR                      2021.0  YEAR                          Year                                            
+004002  MNTH                         2.0  MONTH                         Month                                           
+004003  DAYS                         1.0  DAY                           Day                                             
+004004  HOUR                        11.0  HOUR                          Hour                                            
+004005  MINU                        42.0  MINUTE                        Minute                                          
+005001  CLATH                   -0.40000  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                 -152.30000  DEGREE                        Longitude (high accuracy)                       
+008004  POAF                     MISSING  CODE TABLE                    Phase of aircraft flight                        
+007002  HMSL                     11550.0  M                             Height or altitude                              
+012001  TMDBST                     221.1  K                             Temperature/dry-bulb temperature                
+011001  WDIR                       277.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        43.7  M S⁻¹                      Wind speed                                      
+011031  DGOT                     MISSING  CODE TABLE                    Degree of turbulence                            
+011032  HBOT                     MISSING  M                             Height of base of turbulence                    
+011033  HTOT                     MISSING  M                             Height of top of turbulence                     
+020041  AFIC                     MISSING  CODE TABLE                    Airframe icing                                  
+
+ >>> END OF SUBSET <<< 
+
+
+MESSAGE TYPE MSTTB001  
+
+001006  ACID                     ANZ1005  ( 8)CCITT IA5                 Aircraft flight number                          
+002061  ACNS                     MISSING  CODE TABLE                    Aircraft navigational system                    
+004001  YEAR                      2021.0  YEAR                          Year                                            
+004002  MNTH                         2.0  MONTH                         Month                                           
+004003  DAYS                         1.0  DAY                           Day                                             
+004004  HOUR                        11.0  HOUR                          Hour                                            
+004005  MINU                        54.0  MINUTE                        Minute                                          
+005001  CLATH                   -1.60000  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                 -153.10000  DEGREE                        Longitude (high accuracy)                       
+008004  POAF                     MISSING  CODE TABLE                    Phase of aircraft flight                        
+007002  HMSL                     11550.0  M                             Height or altitude                              
+012001  TMDBST                     221.1  K                             Temperature/dry-bulb temperature                
+011001  WDIR                       265.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        36.5  M S⁻¹                      Wind speed                                      
+011031  DGOT                     MISSING  CODE TABLE                    Degree of turbulence                            
+011032  HBOT                     MISSING  M                             Height of base of turbulence                    
+011033  HTOT                     MISSING  M                             Height of top of turbulence                     
+020041  AFIC                     MISSING  CODE TABLE                    Airframe icing                                  
+
+ >>> END OF SUBSET <<< 
+
+
+MESSAGE TYPE MSTTB001  
+
+001006  ACID                     ANZ1008  ( 8)CCITT IA5                 Aircraft flight number                          
+002061  ACNS                     MISSING  CODE TABLE                    Aircraft navigational system                    
+004001  YEAR                      2021.0  YEAR                          Year                                            
+004002  MNTH                         2.0  MONTH                         Month                                           
+004003  DAYS                         1.0  DAY                           Day                                             
+004004  HOUR                        11.0  HOUR                          Hour                                            
+004005  MINU                         4.0  MINUTE                        Minute                                          
+005001  CLATH                  -30.30000  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                 -177.10000  DEGREE                        Longitude (high accuracy)                       
+008004  POAF                     MISSING  CODE TABLE                    Phase of aircraft flight                        
+007002  HMSL                     11880.0  M                             Height or altitude                              
+012001  TMDBST                     225.1  K                             Temperature/dry-bulb temperature                
+011001  WDIR                       316.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        47.8  M S⁻¹                      Wind speed                                      
+011031  DGOT                     MISSING  CODE TABLE                    Degree of turbulence                            
+011032  HBOT                     MISSING  M                             Height of base of turbulence                    
+011033  HTOT                     MISSING  M                             Height of top of turbulence                     
+020041  AFIC                     MISSING  CODE TABLE                    Airframe icing                                  
+
+ >>> END OF SUBSET <<< 
+
+
+MESSAGE TYPE MSTTB001  
+
+001006  ACID                     ANZ1008  ( 8)CCITT IA5                 Aircraft flight number                          
+002061  ACNS                     MISSING  CODE TABLE                    Aircraft navigational system                    
+004001  YEAR                      2021.0  YEAR                          Year                                            
+004002  MNTH                         2.0  MONTH                         Month                                           
+004003  DAYS                         1.0  DAY                           Day                                             
+004004  HOUR                        11.0  HOUR                          Hour                                            
+004005  MINU                        19.0  MINUTE                        Minute                                          
+005001  CLATH                  -28.90000  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                 -175.50000  DEGREE                        Longitude (high accuracy)                       
+008004  POAF                     MISSING  CODE TABLE                    Phase of aircraft flight                        
+007002  HMSL                     11880.0  M                             Height or altitude                              
+012001  TMDBST                     222.1  K                             Temperature/dry-bulb temperature                
+011001  WDIR                       317.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        42.6  M S⁻¹                      Wind speed                                      
+011031  DGOT                     MISSING  CODE TABLE                    Degree of turbulence                            
+011032  HBOT                     MISSING  M                             Height of base of turbulence                    
+011033  HTOT                     MISSING  M                             Height of top of turbulence                     
+020041  AFIC                     MISSING  CODE TABLE                    Airframe icing                                  
+
+ >>> END OF SUBSET <<< 
+
+
+MESSAGE TYPE MSTTB001  
+
+001006  ACID                     UAL2795  ( 8)CCITT IA5                 Aircraft flight number                          
+002061  ACNS                     MISSING  CODE TABLE                    Aircraft navigational system                    
+004001  YEAR                      2021.0  YEAR                          Year                                            
+004002  MNTH                         2.0  MONTH                         Month                                           
+004003  DAYS                         1.0  DAY                           Day                                             
+004004  HOUR                        11.0  HOUR                          Hour                                            
+004005  MINU                        32.0  MINUTE                        Minute                                          
+005001  CLATH                  -32.40000  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                  167.30000  DEGREE                        Longitude (high accuracy)                       
+008004  POAF                     MISSING  CODE TABLE                    Phase of aircraft flight                        
+007002  HMSL                     11880.0  M                             Height or altitude                              
+012001  TMDBST                     223.1  K                             Temperature/dry-bulb temperature                
+011001  WDIR                       290.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        14.9  M S⁻¹                      Wind speed                                      
+011031  DGOT                     MISSING  CODE TABLE                    Degree of turbulence                            
+011032  HBOT                     MISSING  M                             Height of base of turbulence                    
+011033  HTOT                     MISSING  M                             Height of top of turbulence                     
+020041  AFIC                     MISSING  CODE TABLE                    Airframe icing                                  
+
+ >>> END OF SUBSET <<< 
+
+
+MESSAGE TYPE MSTTB001  
+
+001006  ACID                     ANZ1008  ( 8)CCITT IA5                 Aircraft flight number                          
+002061  ACNS                     MISSING  CODE TABLE                    Aircraft navigational system                    
+004001  YEAR                      2021.0  YEAR                          Year                                            
+004002  MNTH                         2.0  MONTH                         Month                                           
+004003  DAYS                         1.0  DAY                           Day                                             
+004004  HOUR                        11.0  HOUR                          Hour                                            
+004005  MINU                        34.0  MINUTE                        Minute                                          
+005001  CLATH                  -27.40000  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                 -174.10000  DEGREE                        Longitude (high accuracy)                       
+008004  POAF                     MISSING  CODE TABLE                    Phase of aircraft flight                        
+007002  HMSL                     11880.0  M                             Height or altitude                              
+012001  TMDBST                     221.1  K                             Temperature/dry-bulb temperature                
+011001  WDIR                       306.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        34.9  M S⁻¹                      Wind speed                                      
+011031  DGOT                     MISSING  CODE TABLE                    Degree of turbulence                            
+011032  HBOT                     MISSING  M                             Height of base of turbulence                    
+011033  HTOT                     MISSING  M                             Height of top of turbulence                     
+020041  AFIC                     MISSING  CODE TABLE                    Airframe icing                                  
+
+ >>> END OF SUBSET <<< 
+
+
+MESSAGE TYPE MSTTB001  
+
+001006  ACID                     UAL2795  ( 8)CCITT IA5                 Aircraft flight number                          
+002061  ACNS                     MISSING  CODE TABLE                    Aircraft navigational system                    
+004001  YEAR                      2021.0  YEAR                          Year                                            
+004002  MNTH                         2.0  MONTH                         Month                                           
+004003  DAYS                         1.0  DAY                           Day                                             
+004004  HOUR                        11.0  HOUR                          Hour                                            
+004005  MINU                        47.0  MINUTE                        Minute                                          
+005001  CLATH                  -32.00000  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                  169.70000  DEGREE                        Longitude (high accuracy)                       
+008004  POAF                     MISSING  CODE TABLE                    Phase of aircraft flight                        
+007002  HMSL                     11880.0  M                             Height or altitude                              
+012001  TMDBST                     223.1  K                             Temperature/dry-bulb temperature                
+011001  WDIR                       264.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        13.8  M S⁻¹                      Wind speed                                      
+011031  DGOT                     MISSING  CODE TABLE                    Degree of turbulence                            
+011032  HBOT                     MISSING  M                             Height of base of turbulence                    
+011033  HTOT                     MISSING  M                             Height of top of turbulence                     
+020041  AFIC                     MISSING  CODE TABLE                    Airframe icing                                  
+
+ >>> END OF SUBSET <<< 
+
+
+MESSAGE TYPE MSTTB001  
+
+001006  ACID                     ANZ1008  ( 8)CCITT IA5                 Aircraft flight number                          
+002061  ACNS                     MISSING  CODE TABLE                    Aircraft navigational system                    
+004001  YEAR                      2021.0  YEAR                          Year                                            
+004002  MNTH                         2.0  MONTH                         Month                                           
+004003  DAYS                         1.0  DAY                           Day                                             
+004004  HOUR                        11.0  HOUR                          Hour                                            
+004005  MINU                        49.0  MINUTE                        Minute                                          
+005001  CLATH                  -25.80000  DEGREE                        Latitude (high accuracy)                        
+006001  CLONH                 -172.70000  DEGREE                        Longitude (high accuracy)                       
+008004  POAF                     MISSING  CODE TABLE                    Phase of aircraft flight                        
+007002  HMSL                     11880.0  M                             Height or altitude                              
+012001  TMDBST                     221.1  K                             Temperature/dry-bulb temperature                
+011001  WDIR                       297.0  DEGREE TRUE                   Wind direction                                  
+011002  WSPD                        30.8  M S⁻¹                      Wind speed                                      
+011031  DGOT                     MISSING  CODE TABLE                    Degree of turbulence                            
+011032  HBOT                     MISSING  M                             Height of base of turbulence                    
+011033  HTOT                     MISSING  M                             Height of top of turbulence                     
+020041  AFIC                     MISSING  CODE TABLE                    Airframe icing                                  
+
+ >>> END OF SUBSET <<< 
+
+
+End of BUFR message #      1
+
+------------------------------------------------------------------------------------------------------------------------
+
+Reached end of BUFR file; it contained a total of      1 messages and       15 subsets

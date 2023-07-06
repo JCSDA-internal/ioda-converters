@@ -1,0 +1,108 @@
+# (C) Copyright 2021 NOAA/NWS/NCEP/EMC
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+observations:
+  - obs space:
+      name: bufr
+      obsdatain: "./testinput/airep_wmo_multi.bufr"
+      isWmoFormat: true
+      tablepath: "./testinput/bufr_tables"
+
+      mnemonicSets:
+        - mnemonics: [YEAR, MNTH, DAYS, HOUR, MINU, CLATH, CLONH, HMSL]
+        - mnemonics: [ACID, POAF]
+        - mnemonics: [TMDBST, WDIR, WSPD]
+
+      exports:
+        variables:
+          timestamp:
+            datetime:
+              year: YEAR
+              month: MNTH
+              day: DAYS
+              hour: HOUR
+              minute: MINU
+          latitude:
+            mnemonic: CLATH
+          longitude:
+            mnemonic: CLONH
+          height:
+            mnemonic: HMSL
+          aircraftIdentifier:
+            mnemonic: ACID
+          aircraftFlightPhase:
+            mnemonic: POAF
+          airTemperature:
+            mnemonic: TMDBST
+          windDirection:
+            mnemonic: WDIR
+          windSpeed:
+            mnemonic: WSPD
+
+    ioda:
+      backend: netcdf
+      obsdataout: "./testrun/airep_multi.nc"
+
+      dimensions:
+        - name: "Location"
+          size: variables/latitude.nrows
+
+      variables:
+        - name: "MetaData/dateTime"
+          source: variables/timestamp
+          dimensions: [ "Location" ]
+          longName: "dateTime"
+          units: "seconds since 1970-01-01T00:00:00Z"
+
+        - name: "MetaData/latitude"
+          source: variables/latitude
+          dimensions: [ "Location" ]
+          longName: "Latitude"
+          units: "degrees_north"
+
+        - name: "MetaData/longitude"
+          source: variables/longitude
+          dimensions: [ "Location" ]
+          longName: "Longitude"
+          units: "degrees_east"
+
+        - name: "MetaData/height"
+          source: variables/height
+          dimensions: [ "Location" ]
+          longName: "Height"
+          units: "m"
+
+        - name: "MetaData/aircraftIdentifier"
+          source: variables/aircraftIdentifier
+          dimensions: [ "Location" ]
+          longName: "Aircraft identifier"
+          units: ""
+
+        - name: "MetaData/aircraftFlightPhase"
+          source: variables/aircraftFlightPhase
+          dimensions: [ "Location" ]
+          longName: "Aircraft flight phase (ascending/descending/level)"
+          units: ""
+
+        - name: "ObsValue/airTemperature"
+          source: variables/airTemperature
+          coordinates: "longitude latitude"
+          dimensions: [ "Location" ]
+          longName: "Air Temperature"
+          units: "K"
+
+        - name: "ObsValue/windDirection"
+          source: variables/windDirection
+          coordinates: "longitude latitude"
+          dimensions: [ "Location" ]
+          longName: "Wind Direction"
+          units: "degrees"
+
+        - name: "ObsValue/windSpeed"
+          source: variables/windSpeed
+          coordinates: "longitude latitude"
+          dimensions: [ "Location" ]
+          longName: "Wind Speed"
+          units: "m s-1"

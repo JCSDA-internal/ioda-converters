@@ -1,0 +1,237 @@
+
+.------------------------------------------------------------------------------.
+| ------------   USER DEFINITIONS FOR TABLE-A TABLE-B TABLE D   -------------- |
+|------------------------------------------------------------------------------|
+| MNEMONIC | NUMBER | DESCRIPTION                                              |
+|----------|--------|----------------------------------------------------------|
+|          |        |                                                          |
+| MSTTB001 | A54000 | TABLE A MNEMONIC MSTTB001                                |
+|          |        |                                                          |
+| SYNPSHIP | 308009 | Sequence for representation of synoptic reports from a   |
+| SHPIDENT | 301093 | Ship identification, movement, date/time, horizontal an  |
+| SHIPSEQ1 | 301036 | Ship                                                     |
+| SHIPCSDS | 301003 |                                                          |
+| YYMMDD   | 301011 |                                                          |
+| HHMM     | 301012 |                                                          |
+| LTLONC   | 301023 |                                                          |
+| PRESSQ03 | 302001 |                                                          |
+| SHIPINST | 302054 | Ship "instantaneous" data                                |
+| TEHUDAT2 | 302052 | Ship temperature and humidity data                       |
+| VISBDAT2 | 302053 | Ship visibility data                                     |
+| PRECIP24 | 302034 | Precipitation past 24 hours                              |
+| GENCLOUD | 302004 | General cloud information                                |
+| CLOUDSQ1 | 302005 |                                                          |
+| ICINGICE | 302055 | Icing and ice                                            |
+| SHIPDATA | 302057 | Ship marine data                                         |
+| SEATEMPM | 302056 | Sea/water temperature                                    |
+| DPHGTWAV | 302021 |                                                          |
+| WINDSWAV | 302024 |                                                          |
+| DPHGTWWV | 302022 |                                                          |
+| DPHGTSWV | 302023 |                                                          |
+| SHIPPERD | 302060 | Ship "period" data                                       |
+| PWEATHER | 302038 | Present and past weather                                 |
+| PRECMEA2 | 302040 | Precipitation measurement                                |
+| RPSEQ001 | 354001 | REPLICATION SEQUENCE 001                                 |
+| EXTRTEM3 | 302058 | Ship extreme temperature data                            |
+| WINDDAT3 | 302059 | Ship wind data                                           |
+| RPSEQ002 | 354002 | REPLICATION SEQUENCE 002                                 |
+|          |        |                                                          |
+| SMID     | 001011 | Ship or mobile land station identifier                   |
+| DOMO     | 001012 | Direction of motion of moving observing platform         |
+| SMMO     | 001013 | Speed of motion of moving observing platform             |
+| TOST     | 002001 | Type of station                                          |
+| YEAR     | 004001 | Year                                                     |
+| MNTH     | 004002 | Month                                                    |
+| DAYS     | 004003 | Day                                                      |
+| HOUR     | 004004 | Hour                                                     |
+| MINU     | 004005 | Minute                                                   |
+| CLAT     | 005002 | Latitude (coarse accuracy)                               |
+| CLON     | 006002 | Longitude (coarse accuracy)                              |
+| HSMSL    | 007030 | Height of station ground above mean sea level            |
+| HBMSL    | 007031 | Height of barometer above mean sea level                 |
+| PRES     | 010004 | Pressure                                                 |
+| PMSL     | 010051 | Pressure reduced to mean sea level                       |
+| 3HPC     | 010061 | 3-hour pressure change                                   |
+| CHPT     | 010063 | Characteristic of pressure tendency                      |
+| HSALG    | 007032 | Height of sensor above local ground (or deck of marine   |
+| HSAWS    | 007033 | Height of sensor above water surface                     |
+| TMDB     | 012101 | Temperature/dry-bulb temperature                         |
+| MWBT     | 002039 | Method of wet-bulb temperature measurement               |
+| TMWB     | 012102 | Wet-bulb temperature                                     |
+| TMDP     | 012103 | Dew-point temperature                                    |
+| REHU     | 013003 | Relative humidity                                        |
+| HOVI     | 020001 | Horizontal visibility                                    |
+| TP24     | 013023 | Total precipitation past 24 hours                        |
+| TOCC     | 020010 | Cloud cover (total)                                      |
+| VSSO     | 008002 | Vertical significance (surface observations)             |
+| CLAM     | 020011 | Cloud amount                                             |
+| HOCB     | 020013 | Height of base of cloud                                  |
+| CLTP     | 020012 | Cloud type                                               |
+| IDTH     | 020031 | Ice deposit (thickness)                                  |
+| ROIA     | 020032 | Rate of ice accretion                                    |
+| COIA     | 020033 | Cause of ice accretion                                   |
+| SICE     | 020034 | Sea ice concentration                                    |
+| AICE     | 020035 | Amount and type of ice                                   |
+| ICESI    | 020036 | Ice situation                                            |
+| ICEDV    | 020037 | Ice development                                          |
+| BOIE     | 020038 | Bearing of ice edge                                      |
+| MSST     | 002038 | Method of water temperature and/or salinity measurement  |
+| DBSSX    | 007063 | Depth below sea/water surface (cm)                       |
+| SST1     | 022043 | Sea/water temperature                                    |
+| DOWA     | 022001 | Direction of waves                                       |
+| POWV     | 022011 | Period of waves                                          |
+| HOWV     | 022021 | Height of waves                                          |
+| DOWW     | 022002 | Direction of wind waves                                  |
+| POWW     | 022012 | Period of wind waves                                     |
+| HOWW     | 022022 | Height of wind waves                                     |
+| DOSW     | 022003 | Direction of swell waves                                 |
+| POSW     | 022013 | Period of swell waves                                    |
+| HOSW     | 022023 | Height of swell waves                                    |
+| PRWE     | 020003 | Present weather                                          |
+| TPHR     | 004024 | Time period or displacement                              |
+| PSW1     | 020004 | Past weather (1)                                         |
+| PSW2     | 020005 | Past weather (2)                                         |
+| TOPC     | 013011 | Total precipitation/total water equivalent               |
+| MXTM     | 012111 | Maximum temperature, at height and over period specifie  |
+| MITM     | 012112 | Minimum temperature, at height and over period specifie  |
+| TIWM     | 002002 | Type of instrumentation for wind measurement             |
+| TSIG     | 008021 | Time significance                                        |
+| TPMI     | 004025 | Time period or displacement                              |
+| WDIR     | 011001 | Wind direction                                           |
+| WSPD     | 011002 | Wind speed                                               |
+| MXGD     | 011043 | Maximum wind gust direction                              |
+| MXGS     | 011041 | Maximum wind gust speed                                  |
+|          |        |                                                          |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SEQUENCE                                                          |
+|----------|-------------------------------------------------------------------|
+|          |                                                                   |
+| MSTTB001 | SYNPSHIP                                                          |
+|          |                                                                   |
+| SYNPSHIP | SHPIDENT  PRESSQ03  SHIPINST  VSSO  ICINGICE  SHIPDATA  SHIPPERD  |
+|          |                                                                   |
+| SHPIDENT | SHIPSEQ1  HSMSL  HBMSL                                            |
+|          |                                                                   |
+| SHIPSEQ1 | SHIPCSDS  TOST  YYMMDD  HHMM  LTLONC                              |
+|          |                                                                   |
+| SHIPCSDS | SMID  DOMO  SMMO                                                  |
+|          |                                                                   |
+| YYMMDD   | YEAR  MNTH  DAYS                                                  |
+|          |                                                                   |
+| HHMM     | HOUR  MINU                                                        |
+|          |                                                                   |
+| LTLONC   | CLAT  CLON                                                        |
+|          |                                                                   |
+| PRESSQ03 | PRES  PMSL  3HPC  CHPT                                            |
+|          |                                                                   |
+| SHIPINST | TEHUDAT2  VISBDAT2  HSAWS  PRECIP24  HSALG  GENCLOUD  {CLOUDSQ1}  |
+|          |                                                                   |
+| TEHUDAT2 | HSALG  HSAWS  TMDB  MWBT  TMWB  TMDP  REHU                        |
+|          |                                                                   |
+| VISBDAT2 | HSALG  HSAWS  HOVI                                                |
+|          |                                                                   |
+| PRECIP24 | HSALG  TP24                                                       |
+|          |                                                                   |
+| GENCLOUD | TOCC  VSSO  CLAM  HOCB  CLTP  CLTP  CLTP                          |
+|          |                                                                   |
+| CLOUDSQ1 | VSSO  CLAM  CLTP  HOCB                                            |
+|          |                                                                   |
+| ICINGICE | IDTH  ROIA  COIA  SICE  AICE  ICESI  ICEDV  BOIE                  |
+|          |                                                                   |
+| SHIPDATA | SEATEMPM  DPHGTWAV  WINDSWAV                                      |
+|          |                                                                   |
+| SEATEMPM | MSST  DBSSX  SST1  DBSSX                                          |
+|          |                                                                   |
+| DPHGTWAV | DOWA  POWV  HOWV                                                  |
+|          |                                                                   |
+| WINDSWAV | DPHGTWWV  "DPHGTSWV"2                                             |
+|          |                                                                   |
+| DPHGTWWV | DOWW  POWW  HOWW                                                  |
+|          |                                                                   |
+| DPHGTSWV | DOSW  POSW  HOSW                                                  |
+|          |                                                                   |
+| SHIPPERD | PWEATHER  PRECMEA2  EXTRTEM3  WINDDAT3                            |
+|          |                                                                   |
+| PWEATHER | PRWE  TPHR  PSW1  PSW2                                            |
+|          |                                                                   |
+| PRECMEA2 | HSALG  "RPSEQ001"2                                                |
+|          |                                                                   |
+| RPSEQ001 | TPHR  TOPC                                                        |
+|          |                                                                   |
+| EXTRTEM3 | HSALG  HSAWS  TPHR  TPHR  MXTM  TPHR  TPHR  MITM                  |
+|          |                                                                   |
+| WINDDAT3 | HSALG  HSAWS  TIWM  TSIG  TPMI  WDIR  WSPD  TSIG  "RPSEQ002"2     |
+|          |                                                                   |
+| RPSEQ002 | TPMI  MXGD  MXGS                                                  |
+|          |                                                                   |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SCAL | REFERENCE   | BIT | UNITS                    |-------------|
+|----------|------|-------------|-----|--------------------------|-------------|
+|          |      |             |     |                          |-------------|
+| SMID     |    0 |           0 |  72 | CCITT IA5                |-------------|
+| DOMO     |    0 |           0 |   9 | DEGREE TRUE              |-------------|
+| SMMO     |    0 |           0 |  10 | M S⁻¹                 |-------------|
+| TOST     |    0 |           0 |   2 | CODE TABLE               |-------------|
+| YEAR     |    0 |           0 |  12 | YEAR                     |-------------|
+| MNTH     |    0 |           0 |   4 | MONTH                    |-------------|
+| DAYS     |    0 |           0 |   6 | DAY                      |-------------|
+| HOUR     |    0 |           0 |   5 | HOUR                     |-------------|
+| MINU     |    0 |           0 |   6 | MINUTE                   |-------------|
+| CLAT     |    2 |       -9000 |  15 | DEGREE                   |-------------|
+| CLON     |    2 |      -18000 |  16 | DEGREE                   |-------------|
+| HSMSL    |    1 |       -4000 |  17 | M                        |-------------|
+| HBMSL    |    1 |       -4000 |  17 | M                        |-------------|
+| PRES     |   -1 |           0 |  14 | PA                       |-------------|
+| PMSL     |   -1 |           0 |  14 | PA                       |-------------|
+| 3HPC     |   -1 |        -500 |  10 | PA                       |-------------|
+| CHPT     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| HSALG    |    2 |           0 |  16 | M                        |-------------|
+| HSAWS    |    1 |           0 |  12 | M                        |-------------|
+| TMDB     |    2 |           0 |  16 | K                        |-------------|
+| MWBT     |    0 |           0 |   3 | CODE TABLE               |-------------|
+| TMWB     |    2 |           0 |  16 | K                        |-------------|
+| TMDP     |    2 |           0 |  16 | K                        |-------------|
+| REHU     |    0 |           0 |   7 | %                        |-------------|
+| HOVI     |   -1 |           0 |  13 | M                        |-------------|
+| TP24     |    1 |          -1 |  14 | KG M⁻²                |-------------|
+| TOCC     |    0 |           0 |   7 | %                        |-------------|
+| VSSO     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| CLAM     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| HOCB     |   -1 |         -40 |  11 | M                        |-------------|
+| CLTP     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| IDTH     |    2 |           0 |   7 | M                        |-------------|
+| ROIA     |    0 |           0 |   3 | CODE TABLE               |-------------|
+| COIA     |    0 |           0 |   4 | FLAG TABLE               |-------------|
+| SICE     |    0 |           0 |   5 | CODE TABLE               |-------------|
+| AICE     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| ICESI    |    0 |           0 |   5 | CODE TABLE               |-------------|
+| ICEDV    |    0 |           0 |   5 | CODE TABLE               |-------------|
+| BOIE     |    0 |           0 |  12 | DEGREE TRUE              |-------------|
+| MSST     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| DBSSX    |    2 |           0 |  20 | M                        |-------------|
+| SST1     |    2 |           0 |  15 | K                        |-------------|
+| DOWA     |    0 |           0 |   9 | DEGREE TRUE              |-------------|
+| POWV     |    0 |           0 |   6 | S                        |-------------|
+| HOWV     |    1 |           0 |  10 | M                        |-------------|
+| DOWW     |    0 |           0 |   9 | DEGREE TRUE              |-------------|
+| POWW     |    0 |           0 |   6 | S                        |-------------|
+| HOWW     |    1 |           0 |  10 | M                        |-------------|
+| DOSW     |    0 |           0 |   9 | DEGREE TRUE              |-------------|
+| POSW     |    0 |           0 |   6 | S                        |-------------|
+| HOSW     |    1 |           0 |  10 | M                        |-------------|
+| PRWE     |    0 |           0 |   9 | CODE TABLE               |-------------|
+| TPHR     |    0 |       -2048 |  12 | HOUR                     |-------------|
+| PSW1     |    0 |           0 |   5 | CODE TABLE               |-------------|
+| PSW2     |    0 |           0 |   5 | CODE TABLE               |-------------|
+| TOPC     |    1 |          -1 |  14 | KG M⁻²                |-------------|
+| MXTM     |    2 |           0 |  16 | K                        |-------------|
+| MITM     |    2 |           0 |  16 | K                        |-------------|
+| TIWM     |    0 |           0 |   4 | FLAG TABLE               |-------------|
+| TSIG     |    0 |           0 |   5 | CODE TABLE               |-------------|
+| TPMI     |    0 |       -2048 |  12 | MINUTE                   |-------------|
+| WDIR     |    0 |           0 |   9 | DEGREE TRUE              |-------------|
+| WSPD     |    1 |           0 |  12 | M S⁻¹                 |-------------|
+| MXGD     |    0 |           0 |   9 | DEGREE TRUE              |-------------|
+| MXGS     |    1 |           0 |  12 | M S⁻¹                 |-------------|
+|          |      |             |     |                          |-------------|
+`------------------------------------------------------------------------------'

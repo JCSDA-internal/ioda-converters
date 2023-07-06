@@ -1,0 +1,70 @@
+# (C) Copyright 2020 NOAA/NWS/NCEP/EMC
+# #
+# # This software is licensed under the terms of the Apache Licence Version 2.0
+# # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+#
+observations:
+  - obs space:
+      name: bufr
+
+      obsdatain: "./testinput/bufr_empty_fields.bufr_d"
+
+      exports:
+        variables:
+          timestamp:
+            datetime:
+              year: "*/YEAR"
+              month: "*/MNTH"
+              day: "*/DAYS"
+              hour: "*/HOUR"
+              minute: "*/MINU"
+          lat:
+            query: "*/CLAT"
+          lon:
+            query: "*/CLON"
+          swellWavesDirection:
+            query: "NC000000/WAVSQ3/DOSW"
+          heightOfSwellWaves:
+            query: "NC000000/WAVSQ3/HOSW"
+          periodOfSwellWaves:
+            query: "NC000000/WAVSQ3/POSW"
+
+
+    ioda:
+      backend: netcdf
+      obsdataout: "./testrun/bufr_empty_fields.nc"
+
+      variables:
+        - name: "MetaData/dateTime"
+          source: variables/timestamp
+          longName: "Datetime"
+          units: "seconds since 1970-01-01T00:00:00Z"
+
+        - name: "MetaData/latitude"
+          source: variables/lat
+          longName: "latitude"
+          units: "degree_north"
+
+        - name: "MetaData/longitude"
+          source: variables/lon
+          longName: "longitude"
+          units: "degree_east"
+
+        - name: "ObsValue/meanWavePropagationDirection"
+          coordinates: "longitude latitude"
+          source: variables/swellWavesDirection
+          longName: "Swell Waves Direction"
+          units: "degree"
+
+        - name: "ObsValue/heightOfWaves"
+          coordinates: "longitude latitude"
+          source: variables/heightOfSwellWaves
+          longName: "Height of Swell Waves"
+          units: "m"
+
+        - name: "ObsValue/meanPeriodOfWaves"
+          coordinates: "longitude latitude"
+          source: variables/periodOfSwellWaves
+          longName: "Period of Swell Waves"
+          units: "s"
+

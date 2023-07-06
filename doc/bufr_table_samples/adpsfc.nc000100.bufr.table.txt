@@ -1,0 +1,263 @@
+.------------------------------------------------------------------------------.
+| ------------   USER DEFINITIONS FOR TABLE-A TABLE-B TABLE D   -------------- |
+|------------------------------------------------------------------------------|
+| MNEMONIC | NUMBER | DESCRIPTION                                              |
+|----------|--------|----------------------------------------------------------|
+|          |        |                                                          |
+| NC000100 | A51050 | MTYP 000-100 SYNOPTIC - FIXED LAND (BUFR) (WMO RES 40)   |
+|          |        |                                                          |
+| SFCSTNID | 301004 | SURFACE STATION IDENTIFICATION                           |
+| YYMMDD   | 301011 | DATE -- YEAR, MONTH, DAY                                 |
+| HHMM     | 301012 | TIME -- HOUR, MINUTE                                     |
+| LTLONH   | 301021 | LOCATION -- LATITUDE, LONGITUDE (HIGH ACCURACY)          |
+| SFIDTIME | 301090 | SURFACE STATION IDENTIFICATION, TIME AND LOCATION        |
+| WIGOSID  | 301150 | WIGOS IDENTIFIER                                         |
+| PRESSQ03 | 302001 |                                                          |
+| GENCLOUD | 302004 | GENERAL CLOUD INFORMATION                                |
+| PRESDATA | 302031 | PRESSURE INFORMATION                                     |
+| PWEATHER | 302038 | PRESENT AND PAST WEATHER                                 |
+| DIRCLDFT | 302047 | DIRECTION OF CLOUD DRIFT                                 |
+| VISBSEQN | 302069 | VISIBILITY DATA                                          |
+| TEMHUMDA | 302072 | TEMPERATURE AND HUMIDITY DATA                            |
+| STGDSNDM | 302078 | STATE OF GROUND AND SNOW DEPTH MEASUREMENT               |
+| BID      | 352001 | BULLETIN ID DATA                                         |
+| RCPTIM   | 352003 | REPORT RECEIPT TIME DATA                                 |
+| BSYWND1  | 361066 | SYNOPTIC REPORT WIND DATA 1 (BUFR)                       |
+| BSYWND2  | 361067 | SYNOPTIC REPORT WIND DATA 2 (BUFR)                       |
+| BSYPCP1  | 361068 | SYNOPTIC REPORT PRECIPITATION DATA 1 (BUFR)              |
+| BSYPCP2  | 361069 | SYNOPTIC REPORT PRECIPITATION DATA 2 (BUFR)              |
+| BSYEXTM  | 361070 | SYNOPTIC REPORT EXTREME TEMPERATURE DATA (BUFR)          |
+| BSYSCLD  | 361071 | SYNOPTIC REPORT SUPPLEMENTAL CLOUD LAYER DATA (BUFR)     |
+| BSYBCLD  | 361072 | SYNOPTIC REPORT CLOUD BASES BELOW STN LEVEL DATA (BUFR)  |
+| BSYDCLD  | 361073 | SYNOPTIC REPORT CLOUD DRIFT DATA (BUFR)                  |
+|          |        |                                                          |
+| WMOB     | 001001 | WMO BLOCK NUMBER                                         |
+| WMOS     | 001002 | WMO STATION NUMBER                                       |
+| STSN     | 001015 | STATION OR SITE NAME                                     |
+| WGOSIDS  | 001125 | WIGOS IDENTIFIER SERIES                                  |
+| WGOSISID | 001126 | WIGOS ISSUER OF IDENTIFIER                               |
+| WGOSISNM | 001127 | WIGOS ISSUE NUMBER                                       |
+| WGOSLID  | 001128 | WIGOS LOCAL IDENTIFIER (CHARACTER)                       |
+| RPID     | 001198 | REPORT IDENTIFIER                                        |
+| TOST     | 002001 | TYPE OF STATION                                          |
+| TIWM     | 002002 | TYPE OF INSTRUMENTATION FOR WIND MEASUREMENT             |
+| MOPM     | 002175 | METHOD OF PRECIPITATION MEASUREMENT                      |
+| MSGM     | 002176 | METHOD OF STATE OF GROUND MEASUREMENT                    |
+| MODM     | 002177 | METHOD OF SNOW DEPTH MEASUREMENT                         |
+| MLMP     | 002178 | METHOD OF LIQUID CONTENT MEASUREMENT OF PRECIPITATION    |
+| YEAR     | 004001 | YEAR                                                     |
+| MNTH     | 004002 | MONTH                                                    |
+| DAYS     | 004003 | DAY                                                      |
+| HOUR     | 004004 | HOUR                                                     |
+| MINU     | 004005 | MINUTES                                                  |
+| TPHR     | 004024 | TIME PERIOD OR DISPLACEMENT                              |
+| TPMI     | 004025 | TIME PERIOD OR DISPLACEMENT                              |
+| .DTH.... | 004031 | DUR OF TIME IN HOURS RELATED TO FOLLOWING VALUE          |
+| .DTM.... | 004032 | DUR OF TIME IN MINS RELATED TO FOLLOWING VALUE           |
+| RCYR     | 004200 | YEAR   - TIME OF RECEIPT                                 |
+| RCMO     | 004201 | MONTH  - TIME OF RECEIPT                                 |
+| RCDY     | 004202 | DAY    - TIME OF RECEIPT                                 |
+| RCHR     | 004203 | HOUR   - TIME OF RECEIPT                                 |
+| RCMI     | 004204 | MINUTE - TIME OF RECEIPT                                 |
+| CLATH    | 005001 | LATITUDE (HIGH ACCURACY)                                 |
+| CLONH    | 006001 | LONGITUDE (HIGH ACCURACY)                                |
+| PRLC     | 007004 | PRESSURE                                                 |
+| HSMSL    | 007030 | HEIGHT OF STATION GROUND ABOVE MSL                       |
+| HBMSL    | 007031 | HEIGHT OF BAROMETER ABOVE MEAN SEA LEVEL                 |
+| HSALG    | 007032 | HEIGHT OF SENSOR ABOVE LOCAL GROUND                      |
+| HSAWS    | 007033 | HEIGHT OF SENSOR ABOVE WATER SURFACE                     |
+| VSSO     | 008002 | VERT. SIGNIFICANCE (SFC OBSERVATION)                     |
+| TSIG     | 008021 | TIME SIGNIFICANCE                                        |
+| .RE....  | 008201 | RELATIONSHIP TO THE FOLLOWING VALUE                      |
+| RCTS     | 008202 | RECEIPT TIME SIGNIFICANCE                                |
+| PRES     | 010004 | PRESSURE                                                 |
+| GPH10    | 010009 | GEOPOTENTIAL HEIGHT                                      |
+| PMSL     | 010051 | PRESSURE REDUCED TO MSL                                  |
+| 3HPC     | 010061 | 3 HOUR PRESSURE CHANGE                                   |
+| 24PC     | 010062 | 24 HOUR PRESSURE CHANGE                                  |
+| CHPT     | 010063 | CHARACTERISTIC OF PRESSURE TENDENCY                      |
+| WDIR     | 011001 | WIND DIRECTION                                           |
+| WSPD     | 011002 | WIND SPEED                                               |
+| MXGS     | 011041 | MAXIMUM WIND GUST SPEED                                  |
+| MXGD     | 011043 | MAXIMUM WIND GUST DIRECTION                              |
+| TMDB     | 012101 | TEMPERATURE/DRY BULB TEMPERATURE                         |
+| TMDP     | 012103 | DEW POINT TEMPERATURE                                    |
+| MXTM     | 012111 | MAXIMUM TEMPERATURE                                      |
+| MITM     | 012112 | MINIMUM TEMPERATURE                                      |
+| GMITH    | 012113 | GROUND MINIMUM TEMPERATURE, PAST 12 HOURS                |
+| REHU     | 013003 | RELATIVE HUMIDITY                                        |
+| TOPC     | 013011 | TOTAL PRECIPITATION/TOTAL WATER EQUIVALENT               |
+| TOSD     | 013013 | TOTAL SNOW DEPTH                                         |
+| HOVI     | 020001 | HORIZONTAL VISIBILITY                                    |
+| PRWE     | 020003 | PRESENT WEATHER                                          |
+| PSW1     | 020004 | PAST WEATHER (1)                                         |
+| PSW2     | 020005 | PAST WEATHER (2)                                         |
+| TOCC     | 020010 | CLOUD COVER (TOTAL)                                      |
+| CLAM     | 020011 | CLOUD AMOUNT                                             |
+| CLTP     | 020012 | CLOUD TYPE                                               |
+| HOCB     | 020013 | HEIGHT OF BASE OF CLOUD                                  |
+| HOCT     | 020014 | HEIGHT OF TOP OF CLOUD                                   |
+| CTDS     | 020017 | CLOUD TOP DESCRIPTION                                    |
+| TDCM     | 020054 | TRUE DIRECTION FROM WHICH CLOUDS ARE MOVING              |
+| SOGR     | 020062 | STATE OF THE GROUND                                      |
+| AOFV     | 033041 | ATTRIBUTE OF FOLLOWING VALUE                             |
+| QMAT     | 033193 | SDMEDIT QUALITY MARK FOR TEMPERATURE                     |
+| QMDD     | 033194 | SDMEDIT QUALITY MARK FOR MOISTURE                        |
+| QMWN     | 033195 | SDMEDIT QUALITY MARK FOR WIND                            |
+| QMPR     | 033207 | SDMEDIT QUALITY MARK FOR PRESSURE                        |
+| CORN     | 033215 | CORRECTED REPORT INDICATOR                               |
+| BUHD     | 035021 | BULLETIN BEING MONITORED (TTAAii)                        |
+| BULTIM   | 035022 | BULLETIN BEING MONITORED (YYGGgg)                        |
+| BORG     | 035023 | BULLETIN BEING MONITORED (CCCC)                          |
+| BBB      | 035194 | BULLETIN BEING MONITORED (BBB)                           |
+| SEQNUM   | 035195 | CHANNEL SEQUENCE NUMBER                                  |
+| RSRD     | 035200 | RESTRICTIONS ON REDISTRIBUTION                           |
+| EXPRSRD  | 035201 | EXPIRATION OF RESTRICTIONS ON REDISTRIBUTION             |
+|          |        |                                                          |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SEQUENCE                                                          |
+|----------|-------------------------------------------------------------------|
+|          |                                                                   |
+| NC000100 | SFIDTIME  WIGOSID  RPID  PRESDATA  QMPR  TEMHUMDA  QMAT  QMDD     |
+| NC000100 | <BSYEXTM>  VISBSEQN  BSYWND1  QMWN  {BSYWND2}  TPMI  BSYPCP1      |
+| NC000100 | {BSYPCP2}  HSALG  HSAWS  GENCLOUD  {BSYSCLD}  {BSYBCLD}           |
+| NC000100 | <DIRCLDFT>  VSSO  <PWEATHER>  <STGDSNDM>  GMITH  BID  RCPTIM      |
+| NC000100 | CORN  RSRD  EXPRSRD                                               |
+|          |                                                                   |
+| SFCSTNID | WMOB  WMOS  STSN  TOST                                            |
+|          |                                                                   |
+| YYMMDD   | YEAR  MNTH  DAYS                                                  |
+|          |                                                                   |
+| HHMM     | HOUR  MINU                                                        |
+|          |                                                                   |
+| LTLONH   | CLATH  CLONH                                                      |
+|          |                                                                   |
+| SFIDTIME | SFCSTNID  YYMMDD  HHMM  LTLONH  HSMSL  HBMSL                      |
+|          |                                                                   |
+| WIGOSID  | WGOSIDS  WGOSISID  WGOSISNM  WGOSLID                              |
+|          |                                                                   |
+| PRESSQ03 | PRES  PMSL  3HPC  CHPT                                            |
+|          |                                                                   |
+| GENCLOUD | TOCC  VSSO  CLAM  HOCB  CLTP  CLTP  CLTP                          |
+|          |                                                                   |
+| PRESDATA | PRESSQ03  24PC  PRLC  GPH10                                       |
+|          |                                                                   |
+| PWEATHER | PRWE  TPHR  PSW1  PSW2                                            |
+|          |                                                                   |
+| DIRCLDFT | "BSYDCLD"3                                                        |
+|          |                                                                   |
+| VISBSEQN | HSALG  HSAWS  AOFV  HOVI                                          |
+|          |                                                                   |
+| TEMHUMDA | HSALG  HSAWS  TMDB  TMDP  REHU                                    |
+|          |                                                                   |
+| STGDSNDM | MSGM  SOGR  MODM  TOSD                                            |
+|          |                                                                   |
+| BID      | SEQNUM  BUHD  BORG  BULTIM  BBB                                   |
+|          |                                                                   |
+| RCPTIM   | RCTS  RCYR  RCMO  RCDY  RCHR  RCMI                                |
+|          |                                                                   |
+| BSYWND1  | HSALG  HSAWS  TIWM  TSIG  TPMI  WDIR  WSPD  TSIG                  |
+|          |                                                                   |
+| BSYWND2  | TPMI  MXGD  MXGS                                                  |
+|          |                                                                   |
+| BSYPCP1  | HSALG  HSAWS  MOPM  MLMP                                          |
+|          |                                                                   |
+| BSYPCP2  | TPHR  TOPC                                                        |
+|          |                                                                   |
+| BSYEXTM  | HSALG  HSAWS  TPHR  TPHR  MXTM  TPHR  TPHR  MITM  HSALG  HSAWS    |
+| BSYEXTM  | TPMI  MITM                                                        |
+|          |                                                                   |
+| BSYSCLD  | VSSO  CLAM  CLTP  AOFV  HOCB                                      |
+|          |                                                                   |
+| BSYBCLD  | VSSO  CLAM  CLTP  HOCT  CTDS                                      |
+|          |                                                                   |
+| BSYDCLD  | VSSO  TDCM                                                        |
+|          |                                                                   |
+|------------------------------------------------------------------------------|
+| MNEMONIC | SCAL | REFERENCE   | BIT | UNITS                    |-------------|
+|----------|------|-------------|-----|--------------------------|-------------|
+|          |      |             |     |                          |-------------|
+| WMOB     |    0 |           0 |   7 | NUMERIC                  |-------------|
+| WMOS     |    0 |           0 |  10 | NUMERIC                  |-------------|
+| STSN     |    0 |           0 | 160 | CCITT IA5                |-------------|
+| WGOSIDS  |    0 |           0 |   4 | NUMERIC                  |-------------|
+| WGOSISID |    0 |           0 |  16 | NUMERIC                  |-------------|
+| WGOSISNM |    0 |           0 |  16 | NUMERIC                  |-------------|
+| WGOSLID  |    0 |           0 | 128 | CCITT IA5                |-------------|
+| RPID     |    0 |           0 |  64 | CCITT IA5                |-------------|
+| TOST     |    0 |           0 |   2 | CODE TABLE               |-------------|
+| TIWM     |    0 |           0 |   4 | FLAG TABLE               |-------------|
+| MOPM     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| MSGM     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| MODM     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| MLMP     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| YEAR     |    0 |           0 |  12 | YEAR                     |-------------|
+| MNTH     |    0 |           0 |   4 | MONTH                    |-------------|
+| DAYS     |    0 |           0 |   6 | DAY                      |-------------|
+| HOUR     |    0 |           0 |   5 | HOUR                     |-------------|
+| MINU     |    0 |           0 |   6 | MINUTES                  |-------------|
+| TPHR     |    0 |       -2048 |  12 | HOUR                     |-------------|
+| TPMI     |    0 |       -2048 |  12 | MINUTE                   |-------------|
+| .DTH.... |    0 |           0 |   8 | HOUR                     |-------------|
+| .DTM.... |    0 |           0 |   6 | MINUTE                   |-------------|
+| RCYR     |    0 |           0 |  12 | YEAR                     |-------------|
+| RCMO     |    0 |           0 |   4 | MONTH                    |-------------|
+| RCDY     |    0 |           0 |   6 | DAY                      |-------------|
+| RCHR     |    0 |           0 |   5 | HOUR                     |-------------|
+| RCMI     |    0 |           0 |   6 | MINUTE                   |-------------|
+| CLATH    |    5 |    -9000000 |  25 | DEGREE(N+,S-)            |-------------|
+| CLONH    |    5 |   -18000000 |  26 | DEGREE(E+,W-)            |-------------|
+| PRLC     |   -1 |           0 |  14 | PASCALS                  |-------------|
+| HSMSL    |    1 |       -4000 |  17 | METERS                   |-------------|
+| HBMSL    |    1 |       -4000 |  17 | M                        |-------------|
+| HSALG    |    2 |           0 |  16 | M                        |-------------|
+| HSAWS    |    1 |           0 |  12 | M                        |-------------|
+| VSSO     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| TSIG     |    0 |           0 |   5 | CODE TABLE               |-------------|
+| .RE....  |    0 |           0 |   3 | CODE TABLE               |-------------|
+| RCTS     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| PRES     |   -1 |           0 |  14 | PASCALS                  |-------------|
+| GPH10    |    0 |       -1000 |  17 | GPM                      |-------------|
+| PMSL     |   -1 |           0 |  14 | PASCALS                  |-------------|
+| 3HPC     |   -1 |        -500 |  10 | PASCALS                  |-------------|
+| 24PC     |   -1 |       -1000 |  11 | PASCALS                  |-------------|
+| CHPT     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| WDIR     |    0 |           0 |   9 | DEGREES TRUE             |-------------|
+| WSPD     |    1 |           0 |  12 | METERS/SECOND            |-------------|
+| MXGS     |    1 |           0 |  12 | METERS/SECOND            |-------------|
+| MXGD     |    0 |           0 |   9 | DEGREES TRUE             |-------------|
+| TMDB     |    2 |           0 |  16 | DEGREES KELVIN           |-------------|
+| TMDP     |    2 |           0 |  16 | DEGREES KELVIN           |-------------|
+| MXTM     |    2 |           0 |  16 | DEGREES KELVIN           |-------------|
+| MITM     |    2 |           0 |  16 | DEGREES KELVIN           |-------------|
+| GMITH    |    2 |           0 |  16 | DEGREES KELVIN           |-------------|
+| REHU     |    0 |           0 |   7 | %                        |-------------|
+| TOPC     |    1 |          -1 |  14 | KG/METER**2              |-------------|
+| TOSD     |    2 |          -2 |  16 | METERS                   |-------------|
+| HOVI     |   -1 |           0 |  13 | METERS                   |-------------|
+| PRWE     |    0 |           0 |   9 | CODE TABLE               |-------------|
+| PSW1     |    0 |           0 |   5 | CODE TABLE               |-------------|
+| PSW2     |    0 |           0 |   5 | CODE TABLE               |-------------|
+| TOCC     |    0 |           0 |   7 | %                        |-------------|
+| CLAM     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| CLTP     |    0 |           0 |   6 | CODE TABLE               |-------------|
+| HOCB     |   -1 |         -40 |  11 | METERS                   |-------------|
+| HOCT     |   -1 |         -40 |  11 | METERS                   |-------------|
+| CTDS     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| TDCM     |    0 |           0 |   9 | DEGREES TRUE             |-------------|
+| SOGR     |    0 |           0 |   5 | CODE TABLE               |-------------|
+| AOFV     |    0 |           0 |   2 | CODE TABLE               |-------------|
+| QMAT     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| QMDD     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| QMWN     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| QMPR     |    0 |           0 |   4 | CODE TABLE               |-------------|
+| CORN     |    0 |           0 |   3 | CODE TABLE               |-------------|
+| BUHD     |    0 |           0 |  48 | CCITT IA5                |-------------|
+| BULTIM   |    0 |           0 |  48 | CCITT IA5                |-------------|
+| BORG     |    0 |           0 |  32 | CCITT IA5                |-------------|
+| BBB      |    0 |           0 |  48 | CCITT IA5                |-------------|
+| SEQNUM   |    0 |           0 |  32 | CCITT IA5                |-------------|
+| RSRD     |    0 |           0 |   9 | FLAG TABLE               |-------------|
+| EXPRSRD  |    0 |           0 |   8 | HOURS                    |-------------|
+|          |      |             |     |                          |-------------|
+`------------------------------------------------------------------------------'
