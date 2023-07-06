@@ -25,12 +25,21 @@ observations:
           latitude:
             query: "[*/CLAT, */CLATH]"
 
+          stationPressure:
+            query: "*/PRES"
+
           stationElevation:
             query: "[*/SELV, */HSMSL]"
 
           stationIdentification:
             query: "*/RPID"
-        
+
+          airTemperature:
+            query: "*/TMDB"
+
+          dewpointTemperature:
+            query: "*/TMDP"
+
           totalSnowDepth:
             query: "[*/SNWSQ1/TOSD, */MTRMSC/TOSD, */STGDSNDM/TOSD]"
             transforms:
@@ -72,8 +81,29 @@ observations:
           longName: "Height of Station"
           units: "m"
 
+        - name: "ObsValue/stationPressure"
+          coordinates: "longitude latitude"
+          source: variables/stationPressure
+          longName: "Station Pressure"
+          units: "Pa"
+          range: [90000, 105000]
+
+        - name: "ObsValue/airTemperature"
+          source: variables/airTemperature
+          longName: "Temperature of Air"
+          units: "K"
+          range: [230, 315]
+
+        - name: "ObsValue/dewpointTemperature"
+          coordinates: "longitude latitude"
+          source: variables/dewpointTemperature
+          longName: "Dewpoint Temperature"
+          units: "K"
+          range: [200, 315]
+
         - name: "ObsValue/totalSnowDepth"
           coordinates: "longitude latitude"
           source: variables/totalSnowDepth
           longName: "Total Snow Depth"
-          units: "mm"
+          range: [0, 100]
+          units: "m"
