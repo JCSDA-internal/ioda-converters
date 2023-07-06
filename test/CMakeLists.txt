@@ -1335,6 +1335,7 @@ if(iodaconv_bufr_ENABLED)
 
   ecbuild_add_test( TARGET  test_iodaconv_prepbufr_ncep_api_adpsfc2ioda
                     TYPE    SCRIPT
+		    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                     COMMAND bash
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
@@ -1343,7 +1344,8 @@ if(iodaconv_bufr_ENABLED)
 
   ecbuild_add_test( TARGET  test_iodaconv_prepbufr_ncep_api_sfcshp2ioda
                     TYPE    SCRIPT
-                    COMMAND bash
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+		    COMMAND bash
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                             "${Python3_EXECUTABLE} testinput/prepbufr_sfcshp_api.py"
