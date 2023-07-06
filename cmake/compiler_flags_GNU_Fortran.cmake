@@ -20,19 +20,19 @@ set( CMAKE_Fortran_FLAGS_RELEASE "-O3 -funroll-all-loops -finline-functions -mcm
 # DEBUG FLAGS
 ####################################################################
 
-set( CMAKE_Fortran_FLAGS_DEBUG   "-O0 -fcheck=bounds -ffpe-trap=invalid,zero,overflow,underflow -fbacktrace-mcmodel=medium" )
+set( CMAKE_Fortran_FLAGS_DEBUG   "-O0 -fcheck=bounds -ffpe-trap=invalid,zero,overflow,underflow -fbacktrace -mcmodel=medium" )
 
 ####################################################################
 # BIT REPRODUCIBLE FLAGS
 ####################################################################
 
-set( CMAKE_Fortran_FLAGS_BIT     "-O2 -funroll-all-loops -finline-functions-mcmodel=medium" )
+set( CMAKE_Fortran_FLAGS_BIT     "-O2 -funroll-all-loops -finline-functions -mcmodel=medium" )
 
 ####################################################################
 # LINK FLAGS
 ####################################################################
 
-set( CMAKE_Fortran_LINK_FLAGS    "-mcmodel=medium" )
+set( CMAKE_Fortran_LINK_FLAGS    "" )
 
 ####################################################################
 

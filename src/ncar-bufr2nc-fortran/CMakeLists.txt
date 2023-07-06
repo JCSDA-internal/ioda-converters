@@ -18,10 +18,6 @@ list(APPEND bufr2nc_source
   utils_mod.f90
   )
 
-if(CMAKE_Fortran_COMPILER_ID STREQUAL "Intel")
-  add_compile_options(-Xcompiler -mcmodel=medium -Xcompiler "-Wl,--no-relax")
-endif()
-
 ecbuild_add_executable( TARGET  bufr2nc_fortran.x
                         SOURCES ${bufr2nc_source}
                         LIBS    bufr::bufr_d
