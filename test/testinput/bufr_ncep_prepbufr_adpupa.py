@@ -3,23 +3,15 @@
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 
-import sys
-sys.path.append('/work2/noaa/da/pkumar/ioda-bundle/build/lib/')
-sys.path.append('/work2/noaa/da/pkumar/ioda-bundle/build/lib/pyiodaconv/')
-sys.path.append('/work2/noaa/da/pkumar/ioda-bundle/build/lib/python3.9/pyioda/')
-
-#import pyiodaconv.ioda_conv_engines as iconv
-#import pyiodaconv.ioda_conv_ncio as iconio
-#from pyiodaconv import bufr
-#from pyioda import ioda
+import pyiodaconv.ioda_conv_engines as iconv
+import pyiodaconv.ioda_conv_ncio as iconio
+from pyiodaconv import bufr
+from pyioda import ioda
 
 import numpy as np
-import bufr
-import ioda
 import calendar
 import time
 import math
-import ioda_obs_space as ioda_ospace
 
 DATA_PATH = './testinput/ADPUPA.prepbufr'
 OUTPUT_PATH = './testrun/prepbufr_adpupa_api.nc'
