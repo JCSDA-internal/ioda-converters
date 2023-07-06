@@ -78,11 +78,11 @@ contains
          xdata(ityp, itim)%max_datetime = xdata(ityp, itim)%xinfo_char(imax_datetime(1), iv)
 
          if (write_opt == write_nc_conv) then
-            ncfname = trim(outdir)//trim(obtype_list(ityp))//'_obs_'//trim(filedate)//'.h5'
+            ncfname = trim(outdir)//trim(obtype_list(ityp))//'_obs_'//trim(filedate)//'.nc4'
          else if (write_opt == write_nc_radiance) then
-            ncfname = trim(outdir)//trim(inst_list(ityp))//'_obs_'//trim(filedate)//'.h5'
+            ncfname = trim(outdir)//trim(inst_list(ityp))//'_obs_'//trim(filedate)//'.nc4'
          else if (write_opt == write_nc_radiance_geo) then
-            ncfname = trim(outdir)//trim(geoinst_list(ityp))//'_obs_'//trim(filedate)//'.h5'
+            ncfname = trim(outdir)//trim(geoinst_list(ityp))//'_obs_'//trim(filedate)//'.nc4'
          end if
          if (write_opt == write_nc_radiance .or. write_opt == write_nc_radiance_geo) then
             iv = ufo_vars_getindex(name_sen_info, 'sensor_channel')
@@ -184,7 +184,7 @@ contains
                dim2 = ncid_ncdim(idim)
                call def_netcdf_var(ncid_ncgrp(igrp), ncname, (/dim1, dim2/), type_var_info(i))
             else
-               if (ncname == 'dateTime') then
+               if (ncname == 'dateTime' .or. ncname == 'LaunchTime') then
                   call def_netcdf_var(ncid_ncgrp(igrp), ncname, (/dim1/), type_var_info(i), &
                                       'units', 'seconds since 1970-01-01T00:00:00Z')
                else
