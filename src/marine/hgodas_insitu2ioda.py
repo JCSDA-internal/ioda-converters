@@ -15,8 +15,8 @@ from datetime import datetime
 from pathlib import Path
 
 
-import lib_python.ioda_conv_engines as iconv
-from lib_python.orddicts import DefaultOrderedDict
+import pyiodaconv.ioda_conv_engines as iconv
+from pyiodaconv.orddicts import DefaultOrderedDict
 
 
 vName = {

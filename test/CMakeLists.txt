@@ -79,6 +79,7 @@ list( APPEND test_input
   testinput/sst_ostia.nc
   testinput/2021081612_RAOB_small.txt
   testinput/tropomi_co.nc
+  testinput/gdas.t18z.abias_air
 )
 
 list( APPEND test_output
@@ -152,6 +153,7 @@ list( APPEND test_output
   testoutput/sst_ostia.nc
   testoutput/2021081612_sonde_small.nc
   testoutput/tropomi_co_total.nc
+  testoutput/gdas.t18z.abias_air_ascent.csv
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -298,7 +300,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/NC005031.nc
     testoutput/NC005066.nc
     testoutput/gdas.t18z.satwnd_avhrr.tm00.nc
-    testoutput/gdas.t12z.mtiasi.metop-c.tm00.nc
+    testoutput/gdas.t12z.mtiasi_metop-c.tm00.nc
     testoutput/bufr_simple_groupby.nc
     testoutput/bufr_empty_fields.nc
     testoutput/bufr_sfcshp.nc
@@ -440,12 +442,11 @@ set(IODA_CONV_COMP_TOL "0.5e-4")
 #        ...
 #        )
 #  Dom's fix to get right path
-#set(IODACONV_PYTHONPATH "$<TARGET_FILE_DIR:_ioda_python>/../:$ENV{PYTHONPATH}")
 
 list(APPEND python_path
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src"
-  "${CMAKE_BINARY_DIR}/lib/pyiodaconv"
-  "$<TARGET_FILE_DIR:_ioda_python>/../"
+  "${PYIODACONV_BUILD_LIBDIR}/../"
+  "${PYIODACONV_INSTALL_LIBDIR}/../"
+  "$<TARGET_FILE_DIR:_ioda_python>/../../"
   "$ENV{PYTHONPATH}")
 
 string(REPLACE ";" ":" python_path_str "${python_path}")
@@ -938,6 +939,15 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gen_singleob
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/gen_single_ob.py
                           -y testinput/singleob.yaml"
                           singleob.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_gen_aircraft_bias_csv_python
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          ascii
+                          "${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/src/acftbias/generate_aircraft_bias_csv.py ./testinput/gdas.t18z.abias_air ./testrun/gdas.t18z.abias_air_ascent.csv MetaData/stationIdentification string 0 BiasCoefficientValue/ascentPredictor float 3"
+                          gdas.t18z.abias_air_ascent.csv ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
 # SSEC GIIRS converters
@@ -1435,7 +1445,7 @@ if(iodaconv_bufr_ENABLED)
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_mtiasi.yaml"
-                    gdas.t12z.mtiasi.metop-c.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    gdas.t12z.mtiasi_metop-c.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_atms

@@ -8,10 +8,10 @@ import netCDF4 as nc
 import numpy as np
 import pandas as pd
 
-import lib_python.ioda_conv_engines as iconv
-import lib_python.ioda_conv_ncio as iconio
+import pyiodaconv.ioda_conv_engines as iconv
+import pyiodaconv.ioda_conv_ncio as iconio
 from collections import defaultdict, OrderedDict
-from lib_python.orddicts import DefaultOrderedDict
+from pyiodaconv.orddicts import DefaultOrderedDict
 
 os.environ["TZ"] = "UTC"
 

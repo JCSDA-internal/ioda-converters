@@ -7,8 +7,8 @@ import argparse
 import ioda_obs_space as ios
 from collections import defaultdict, OrderedDict
 
-import lib_python.ioda_conv_engines as iconv
-from lib_python.orddicts import DefaultOrderedDict
+import pyiodaconv.ioda_conv_engines as iconv
+from pyiodaconv.orddicts import DefaultOrderedDict
 
 # these are the variables that can be used to match up locations
 loc_vars = [
@@ -54,7 +54,7 @@ def combine_obsspace(FileList, OutFile, GeoDir):
     # global attributes will come from the first file only in case of conflicts
     obsspace = ios.ObsSpace(FileList[0])
     for attr in obsspace.attrs:
-        if attr not in ['_ioda_layout']:
+        if attr not in ['_ioda_layout', '_ioda_layout_version']:
             globalAttrs[attr] = obsspace.read_attr(attr)
     # add a new global attribute
     globalAttrs['input_files'] = ';'.join(FileList)

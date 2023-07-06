@@ -14,9 +14,9 @@ from datetime import datetime, timedelta
 import os
 from pyhdf.SD import SD, SDC
 
-import lib_python.ioda_conv_engines as iconv
+import pyiodaconv.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
-from lib_python.orddicts import DefaultOrderedDict
+from pyiodaconv.orddicts import DefaultOrderedDict
 
 locationKeyList = [
     ("latitude", "float"),

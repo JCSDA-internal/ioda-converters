@@ -13,8 +13,8 @@ import numpy as np
 from datetime import datetime, timedelta
 import netCDF4 as nc
 
-import lib_python.ioda_conv_ncio as iconio
-from lib_python.orddicts import DefaultOrderedDict
+import pyiodaconv.ioda_conv_ncio as iconio
+from pyiodaconv.orddicts import DefaultOrderedDict
 
 
 vName = "longwave_radiance"
