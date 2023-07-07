@@ -30,6 +30,7 @@ namespace bufr {
         std::vector<std::shared_ptr<BufrNode>> children;
         size_t nodeIdx;
         size_t copyIdx;
+        size_t mnemonicCnt;
         bool hasDuplicates;
         TypeInfo typeInfo;
         size_t fixedRepCount;
@@ -328,11 +329,14 @@ namespace bufr {
         std::shared_ptr<BufrNode>
             getNodeForPath(const std::vector<std::shared_ptr<PathComponent>>& path);
 
-     private:
+        std::string getLongStrId(FortranIdx idx) const;
+
+    private:
         const DataProviderType dataProvider_;
         std::shared_ptr<BufrNode> root_;
         BufrNodeVector leaves_;
         std::unordered_map<size_t, std::shared_ptr<BufrNode>> nodeIdxMap_;
+        std::unordered_map<std::string, size_t> mnemonicCnts_;
 
         /// \brief Initializes the subset table.
         void initialize();

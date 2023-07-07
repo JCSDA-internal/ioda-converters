@@ -60,6 +60,8 @@ namespace bufr {
             TargetComponent component;
             bool collectedCounts = false;
             bool collectedData = false;
+            bool isLongString = false;
+            std::string longStrId;
         };
 
         typedef __details::OffsetArray<NodeData> LookupTable;
