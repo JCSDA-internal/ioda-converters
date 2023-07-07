@@ -28,6 +28,11 @@ case $file_type in
     odc compare testrun/$file_name testoutput/$file_name
     rc=${?}
     ;;
+  ascii)
+    $cmd && \
+    diff testrun/$file_name testoutput/$file_name
+    rc=${?}
+    ;;
    *)
     echo "ERROR: iodaconv_comp.sh: Unrecognized file type: ${file_type}"
     rc="-2"

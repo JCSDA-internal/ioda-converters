@@ -79,6 +79,7 @@ list( APPEND test_input
   testinput/sst_ostia.nc
   testinput/2021081612_RAOB_small.txt
   testinput/tropomi_co.nc
+  testinput/gdas.t18z.abias_air
 )
 
 list( APPEND test_output
@@ -152,6 +153,7 @@ list( APPEND test_output
   testoutput/sst_ostia.nc
   testoutput/2021081612_sonde_small.nc
   testoutput/tropomi_co_total.nc
+  testoutput/gdas.t18z.abias_air_ascent.csv
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -937,6 +939,15 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gen_singleob
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/gen_single_ob.py
                           -y testinput/singleob.yaml"
                           singleob.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_gen_aircraft_bias_csv_python
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          ascii
+                          "${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/src/acftbias/generate_aircraft_bias_csv.py ./testinput/gdas.t18z.abias_air ./testrun/gdas.t18z.abias_air_ascent.csv MetaData/stationIdentification string 0 BiasCoefficientValue/ascentPredictor float 3"
+                          gdas.t18z.abias_air_ascent.csv ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
 # SSEC GIIRS converters
