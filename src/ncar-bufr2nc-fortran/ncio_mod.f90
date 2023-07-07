@@ -73,7 +73,7 @@ contains
          iv = ufo_vars_getindex(name_var_info, 'dateTime')
          imin_datetime = minloc(xdata(ityp, itim)%xinfo_int64(:, iv))
          imax_datetime = maxloc(xdata(ityp, itim)%xinfo_int64(:, iv))
-         iv = ufo_vars_getindex(name_var_info, 'datetime')
+!         iv = ufo_vars_getindex(name_var_info, 'datetime')
          xdata(ityp, itim)%min_datetime = xdata(ityp, itim)%xinfo_char(imin_datetime(1), iv)
          xdata(ityp, itim)%max_datetime = xdata(ityp, itim)%xinfo_char(imax_datetime(1), iv)
 
