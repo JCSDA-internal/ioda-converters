@@ -149,7 +149,7 @@ def get_data(f, obs_data):
     # start at channel 5 as lowest frequencies are not included
     obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(nchans)+1, dtype='int32')
     k = 'sensorScanPosition'
-    obs_data[(k, metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='float32')+1, (nscans, 1)).flatten()
+    obs_data[(k, metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='int32')+1, (nscans, 1)).flatten()
     k = 'sensorZenithAngle'   # ~52.85 low freq incidence angle (~49.16 higher freq)
     obs_data[(k, metaDataName)] = np.array(f['S1']['incidenceAngle'], dtype='float32').flatten()
     instr_scan_ang = obs_data[(k, metaDataName)]

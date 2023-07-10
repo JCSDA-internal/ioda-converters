@@ -135,7 +135,7 @@ all_LocKeyList = {
     'process_center': ('dataProviderOrigin', 'integer'),
     'Elevation': ('heightOfSurface', 'float'),
     'Obs_Time': ('dateTime', 'string'),
-    'Scan_Position': ('sensorScanPosition', 'float'),
+    'Scan_Position': ('sensorScanPosition', 'integer'),
     'Sat_Zenith_Angle': ('sensorZenithAngle', 'float'),
     'Sat_Azimuth_Angle': ('sensorAzimuthAngle', 'float'),
     'Sol_Zenith_Angle': ('solarZenithAngle', 'float'),
