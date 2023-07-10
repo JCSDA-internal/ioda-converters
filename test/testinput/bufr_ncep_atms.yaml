@@ -34,7 +34,6 @@ observations:
 
           fieldOfViewNumber:
             query: "*/FOVN"
-            type: integer
 
           heightOfStation:
             query: "*/HMSL"
