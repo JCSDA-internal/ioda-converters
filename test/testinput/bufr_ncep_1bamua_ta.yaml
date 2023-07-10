@@ -33,7 +33,6 @@ observations:
 
           fieldOfViewNumber:
             query: "*/FOVN"
-            type: float
 
           landOrSeaQualifier:
             query: "*/LSQL"
@@ -130,10 +129,6 @@ observations:
         - name: "MetaData/satelliteInstrument"
           source: variables/satelliteInstrument
           longName: "Satellite Instrument"
-
-        - name: "MetaData/fieldOfViewNumber"
-          source: variables/fieldOfViewNumber
-          longName: "Field of View Number"
 
         - name: "MetaData/landOrSeaQualifier"
           source: variables/landOrSeaQualifier
