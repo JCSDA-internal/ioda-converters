@@ -1483,6 +1483,7 @@ class Radiances(BaseGSI):
                 ii += 1
         for lvar in LocVars:
             loc_mdata_name = all_LocKeyList[lvar][0]
+            dtype = all_LocKeyList[lvar][1]
             if lvar == 'Obs_Time':
                 tmp = self.var(lvar)[::nchans]
                 obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
@@ -1508,9 +1509,16 @@ class Radiances(BaseGSI):
                 # if loc_mdata_name in units_values.keys():
                 #     varAttrs[(loc_mdata_name, 'MetaData')]['units'] = units_values[loc_mdata_name]
             else:
-                tmp = self.var(lvar)[::nchans]
-                tmp[tmp > 4e8] = self.FLOAT_FILL
-                outdata[(loc_mdata_name, 'MetaData')] = tmp
+                if dtype == 'integer':
+                    tmp = self.var(lvar)[::nchans].astype(np.int32)
+                    tmp[tmp > 4e8] = self.INT_FILL
+                    outdata[(loc_mdata_name, 'MetaData')] = tmp
+                    varAttrs[(loc_mdata_name, 'MetaData')]['_FillValue'] = self.INT_FILL
+                else:
+                    tmp = self.var(lvar)[::nchans]
+                    tmp[tmp > 4e8] = self.FLOAT_FILL
+                    outdata[(loc_mdata_name, 'MetaData')] = tmp
+
                 if loc_mdata_name in units_values.keys():
                     varAttrs[(loc_mdata_name, 'MetaData')]['units'] = units_values[loc_mdata_name]
 
