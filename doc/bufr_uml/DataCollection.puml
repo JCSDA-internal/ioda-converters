@@ -1,6 +1,6 @@
 @startuml
 hide footbox
-skinparam dpi 300
+skinparam dpi 150
 skinparam SequenceActorBorderThickness 2
 skinparam SequenceActorBorderColor #firebrick
 skinparam ActorBackgroundColor #lightyellow

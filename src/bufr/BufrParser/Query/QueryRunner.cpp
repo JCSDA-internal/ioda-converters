@@ -6,12 +6,13 @@
  */
 #include "QueryRunner.h"
 
-#include "eckit/exception/Exceptions.h"
-#include "oops/util/Logger.h"
-
 #include <string>
 #include <iostream>
 #include <memory>
+
+#ifdef BUILD_IODA_BINDING
+    #include "oops/util/Logger.h"
+#endif
 
 #include "Constants.h"
 #include "SubsetTable.h"
@@ -81,12 +82,22 @@ namespace bufr
                 target->exportDimIdxs = {0};
                 targets->push_back(target);
 
-                // Print message to inform the user of the missing targetz
+#ifdef BUILD_IODA_BINDING
+                // Print message to inform the user of the missing targets
                 oops::Log::warning() << "Warning: Query String ";
                 oops::Log::warning() << querySet_.queriesFor(name)[0].str();
                 oops::Log::warning() << " didn't apply to subset ";
                 oops::Log::warning() << dataProvider_->getSubsetVariant().str();
                 oops::Log::warning() << std::endl;
+#endif
+
+#ifndef BUILD_IODA_BINDING
+                std::cout << "Warning: Query String ";
+                std::cout << querySet_.queriesFor(name)[0].str();
+                std::cout << " didn't apply to subset ";
+                std::cout << dataProvider_->getSubsetVariant().str();
+                std::cout << std::endl;
+#endif
 
                 continue;
             }

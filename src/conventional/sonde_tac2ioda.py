@@ -23,17 +23,11 @@ import netCDF4 as nc
 from cartopy import geodesic
 from copy import deepcopy as dcop
 
-# set path to ioda_conv_engines module
-IODA_CONV_PATH = Path(__file__).parent/"@SCRIPT_LIB_PATH@"
-if not IODA_CONV_PATH.is_dir():
-    IODA_CONV_PATH = Path(__file__).parent/'..'/'lib-python'
-sys.path.append(str(IODA_CONV_PATH.resolve()))
-
 # These modules need the path to lib-python modules
-import ioda_conv_engines as iconv
-import meteo_utils
-import meteo_sounding_utils
-from orddicts import DefaultOrderedDict
+import pyiodaconv.ioda_conv_engines as iconv
+import pyiodaconv.meteo_utils as meteo_utils
+import pyiodaconv.meteo_sounding_utils as meteo_sounding_utils
+from pyiodaconv.orddicts import DefaultOrderedDict
 from collections import defaultdict
 
 os.environ["TZ"] = "UTC"

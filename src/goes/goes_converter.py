@@ -21,8 +21,8 @@
 # /MetaData/sensorScanAngle -> units
 # /MetaData/sensorScanPosition
 # /MetaData/sensorAzimuthAngle -> units
-# /MetaData/sensorViewAngle -> units
 # /MetaData/sensorZenithAngle -> units
+# /MetaData/sensorViewAngle -> units
 # /MetaData/solarAzimuthAngle -> units
 # /MetaData/solarZenithAngle -> units
 # /MetaData/sensorChannelNumber

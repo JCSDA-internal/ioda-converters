@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # --+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
 # Set of routines to do interpolation/extrapolation of P/Z/T sounding data.
 # These routines should allow one to compute a full set of P/Z/T data given

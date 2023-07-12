@@ -82,7 +82,7 @@ namespace Ingester
 
             if (!radObj->isMissing(idx) && !scaleFactorObj->isMissing(bandOffset))
             {
-                auto scaleFactor = powf(10.0f, -(scaleFactorObj->getAsFloat(bandOffset) - 5.0f));
+                auto scaleFactor = powf(10.0f, -(scaleFactorObj->getAsFloat(bandOffset) ));
                 outData[idx] = radObj->getAsFloat(idx) * scaleFactor;
             }
         }

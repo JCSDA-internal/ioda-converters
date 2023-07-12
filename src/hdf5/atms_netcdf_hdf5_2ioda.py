@@ -15,14 +15,19 @@ import h5py
 import numpy as np
 
 from apply_BG.apply_BG import apply_BG_class
-import lib_python.ioda_conv_engines as iconv
-from lib_python.orddicts import DefaultOrderedDict
+import pyiodaconv.ioda_conv_engines as iconv
+from pyiodaconv.def_jedi_utils import set_metadata_attributes, set_obspace_attributes
+from pyiodaconv.orddicts import DefaultOrderedDict
+from pyiodaconv.def_jedi_utils import concat_obs_dict
 
 # globals
 SNPP_WMO_sat_ID = 224
 NOAA20_WMO_sat_ID = 225
 NOAA21_WMO_sat_ID = 226
 ATMS_WMO_sensor_ID = 621
+
+# Number of seconds between 1958 Jan 1,00Z and 1970 Jan 1, 00Z.
+IET_AND_UNIX_TIME_OFFSET = 378691200
 
 float_missing_value = iconv.get_default_fill_val(np.float32)
 int_missing_value = iconv.get_default_fill_val(np.int32)
@@ -215,19 +220,21 @@ def get_data_noaa_class(f, g, obs_data, add_qc=True):
 
     nscans = np.shape(g['All_Data']['ATMS-SDR-GEO_All']['Latitude'])[0]
     nbeam_pos = np.shape(g['All_Data']['ATMS-SDR-GEO_All']['Latitude'])[1]
-    obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(np.shape(g['All_Data']['ATMS-SDR_All']['BrightnessTemperature'])[2])+1, dtype='int32')
+    obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(np.shape(f['All_Data']['ATMS-SDR_All']['BrightnessTemperature'])[2])+1, dtype='int32')
     obs_data[('sensorScanPosition', metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='float32') + 1, (nscans, 1)).flatten()
     obs_data[('solarZenithAngle', metaDataName)] = np.array(g['All_Data']['ATMS-SDR-GEO_All']['SolarZenithAngle'][:, :].flatten(), dtype='float32')
     obs_data[('solarAzimuthAngle', metaDataName)] = np.array(g['All_Data']['ATMS-SDR-GEO_All']['SolarAzimuthAngle'][:, :].flatten(), dtype='float32')
     obs_data[('sensorZenithAngle', metaDataName)] = np.array(g['All_Data']['ATMS-SDR-GEO_All']['SatelliteZenithAngle'][:, :].flatten(), dtype='float32')
     obs_data[('sensorAzimuthAngle', metaDataName)] = np.array(g['All_Data']['ATMS-SDR-GEO_All']['SatelliteAzimuthAngle'][:, :].flatten(), dtype='float32')
     # put in approximate
-    # scanang = (real(ibeam) - 1.0) * 1.11 -  52.726
-    obs_data[('sensorViewAngle', metaDataName)] = (obs_data[('scan_position', metaDataName)] - 1.0) * 1.11 - 52.726
+    obs_data[('sensorViewAngle', metaDataName)] = (obs_data[('sensorScanPosition', metaDataName)] - 1.0) * 1.11 - 52.726
 
     nlocs = len(obs_data[('latitude', metaDataName)])
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
-    obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(g['obs_time_utc']), dtype='int64')
+    # obs_time_utc is not available in all files
+    # obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(g['obs_time_utc']), dtype='int64')
+    obs_scan_epoch = np.array(g['All_Data']['ATMS-SDR-GEO_All']['StartTime'][:]/1.e6 - IET_AND_UNIX_TIME_OFFSET, dtype='int64')
+    obs_data[('dateTime', metaDataName)] = np.repeat(obs_scan_epoch, nbeam_pos)
 
     # example: dimension ( 180, 96, 22 ) == dimension( nscan, nbeam_pos, nchannel )
     nchans = len(obs_data[('sensorChannelNumber', metaDataName)])
@@ -357,40 +364,6 @@ def init_obs_loc():
     }
 
     return obs
-
-
-def concat_obs_dict(obs_data, append_obs_data):
-    # For now we are assuming that the obs_data dictionary has the "golden" list
-    # of variables. If one is missing from append_obs_data, a warning will be issued.
-    append_keys = list(append_obs_data.keys())
-    for gv_key in obs_data.keys():
-        if gv_key in append_keys:
-            obs_data[gv_key] = np.append(obs_data[gv_key], append_obs_data[gv_key], axis=0)
-        else:
-            print("WARNING: ", gv_key, " is missing from append_obs_data dictionary")
-
-
-def set_metadata_attributes(VarAttrs):
-    VarAttrs[('sensorZenithAngle', metaDataName)]['units'] = 'degree'
-    VarAttrs[('sensorViewAngle', metaDataName)]['units'] = 'degree'
-    VarAttrs[('solarZenithAngle', metaDataName)]['units'] = 'degree'
-    VarAttrs[('sensorAzimuthAngle', metaDataName)]['units'] = 'degree'
-    VarAttrs[('solarAzimuthAngle', metaDataName)]['units'] = 'degree'
-    VarAttrs[('dateTime', metaDataName)]['units'] = iso8601_string
-    VarAttrs[('dateTime', metaDataName)]['_FillValue'] = long_missing_value
-
-    return VarAttrs
-
-
-def set_obspace_attributes(VarAttrs):
-    VarAttrs[('brightnessTemperature', obsValName)]['units'] = 'K'
-    VarAttrs[('brightnessTemperature', obsErrName)]['units'] = 'K'
-
-    VarAttrs[('brightnessTemperature', obsValName)]['_FillValue'] = float_missing_value
-    VarAttrs[('brightnessTemperature', obsErrName)]['_FillValue'] = float_missing_value
-    VarAttrs[('brightnessTemperature', qcName)]['_FillValue'] = int_missing_value
-
-    return VarAttrs
 
 
 def remapBG(input_files, add_qc=True):

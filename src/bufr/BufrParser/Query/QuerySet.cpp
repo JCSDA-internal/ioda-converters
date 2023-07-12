@@ -13,6 +13,14 @@
 namespace Ingester {
 namespace bufr {
 
+    QuerySet::QuerySet() :
+        includesAllSubsets_(true),
+        addHasBeenCalled_(false),
+        limitSubsets_({}),
+        presentSubsets_({})
+    {
+    }
+
     QuerySet::QuerySet(const std::vector<std::string>& subsets) :
         includesAllSubsets_(false),
         addHasBeenCalled_(false),

@@ -20,9 +20,9 @@
 
 namespace Ingester {
 namespace bufr {
-    File::File(const std::string &filename, bool isWmoFormat, const std::string &wmoTablePath)
+    File::File(const std::string &filename, const std::string &wmoTablePath)
     {
-        if (!isWmoFormat)
+        if (wmoTablePath.empty())
         {
             dataProvider_ = std::make_shared<Ingester::bufr::NcepDataProvider>(filename);
         }
