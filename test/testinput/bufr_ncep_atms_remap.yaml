@@ -180,4 +180,5 @@ observations:
           source: variables/remappedBT
           longName: "3-by-3 Averaged Brightness Temperature"
           units: "K"
+          range: [120, 500]
           chunks: [10000, 22]
