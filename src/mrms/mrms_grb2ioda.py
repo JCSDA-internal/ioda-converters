@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
 
+'''
+ This script converts Multi-radar, multi-sensor (MRMS) radar reflectivity found
+ on the NOAA AWS S3 bucket
+ https://noaa-mrms-pds.s3.amazonaws.com/index.html#CONUS/MergedReflectivityQC_01.50
+ which are GRIB2 files into IODA's netCDF format.
+'''
+
 import sys 
 import os
 from datetime import datetime, timedelta
@@ -28,6 +35,8 @@ meta_keys = [m_item[0] for m_item in locationKeyList]
 mrms_products = {
     '97-209-9-0': 'reflectivity',
 }
+obsvars_units = ['dbZ']
+obserrlist = [3.5]
 
 # In the product list above, the four groups of digits represent the following GRIB keys
 grib_keys = ['generatingProcessIdentifier', 'discipline', 'parameterCategory', 'parameterNumber']
@@ -86,7 +95,7 @@ def main(file_names, output_file):
         logging.debug("Reading file: " + fname)
         AttrData['sourceFiles'] += ", " + fname
 
-        dt, heights, lat, lon, vars_mrms = read_grib(fname)
+        dt, heights, lat, lon, vars_mrms = read_grib(fname, obsvars)
 
         time_offset = round((dt - epoch).total_seconds())
 
@@ -98,7 +107,7 @@ def main(file_names, output_file):
             data['longitude'].append(lon.tolist())
 
             for key in vars_mrms.keys():
-                data[key].append(vars_mrms[key][height].tolist())
+                data[key].append(vars_mrms[key])
 
         vars_mrms.clear()
 
@@ -145,15 +154,16 @@ def main(file_names, output_file):
     writer.BuildIoda(obs_data, VarDims, varAttrs, AttrData)
 
 
-def read_grib(input_file):
+def read_grib(input_file, obsvars):
     logging.debug(f"Reading file: {input_file}")
     grbs = pygrib.open(input_file)
     grbs.seek(0)
 
     dt = None
-    mrms_data = {}
-    obsvars = []
     heights = []
+    mrms_data = {}
+    for obsvar in obsvars:
+        mrms_data[obsvar] = []
 
     for grb in grbs:
         product_id = ''
@@ -162,16 +172,14 @@ def read_grib(input_file):
         product_id = product_id[:-1]
 
         if product_id in mrms_products.keys():
-            obsvar = mrms_products[product_id]
-            obsvars.append(obsvar)
-            lats, lons = grb.latlons()
-            nj = lats.shape[0]
-            ni = lats.shape[1]
             dt = grb.validDate
             height = grb['level']
             heights.append(height)
+            lats, lons = grb.latlons()
+            nj = lats.shape[0]
+            ni = lats.shape[1]
             Z = grb.values
-            mrms_data[obsvar][height] = Z.reshape(ni*nj)
+            mrms_data[obsvar].append((Z.reshape(ni*nj)).tolist())
         else:
             pass
 
