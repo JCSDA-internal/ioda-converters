@@ -58,7 +58,6 @@ observations:
               fieldOfViewNumber: "*/FOVN"
               scanStart: -52.725
               scanStep: 1.110 
-              sensor: atms
 
           sensorChannelNumber:
             query: "*/ATMSCH/CHNM"
@@ -181,5 +180,4 @@ observations:
           source: variables/remappedBT
           longName: "3-by-3 Averaged Antenna Temperature"
           units: "K"
-          range: [120, 500]
           chunks: [10000, 22]
