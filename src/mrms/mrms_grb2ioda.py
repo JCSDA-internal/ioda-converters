@@ -49,6 +49,9 @@ AttrData = {
     'sourceFiles': ''
 }
 
+iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
+epoch = datetime.fromisoformat(iso8601_string[14:-1])
+
 metaDataName = iconv.MetaDataName()
 obsValName = iconv.OvalName()
 obsErrName = iconv.OerrName()
@@ -58,9 +61,19 @@ DimDict = {
 }
 
 float_missing_value = -999.0    # or netCDF value,  nc.default_fillvals['f4']
+int_missing_value = nc.default_fillvals['i4']
+double_missing_value = nc.default_fillvals['f8']
+long_missing_value = nc.default_fillvals['i8']
+string_missing_value = '_'
 
 iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
 epoch = datetime.fromisoformat(iso8601_string[14:-1])
+
+missing_vals = {'string': string_missing_value,
+                'integer': int_missing_value,
+                'long': long_missing_value,
+                'float': float_missing_value,
+                'double': double_missing_value}
 
 dtypes = {'string': object,
           'integer': np.int32,
@@ -92,7 +105,6 @@ def main(file_names, output_file):
     # Loop through input files, reading data.
     nlocs = 0
     for fname in file_names:
-        logging.debug("Reading file: " + fname)
         AttrData['sourceFiles'] += ", " + fname
 
         dt, heights, lat, lon, vars_mrms = read_grib(fname, obsvars)
@@ -101,13 +113,15 @@ def main(file_names, output_file):
 
         for height in heights:
             nlocs = nlocs + len(lat)
-            data['dateTime'].append((np.full(len(lat), time_offset)).tolist())
-            data['height'].append((np.full(len(lat), height)).tolist())
-            data['latitude'].append(lat.tolist())
-            data['longitude'].append(lon.tolist())
+            x = np.full(len(lat), time_offset)
+            data['dateTime'].extend(x.tolist())
+            x = np.full(len(lat), height)
+            data['height'].extend(x.tolist())
+            data['latitude'].extend(lat)
+            data['longitude'].extend(lon)
 
             for key in vars_mrms.keys():
-                data[key].append(vars_mrms[key])
+                data[key].extend(vars_mrms[key])
 
         vars_mrms.clear()
 
@@ -172,14 +186,18 @@ def read_grib(input_file, obsvars):
         product_id = product_id[:-1]
 
         if product_id in mrms_products.keys():
+            obsvar = mrms_products[product_id]
             dt = grb.validDate
             height = grb['level']
             heights.append(height)
             lats, lons = grb.latlons()
             nj = lats.shape[0]
             ni = lats.shape[1]
+            logging.debug(f"  capturing data for variable {obsvar} [{product_id}]")
             Z = grb.values
-            mrms_data[obsvar].append((Z.reshape(ni*nj)).tolist())
+            Z = Z.reshape(ni*nj)
+            Z = Z.tolist()
+            mrms_data[obsvar].extend(Z)
         else:
             pass
 
@@ -190,7 +208,9 @@ def read_grib(input_file, obsvars):
         sys.exit()
 
     lats = lats.reshape(ni*nj)
+    lats = lats.tolist()
     lons = lons.reshape(ni*nj)
+    lons = lons.tolist()
 
     return dt, heights, lats, lons, mrms_data
 
