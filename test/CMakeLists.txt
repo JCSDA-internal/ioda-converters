@@ -79,9 +79,12 @@ list( APPEND test_input
   testinput/sst_ostia.nc
   testinput/2021081612_RAOB_small.txt
   testinput/tropomi_co.nc
-  testinput/TEMPO_NO2-PROXY_L2_V01_20130801T100000Z_S002G01_test.nc
-  testinput/TEMPO_NO2-PROXY_L2_V01_20130801T100600Z_S002G02_test.nc
-  testinput/TEMPO_NO2-PROXY_L2_V01_20130801T101200Z_S002G03_test.nc
+  testinput/tempo_no2_proxy_20130801T100000Z_S002G01.nc
+  testinput/tempo_no2_proxy_20130801T100600Z_S002G02.nc
+  testinput/tempo_no2_proxy_20130801T101200Z_S002G03.nc
+  testinput/tempo_hcho_proxy_20130801T100000Z_S002G01.nc
+  testinput/tempo_hcho_proxy_20130801T100600Z_S002G02.nc
+  testinput/tempo_hcho_proxy_20130801T101200Z_S002G03.nc
 )
 
 list( APPEND test_output
@@ -156,8 +159,9 @@ list( APPEND test_output
   testoutput/2021081612_sonde_small.nc
   testoutput/tropomi_co_total.nc
   testoutput/tempo_no2_total.nc
-  testoutput/tempo_no2_tropo.nc
-  testoutput/tempo_no2_strato.nc
+  testoutput/tempo_no2_troposphere.nc
+  testoutput/tempo_no2_stratosphere.nc
+  testoutput/tempo_hcho_troposphere.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -1118,23 +1122,26 @@ foreach (coltype total tropo)
                                   tropomi_no2_${coltype}.nc ${IODA_CONV_COMP_TOL_ZERO})
 endforeach()
 
-foreach (coltype total tropo strato)
-        ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tempo_no2_${coltype}
+foreach (coltype total troposphere stratosphere)
+  foreach (spec no2 hcho)
+    if (NOT (${spec} STREQUAL "hcho" AND (${coltype} STREQUAL "total" OR ${coltype} STREQUAL "stratosphere")))
+        ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tempo_${spec}_${coltype}
                           TYPE    SCRIPT
                           ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                           COMMAND bash
                           ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                                   netcdf
                                   "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tempo_nc2ioda.py
-                                  -i testinput/TEMPO_NO2-PROXY_L2_V01_20130801T100000Z_S002G01_test.nc
-                                     testinput/TEMPO_NO2-PROXY_L2_V01_20130801T100600Z_S002G02_test.nc
-                                     testinput/TEMPO_NO2-PROXY_L2_V01_20130801T101200Z_S002G03_test.nc
-                                  -o testrun/tempo_no2_${coltype}.nc
-                                  -v no2
+                                  -i testinput/tempo_${spec}_proxy_20130801T100000Z_S002G01.nc
+                                     testinput/tempo_${spec}_proxy_20130801T100600Z_S002G02.nc
+                                     testinput/tempo_${spec}_proxy_20130801T101200Z_S002G03.nc
+                                  -o testrun/tempo_${spec}_${coltype}.nc
+                                  -v ${spec}
                                   -c ${coltype}"
-                                  tempo_no2_${coltype}.nc ${IODA_CONV_COMP_TOL})
+                                  tempo_${spec}_${coltype}.nc ${IODA_CONV_COMP_TOL})
+    endif()
+  endforeach()
 endforeach()
-
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mopitt_co
                   TYPE    SCRIPT

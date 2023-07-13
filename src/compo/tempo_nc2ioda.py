@@ -109,6 +109,7 @@ class tempo(object):
             time = np.repeat([str(element) + 'Z' for element in time], xtrack)
             time = np.ma.array(time, mask=mask, dtype=object)
 
+            # NO2 and HCHO
             if self.varname == 'no2' or self.varname == 'hcho':
 
                 # pressure levels
@@ -124,9 +125,18 @@ class tempo(object):
                 # here we assume avk is scattering weights / AMF
                 # there is a mismatch between the mask in the scattering weights/box amf
                 # so we need to reset the mask and replace with the mask that is used
-                t_pause = hPa2Pa * ncd.groups['support_data'].variables['tropopause_pressure'][:]\
-                    .ravel()
-                tot_amf = ncd.groups['support_data'].variables['amf_total'][:].ravel()
+                if self.varname == 'no2':
+                    tot_amf_name = 'amf_total'
+                    col_amf_name = 'amf_'+self.columnType
+                    obs_name = 'vertical_column_'+self.columnType
+                    err_name = 'vertical_column_total'
+                if self.varname == 'hcho':
+                    tot_amf_name = 'amf'
+                    col_amf_name = 'amf'
+                    obs_name = 'vertical_column'
+                    err_name = 'vertical_column'
+
+                tot_amf = ncd.groups['support_data'].variables[tot_amf_name][:].ravel()
                 tot_amf.mask = False
                 tot_amf = np.ma.array(tot_amf, mask=mask)
                 box_amf = ncd.groups['support_data'].variables['scattering_weights'][:]\
@@ -136,25 +146,30 @@ class tempo(object):
                 box_amf = np.ma.array(box_amf, mask=np.repeat(mask, levels))
                 avg_kernel = box_amf / tot_amf[:, np.newaxis]
 
-                # also using avk to define strat trop separation
-                if self.columnType != "total":
-                    t_diff = np.array(t_pause[:, np.newaxis] - preslev)[:, :-1]
-                    if self.columnType == "strato":
-                        avg_kernel[t_diff <= 0] = 0.0
-                    if self.columnType == "tropo":
-                        avg_kernel[t_diff > 0] = 0.0
-                    if first:
-                        self.columnType += "sphere"
-                # make sure that the avk mask is correctly put
-                avg_kernel = np.ma.array(avg_kernel, mask=np.repeat(mask, levels))
+
+                # for no2 use avk to define strat trop separation
+                if self.varname == 'no2':
+                    t_pause = hPa2Pa * ncd.groups['support_data'].variables['tropopause_pressure'][:]\
+                        .ravel()
+
+                    if self.columnType != "total":
+                        t_diff = np.array(t_pause[:, np.newaxis] - preslev)[:, :-1]
+                        if self.columnType == "stratosphere":
+                            avg_kernel[t_diff <= 0] = 0.0
+                        if self.columnType == "troposphere":
+                            avg_kernel[t_diff > 0] = 0.0
+
+                    # make sure that the avk mask is correctly put
+                    avg_kernel = np.ma.array(avg_kernel, mask=np.repeat(mask, levels))
 
                 # obs value and error
-                col_amf = ncd.groups['support_data'].variables["amf_"+self.columnType][:].ravel()
-                obs = ncd.groups['product'].variables["vertical_column_"+self.columnType][:]\
+                col_amf = ncd.groups['support_data'].variables[col_amf_name][:].ravel()
+                obs = ncd.groups['product'].variables[obs_name][:]\
                     .ravel() * conv
                 # there is apparently a mismatch in the mask for obs
                 obs = np.ma.masked_invalid(obs)
 
+                # error calculation:
                 # FIXME: it seems that the proxy product is incomplete as it doesn't provide values for
                 # SCV uncertainty. To have the partial column error calculated like in
                 # Boersma et al., 2003 we must have this quantity (i.e. compute SCD/AMF).
@@ -165,8 +180,12 @@ class tempo(object):
                 # teporary error workaround below:
                 if self.columnType == "total":
                     col_amf = np.ones((xtrack*mirror))
-                err = ncd.groups['product'].variables["vertical_column_total_uncertainty"][:]\
+                err = ncd.groups['product'].variables[err_name+'_uncertainty'][:]\
                     .ravel() * conv / col_amf
+
+            # O3
+            if self.varname == 'o3':
+                exit()
 
             # clean data
             neg_obs = obs > 0.0
@@ -187,6 +206,23 @@ class tempo(object):
             err = np.ma.compressed(err)
             preslev = np.ma.compress_rowcols(preslev, axis=0)
             avg_kernel = np.ma.compress_rowcols(avg_kernel, axis=0)
+
+            # flip 2d arrays to have increaing pressure
+            preslev = np.flip(preslev, axis=1)
+            avg_kernel = np.flip(avg_kernel, axis=1)
+
+            # # check dimensions
+            # print(np.shape(lats))
+            # print(np.shape(lons))
+            # print(np.shape(time))
+            # print(np.shape(flg))
+            # print(np.shape(qa_value))
+            # print(np.shape(qc_flag))
+            # print(np.shape(obs))
+            # print(np.shape(err))
+            # print(np.shape(preslev))
+            # print(np.shape(avg_kernel))
+
 
             if first:
                 self.outdata[('dateTime', 'MetaData')] = time
@@ -264,7 +300,7 @@ def main():
         type=str, required=True)
     required.add_argument(
         '-c', '--column',
-        help="type of column: total, tropo or strato",
+        help="type of column: total, troposphere or stratosphere",
         type=str, required=True)
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
@@ -282,15 +318,15 @@ def main():
 
     if args.variable == "hcho":
         var_name = 'formaldehyde'
-        if args.column != "total":
-            print('hcho is only available for total column, reset column to total', flush=1)
-            args.column = 'total'
+        if args.column != "troposphere":
+            print('hcho is only available for troposphere column, reset column to troposphere', flush=1)
+            args.column = 'troposphere'
     elif args.variable == "no2":
         var_name = 'nitrogendioxide'
     elif args.variable == "o3":
         var_name = 'ozone'
         varDims['averagingKernel'] = ['Location', 'Layer']
-    if args.column == "tropo" or args.column == "strato":
+    if args.column == "troposphere" or args.column == "stratosphere":
 
         obsVar = {
             var_name+'_'+args.column+'spheric_column': var_name+'Column'
