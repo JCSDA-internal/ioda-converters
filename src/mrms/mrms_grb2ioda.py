@@ -49,6 +49,9 @@ AttrData = {
     'sourceFiles': ''
 }
 
+DimDict = {
+}
+
 iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
 epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
@@ -57,17 +60,11 @@ obsValName = iconv.OvalName()
 obsErrName = iconv.OerrName()
 qcName = iconv.OqcName()
 
-DimDict = {
-}
-
 float_missing_value = -999.0    # or netCDF value,  nc.default_fillvals['f4']
 int_missing_value = nc.default_fillvals['i4']
 double_missing_value = nc.default_fillvals['f8']
 long_missing_value = nc.default_fillvals['i8']
 string_missing_value = '_'
-
-iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
-epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 missing_vals = {'string': string_missing_value,
                 'integer': int_missing_value,
@@ -154,6 +151,7 @@ def main(file_names, output_file):
         obs_data[(iodavar, obsValName)] = np.array(data[iodavar], dtype=np.float32)
         obs_data[(iodavar, obsErrName)] = np.full(nlocs, obserrlist[n], dtype=np.float32)
         obs_data[(iodavar, qcName)] = np.full(nlocs, 2, dtype=np.int32)
+        varAttrs[(iodavar, obsValName)]['_FillValue'] = float_missing_value
 
     VarDims = {}
     for vname in obsvars:
@@ -196,6 +194,8 @@ def read_grib(input_file, obsvars):
             logging.debug(f"  capturing data for variable {obsvar} [{product_id}]")
             Z = grb.values
             Z = Z.reshape(ni*nj)
+            if obsvar == 'reflectivity':
+                Z[Z<-25.0] = float_missing_value
             Z = Z.tolist()
             mrms_data[obsvar].extend(Z)
         else:
@@ -210,6 +210,7 @@ def read_grib(input_file, obsvars):
     lats = lats.reshape(ni*nj)
     lats = lats.tolist()
     lons = lons.reshape(ni*nj)
+    lons[lons>180.0] = lons - 360.0
     lons = lons.tolist()
 
     return dt, heights, lats, lons, mrms_data
