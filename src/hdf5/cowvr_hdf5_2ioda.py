@@ -25,6 +25,7 @@ import h5py
 import numpy as np
 
 import pyiodaconv.ioda_conv_engines as iconv
+from pyiodaconv.def_jedi_utils import compute_scan_angle
 from pyiodaconv.orddicts import DefaultOrderedDict
 
 # globals
@@ -289,35 +290,6 @@ def cowvr_gross_quality_control(obs_data, qc_flag, solar_array_flag, support_arm
             obs_data[k] = obs_data[k][good, :]  # [::33] -- add as skip
 
     return obs_data
-
-
-def compute_scan_angle(instr_scan_ang, sensor_altitude, sensor_zenith, qc_flag=[None]):
-
-    # should come from standard table
-    earth_mean_radius_km = 6378.1370  # WGS84
-
-    # example values sensor_altitude
-    # iss_altitude_km = 408.
-    # tropics_altitude_km = 550.
-    # sensor_altitude_km = tropics_altitude_km
-
-    d2r = np.pi/180.
-    r2d = 180./np.pi
-
-    # do we need a missing here
-    ratio = np.empty_like(sensor_altitude)
-
-    # compute scan angle
-    if not qc_flag[0]:
-        qc_flag = np.zeros_like(sensor_altitude)
-    good = qc_flag[:] == 0
-    if sum(good) > 0:
-        ratio[good] = earth_mean_radius_km/(earth_mean_radius_km + sensor_altitude[good]/1000.)
-
-    # γ = arcsin(R / (R + h) * sin(theta)),h: sat alt; theta: sat zenith angle
-    scanang = np.arcsin(ratio*np.sin(abs(sensor_zenith)*d2r))*r2d
-
-    return scanang
 
 
 def get_WMO_satellite_ID(sensor_name):
