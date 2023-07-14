@@ -87,10 +87,11 @@ class tempo(object):
             # coordinates and mask
             lats = ncd.groups['geolocation'].variables['latitude'][:].ravel()
             lons = ncd.groups['geolocation'].variables['longitude'][:].ravel()
-            qa_value = ncd.groups['product'].variables['main_data_quality_flag'][:]\
-                .ravel()
             qc_flag = ncd.groups['support_data'].variables['ground_pixel_quality_flag'][:]\
                 .ravel()
+            qa_value = ncd.groups['product'].variables['main_data_quality_flag'][:]\
+                .ravel()
+
             mask = np.ma.getmask(qa_value)
             lats = np.ma.array(lats, mask=mask)
             lons = np.ma.array(lons, mask=mask)
@@ -146,7 +147,6 @@ class tempo(object):
                 box_amf = np.ma.array(box_amf, mask=np.repeat(mask, levels))
                 avg_kernel = box_amf / tot_amf[:, np.newaxis]
 
-
                 # for no2 use avk to define strat trop separation
                 if self.varname == 'no2':
                     t_pause = hPa2Pa * ncd.groups['support_data'].variables['tropopause_pressure'][:]\
@@ -170,21 +170,12 @@ class tempo(object):
                 obs = np.ma.masked_invalid(obs)
 
                 # error calculation:
-                # FIXME: it seems that the proxy product is incomplete as it doesn't provide values for
-                # SCV uncertainty. To have the partial column error calculated like in
-                # Boersma et al., 2003 we must have this quantity (i.e. compute SCD/AMF).
-                # For we can only do a "wrong" scaling of the VCD error such as VCD/AMF(tropo|strato)
-                # the correct line of code below:
-                # err = ncd.groups['support_data'].variables["fitted_slant_column_uncertainty"][:].\
-                #       ravel() * conv / col_amf
-                # teporary error workaround below:
-                if self.columnType == "total":
-                    col_amf = np.ones((xtrack*mirror))
                 err = ncd.groups['product'].variables[err_name+'_uncertainty'][:]\
-                    .ravel() * conv / col_amf
+                    .ravel() * conv * col_amf / tot_amf
 
             # O3
             if self.varname == 'o3':
+                print("O3 proxy product not ready yet")
                 exit()
 
             # clean data
@@ -210,19 +201,6 @@ class tempo(object):
             # flip 2d arrays to have increaing pressure
             preslev = np.flip(preslev, axis=1)
             avg_kernel = np.flip(avg_kernel, axis=1)
-
-            # # check dimensions
-            # print(np.shape(lats))
-            # print(np.shape(lons))
-            # print(np.shape(time))
-            # print(np.shape(flg))
-            # print(np.shape(qa_value))
-            # print(np.shape(qc_flag))
-            # print(np.shape(obs))
-            # print(np.shape(err))
-            # print(np.shape(preslev))
-            # print(np.shape(avg_kernel))
-
 
             if first:
                 self.outdata[('dateTime', 'MetaData')] = time
@@ -325,7 +303,7 @@ def main():
         var_name = 'nitrogendioxide'
     elif args.variable == "o3":
         var_name = 'ozone'
-        varDims['averagingKernel'] = ['Location', 'Layer']
+
     if args.column == "troposphere" or args.column == "stratosphere":
 
         obsVar = {
@@ -346,6 +324,7 @@ def main():
             var_name+'Total': ['Location']
         }
 
+    varDims['averagingKernel'] = ['Location', 'Layer']
     varDims['pressureVertice'] = ['Location', 'Vertice']
 
     # Read in the NO2 data

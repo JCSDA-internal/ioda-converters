@@ -85,6 +85,9 @@ list( APPEND test_input
   testinput/tempo_hcho_proxy_20130801T100000Z_S002G01.nc
   testinput/tempo_hcho_proxy_20130801T100600Z_S002G02.nc
   testinput/tempo_hcho_proxy_20130801T101200Z_S002G03.nc
+  testinput/tempo_o3_proxy_20130801T100000Z_S002G01.nc
+  testinput/tempo_o3_proxy_20130801T100600Z_S002G02.nc
+  testinput/tempo_o3_proxy_20130801T101200Z_S002G03.nc
 )
 
 list( APPEND test_output
