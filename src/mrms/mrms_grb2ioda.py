@@ -185,6 +185,13 @@ def read_grib(input_file, obsvars):
             product_id = product_id + str(grb[key]) + '-'
         product_id = product_id[:-1]
 
+        '''
+        # Use a mask to remove the missing value points entirely from the dataset.
+        # This is FLAWED because there could be different missing values on different
+        # height levels, or potentially different missing values depending on product.
+        '''
+
+        mask = None
         if product_id in mrms_products.keys():
             obsvar = mrms_products[product_id]
             dt = grb.validDate
@@ -197,8 +204,8 @@ def read_grib(input_file, obsvars):
             Z = grb.values
             Z = Z.reshape(ni*nj)
             if obsvar == 'reflectivity':
-                Z[Z<-25.0] = float_missing_value
-                Z[Z>80.0] = float_missing_value
+                mask = np.logical_and(Z >= -25, Z <= 80)
+                Z = Z[mask]
             Z = Z.tolist()
             mrms_data[obsvar].extend(Z)
             Z.clear()
@@ -212,22 +219,14 @@ def read_grib(input_file, obsvars):
         sys.exit()
 
     lats = lats.reshape(ni*nj)
+    if mask is not None and (len(heights) == 1):
+        lats = lats[mask]
     lats = lats.tolist()
     lons = lons.reshape(ni*nj)
     lons[lons>180.0] = lons - 360.0
+    if mask is not None and (len(heights) == 1):
+        lons = lons[mask]
     lons = lons.tolist()
-
-    '''
-    # Remove the missing value points entirely from the dataset.
-    # This is FLAWED because there could be different missing values on different
-    # height levels, or potentially different missing values depending on product.
-    '''
-
-    if len(heights) == 1:
-        for obsvar in mrms_data.keys():
-            mrms_data[obsvar][:] = [item for item in mrms_data[obsvar] if item != float_missing_value]
-            lats[:] = [item for item in mrms_data[obsvar] if item != float_missing_value]
-            lons[:] = [item for item in mrms_data[obsvar] if item != float_missing_value]
 
     return dt, heights, lats, lons, mrms_data
 
