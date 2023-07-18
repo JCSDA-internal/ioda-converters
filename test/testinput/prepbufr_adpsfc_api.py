@@ -226,8 +226,8 @@ if __name__ == '__main__':
                           dest='filename', help='adpsfc file name')
     optional.add_argument('-o', '--output', type=str, default=OUTPUT_PATH,
                           dest='output', help='output filename')
-    optional.add_argument('-d', '--date', type=str, default='2021 08 01 00 00',
-                          dest='date', metavar='YYYY mm dd HH MM', help='analysis cycle date'
+    optional.add_argument('-d', '--date', type=str, default='202108010000',
+                          dest='date', metavar='YYYYmmddHHMM', help='analysis cycle date')
 
     args = parser.parse_args()
 
