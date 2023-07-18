@@ -80,6 +80,7 @@ list( APPEND test_input
   testinput/2021081612_RAOB_small.txt
   testinput/tropomi_co.nc
   testinput/gdas.t18z.abias_air
+  testinput/MRMS_MergedReflectivityQC_01.50_20230712-152241.grib2
 )
 
 list( APPEND test_output
@@ -154,6 +155,7 @@ list( APPEND test_output
   testoutput/2021081612_sonde_small.nc
   testoutput/tropomi_co_total.nc
   testoutput/gdas.t18z.abias_air_ascent.csv
+  testoutput/mrms_reflectivity_Z1500m.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -867,6 +869,21 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_sondetac
                           -t share/raob_stations_small.json
                           --date 2021-08-16T12:00:00Z --netcdf"
                           2021081612_sonde_small.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+#===============================================================================
+# MRMS (multi-radar, multi-sensor) radar reflectivity CONUS converter
+#===============================================================================
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mrms
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/mrms_grib2ioda.py
+                          -i testinput/MRMS_MergedReflectivityQC_01.50_20230712-152241.grib2
+                          -o testrun/mrms_reflectivity_Z1500m.nc"
+                          mrms_reflectivity_Z1500m.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
 # MISC converters
