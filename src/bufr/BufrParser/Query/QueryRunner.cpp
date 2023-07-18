@@ -241,7 +241,18 @@ namespace bufr
                                             const SeqCounts& origCounts,
                                             const std::vector<std::vector<size_t>>& filter) const
     {
+
         auto data = bufr::NodeLookupTable::DataVector();
+
+        if (srcData.data.type() == typeid(std::vector<double>))
+        {
+            data.data = std::vector<double>();
+        }
+        else
+        {
+            data.data = std::vector<std::string>();
+        }
+
         data.reserve(sum(origCounts.back()));
 
         size_t offset = 0;
@@ -262,7 +273,7 @@ namespace bufr
         {
             if (!skipResult)
             {
-                if (data.data.type() == typeid(std::vector<std::string>))
+                if (srcData.data.type() == typeid(std::vector<std::string>))
                 {
                     boost::get<std::vector<std::string>>(data.data).push_back(
                         std::string(boost::get<std::vector<std::string>>(srcData.data)[offset]));
