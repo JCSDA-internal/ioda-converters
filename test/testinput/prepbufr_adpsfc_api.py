@@ -222,14 +222,14 @@ if __name__ == '__main__':
     OUTPUT_PATH = './testrun/prepbufr_adpsfc_api.nc'
 
     optional = parser.add_argument_group(title='optional arguments')
-    optional.add_argument('-f', '--filenames', type=str, default=DATA_PATH,
-                          dest='filenames', help='adpsfc file name')
+    optional.add_argument('-f', '--filename', type=str, default=DATA_PATH,
+                          dest='filename', help='adpsfc file name')
     optional.add_argument('-o', '--output', type=str, default=OUTPUT_PATH,
                           dest='output', help='output filename')
     optional.add_argument('-d', '--date', type=str, default='2021 08 01 00 00',
-                          dest='date', help='enable verbose debug messages')
+                          dest='date', metadatavar='YYYY mm dd HH MM', help='enable verbose debug messages')
 
     args = parser.parse_args()
 
-    test_bufr_to_ioda(args.filenames, args.output, args.date)
+    test_bufr_to_ioda(args.filename, args.output, args.date)
 
