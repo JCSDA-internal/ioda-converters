@@ -35,7 +35,7 @@ meta_keys = [m_item[0] for m_item in locationKeyList]
 mrms_products = {
     '97-209-9-0': 'reflectivity',
 }
-obsvars_units = ['dbZ']
+obsvars_units = ['dBZ']
 obserrlist = [3.5]
 
 # In the product list above, the four groups of digits represent the following GRIB keys
@@ -109,10 +109,12 @@ def main(file_names, output_file):
         time_offset = round((dt - epoch).total_seconds())
 
         for height in heights:
-            nlocs = nlocs + len(lat)
-            x = np.full(len(lat), time_offset)
+            nobs = len(lat)
+            nlocs = nlocs + nobs
+            logging.info(f" adding {nobs} data locations for total of {nlocs}")
+            x = np.full(nobs, time_offset)
             data['dateTime'].extend(x.tolist())
-            x = np.full(len(lat), height)
+            x = np.full(nobs, height)
             data['height'].extend(x.tolist())
             data['latitude'].extend(lat)
             data['longitude'].extend(lon)
@@ -196,8 +198,10 @@ def read_grib(input_file, obsvars):
             Z = Z.reshape(ni*nj)
             if obsvar == 'reflectivity':
                 Z[Z<-25.0] = float_missing_value
+                Z[Z>80.0] = float_missing_value
             Z = Z.tolist()
             mrms_data[obsvar].extend(Z)
+            Z.clear()
         else:
             pass
 
@@ -212,6 +216,18 @@ def read_grib(input_file, obsvars):
     lons = lons.reshape(ni*nj)
     lons[lons>180.0] = lons - 360.0
     lons = lons.tolist()
+
+    '''
+    # Remove the missing value points entirely from the dataset.
+    # This is FLAWED because there could be different missing values on different
+    # height levels, or potentially different missing values depending on product.
+    '''
+
+    if len(heights) == 1:
+        for obsvar in mrms_data.keys():
+            mrms_data[obsvar][:] = [item for item in mrms_data[obsvar] if item != float_missing_value]
+            lats[:] = [item for item in mrms_data[obsvar] if item != float_missing_value]
+            lons[:] = [item for item in mrms_data[obsvar] if item != float_missing_value]
 
     return dt, heights, lats, lons, mrms_data
 
