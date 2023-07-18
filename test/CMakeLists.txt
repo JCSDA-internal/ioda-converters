@@ -79,7 +79,6 @@ list( APPEND test_input
   testinput/sst_ostia.nc
   testinput/2021081612_RAOB_small.txt
   testinput/tropomi_co.nc
-<<<<<<< HEAD
   testinput/tempo_no2_proxy_20130801T100000Z_S002G01.nc
   testinput/tempo_no2_proxy_20130801T100600Z_S002G02.nc
   testinput/tempo_no2_proxy_20130801T101200Z_S002G03.nc
@@ -89,9 +88,7 @@ list( APPEND test_input
   testinput/tempo_o3_proxy_20130801T100000Z_S002G01.nc
   testinput/tempo_o3_proxy_20130801T100600Z_S002G02.nc
   testinput/tempo_o3_proxy_20130801T101200Z_S002G03.nc
-=======
   testinput/gdas.t18z.abias_air
->>>>>>> develop
 )
 
 list( APPEND test_output
