@@ -11,6 +11,7 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <boost/variant.hpp>
 
 #include "VectorMath.h"
 #include "DataProvider/DataProvider.h"
@@ -50,12 +51,82 @@ namespace bufr {
     /// information for a given node.
     class NodeLookupTable
     {
-        typedef std::vector<double> DataVector;
+        typedef boost::variant<std::vector<std::string>, std::vector<double>> _Data;
         typedef std::vector<int> CountsVector;
+
+        struct _DataVector
+        {
+            _Data data;
+
+            void reserve(size_t size)
+            {
+                if (data.type() == typeid(std::vector<double>))
+                {
+                    boost::get<std::vector<double>>(data).reserve(size);
+                }
+                else
+                {
+                    boost::get<std::vector<std::string>>(data).reserve(size);
+                }
+            }
+
+            template<typename T>
+            void resize(size_t size, T defaultValue)
+            {
+                if (data.type() == typeid(std::vector<double>))
+                {
+                    boost::get<std::vector<double>>(data).resize(size, defaultValue);
+                }
+                else
+                {
+                    boost::get<std::vector<std::string>>(data).resize(size, defaultValue);
+                }
+            }
+
+            bool empty() const
+            {
+                if (data.type() == typeid(std::vector<double>))
+                {
+                    return boost::get<std::vector<double>>(data).empty();
+                }
+                else
+                {
+                    return boost::get<std::vector<std::string>>(data).empty();
+                }
+            }
+
+            size_t size() const
+            {
+                if (data.type() == typeid(std::vector<double>))
+                {
+                    return boost::get<std::vector<double>>(data).size();
+                }
+                else
+                {
+                    return boost::get<std::vector<std::string>>(data).size();
+                }
+            }
+
+            void push_back(const double& item)
+            {
+                boost::get<std::vector<double>>(data).push_back(item);
+            }
+
+            void push_back(const std::string& item)
+            {
+                boost::get<std::vector<std::string>>(data).push_back(item);
+            }
+
+            template<typename T>
+            T rawData() const
+            {
+                return boost::get<T>(data);
+            }
+        };
 
         struct NodeData
         {
-            DataVector data;
+            _DataVector data;
             CountsVector counts;
             TargetComponent component;
             bool collectedCounts = false;
@@ -67,6 +138,9 @@ namespace bufr {
         typedef __details::OffsetArray<NodeData> LookupTable;
 
      public:
+        typedef _DataVector DataVector;
+        typedef _Data Data;
+
         NodeLookupTable(const std::shared_ptr<DataProvider>& dataProvider, const Targets& targets);
 
         /// \brief Returns the NodeData for a given bufr node.

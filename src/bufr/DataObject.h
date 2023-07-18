@@ -35,6 +35,7 @@
 
 #include "BufrParser/Query/Constants.h"
 #include "BufrParser/Query/QueryParser.h"
+#include "BufrParser/Query/NodeLookupTable.h"
 
 namespace Ingester
 {
@@ -113,7 +114,7 @@ namespace Ingester
         void setQuery(const std::string& query) { query_ = query; }
         void setDimPaths(const std::vector<bufr::Query>& dimPaths)
             { dimPaths_ = dimPaths; }
-        virtual void setData(const std::vector<double>& data, double dataMissingValue) = 0;
+        virtual void setData(const bufr::NodeLookupTable::DataVector& data, double dataMissingValue) = 0;
 
         // Getters
         std::string getFieldName() const { return fieldName_; }
@@ -246,7 +247,7 @@ namespace Ingester
         /// \brief Set the data for this object
         /// \param data The data vector
         /// \param dataMissingValue The missing value used in the raw data
-        void setData(const std::vector<double>& data, double dataMissingValue) final
+        void setData(const bufr::NodeLookupTable::DataVector& data, double dataMissingValue) final
         {
             _setData(data, dataMissingValue);
         }
@@ -661,11 +662,22 @@ namespace Ingester
         /// \param data - double vector of raw data
         /// \param dataMissingValue - The number that represents missing values within the raw data
         template<typename U = void>
-        void _setData(const std::vector<double>& data,
+        void _setData(const bufr::NodeLookupTable::DataVector& data,
                       double dataMissingValue,
                       typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr)
         {
-            data_ = std::vector<T>(data.begin(), data.end());
+            if (data.data.type() == typeid(std::vector<double>))
+            {
+                auto rawData = data.rawData<std::vector<double>>();
+                data_ = std::vector<T>(rawData.begin(), rawData.end());
+            }
+            else if (data.data.type() == typeid(std::vector<std::string>))
+            {
+                auto errStr = std::stringstream();
+                errStr << "The data type of the data object is not numeric";
+                throw eckit::BadValue(errStr.str());
+            }
+
             std::replace(data_.begin(),
                          data_.end(),
                          static_cast<T>(dataMissingValue),
@@ -677,30 +689,40 @@ namespace Ingester
         /// \param dataMissingValue - The number that represents missing values within the raw data
         template<typename U = void>
         void _setData(
-            const std::vector<double>& data,
+            const bufr::NodeLookupTable::DataVector& data,
             double dataMissingValue,
             typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr)
         {
-            data_ = std::vector<std::string>();
-            auto charPtr = reinterpret_cast<const char*>(data.data());
-            for (size_t row_idx = 0; row_idx < data.size(); row_idx++)
+            if (data.data.type() == typeid(std::vector<double>))
             {
-                if (data[row_idx] != dataMissingValue)
+                data_ = std::vector<std::string>();
+                data_.reserve(data.size());
+                auto charPtr = reinterpret_cast<const char*>(boost::get<std::vector<std::string>> (data.data).data());
+                for (size_t row_idx = 0; row_idx < data.size(); row_idx++)
                 {
-                    std::string str = std::string(
-                        charPtr + row_idx * sizeof(double), sizeof(double));
+                    if (boost::get<std::vector<std::string>>(data.data)[row_idx] != "")
+                    {
+                        std::string str = std::string(
+                            charPtr + row_idx * sizeof(double), sizeof(double));
 
-                    // trim trailing whitespace from str
-                    str.erase(std::find_if(str.rbegin(), str.rend(),
-                                           [](char c){ return !std::isspace(c); }).base(),
-                              str.end());
+                        // trim trailing whitespace from str
+                        str.erase(std::find_if(str.rbegin(), str.rend(),
+                                               [](char c){ return !std::isspace(c); }).base(),
+                                  str.end());
 
-                    data_.push_back(str);
+                        data_.push_back(str);
+                    }
+                    else
+                    {
+                        data_ = boost::get<std::vector<std::string>>(data.data);
+                    }
                 }
-                else
-                {
-                    data_.push_back("");
-                }
+            }
+            else if (data.data.type() == typeid(std::vector<std::string>))
+            {
+                auto errStr = std::stringstream();
+                errStr << "The data type of the data object is not numeric";
+                throw eckit::BadValue(errStr.str());
             }
         }
 

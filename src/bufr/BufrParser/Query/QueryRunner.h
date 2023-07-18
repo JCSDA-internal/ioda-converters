@@ -59,7 +59,7 @@ namespace bufr {
         /// \param[in] origCounts The original (unfiltered) data counts.
         /// \param[in] filter The filter specification.
         /// \return The resulting data vector after the filter is applied.
-        std::vector<double> makeFilteredData(const std::vector<double>& srcData,
+        NodeLookupTable::DataVector makeFilteredData(const NodeLookupTable::DataVector& srcData,
                                              const SeqCounts &origCounts,
                                              const std::vector<std::vector<size_t>> &filter) const;
 
@@ -73,10 +73,10 @@ namespace bufr {
         /// \param[in] depth The current depth of the recursion.
         /// \param[in] skipResult If true, the result of the current recursion is not stored in the
         ///                       resulting data vector. This data is being filtered out.
-        void _makeFilteredData(const std::vector<double>& srcData,
+        void _makeFilteredData(const NodeLookupTable::DataVector& srcData,
                                const SeqCounts& origCounts,
                                const std::vector<std::vector<size_t>>& filters,
-                               std::vector<double>& data,
+                               NodeLookupTable::DataVector& data,
                                size_t& offset,
                                size_t depth,
                                bool skipResult = false) const;

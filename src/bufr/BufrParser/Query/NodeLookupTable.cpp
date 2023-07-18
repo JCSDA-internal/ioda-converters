@@ -81,6 +81,15 @@ namespace bufr {
             if (target->nodeIdx == 0) { continue; }
             const auto &path = target->path.back();
 
+            if (target->typeInfo.isLongString())
+            {
+                lookup[target->nodeIdx].data.data = std::vector<std::string>();
+            }
+            else
+            {
+                lookup[target->nodeIdx].data.data = std::vector<double>();
+            }
+
             lookup[target->nodeIdx].data.reserve(sum(lookup[path.parentDimensionNodeId].counts));
             lookup[target->nodeIdx].collectedData = true;
             lookup[target->nodeIdx].isLongString = target->typeInfo.isLongString();
@@ -95,6 +104,7 @@ namespace bufr {
                 if (lookup[nodeId].isLongString)
                 {
                     auto longStr = dataProvider_->getLongStr(lookup[nodeId].longStrId);
+                    lookup[nodeId].data.push_back(longStr);
                 }
                 else
                 {

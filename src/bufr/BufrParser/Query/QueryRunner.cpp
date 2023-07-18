@@ -23,12 +23,6 @@
 namespace Ingester {
 namespace bufr
 {
-    struct NodeData
-    {
-        std::vector<double> values;
-        std::vector<int> counts;
-    };
-
     QueryRunner::QueryRunner(const QuerySet &querySet,
                              ResultSet &resultSet,
                              const DataProviderType &dataProvider) :
@@ -163,7 +157,15 @@ namespace bufr
 
             if (targ->nodeIdx == 0)
             {
-                dataField.data = {MissingValue};
+                if (targ->typeInfo.isLongString())
+                {
+                    boost::get<std::vector<std::string>>(dataField.data.data) = {""};
+                }
+                else
+                {
+                    boost::get<std::vector<double>>(dataField.data.data) = {MissingValue};
+                }
+
                 dataField.seqCounts = SeqCounts(std::vector<std::vector<int>>(1, {1}));
             }
             else
@@ -234,12 +236,12 @@ namespace bufr
         }
     }
 
-    std::vector<double> QueryRunner::makeFilteredData(
-                                            const std::vector<double>& srcData,
+    NodeLookupTable::DataVector QueryRunner::makeFilteredData(
+                                            const NodeLookupTable::DataVector& srcData,
                                             const SeqCounts& origCounts,
                                             const std::vector<std::vector<size_t>>& filter) const
     {
-        auto data = std::vector<double>();
+        auto data = bufr::NodeLookupTable::DataVector();
         data.reserve(sum(origCounts.back()));
 
         size_t offset = 0;
@@ -248,17 +250,29 @@ namespace bufr
         return data;
     }
 
-    void QueryRunner::_makeFilteredData(const std::vector<double>& srcData,
+    void QueryRunner::_makeFilteredData(const NodeLookupTable::DataVector& srcData,
                                         const SeqCounts& origCounts,
                                         const std::vector<std::vector<size_t>> &filters,
-                                        std::vector<double>& data,
+                                        NodeLookupTable::DataVector& data,
                                         size_t& offset,
                                         size_t depth,
                                         bool skipResult) const
     {
         if (depth > origCounts.size() - 1)
         {
-            if (!skipResult) data.push_back(srcData[offset]);
+            if (!skipResult)
+            {
+                if (data.data.type() == typeid(std::vector<std::string>))
+                {
+                    boost::get<std::vector<std::string>>(data.data).push_back(
+                        std::string(boost::get<std::vector<std::string>>(srcData.data)[offset]));
+                }
+                else
+                {
+                    boost::get<std::vector<double>>(data.data).push_back(
+                        boost::get<std::vector<double>>(srcData.data)[offset]);
+                }
+            }
             offset++;
 
             return;

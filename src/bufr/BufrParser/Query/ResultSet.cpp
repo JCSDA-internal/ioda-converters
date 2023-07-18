@@ -60,7 +60,7 @@ namespace bufr {
                                   groupByFieldName);
         }
 
-        std::vector<double> data;
+        NodeLookupTable::DataVector data;
         std::vector<int> dims;
         std::vector<Query> dimPaths;
         TypeInfo info;
@@ -177,7 +177,7 @@ namespace bufr {
 
     void ResultSet::getRawValues(const std::string& fieldName,
                                  const std::string& groupByField,
-                                 std::vector<double>& data,
+                                 NodeLookupTable::DataVector& data,
                                  std::vector<int>& dims,
                                  std::vector<Query>& dimPaths,
                                  TypeInfo& info) const
@@ -362,11 +362,19 @@ namespace bufr {
             rowLength *= dims[dimIdx];
         }
 
-        data.resize(totalRows * rowLength, MissingValue);
+        if (info.isLongString())
+        {
+            data.data = std::vector<std::string>(totalRows * rowLength, "");
+        }
+        else
+        {
+            data.data = std::vector<double>(totalRows * rowLength, MissingValue);
+        }
+
         for (size_t frameIdx = 0; frameIdx < dataFrames_.size(); ++frameIdx)
         {
             auto& dataFrame = dataFrames_[frameIdx];
-            std::vector<std::vector<double>> frameData;
+            std::vector<NodeLookupTable::DataVector> frameData;
             auto& targetField = dataFrame.fieldAtIdx(targetFieldIdx);
 
             if (!targetField.data.empty()) {
@@ -381,7 +389,16 @@ namespace bufr {
                     auto &row = frameData[rowIdx];
                     for (size_t colIdx = 0; colIdx < row.size(); ++colIdx)
                     {
-                        data[dataRowIdx*rowLength + rowIdx * row.size() + colIdx] = row[colIdx];
+                        if (info.isLongString())
+                        {
+                            boost::get<std::vector<std::string>>(data.data)[dataRowIdx*rowLength + rowIdx * row.size() + colIdx]
+                                = boost::get<std::vector<std::string>>(row.data)[colIdx];
+                        }
+                        else
+                        {
+                            boost::get<std::vector<double>>(data.data)[dataRowIdx*rowLength + rowIdx * row.size() + colIdx]
+                                = boost::get<std::vector<double>>(row.data)[colIdx];
+                        }
                     }
                 }
             }
@@ -395,7 +412,7 @@ namespace bufr {
 //    subroutine result_set__get_rows_for_field(self, target_field, data_rows, dims, groupby_idx)
 
     void ResultSet::getRowsForField(const DataField& targetField,
-                                    std::vector<std::vector<double>>& dataRows,
+                                    std::vector<NodeLookupTable::DataVector>& dataRows,
                                     const std::vector<int>& dims,
                                     int groupbyIdx) const
     {
@@ -449,10 +466,28 @@ namespace bufr {
             }
         }
 
-        auto output = std::vector<double>(product(dims), MissingValue);
+        NodeLookupTable::DataVector output;
+        if (targetField.data.data.type() == typeid(std::vector<std::string>))
+        {
+            output.data = std::vector<std::string>(product(dims), std::string(""));
+        }
+        else if (targetField.data.data.type() == typeid(std::vector<double>))
+        {
+            output.data = std::vector<double>(product(dims), MissingValue);
+        }
+
         for (size_t i = 0; i < idxs.size(); ++i)
         {
-            output[idxs[i]] = targetField.data[i];
+            if (targetField.data.data.type() == typeid(std::vector<std::string>))
+            {
+                boost::get<std::vector<std::string>>(output.data)[i] =
+                    boost::get<std::vector<std::string>>(targetField.data.data)[idxs[i]];
+            }
+            else if (targetField.data.data.type() == typeid(std::vector<double>))
+            {
+                boost::get<std::vector<double>>(output.data)[i] =
+                    boost::get<std::vector<double>>(targetField.data.data)[idxs[i]];
+            }
         }
 
         // Apply groupBy and make output
@@ -461,12 +496,21 @@ namespace bufr {
             if (groupbyIdx > static_cast<int>(targetField.seqCounts.size()))
             {
                 size_t numRows = product(dims);
-                dataRows.resize(numRows * maxCounts, {MissingValue});
+                dataRows.resize(numRows * maxCounts);
                 for (size_t i = 0; i < numRows; ++i)
                 {
                     if (output.size())
                     {
-                        dataRows[i][0] = output[0];
+                        if (targetField.data.data.type() == typeid(std::vector<std::string>))
+                        {
+                            boost::get<std::vector<std::string>>(dataRows[i].data)[0] =
+                                boost::get<std::vector<std::string>>(output.data)[i];
+                        }
+                        else if (targetField.data.data.type() == typeid(std::vector<double>))
+                        {
+                            boost::get<std::vector<double>>(dataRows[i].data)[0] =
+                                boost::get<std::vector<double>>(output.data)[i];
+                        }
                     }
                 }
             }
@@ -477,12 +521,31 @@ namespace bufr {
                 rowDims.assign(dims.begin() + groupbyIdx, dims.end());
 
                 size_t numsPerRow = static_cast<size_t>(product(rowDims));
-                dataRows.resize(numRows, std::vector<double>(numsPerRow, MissingValue));
+                dataRows.resize(numRows);
+//
+//                if (targetField.data.data.type() == typeid(std::vector<std::string>))
+//                {
+//                    dataRows.resize(numRows, std::vector<std::string>(numsPerRow, ""));
+//                }
+//                else if (targetField.data.data.type() == typeid(std::vector<double>))
+//                {
+//                    dataRows.resize(numRows, std::vector<double>(numsPerRow, MissingValue));
+//                }
+
                 for (size_t i = 0; i < numRows; ++i)
                 {
                     for (size_t j = 0; j < numsPerRow; ++j)
                     {
-                        dataRows[i][j] = output[i * numsPerRow + j];
+                        if (targetField.data.data.type() == typeid(std::vector<std::string>))
+                        {
+                            boost::get<std::vector<std::string>>(dataRows[i].data)[j] =
+                                boost::get<std::vector<std::string>>(output.data)[i * numsPerRow + j];
+                        }
+                        else if (targetField.data.data.type() == typeid(std::vector<double>))
+                        {
+                            boost::get<std::vector<double>>(dataRows[i].data)[j] =
+                                boost::get<std::vector<double>>(output.data)[i * numsPerRow + j];
+                        }
                     }
                 }
             }
@@ -505,7 +568,7 @@ namespace bufr {
                                 const std::string& groupByFieldName,
                                 TypeInfo& info,
                                 const std::string& overrideType,
-                                const std::vector<double> data,
+                                const NodeLookupTable::DataVector data,
                                 const std::vector<int> dims,
                                 const std::vector<Query> dimPaths) const
     {

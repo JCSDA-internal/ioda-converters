@@ -79,9 +79,7 @@ endif()
 
 find_package( gsl-lite HINTS $ENV{gsl_lite_DIR} )
 find_package( MPI )
-
 find_package( ioda QUIET )
-
 find_package( bufr QUIET )
 find_package( NetCDF QUIET COMPONENTS Fortran )
 
@@ -101,11 +99,14 @@ else()
     message(STATUS "Disabled Component: gnssro")
 endif()
 
-if( eckit_FOUND AND oops_FOUND AND ioda_FOUND AND bufr_FOUND )
+find_package( Boost QUIET)  # provides optional and variant components
+
+if( eckit_FOUND AND oops_FOUND AND ioda_FOUND AND bufr_FOUND AND Boost_FOUND )
     set(iodaconv_bufr_ENABLED True)
     message(STATUS "Found: eckit")
     message(STATUS "Found: oops")
     message(STATUS "Found: ioda")
+    message(STATUS "Found: boost")
     message(STATUS "Found: bufr")
     message(STATUS "Enabled Component: bufr")
 else()
