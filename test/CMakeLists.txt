@@ -162,14 +162,11 @@ list( APPEND test_output
   testoutput/sst_ostia.nc
   testoutput/2021081612_sonde_small.nc
   testoutput/tropomi_co_total.nc
-<<<<<<< HEAD
   testoutput/tempo_no2_total.nc
   testoutput/tempo_no2_troposphere.nc
   testoutput/tempo_no2_stratosphere.nc
   testoutput/tempo_hcho_troposphere.nc
-=======
   testoutput/gdas.t18z.abias_air_ascent.csv
->>>>>>> develop
 )
 
 if( iodaconv_gnssro_ENABLED )
