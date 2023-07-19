@@ -32,10 +32,10 @@
     namespace py = pybind11;
 #endif
 
-
 #include "BufrParser/Query/Constants.h"
 #include "BufrParser/Query/QueryParser.h"
 #include "BufrParser/Query/NodeLookupTable.h"
+
 
 namespace Ingester
 {
@@ -697,10 +697,10 @@ namespace Ingester
             {
                 data_ = std::vector<std::string>();
                 data_.reserve(data.size());
-                auto charPtr = reinterpret_cast<const char*>(boost::get<std::vector<std::string>> (data.data).data());
+                auto charPtr = reinterpret_cast<const char*>(boost::get<std::vector<double>> (data.data).data());
                 for (size_t row_idx = 0; row_idx < data.size(); row_idx++)
                 {
-                    if (boost::get<std::vector<std::string>>(data.data)[row_idx] != "")
+                    if (boost::get<std::vector<double>>(data.data)[row_idx] != dataMissingValue)
                     {
                         std::string str = std::string(
                             charPtr + row_idx * sizeof(double), sizeof(double));
@@ -714,7 +714,7 @@ namespace Ingester
                     }
                     else
                     {
-                        data_ = boost::get<std::vector<std::string>>(data.data);
+                        data_.push_back("");
                     }
                 }
             }

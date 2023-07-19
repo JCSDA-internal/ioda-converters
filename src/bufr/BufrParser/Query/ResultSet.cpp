@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <string>
 #include <iostream>
+#include <variant>
 
 #ifdef BUILD_PYTHON_BINDING
     #include <time.h>
@@ -522,12 +523,13 @@ namespace bufr {
 
                 size_t numsPerRow = static_cast<size_t>(product(rowDims));
                 dataRows.resize(numRows);
-//
-//                if (targetField.data.data.type() == typeid(std::vector<std::string>))
+
+
+//                if (targetField.target->typeInfo.isLongString())
 //                {
 //                    dataRows.resize(numRows, std::vector<std::string>(numsPerRow, ""));
 //                }
-//                else if (targetField.data.data.type() == typeid(std::vector<double>))
+//                else
 //                {
 //                    dataRows.resize(numRows, std::vector<double>(numsPerRow, MissingValue));
 //                }

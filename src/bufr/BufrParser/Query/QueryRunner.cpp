@@ -155,6 +155,15 @@ namespace bufr
             auto &dataField = dataFrame.fieldAtIdx(targetIdx);
             dataField.target = targ;
 
+            if (targ->typeInfo.isLongString())
+            {
+                dataField.data.data = std::vector<std::string>();
+            }
+            else
+            {
+                dataField.data.data = std::vector<double>();
+            }
+
             if (targ->nodeIdx == 0)
             {
                 if (targ->typeInfo.isLongString())
