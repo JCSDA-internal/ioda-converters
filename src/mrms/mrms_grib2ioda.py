@@ -7,7 +7,7 @@
  which are GRIB2 files into IODA's netCDF format.
 '''
 
-import sys 
+import sys
 import os
 from datetime import datetime, timedelta
 import logging
@@ -90,7 +90,7 @@ def main(file_names, output_file):
 
     obsvars = []
     for key in mrms_products.keys():
-        vname =  mrms_products[key]
+        vname = mrms_products[key]
         obsvars.append(vname)
 
     for key in meta_keys:
@@ -223,7 +223,7 @@ def read_grib(input_file, obsvars):
         lats = lats[mask]
     lats = lats.tolist()
     lons = lons.reshape(ni*nj)
-    lons[lons>180.0] = lons - 360.0
+    lons[lons > 180.0] = lons - 360.0
     if mask is not None and (len(heights) == 1):
         lons = lons[mask]
     lons = lons.tolist()
