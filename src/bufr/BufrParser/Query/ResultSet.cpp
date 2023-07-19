@@ -498,6 +498,19 @@ namespace bufr {
             {
                 size_t numRows = product(dims);
                 dataRows.resize(numRows * maxCounts);
+
+                for (size_t rowIdx = 0; rowIdx < dataRows.size(); rowIdx++)
+                {
+                    if (targetField.target->typeInfo.isLongString())
+                    {
+                        dataRows[rowIdx].data = std::vector<std::string>({""});
+                    }
+                    else
+                    {
+                        dataRows[rowIdx].data = std::vector<double>({MissingValue});
+                    }
+                }
+
                 for (size_t i = 0; i < numRows; ++i)
                 {
                     if (output.size())
@@ -524,15 +537,17 @@ namespace bufr {
                 size_t numsPerRow = static_cast<size_t>(product(rowDims));
                 dataRows.resize(numRows);
 
-
-//                if (targetField.target->typeInfo.isLongString())
-//                {
-//                    dataRows.resize(numRows, std::vector<std::string>(numsPerRow, ""));
-//                }
-//                else
-//                {
-//                    dataRows.resize(numRows, std::vector<double>(numsPerRow, MissingValue));
-//                }
+                for (size_t rowIdx = 0; rowIdx < dataRows.size(); rowIdx++)
+                {
+                    if (targetField.target->typeInfo.isLongString())
+                    {
+                        dataRows[rowIdx].data = std::vector<std::string>(numsPerRow, "");
+                    }
+                    else
+                    {
+                        dataRows[rowIdx].data = std::vector<double>(numsPerRow, MissingValue);
+                    }
+                }
 
                 for (size_t i = 0; i < numRows; ++i)
                 {
