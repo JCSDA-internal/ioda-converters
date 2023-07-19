@@ -2002,31 +2002,33 @@ endif()
 # Land product converters
 #==============================================================================
 
-if( iodaconv_pygrib_ENABLED )
-  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ims_scf
-                    TYPE    SCRIPT
-                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
-                    COMMAND bash
-                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                            netcdf
-                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/ims_scf2ioda.py
-                            -i testinput/imssnow_24km.grib2
-                            -o testrun/imssnow_scf.nc
-                            -m maskout"
-                            imssnow_scf.nc ${IODA_CONV_COMP_TOL_ZERO})
-
-  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_afwa_snod
-                    TYPE    SCRIPT
-                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
-                    COMMAND bash
-                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                            netcdf
-                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/afwa_snod2ioda.py
-                            -i testinput/afwa_snod_24km.grib
-                            -o testrun/afwa_snod.nc
-                            -m maskout"
-                            afwa_snod.nc ${IODA_CONV_COMP_TOL_ZERO})
-endif()
+# The following two tests have never been enabled and the python codes were not updated
+# for JEDI data naming conventions.  So these are now disabled until updates are moade.
+#if( iodaconv_pygrib_ENABLED )
+#  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ims_scf
+#                    TYPE    SCRIPT
+#                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+#                    COMMAND bash
+#                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+#                            netcdf
+#                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/ims_scf2ioda.py
+#                            -i testinput/imssnow_24km.grib2
+#                            -o testrun/imssnow_scf.nc
+#                            -m maskout"
+#                            imssnow_scf.nc ${IODA_CONV_COMP_TOL_ZERO})
+#
+#  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_afwa_snod
+#                    TYPE    SCRIPT
+#                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+#                    COMMAND bash
+#                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+#                            netcdf
+#                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/afwa_snod2ioda.py
+#                            -i testinput/afwa_snod_24km.grib
+#                            -o testrun/afwa_snod.nc
+#                            -m maskout"
+#                            afwa_snod.nc ${IODA_CONV_COMP_TOL_ZERO})
+#endif()
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ghcn_snod
                   TYPE    SCRIPT
