@@ -78,6 +78,7 @@ observations:
               variable: satelliteIdentifier
               map:
                 _206: n15
+                _207: n16
 
     ioda:
       backend: netcdf
@@ -184,6 +185,6 @@ observations:
           source: variables/brightnessTemperature
           longName: "Brightness Temperature"
           units: "K"
-#         range: [100, 500]
+          range: [100, 500]
           chunks: [1000, 15]
           compressionLevel: 4
