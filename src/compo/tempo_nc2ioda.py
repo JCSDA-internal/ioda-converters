@@ -92,6 +92,8 @@ class tempo(object):
             qa_value = ncd.groups['product'].variables['main_data_quality_flag'][:]\
                 .ravel()
 
+            # there are inconsitencies in masking between different variables
+            # choose one from one variable and apply it to all the other variables
             mask = np.ma.getmask(qa_value)
             lats = np.ma.array(lats, mask=mask)
             lons = np.ma.array(lons, mask=mask)
@@ -166,12 +168,12 @@ class tempo(object):
                 col_amf = ncd.groups['support_data'].variables[col_amf_name][:].ravel()
                 obs = ncd.groups['product'].variables[obs_name][:]\
                     .ravel() * conv
-                # there is apparently a mismatch in the mask for obs
-                obs = np.ma.masked_invalid(obs)
+                obs = np.ma.array(obs, mask=mask)
 
                 # error calculation:
                 err = ncd.groups['product'].variables[err_name+'_uncertainty'][:]\
                     .ravel() * conv * col_amf / tot_amf
+                err = np.ma.array(err, mask=mask)
 
             # O3
             if self.varname == 'o3':
@@ -186,51 +188,51 @@ class tempo(object):
             # final flag before sending this to ioda engines
             flg = np.logical_and(flg, cln)
 
-            # remove masked Data
-            lats = np.ma.compressed(lats)
-            lons = np.ma.compressed(lons)
+            # remove masked Data and make sure types are correct
+            lats = np.ma.compressed(lats).astype('float32')
+            lons = np.ma.compressed(lons).astype('float32')
             time = np.ma.compressed(time)
             flg = np.ma.compressed(flg)
-            qa_value = np.ma.compressed(qa_value)
-            qc_flag = np.ma.compressed(qc_flag)
-            obs = np.ma.compressed(obs)
-            err = np.ma.compressed(err)
-            preslev = np.ma.compress_rowcols(preslev, axis=0)
-            avg_kernel = np.ma.compress_rowcols(avg_kernel, axis=0)
+            qa_value = np.ma.compressed(qa_value).astype('float32')
+            qc_flag = np.ma.compressed(qc_flag).astype('int32')
+            obs = np.ma.compressed(obs).astype('float32')
+            err = np.ma.compressed(err).astype('float32')
+            preslev = np.ma.compress_rowcols(preslev, axis=0).astype('float32')
+            avg_kernel = np.ma.compress_rowcols(avg_kernel, axis=0).astype('float32')
 
             # flip 2d arrays to have increaing pressure
             preslev = np.flip(preslev, axis=1)
             avg_kernel = np.flip(avg_kernel, axis=1)
 
             if first:
-                self.outdata[('dateTime', 'MetaData')] = time
-                self.outdata[('latitude', 'MetaData')] = lats
-                self.outdata[('longitude', 'MetaData')] = lons
-                self.outdata[('quality_assurance_value', 'MetaData')] = qa_value
-                self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = avg_kernel
-                self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = preslev
-                self.outdata[self.varDict[iodavar]['valKey']] = obs
-                self.outdata[self.varDict[iodavar]['errKey']] = err
-                self.outdata[self.varDict[iodavar]['qcKey']] = qc_flag
+                self.outdata[('dateTime', 'MetaData')] = time[flg]
+                self.outdata[('latitude', 'MetaData')] = lats[flg]
+                self.outdata[('longitude', 'MetaData')] = lons[flg]
+                self.outdata[('quality_assurance_value', 'MetaData')] = qa_value[flg]
+                self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = avg_kernel[flg]
+                self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = preslev[flg]
+                self.outdata[self.varDict[iodavar]['valKey']] = obs[flg]
+                self.outdata[self.varDict[iodavar]['errKey']] = err[flg]
+                self.outdata[self.varDict[iodavar]['qcKey']] = qc_flag[flg]
             else:
                 self.outdata[('dateTime', 'MetaData')] = np.concatenate((
-                    self.outdata[('dateTime', 'MetaData')], time))
+                    self.outdata[('dateTime', 'MetaData')], time[flg]))
                 self.outdata[('latitude', 'MetaData')] = np.concatenate((
-                    self.outdata[('latitude', 'MetaData')], lats))
+                    self.outdata[('latitude', 'MetaData')], lats[flg]))
                 self.outdata[('longitude', 'MetaData')] = np.concatenate((
-                    self.outdata[('longitude', 'MetaData')], lons))
+                    self.outdata[('longitude', 'MetaData')], lons[flg]))
                 self.outdata[('quality_assurance_value', 'MetaData')] = np.concatenate((
-                    self.outdata[('quality_assurance_value', 'MetaData')], qa_value))
+                    self.outdata[('quality_assurance_value', 'MetaData')], qa_value[flg]))
                 self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = np.concatenate((
-                    self.outdata[('averagingKernel', 'RetrievalAncillaryData')], avg_kernel))
+                    self.outdata[('averagingKernel', 'RetrievalAncillaryData')], avg_kernel[flg]))
                 self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = np.concatenate((
-                    self.outdata[('pressureVertice', 'RetrievalAncillaryData')], preslev))
+                    self.outdata[('pressureVertice', 'RetrievalAncillaryData')], preslev[flg]))
                 self.outdata[self.varDict[iodavar]['valKey']] = np.concatenate(
-                    (self.outdata[self.varDict[iodavar]['valKey']], obs))
+                    (self.outdata[self.varDict[iodavar]['valKey']], obs[flg]))
                 self.outdata[self.varDict[iodavar]['errKey']] = np.concatenate(
-                    (self.outdata[self.varDict[iodavar]['errKey']], err))
+                    (self.outdata[self.varDict[iodavar]['errKey']], err[flg]))
                 self.outdata[self.varDict[iodavar]['qcKey']] = np.concatenate(
-                    (self.outdata[self.varDict[iodavar]['qcKey']], qc_flag))
+                    (self.outdata[self.varDict[iodavar]['qcKey']], qc_flag[flg]))
 
             first = False
 
