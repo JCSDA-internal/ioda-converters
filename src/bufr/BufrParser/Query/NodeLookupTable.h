@@ -121,7 +121,6 @@ namespace bufr {
             T rawData() const
             {
                 return boost::get<T>(data);
-
             }
         };
 
