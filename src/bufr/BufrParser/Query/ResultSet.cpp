@@ -518,12 +518,12 @@ namespace bufr {
                         if (std::holds_alternative<std::vector<std::string>>(targetField.data.data))
                         {
                             std::get<std::vector<std::string>>(dataRows[i].data)[0] =
-                                std::get<std::vector<std::string>>(output.data)[i];
+                                std::get<std::vector<std::string>>(output.data)[0];
                         }
                         else if (std::holds_alternative<std::vector<double>>(targetField.data.data))
                         {
                             std::get<std::vector<double>>(dataRows[i].data)[0] =
-                                std::get<std::vector<double>>(output.data)[i];
+                                std::get<std::vector<double>>(output.data)[0];
                         }
                     }
                 }
