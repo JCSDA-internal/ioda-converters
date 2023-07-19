@@ -666,12 +666,12 @@ namespace Ingester
                       double dataMissingValue,
                       typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr)
         {
-            if (data.data.type() == typeid(std::vector<double>))
+            if (std::holds_alternative<std::vector<double>>(data.data))
             {
                 auto rawData = data.rawData<std::vector<double>>();
                 data_ = std::vector<T>(rawData.begin(), rawData.end());
             }
-            else if (data.data.type() == typeid(std::vector<std::string>))
+            else if (std::holds_alternative<std::vector<std::string>>(data.data))
             {
                 auto errStr = std::stringstream();
                 errStr << "The data type of the data object is not numeric";
@@ -693,14 +693,14 @@ namespace Ingester
             double dataMissingValue,
             typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr)
         {
-            if (data.data.type() == typeid(std::vector<double>))
+            if (std::holds_alternative<std::vector<double>>(data.data))
             {
                 data_ = std::vector<std::string>();
                 data_.reserve(data.size());
-                auto charPtr = reinterpret_cast<const char*>(boost::get<std::vector<double>> (data.data).data());
+                auto charPtr = reinterpret_cast<const char*>(std::get<std::vector<double>> (data.data).data());
                 for (size_t row_idx = 0; row_idx < data.size(); row_idx++)
                 {
-                    if (boost::get<std::vector<double>>(data.data)[row_idx] != dataMissingValue)
+                    if (std::get<std::vector<double>>(data.data)[row_idx] != dataMissingValue)
                     {
                         std::string str = std::string(
                             charPtr + row_idx * sizeof(double), sizeof(double));
@@ -718,7 +718,7 @@ namespace Ingester
                     }
                 }
             }
-            else if (data.data.type() == typeid(std::vector<std::string>))
+            else if (std::holds_alternative<std::vector<std::string>>(data.data))
             {
                 auto errStr = std::stringstream();
                 errStr << "The data type of the data object is not numeric";

@@ -392,13 +392,13 @@ namespace bufr {
                     {
                         if (info.isLongString())
                         {
-                            boost::get<std::vector<std::string>>(data.data)[dataRowIdx*rowLength + rowIdx * row.size() + colIdx]
-                                = boost::get<std::vector<std::string>>(row.data)[colIdx];
+                            std::get<std::vector<std::string>>(data.data)[dataRowIdx*rowLength + rowIdx * row.size() + colIdx]
+                                = std::get<std::vector<std::string>>(row.data)[colIdx];
                         }
                         else
                         {
-                            boost::get<std::vector<double>>(data.data)[dataRowIdx*rowLength + rowIdx * row.size() + colIdx]
-                                = boost::get<std::vector<double>>(row.data)[colIdx];
+                            std::get<std::vector<double>>(data.data)[dataRowIdx*rowLength + rowIdx * row.size() + colIdx]
+                                = std::get<std::vector<double>>(row.data)[colIdx];
                         }
                     }
                 }
@@ -468,26 +468,26 @@ namespace bufr {
         }
 
         NodeLookupTable::DataVector output;
-        if (targetField.data.data.type() == typeid(std::vector<std::string>))
+        if (std::holds_alternative<std::vector<std::string>>(targetField.data.data))
         {
             output.data = std::vector<std::string>(product(dims), std::string(""));
         }
-        else if (targetField.data.data.type() == typeid(std::vector<double>))
+        else if (std::holds_alternative<std::vector<double>>(targetField.data.data))
         {
             output.data = std::vector<double>(product(dims), MissingValue);
         }
 
         for (size_t i = 0; i < idxs.size(); ++i)
         {
-            if (targetField.data.data.type() == typeid(std::vector<std::string>))
+            if (std::holds_alternative<std::vector<std::string>>(targetField.data.data))
             {
-                boost::get<std::vector<std::string>>(output.data)[i] =
-                    boost::get<std::vector<std::string>>(targetField.data.data)[idxs[i]];
+                std::get<std::vector<std::string>>(output.data)[i] =
+                    std::get<std::vector<std::string>>(targetField.data.data)[idxs[i]];
             }
-            else if (targetField.data.data.type() == typeid(std::vector<double>))
+            else if (std::holds_alternative<std::vector<double>>(targetField.data.data))
             {
-                boost::get<std::vector<double>>(output.data)[i] =
-                    boost::get<std::vector<double>>(targetField.data.data)[idxs[i]];
+                std::get<std::vector<double>>(output.data)[i] =
+                    std::get<std::vector<double>>(targetField.data.data)[idxs[i]];
             }
         }
 
@@ -502,15 +502,15 @@ namespace bufr {
                 {
                     if (output.size())
                     {
-                        if (targetField.data.data.type() == typeid(std::vector<std::string>))
+                        if (std::holds_alternative<std::vector<std::string>>(targetField.data.data))
                         {
-                            boost::get<std::vector<std::string>>(dataRows[i].data)[0] =
-                                boost::get<std::vector<std::string>>(output.data)[i];
+                            std::get<std::vector<std::string>>(dataRows[i].data)[0] =
+                                std::get<std::vector<std::string>>(output.data)[i];
                         }
-                        else if (targetField.data.data.type() == typeid(std::vector<double>))
+                        else if (std::holds_alternative<std::vector<double>>(targetField.data.data))
                         {
-                            boost::get<std::vector<double>>(dataRows[i].data)[0] =
-                                boost::get<std::vector<double>>(output.data)[i];
+                            std::get<std::vector<double>>(dataRows[i].data)[0] =
+                                std::get<std::vector<double>>(output.data)[i];
                         }
                     }
                 }
@@ -538,15 +538,15 @@ namespace bufr {
                 {
                     for (size_t j = 0; j < numsPerRow; ++j)
                     {
-                        if (targetField.data.data.type() == typeid(std::vector<std::string>))
+                        if (std::holds_alternative<std::vector<std::string>>(targetField.data.data))
                         {
-                            boost::get<std::vector<std::string>>(dataRows[i].data)[j] =
-                                boost::get<std::vector<std::string>>(output.data)[i * numsPerRow + j];
+                            std::get<std::vector<std::string>>(dataRows[i].data)[j] =
+                                std::get<std::vector<std::string>>(output.data)[i * numsPerRow + j];
                         }
-                        else if (targetField.data.data.type() == typeid(std::vector<double>))
+                        else if (std::holds_alternative<std::vector<double>>(targetField.data.data))
                         {
-                            boost::get<std::vector<double>>(dataRows[i].data)[j] =
-                                boost::get<std::vector<double>>(output.data)[i * numsPerRow + j];
+                            std::get<std::vector<double>>(dataRows[i].data)[j] =
+                                std::get<std::vector<double>>(output.data)[i * numsPerRow + j];
                         }
                     }
                 }

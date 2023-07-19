@@ -168,11 +168,11 @@ namespace bufr
             {
                 if (targ->typeInfo.isLongString())
                 {
-                    boost::get<std::vector<std::string>>(dataField.data.data) = {""};
+                    std::get<std::vector<std::string>>(dataField.data.data) = {""};
                 }
                 else
                 {
-                    boost::get<std::vector<double>>(dataField.data.data) = {MissingValue};
+                    std::get<std::vector<double>>(dataField.data.data) = {MissingValue};
                 }
 
                 dataField.seqCounts = SeqCounts(std::vector<std::vector<int>>(1, {1}));
@@ -253,7 +253,7 @@ namespace bufr
 
         auto data = bufr::NodeLookupTable::DataVector();
 
-        if (srcData.data.type() == typeid(std::vector<double>))
+        if (std::holds_alternative<std::vector<double>>(srcData.data))
         {
             data.data = std::vector<double>();
         }
@@ -282,15 +282,15 @@ namespace bufr
         {
             if (!skipResult)
             {
-                if (srcData.data.type() == typeid(std::vector<std::string>))
+                if (std::holds_alternative<std::vector<std::string>>(srcData.data))
                 {
-                    boost::get<std::vector<std::string>>(data.data).push_back(
-                        std::string(boost::get<std::vector<std::string>>(srcData.data)[offset]));
+                    std::get<std::vector<std::string>>(data.data).push_back(
+                        std::string(std::get<std::vector<std::string>>(srcData.data)[offset]));
                 }
                 else
                 {
-                    boost::get<std::vector<double>>(data.data).push_back(
-                        boost::get<std::vector<double>>(srcData.data)[offset]);
+                    std::get<std::vector<double>>(data.data).push_back(
+                        std::get<std::vector<double>>(srcData.data)[offset]);
                 }
             }
             offset++;
