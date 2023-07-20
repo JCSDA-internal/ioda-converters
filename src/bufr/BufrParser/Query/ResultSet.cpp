@@ -470,11 +470,11 @@ namespace bufr {
         NodeLookupTable::DataVector output;
         if (std::holds_alternative<std::vector<std::string>>(targetField.data.data))
         {
-            output.data = std::vector<std::string>(product(dims), std::string(""));
+            output.data = std::move(std::vector<std::string>(product(dims), std::string("")));
         }
         else if (std::holds_alternative<std::vector<double>>(targetField.data.data))
         {
-            output.data = std::vector<double>(product(dims), MissingValue);
+            output.data = std::move(std::vector<double>(product(dims), MissingValue));
         }
 
         for (size_t i = 0; i < idxs.size(); ++i)
@@ -569,8 +569,7 @@ namespace bufr {
         }
         else
         {
-            dataRows.resize(1);
-            dataRows[0] = output;
+            dataRows.push_back(std::move(output));
         }
     }
 
