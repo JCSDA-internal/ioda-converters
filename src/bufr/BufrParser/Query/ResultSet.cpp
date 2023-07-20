@@ -385,20 +385,30 @@ namespace bufr {
                                 groupbyIdx);
 
                 auto dataRowIdx = dims[0] * frameIdx;
-                for (size_t rowIdx = 0; rowIdx < frameData.size(); ++rowIdx)
+
+                if (info.isLongString())
                 {
-                    auto &row = frameData[rowIdx];
-                    for (size_t colIdx = 0; colIdx < row.size(); ++colIdx)
+                    auto& dest = std::get<std::vector<std::string>>(data.data);
+                    for (size_t rowIdx = 0; rowIdx < frameData.size(); ++rowIdx)
                     {
-                        if (info.isLongString())
+                        auto &row = frameData[rowIdx];
+                        auto &src = std::get<std::vector<std::string>>(row.data);
+                        for (size_t colIdx = 0; colIdx < row.size(); ++colIdx)
                         {
-                            std::get<std::vector<std::string>>(data.data)[dataRowIdx*rowLength + rowIdx * row.size() + colIdx]
-                                = std::get<std::vector<std::string>>(row.data)[colIdx];
+                            dest[dataRowIdx*rowLength + rowIdx * row.size() + colIdx] = src[colIdx];
                         }
-                        else
+                    }
+                }
+                else
+                {
+                    auto& dest = std::get<std::vector<double>>(data.data);
+                    for (size_t rowIdx = 0; rowIdx < frameData.size(); ++rowIdx)
+                    {
+                        auto &row = frameData[rowIdx];
+                        auto &src = std::get<std::vector<double>>(row.data);
+                        for (size_t colIdx = 0; colIdx < row.size(); ++colIdx)
                         {
-                            std::get<std::vector<double>>(data.data)[dataRowIdx*rowLength + rowIdx * row.size() + colIdx]
-                                = std::get<std::vector<double>>(row.data)[colIdx];
+                            dest[dataRowIdx*rowLength + rowIdx * row.size() + colIdx] = src[colIdx];
                         }
                     }
                 }
@@ -477,17 +487,20 @@ namespace bufr {
             output.data = std::move(std::vector<double>(product(dims), MissingValue));
         }
 
-        for (size_t i = 0; i < idxs.size(); ++i)
+        if (std::holds_alternative<std::vector<std::string>>(targetField.data.data))
         {
-            if (std::holds_alternative<std::vector<std::string>>(targetField.data.data))
+            auto& src = std::get<std::vector<std::string>>(targetField.data.data);
+            for (size_t i = 0; i < idxs.size(); ++i)
             {
-                std::get<std::vector<std::string>>(output.data)[idxs[i]] =
-                    std::get<std::vector<std::string>>(targetField.data.data)[i];
+                std::get<std::vector<std::string>>(output.data)[idxs[i]] = src[i];
             }
-            else if (std::holds_alternative<std::vector<double>>(targetField.data.data))
+        }
+        else if (std::holds_alternative<std::vector<double>>(targetField.data.data))
+        {
+            auto& src = std::get<std::vector<double>>(targetField.data.data);
+            for (size_t i = 0; i < idxs.size(); ++i)
             {
-                std::get<std::vector<double>>(output.data)[idxs[i]] =
-                    std::get<std::vector<double>>(targetField.data.data)[i];
+                std::get<std::vector<double>>(output.data)[idxs[i]] = src[i];
             }
         }
 
@@ -511,19 +524,22 @@ namespace bufr {
                     }
                 }
 
-                for (size_t i = 0; i < numRows; ++i)
+                if (output.size())
                 {
-                    if (output.size())
+                    if (std::holds_alternative<std::vector<std::string>>(targetField.data.data))
                     {
-                        if (std::holds_alternative<std::vector<std::string>>(targetField.data.data))
+                        auto& src = std::get<std::vector<std::string>>(output.data);
+                        for (size_t i = 0; i < numRows; ++i)
                         {
-                            std::get<std::vector<std::string>>(dataRows[i].data)[0] =
-                                std::get<std::vector<std::string>>(output.data)[0];
+                            std::get<std::vector<std::string>>(dataRows[i].data)[0] = src[0];
                         }
-                        else if (std::holds_alternative<std::vector<double>>(targetField.data.data))
+                    }
+                    else if (std::holds_alternative<std::vector<double>>(targetField.data.data))
+                    {
+                        auto& src = std::get<std::vector<double>>(output.data);
+                        for (size_t i = 0; i < numRows; ++i)
                         {
-                            std::get<std::vector<double>>(dataRows[i].data)[0] =
-                                std::get<std::vector<double>>(output.data)[0];
+                            std::get<std::vector<double>>(dataRows[i].data)[0] = src[0];
                         }
                     }
                 }
@@ -542,26 +558,33 @@ namespace bufr {
                     if (targetField.target->typeInfo.isLongString())
                     {
                         dataRows[rowIdx].data = std::vector<std::string>(numsPerRow, "");
-                    }
-                    else
+                    } else
                     {
                         dataRows[rowIdx].data = std::vector<double>(numsPerRow, MissingValue);
                     }
                 }
 
-                for (size_t i = 0; i < numRows; ++i)
+                if (std::holds_alternative<std::vector<std::string>>(targetField.data.data))
                 {
-                    for (size_t j = 0; j < numsPerRow; ++j)
+                    auto& src = std::get<std::vector<std::string>>(output.data);
+                    for (size_t i = 0; i < numRows; ++i)
                     {
-                        if (std::holds_alternative<std::vector<std::string>>(targetField.data.data))
+                        auto& dest = std::get<std::vector<std::string>>(dataRows[i].data);
+                        for (size_t j = 0; j < numsPerRow; ++j)
                         {
-                            std::get<std::vector<std::string>>(dataRows[i].data)[j] =
-                                std::get<std::vector<std::string>>(output.data)[i * numsPerRow + j];
+                            dest[j] = src[i * numsPerRow + j];
                         }
-                        else if (std::holds_alternative<std::vector<double>>(targetField.data.data))
+                    }
+                }
+                else if (std::holds_alternative<std::vector<double>>(targetField.data.data))
+                {
+                    auto& src = std::get<std::vector<double>>(output.data);
+                    for (size_t i = 0; i < numRows; ++i)
+                    {
+                        auto& dest = std::get<std::vector<double>>(dataRows[i].data);
+                        for (size_t j = 0; j < numsPerRow; ++j)
                         {
-                            std::get<std::vector<double>>(dataRows[i].data)[j] =
-                                std::get<std::vector<double>>(output.data)[i * numsPerRow + j];
+                            dest[j] = src[i * numsPerRow + j];
                         }
                     }
                 }
