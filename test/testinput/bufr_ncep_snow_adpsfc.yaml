@@ -7,7 +7,7 @@ observations:
   - obs space:
       name: bufr
 
-      obsdatain: "/Users/rmclaren/Work/NCEPLIBS-bufr/build/test/testfiles/OUT_10"
+      obsdatain: "./testinput/gdas.t06z.adpsfc.tm00.bufr_d"
 
       exports:
         variables:
@@ -42,10 +42,6 @@ observations:
 
           totalSnowDepth:
             query: "[*/SNWSQ1/TOSD, */MTRMSC/TOSD, */STGDSNDM/TOSD]"
-
-#          wgosLid:
-#            query: "*/WGOSLID"
-
 
     ioda:
       backend: netcdf
@@ -105,7 +101,3 @@ observations:
           longName: "Total Snow Depth"
           units: "m"
           range: [0, 100]
-#
-#        - name: "MetaData/wgosLid"
-#          source: variables/wgosLid
-#          longName: "WIGO Station ID"
