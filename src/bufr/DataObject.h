@@ -720,9 +720,7 @@ namespace Ingester
             }
             else if (std::holds_alternative<std::vector<std::string>>(data.data))
             {
-                auto errStr = std::stringstream();
-                errStr << "The data type of the data object is not numeric";
-                throw eckit::BadValue(errStr.str());
+                data_ = std::get<std::vector<std::string>> (data.data);
             }
         }
 

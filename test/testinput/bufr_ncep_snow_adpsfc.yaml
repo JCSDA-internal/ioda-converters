@@ -11,40 +11,40 @@ observations:
 
       exports:
         variables:
-          wgosLid:
-            query: "*/WGOSLID"
+          timestamp:
+            datetime:
+              year: "*/YEAR[1]"
+              month: "*/MNTH[1]"
+              day: "*/DAYS[1]"
+              hour: "*/HOUR[1]"
+              minute: "*/MINU[1]"
 
-#          timestamp:
-#            datetime:
-#              year: "*/YEAR[1]"
-#              month: "*/MNTH[1]"
-#              day: "*/DAYS[1]"
-#              hour: "*/HOUR[1]"
-#              minute: "*/MINU[1]"
-#
-#          longitude:
-#            query: "[*/CLON, */CLONH]"
-#
-#          latitude:
-#            query:  "[*/CLAT, */CLATH]"
-#
-#          stationPressure:
-#            query: "*/PRES"
-#
-#          stationElevation:
-#            query: "[*/SELV, */HSMSL]"
-#
-#          stationIdentification:
-#            query: "*/RPID"
-#
-#          airTemperature:
-#            query: "*/TMDB"
-#
-#          dewpointTemperature:
-#            query: "*/TMDP"
-#
-#          totalSnowDepth:
-#            query: "[*/SNWSQ1/TOSD, */MTRMSC/TOSD, */STGDSNDM/TOSD]"
+          longitude:
+            query: "[*/CLON, */CLONH]"
+
+          latitude:
+            query:  "[*/CLAT, */CLATH]"
+
+          stationPressure:
+            query: "*/PRES"
+
+          stationElevation:
+            query: "[*/SELV, */HSMSL]"
+
+          stationIdentification:
+            query: "*/RPID"
+
+          airTemperature:
+            query: "*/TMDB"
+
+          dewpointTemperature:
+            query: "*/TMDP"
+
+          totalSnowDepth:
+            query: "[*/SNWSQ1/TOSD, */MTRMSC/TOSD, */STGDSNDM/TOSD]"
+
+#          wgosLid:
+#            query: "*/WGOSLID"
 
 
     ioda:
@@ -52,60 +52,60 @@ observations:
       obsdataout: "./testrun/gdas.t06z.adpsfc_snow.tm00.nc"
 
       variables:
-        - name: "MetaData/wgosLid"
-          source: variables/wgosLid
-          longName: "WIGO Station ID"
+        - name: "MetaData/dateTime"
+          source: variables/timestamp
+          longName: "dateTime"
+          units: "seconds since 1970-01-01T00:00:00Z"
 
-#        - name: "MetaData/dateTime"
-#          source: variables/timestamp
-#          longName: "dateTime"
-#          units: "seconds since 1970-01-01T00:00:00Z"
+        - name: "MetaData/stationIdentification"
+          source: variables/stationIdentification
+          longName: "Report Number"
+
+        - name: "MetaData/latitude"
+          source: variables/latitude
+          longName: "Latitude"
+          units: "degrees_north"
+          range: [-90, 90]
+
+        - name: "MetaData/longitude"
+          source: variables/longitude
+          longName: "Longitude"
+          units: "degrees_east"
+          range: [-180, 180]
+
+        - name: "MetaData/stationElevation"
+          coordinates: "longitude latitude"
+          source: variables/stationElevation
+          longName: "Height of Station"
+          units: "m"
+
+        - name: "ObsValue/stationPressure"
+          coordinates: "longitude latitude"
+          source: variables/stationPressure
+          longName: "Station Pressure"
+          units: "Pa"
+          range: [90000, 105000]
+
+        - name: "ObsValue/airTemperature"
+          source: variables/airTemperature
+          longName: "Temperature of Air"
+          units: "K"
+          range: [230, 315]
+
+        - name: "ObsValue/dewpointTemperature"
+          coordinates: "longitude latitude"
+          source: variables/dewpointTemperature
+          longName: "Dewpoint Temperature"
+          units: "K"
+          range: [200, 315]
+
+        - name: "ObsValue/totalSnowDepth"
+          coordinates: "longitude latitude"
+          source: variables/totalSnowDepth
+          longName: "Total Snow Depth"
+          units: "m"
+          range: [0, 100]
 #
-#        - name: "MetaData/stationIdentification"
-#          source: variables/stationIdentification
-#          longName: "Report Number"
-#
-#        - name: "MetaData/latitude"
-#          source: variables/latitude
-#          longName: "Latitude"
-#          units: "degrees_north"
-#          range: [-90, 90]
-#
-#        - name: "MetaData/longitude"
-#          source: variables/longitude
-#          longName: "Longitude"
-#          units: "degrees_east"
-#          range: [-180, 180]
-#
-#        - name: "MetaData/stationElevation"
-#          coordinates: "longitude latitude"
-#          source: variables/stationElevation
-#          longName: "Height of Station"
-#          units: "m"
-#
-#        - name: "ObsValue/stationPressure"
-#          coordinates: "longitude latitude"
-#          source: variables/stationPressure
-#          longName: "Station Pressure"
-#          units: "Pa"
-#          range: [90000, 105000]
-#
-#        - name: "ObsValue/airTemperature"
-#          source: variables/airTemperature
-#          longName: "Temperature of Air"
-#          units: "K"
-#          range: [230, 315]
-#
-#        - name: "ObsValue/dewpointTemperature"
-#          coordinates: "longitude latitude"
-#          source: variables/dewpointTemperature
-#          longName: "Dewpoint Temperature"
-#          units: "K"
-#          range: [200, 315]
-#
-#        - name: "ObsValue/totalSnowDepth"
-#          coordinates: "longitude latitude"
-#          source: variables/totalSnowDepth
-#          longName: "Total Snow Depth"
-#          units: "m"
-#          range: [0, 100]
+#        - name: "MetaData/wgosLid"
+#          source: variables/wgosLid
+#          longName: "WIGO Station ID"
