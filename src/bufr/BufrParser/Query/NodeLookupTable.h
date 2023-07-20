@@ -70,19 +70,6 @@ namespace bufr {
                 }
             }
 
-            template<typename T>
-            void resize(size_t size, T defaultValue)
-            {
-                if (std::holds_alternative<std::vector<double>>(data))
-                {
-                    std::get<std::vector<double>>(data).resize(size, defaultValue);
-                }
-                else
-                {
-                    std::get<std::vector<std::string>>(data).resize(size, defaultValue);
-                }
-            }
-
             bool empty() const
             {
                 if (std::holds_alternative<std::vector<double>>(data))
