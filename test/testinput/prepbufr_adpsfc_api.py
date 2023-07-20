@@ -11,11 +11,10 @@ from pyiodaconv import bufr
 from pyioda import ioda
 import calendar
 import time
+import argparse
+import os
 
-DATA_PATH = './testinput/gdas.t12z.adpsfc.prepbufr'
-OUTPUT_PATH = './testrun/prepbufr_adpsfc_api.nc'
-
-def test_bufr_to_ioda():
+def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
    # Make the QuerySet for all the data we want
    q = bufr.QuerySet()
 #MetaData
@@ -53,7 +52,7 @@ def test_bufr_to_ioda():
    print("Get time")
    dhr = r.get('obsTimeMinusCycleTime') #Needs to be converted to seconds since Epoch time from [-3,3]
    print("cycleTimeSinceEpoch") #For now, file time is put in manually 
-   cycleTimeSinceEpoch = np.int64(calendar.timegm(time.strptime('2021 08 01 00 00', '%Y %m %d %H %M')))
+   cycleTimeSinceEpoch = np.int64(calendar.timegm(time.strptime(date, '%Y%m%d%H%M')))
    print("cycleTimeSinceEpoch: ", cycleTimeSinceEpoch)
    dhr = np.int64(dhr*3600)
    dhr += cycleTimeSinceEpoch
@@ -84,6 +83,9 @@ def test_bufr_to_ioda():
    vobqm = r.get('windNorthwardQM')
 
    # Write the data to an IODA file
+   path, fname = os.path.split(OUTPUT_PATH)
+   if path and not os.path.exists(path):
+        os.makedirs(path)
    g = ioda.Engines.HH.createFile(name=OUTPUT_PATH,
                                   mode=ioda.Engines.BackendCreateModes.Truncate_If_Exists)
 
@@ -210,5 +212,24 @@ def test_bufr_to_ioda():
    print("end")
 
 if __name__ == '__main__':
-   test_bufr_to_ioda()
+    parser = argparse.ArgumentParser()
+    description=(
+            'Reads NCEP PREPBUFR formated ADPsurface input files'
+            ' convert into IODA formatted output files. '
+    )
+
+    DATA_PATH = './testinput/gdas.t12z.adpsfc.prepbufr'
+    OUTPUT_PATH = './testrun/prepbufr_adpsfc_api.nc'
+
+    optional = parser.add_argument_group(title='optional arguments')
+    optional.add_argument('-f', '--filename', type=str, default=DATA_PATH,
+                          dest='filename', help='adpsfc file name')
+    optional.add_argument('-o', '--output', type=str, default=OUTPUT_PATH,
+                          dest='output', help='output filename')
+    optional.add_argument('-d', '--date', type=str, default='202108010000',
+                          dest='date', metavar='YYYYmmddHHMM', help='analysis cycle date')
+
+    args = parser.parse_args()
+
+    test_bufr_to_ioda(args.filename, args.output, args.date)
 
