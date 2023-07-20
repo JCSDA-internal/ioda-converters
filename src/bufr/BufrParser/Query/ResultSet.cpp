@@ -481,13 +481,13 @@ namespace bufr {
         {
             if (std::holds_alternative<std::vector<std::string>>(targetField.data.data))
             {
-                std::get<std::vector<std::string>>(output.data)[i] =
-                    std::get<std::vector<std::string>>(targetField.data.data)[idxs[i]];
+                std::get<std::vector<std::string>>(output.data)[idxs[i]] =
+                    std::get<std::vector<std::string>>(targetField.data.data)[i];
             }
             else if (std::holds_alternative<std::vector<double>>(targetField.data.data))
             {
-                std::get<std::vector<double>>(output.data)[i] =
-                    std::get<std::vector<double>>(targetField.data.data)[idxs[i]];
+                std::get<std::vector<double>>(output.data)[idxs[i]] =
+                    std::get<std::vector<double>>(targetField.data.data)[i];
             }
         }
 
