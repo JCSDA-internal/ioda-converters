@@ -135,7 +135,7 @@ namespace bufr
             target->setPath(path);
             target->typeInfo = tableNode->typeInfo;
             target->nodeIdx = tableNode->nodeIdx;
-            target->longStrId = tableNode->mnemonic + "#" + std::to_string(tableNode->mnemonicCnt);
+            target->longStrId = tableNode->mnemonic + "#" + std::to_string(tableNode->mnemonicIdx);
 
             targets.push_back(target);
         }

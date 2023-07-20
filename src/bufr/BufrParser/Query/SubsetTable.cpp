@@ -71,7 +71,7 @@ namespace bufr {
             {
                 mnemonicCnts_[newNode->mnemonic]++;
             }
-            newNode->mnemonicCnt = mnemonicCnts_[newNode->mnemonic];
+            newNode->mnemonicIdx = mnemonicCnts_[newNode->mnemonic];
 
             if (newNode->type == Typ::FixedRep)
             {

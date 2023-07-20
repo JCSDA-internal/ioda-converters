@@ -30,7 +30,7 @@ namespace bufr {
         std::vector<std::shared_ptr<BufrNode>> children;
         size_t nodeIdx;
         size_t copyIdx;
-        size_t mnemonicCnt;
+        size_t mnemonicIdx;
         bool hasDuplicates;
         TypeInfo typeInfo;
         size_t fixedRepCount;

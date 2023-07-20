@@ -159,8 +159,6 @@ namespace bufr {
 
     std::string DataProvider::getLongStr(const std::string& longStrId) const
     {
-//        int lun, char* str_id, char** output_str, int* output_str_len
-
         char charPtr[120];
         int longStrLen;
 
