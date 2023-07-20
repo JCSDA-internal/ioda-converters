@@ -185,6 +185,6 @@ observations:
           source: variables/brightnessTemperature
           longName: "Brightness Temperature"
           units: "K"
-          range: [100, 500]
+          range: [90, 380]
           chunks: [1000, 15]
           compressionLevel: 4
