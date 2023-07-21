@@ -12,7 +12,11 @@ endif()
 #######################################################################################
 
 if( CMAKE_Fortran_COMPILER_ID MATCHES "GNU" )
-  include( compiler_flags_GNU_Fortran )
+  if ( APPLE )
+    include( compiler_flags_Clang_GNU_Fortran )	
+  else()
+    include( compiler_flags_GNU_Fortran )
+  endif()
 elseif( CMAKE_Fortran_COMPILER_ID MATCHES "Intel" )
   include( compiler_flags_Intel_Fortran )
 elseif( CMAKE_Fortran_COMPILER_ID MATCHES "Cray" )
