@@ -58,12 +58,17 @@ namespace bufr {
         {
             DataVector data;
             CountsVector counts;
+        };
+
+        struct NodeMetaData
+        {
             TargetComponent component;
             bool collectedCounts = false;
             bool collectedData = false;
         };
 
         typedef __details::OffsetArray<NodeData> LookupTable;
+        typedef __details::OffsetArray<NodeMetaData> LookupMetaTable;
 
      public:
         SubsetLookupTable(const std::shared_ptr<DataProvider>& dataProvider,
@@ -93,6 +98,7 @@ namespace bufr {
      private:
         const std::shared_ptr<Targets> targets_;
         LookupTable lookupTable_;
+        NodeMetaData lookupMetaTable_;
 
         /// \brief Creates a lookup table that maps node ids to NodeData objects.
         /// \param[in] targets The targets to create the lookup table for.
@@ -105,14 +111,16 @@ namespace bufr {
         /// \param[in, out] lookup The lookup table to add the counts data to.
         void addCounts(const std::shared_ptr<DataProvider>& dataProvider,
                        const Targets& targets,
-                       LookupTable& lookup) const;
+                       LookupTable& lookup,
+                       LookupMetaTable& lookupMeta) const;
 
         /// \brief Adds the data for the given targets to the lookup table.
         /// \param[in] targets The targets to add the data for.
         /// \param[in, out] lookup The lookup table to add the data to.
         void addData(const std::shared_ptr<DataProvider>& dataProvider,
                      const Targets& targets,
-                     LookupTable& lookup) const;
+                     LookupTable& lookup,
+                     LookupMetaTable& lookupMeta) const;
     };
 }  // namespace bufr
 }  // namespace Ingester

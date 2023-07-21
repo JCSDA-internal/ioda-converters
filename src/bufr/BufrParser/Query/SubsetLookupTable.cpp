@@ -24,17 +24,21 @@ namespace bufr {
         auto lookupTable = LookupTable(dataProvider->getInode(),
                                        dataProvider->getIsc(dataProvider->getInode()));
 
+        auto lookupMetaTable = LookupMetaTable(dataProvider->getInode(),
+                                               dataProvider->getIsc(dataProvider->getInode()));
+
         // Populate the lookup table with the counts and data corresponding to each BUFR node
         // we care about.
-        addCounts(dataProvider, targets, lookupTable);
-        addData(dataProvider, targets, lookupTable);
+        addCounts(dataProvider, targets, lookupTable, lookupMetaTable);
+        addData(dataProvider, targets, lookupTable, lookupMetaTable);
 
         return lookupTable;
     }
 
     void SubsetLookupTable::addCounts(const std::shared_ptr<DataProvider>& dataProvider,
                                       const Targets &targets,
-                                      LookupTable &lookup) const
+                                      LookupTable& lookup,
+                                      LookupMetaTable& lookupMeta) const
     {
         // Add entries for all the path nodes in the targets that are containers (can contain)
         // children. Uses merged data from the Subset metadata and Query strings.
@@ -44,8 +48,8 @@ namespace bufr {
             {
                 if (path.isContainer())
                 {
-                    lookup[path.nodeId].component = path;
-                    lookup[path.nodeId].collectedCounts = true;
+                    lookupMeta[path.nodeId].component = path;
+                    lookupMeta[path.nodeId].collectedCounts = true;
                 }
             }
         }
@@ -54,9 +58,9 @@ namespace bufr {
         for (size_t cursor = 1; cursor <= dataProvider->getNVal(); ++cursor)
         {
             auto nodeId = static_cast<size_t>(dataProvider->getInv(cursor));
-            if (lookup[nodeId].collectedCounts)
+            if (lookupMeta[nodeId].collectedCounts)
             {
-                const auto &component = lookup[nodeId].component;
+                const auto &component = lookupMeta[nodeId].component;
 
                 if (component.type == TargetComponent::Type::Subset)
                 {
@@ -79,7 +83,8 @@ namespace bufr {
 
     void SubsetLookupTable::addData(const std::shared_ptr<DataProvider>& dataProvider,
                                     const Targets &targets,
-                                    LookupTable &lookup) const
+                                    LookupTable& lookup,
+                                    LookupMetaTable& lookupMeta) const
     {
         // Reserve space for the data in the lookup table by summing the counts for each node.
         for (const auto& target : targets)
@@ -88,13 +93,13 @@ namespace bufr {
             const auto &path = target->path.back();
 
             lookup[target->nodeIdx].data.reserve(sum(lookup[path.parentDimensionNodeId].counts));
-            lookup[target->nodeIdx].collectedData = true;
+            lookupMeta[target->nodeIdx].collectedData = true;
         }
 
         for (size_t cursor = 1; cursor <= dataProvider->getNVal(); ++cursor)
         {
             const auto nodeId = dataProvider->getInv(cursor);
-            if (lookup[nodeId].collectedData)
+            if (lookupMeta[nodeId].collectedData)
             {
                 lookup[nodeId].data.push_back(dataProvider->getVal(cursor));
             }
