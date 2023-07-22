@@ -39,8 +39,7 @@ list( APPEND test_input
   testinput/b001xx007.20200310.bufr
   testinput/viirs_aod.nc
   testinput/tropomi_no2.nc
-# remove this for now
-#  testinput/mopitt_co.he5
+  testinput/mopitt_co.he5
   testinput/tropess_cris_co.nc
   testinput/modis_aod.hdf
   testinput/imssnow_24km.grib2
@@ -1166,17 +1165,17 @@ foreach (coltype total troposphere stratosphere)
 endforeach()
 
 # disable this test 
-#ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mopitt_co
-#                  TYPE    SCRIPT
-#                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
-#                  COMMAND bash
-#                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-#                          netcdf
-#                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/mopitt_co_nc2ioda.py
-#                          -i testinput/mopitt_co.he5
-#                          -o testrun/mopitt_co.nc
-#                          -r 2021092903 2021092921"
-#                  mopitt_co.nc ${IODA_CONV_COMP_TOL_ZERO})
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mopitt_co
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/mopitt_co_nc2ioda.py
+                          -i testinput/mopitt_co.he5
+                          -o testrun/mopitt_co.nc
+                          -r 2021092903 2021092921"
+                  mopitt_co.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropess_cris_co
                   TYPE    SCRIPT
