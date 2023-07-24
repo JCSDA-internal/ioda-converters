@@ -250,7 +250,6 @@ namespace bufr
                                             const SeqCounts& origCounts,
                                             const std::vector<std::vector<size_t>>& filter) const
     {
-
         auto data = bufr::NodeLookupTable::DataVector();
 
         if (std::holds_alternative<std::vector<double>>(srcData.data))

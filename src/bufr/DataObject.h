@@ -114,7 +114,8 @@ namespace Ingester
         void setQuery(const std::string& query) { query_ = query; }
         void setDimPaths(const std::vector<bufr::Query>& dimPaths)
             { dimPaths_ = dimPaths; }
-        virtual void setData(const bufr::NodeLookupTable::DataVector& data, double dataMissingValue) = 0;
+        virtual void setData(const bufr::NodeLookupTable::DataVector& data,
+                             double dataMissingValue) = 0;
 
         // Getters
         std::string getFieldName() const { return fieldName_; }
@@ -697,7 +698,8 @@ namespace Ingester
             {
                 data_ = std::vector<std::string>();
                 data_.reserve(data.size());
-                auto charPtr = reinterpret_cast<const char*>(std::get<std::vector<double>> (data.data).data());
+                auto charPtr =
+                    reinterpret_cast<const char*>(std::get<std::vector<double>> (data.data).data());
                 for (size_t row_idx = 0; row_idx < data.size(); row_idx++)
                 {
                     if (std::get<std::vector<double>>(data.data)[row_idx] != dataMissingValue)

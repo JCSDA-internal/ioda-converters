@@ -558,7 +558,8 @@ namespace bufr {
                     if (targetField.target->typeInfo.isLongString())
                     {
                         dataRows[rowIdx].data = std::vector<std::string>(numsPerRow, "");
-                    } else
+                    }
+                    else
                     {
                         dataRows[rowIdx].data = std::vector<double>(numsPerRow, MissingValue);
                     }

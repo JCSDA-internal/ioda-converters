@@ -331,7 +331,7 @@ namespace bufr {
 
         std::string getLongStrId(FortranIdx idx) const;
 
-    private:
+     private:
         const DataProviderType dataProvider_;
         std::shared_ptr<BufrNode> root_;
         BufrNodeVector leaves_;
