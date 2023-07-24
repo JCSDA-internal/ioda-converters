@@ -1160,6 +1160,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2_tropo
                           -c tropo"
                           tropomi_no2_tropo.nc ${IODA_CONV_COMP_TOL})
 
+# disable this test 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mopitt_co
                   TYPE    SCRIPT
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
