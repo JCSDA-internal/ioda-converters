@@ -5,6 +5,7 @@ list(APPEND programs
   mls_o3_nc2ioda.py
   viirs_aod2ioda.py
   tropomi_no2_co_nc2ioda.py
+  tempo_nc2ioda.py
   mopitt_co_nc2ioda.py
   tropess_co_nc2ioda.py
   airnow2ioda_nc.py
