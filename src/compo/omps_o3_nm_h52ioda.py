@@ -91,7 +91,50 @@ class omps_nm(object):
             # a linear relationship between obs value and obs error
             err = (5.84347E-3 * obs + 18.58484) * DU2molsqm
 
-            
+            # seems like obs (hence err) has a mask so need to apply to all other
+            # quantities
+            mask = np.ma.getmask(obs)
+            lat = np.ma.array(lat, mask=mask)
+            lon = np.ma.array(lon, mask=mask)
+            time = np.ma.array(time, mask=mask)
+            qa_value = np.ma.array(qa_value, mask=mask)
+            flg = np.ma.array(flg, mask=mask)
+
+            # remove masked values and types
+            lat = np.ma.compressed(lat).astype('float32')
+            lon = np.ma.compressed(lon).astype('float32')
+            time = np.ma.compressed(time)
+            qa_value = np.ma.compressed(qa_value).astype('int32')
+            obs = np.ma.compressed(obs).astype('float32')
+            err = np.ma.compressed(err).astype('float32')
+            flg = np.ma.compressed(flg)
+
+            if first:
+                self.outdata[('dateTime', 'MetaData')] = time[flg]
+                self.outdata[('latitude', 'MetaData')] = lat[flg]
+                self.outdata[('longitude', 'MetaData')] = lon[flg]
+                self.outdata[self.varDict[iodavar]['valKey']] = obs[flg]
+                self.outdata[self.varDict[iodavar]['errKey']] = err[flg]
+                self.outdata[self.varDict[iodavar]['qcKey']] = qa_value[flg]
+            else:
+                self.outdata[('dateTime', 'MetaData')] = np.concatenate((
+                    self.outdata[('dateTime', 'MetaData')], time[flg]))
+                self.outdata[('latitude', 'MetaData')] = np.concatenate((
+                    self.outdata[('latitude', 'MetaData')], lat[flg]))
+                self.outdata[('longitude', 'MetaData')] = np.concatenate((
+                    self.outdata[('longitude', 'MetaData')], lon[flg]))
+                self.outdata[self.varDict[iodavar]['valKey']] = np.concatenate(
+                    (self.outdata[self.varDict[iodavar]['valKey']], obs[flg]))
+                self.outdata[self.varDict[iodavar]['errKey']] = np.concatenate(
+                    (self.outdata[self.varDict[iodavar]['errKey']], err[flg]))
+                self.outdata[self.varDict[iodavar]['qcKey']] = np.concatenate(
+                    (self.outdata[self.varDict[iodavar]['qcKey']], qa_value[flg]))
+
+            first = False
+
+        DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
+        AttrData['Location'] = np.int32(DimDict['Location'])
+
 def main():
 
     # get command line arguments

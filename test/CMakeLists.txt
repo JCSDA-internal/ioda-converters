@@ -169,6 +169,7 @@ list( APPEND test_output
   testoutput/tempo_no2_stratosphere.nc
   testoutput/tempo_hcho_troposphere.nc
   testoutput/gdas.t18z.abias_air_ascent.csv
+  testoutput/omps_o3_nm.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -1166,7 +1167,7 @@ foreach (coltype total troposphere stratosphere)
   endforeach()
 endforeach()
 
-# disable this test 
+# disable this test
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mopitt_co
                   TYPE    SCRIPT
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
