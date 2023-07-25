@@ -34,6 +34,7 @@ DimDict = {
 # DU to mol.m-2 conversion factor
 DU2molsqm = 4.4615E-4
 
+
 class omps_nm(object):
     def __init__(self, filenames, qa_flg, obsVar):
         self.filenames = filenames
@@ -63,18 +64,21 @@ class omps_nm(object):
         first = True
         for f in self.filenames:
             ncd = nc.Dataset(f, 'r')
-            #get dimensions
+            # get dimensions
             da = ncd.dimensions['DimAlongTrack'].size
             dc = ncd.dimensions['DimCrossTrack'].size
             geo = ncd.groups['GeolocationData']
             sci = ncd.groups['ScienceData']
 
-            #geolocation
+            # geolocation
             lat = geo.variables['Latitude'][:].ravel()
             lon = geo.variables['Longitude'][:].ravel()
-            time = geo.variables['Time'][:]
-            dt = np.datetime64('1993-01-01T00:00', 's') - np.datetime64('1970-01-01T00:00', 's')
-            time = np.repeat(time + dt.astype('float64'), dc).astype('int64')
+
+            # time
+            time_ref = np.datetime64('1993-01-01T00:00')
+            dt = geo.variables['Time'][:]
+            time = time_ref + dt.astype('timedelta64[s]')
+            time = np.repeat([str(element) + 'Z' for element in time], dc).astype('object')
 
             # qa flag, qc value, here we'll use qa_value for the qc_flag
             # other quantities could be used for future filtering in UFO
@@ -84,7 +88,7 @@ class omps_nm(object):
             # obs value, we prefer to convert DU to mol.m-2
             obs = sci.variables['ColumnAmountO3'][:].ravel() * DU2molsqm
 
-            # for obs error, it is no provided in the
+            # for obs error, it is not provided in the
             # product. In the ATBD: https://www.star.nesdis.noaa.gov/jpss/documents/
             # ATBD/D0001-M01-S01-006_JPSS_ATBD_OMPS-TC-Ozone_C.pdf
             # using section 7.1 and figure and tables 7.1-1 and 7.1-2 we can derive
@@ -135,6 +139,7 @@ class omps_nm(object):
         DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
         AttrData['Location'] = np.int32(DimDict['Location'])
 
+
 def main():
 
     # get command line arguments
@@ -177,6 +182,7 @@ def main():
 
     # write everything out
     writer.BuildIoda(var.outdata, varDims, var.varAttrs, AttrData)
+
 
 if __name__ == '__main__':
     main()
