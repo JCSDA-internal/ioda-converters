@@ -80,6 +80,8 @@ list( APPEND test_input
   testinput/2021081612_RAOB_small.txt
   testinput/tropomi_co.nc
   testinput/gdas.t18z.abias_air
+  testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t162415_small.h5
+  testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t180544_small.h5
 )
 
 list( APPEND test_output
@@ -113,7 +115,7 @@ list( APPEND test_output
   testoutput/abi_g16_obs_2018041500.nc4
   testoutput/ioda.NC001007.2020031012.nc
   testoutput/viirs_aod.nc
-  testoutput/viirs_bias.nc 
+  testoutput/viirs_bias.nc
   testoutput/tropomi_no2_total.nc
   testoutput/tropomi_no2_tropo.nc
   testoutput/mopitt_co.nc
@@ -353,7 +355,7 @@ if (iodaconv_satbias_ENABLED )
     testoutput/satbias_cris_npp.nc4
     testoutput/satbias_gmi_gpm.nc4
     testoutput/satbias_ssmis_f16.nc4
-    testoutput/viirs_bias.nc 
+    testoutput/viirs_bias.nc
   )
 endif()
 
@@ -1099,7 +1101,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_aod
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/viirs_aod2ioda.py
-                          -i testinput/viirs_aod.nc 
+                          -i testinput/viirs_aod.nc
                           -o testrun/viirs_aod.nc
                           -m nesdis
                           -k maskout
@@ -1226,6 +1228,19 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_co_total
                           -q 0.5
                           -c total"
                           tropomi_co_total.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_omps_o3_nm
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/omps_o3_nm_h52ioda.py
+                          -i testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t162415_small.h5
+                             testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t180544_small.h5
+                          -o testrun/omps_o3_nm.nc
+                          -q 128"
+                          omps_o3_nm.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 #==============================================================================
 # Bufr Ingester tests
@@ -1535,7 +1550,7 @@ if(iodaconv_bufr_ENABLED)
                     netcdf
                     "${Python3_EXECUTABLE} testinput/bufr_ncep_prepbufr_adpupa.py"
                     prepbufr_adpupa_api.nc ${IODA_CONV_COMP_TOL_ZERO} )
-                    
+
   ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_adpupa2ioda
                     TYPE    SCRIPT
                     COMMAND bash
@@ -1756,7 +1771,7 @@ ecbuild_add_test( TARGET  test_iodaconv_atms_nc4
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                          netcdf 
+                          netcdf
                           "${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/src/hdf5/atms_netcdf_hdf5_2ioda.py
                           -d 2021120600
                           -i testinput/SNDR_SNPP_ATMS_SAMPLE.nc4
@@ -2117,5 +2132,3 @@ foreach ( f ${TESTOUTPUT_IODA_FILES} )
              "${f}"
     )
 endforeach()
-
-
