@@ -2,6 +2,7 @@
 
 list(APPEND _bufr_deps
             eckit
+            gsl::gsl-lite
             bufr::bufr_d)
 
 list(APPEND _srcs
