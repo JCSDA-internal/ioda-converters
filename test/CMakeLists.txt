@@ -89,6 +89,8 @@ list( APPEND test_input
   testinput/tempo_o3_proxy_20130801T100600Z_S002G02.nc
   testinput/tempo_o3_proxy_20130801T101200Z_S002G03.nc
   testinput/gdas.t18z.abias_air
+  testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t162415_small.h5
+  testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t180544_small.h5
 )
 
 list( APPEND test_output
@@ -167,6 +169,7 @@ list( APPEND test_output
   testoutput/tempo_no2_stratosphere.nc
   testoutput/tempo_hcho_troposphere.nc
   testoutput/gdas.t18z.abias_air_ascent.csv
+  testoutput/omps_o3_nm.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -1164,7 +1167,7 @@ foreach (coltype total troposphere stratosphere)
   endforeach()
 endforeach()
 
-# disable this test 
+# disable this test
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mopitt_co
                   TYPE    SCRIPT
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
@@ -1250,6 +1253,19 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_co_total
                           -q 0.5
                           -c total"
                           tropomi_co_total.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_omps_o3_nm
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/omps_o3_nm_h52ioda.py
+                          -i testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t162415_small.h5
+                             testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t180544_small.h5
+                          -o testrun/omps_o3_nm.nc
+                          -q 128"
+                          omps_o3_nm.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 #==============================================================================
 # Bufr Ingester tests
