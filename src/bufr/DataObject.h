@@ -665,11 +665,18 @@ namespace Ingester
                       double dataMissingValue,
                       typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr)
         {
-            data_ = std::vector<T>(data.begin(), data.end());
-            std::replace(data_.begin(),
-                         data_.end(),
-                         static_cast<T>(dataMissingValue),
-                         missingValue());
+            data_ = std::vector<T>(data.size());
+            for (size_t dataIdx = 0; dataIdx < data.size(); ++dataIdx)
+            {
+                if (data[dataIdx] == dataMissingValue)
+                {
+                    data_[dataIdx] = missingValue();
+                }
+                else
+                {
+                    data_[dataIdx] = static_cast<T>(data[dataIdx]);
+                }
+            }
         }
 
         /// \brief Set the data associated with this data object (string DataObject).
