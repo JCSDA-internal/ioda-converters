@@ -168,11 +168,11 @@ namespace bufr
             {
                 if (targ->typeInfo.isLongString())
                 {
-                    std::get<std::vector<std::string>>(dataField.data.data) = {""};
+                    std::get<std::vector<std::string>>(dataField.data.data) = {MissingStringValue};
                 }
                 else
                 {
-                    std::get<std::vector<double>>(dataField.data.data) = {MissingValue};
+                    std::get<std::vector<double>>(dataField.data.data) = {MissingDoubleValue};
                 }
 
                 dataField.seqCounts = SeqCounts(std::vector<std::vector<int>>(1, {1}));

@@ -365,11 +365,11 @@ namespace bufr {
 
         if (info.isLongString())
         {
-            data.data = std::vector<std::string>(totalRows * rowLength, "");
+            data.data = std::vector<std::string>(totalRows * rowLength, MissingStringValue);
         }
         else
         {
-            data.data = std::vector<double>(totalRows * rowLength, MissingValue);
+            data.data = std::vector<double>(totalRows * rowLength, MissingDoubleValue);
         }
 
         for (size_t frameIdx = 0; frameIdx < dataFrames_.size(); ++frameIdx)
@@ -480,15 +480,8 @@ namespace bufr {
         NodeLookupTable::DataVector output;
         if (std::holds_alternative<std::vector<std::string>>(targetField.data.data))
         {
-            output.data = std::move(std::vector<std::string>(product(dims), std::string("")));
-        }
-        else if (std::holds_alternative<std::vector<double>>(targetField.data.data))
-        {
-            output.data = std::move(std::vector<double>(product(dims), MissingValue));
-        }
+            output.data = std::move(std::vector<std::string>(product(dims), MissingStringValue));
 
-        if (std::holds_alternative<std::vector<std::string>>(targetField.data.data))
-        {
             auto& src = std::get<std::vector<std::string>>(targetField.data.data);
             for (size_t i = 0; i < idxs.size(); ++i)
             {
@@ -497,6 +490,8 @@ namespace bufr {
         }
         else if (std::holds_alternative<std::vector<double>>(targetField.data.data))
         {
+            output.data = std::move(std::vector<double>(product(dims), MissingDoubleValue));
+
             auto& src = std::get<std::vector<double>>(targetField.data.data);
             for (size_t i = 0; i < idxs.size(); ++i)
             {
@@ -516,11 +511,11 @@ namespace bufr {
                 {
                     if (targetField.target->typeInfo.isLongString())
                     {
-                        dataRows[rowIdx].data = std::vector<std::string>({""});
+                        dataRows[rowIdx].data = std::vector<std::string>({MissingStringValue});
                     }
                     else
                     {
-                        dataRows[rowIdx].data = std::vector<double>({MissingValue});
+                        dataRows[rowIdx].data = std::vector<double>({MissingDoubleValue});
                     }
                 }
 
@@ -557,11 +552,12 @@ namespace bufr {
                 {
                     if (targetField.target->typeInfo.isLongString())
                     {
-                        dataRows[rowIdx].data = std::vector<std::string>(numsPerRow, "");
+                        dataRows[rowIdx].data = std::vector<std::string>(numsPerRow,
+                                                                         MissingStringValue);
                     }
                     else
                     {
-                        dataRows[rowIdx].data = std::vector<double>(numsPerRow, MissingValue);
+                        dataRows[rowIdx].data = std::vector<double>(numsPerRow, MissingDoubleValue);
                     }
                 }
 
@@ -631,7 +627,7 @@ namespace bufr {
             }
         }
 
-        object->setData(data, 10e10);
+        object->setData(data);
         object->setDims(dims);
         object->setFieldName(fieldName);
         object->setGroupByFieldName(groupByFieldName);

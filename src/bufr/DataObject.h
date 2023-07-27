@@ -112,10 +112,8 @@ namespace Ingester
         void setGroupByFieldName(const std::string& fieldName) { groupByFieldName_ = fieldName; }
         void setDims(const std::vector<int> dims) { dims_ = dims; }
         void setQuery(const std::string& query) { query_ = query; }
-        void setDimPaths(const std::vector<bufr::Query>& dimPaths)
-            { dimPaths_ = dimPaths; }
-        virtual void setData(const bufr::NodeLookupTable::DataVector& data,
-                             double dataMissingValue) = 0;
+        void setDimPaths(const std::vector<bufr::Query>& dimPaths) { dimPaths_ = dimPaths; }
+        virtual void setData(const bufr::NodeLookupTable::DataVector& data) = 0;
 
         // Getters
         std::string getFieldName() const { return fieldName_; }
@@ -243,14 +241,10 @@ namespace Ingester
 
         /// \brief Set the data for this object
         /// \param data The data vector
-        void setData(const std::vector<T>& data) { data_ = data; }
-
-        /// \brief Set the data for this object
-        /// \param data The data vector
         /// \param dataMissingValue The missing value used in the raw data
-        void setData(const bufr::NodeLookupTable::DataVector& data, double dataMissingValue) final
+        void setData(const bufr::NodeLookupTable::DataVector& data) final
         {
-            _setData(data, dataMissingValue);
+            _setData(data);
         }
 
 #ifdef BUILD_PYTHON_BINDING
@@ -664,13 +658,24 @@ namespace Ingester
         /// \param dataMissingValue - The number that represents missing values within the raw data
         template<typename U = void>
         void _setData(const bufr::NodeLookupTable::DataVector& data,
-                      double dataMissingValue,
                       typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr)
         {
             if (std::holds_alternative<std::vector<double>>(data.data))
             {
                 auto rawData = data.rawData<std::vector<double>>();
-                data_ = std::vector<T>(rawData.begin(), rawData.end());
+                data_ = std::vector<T>(rawData.size());
+
+                for (size_t idx = 0; idx < rawData.size(); ++idx)
+                {
+                    if (rawData[idx] == bufr::MissingDoubleValue)
+                    {
+                        data_[idx] = missingValue();
+                    }
+                    else
+                    {
+                        data_[idx] = static_cast<T>(rawData[idx]);
+                    }
+                }
             }
             else if (std::holds_alternative<std::vector<std::string>>(data.data))
             {
@@ -678,11 +683,6 @@ namespace Ingester
                 errStr << "The data type of the data object is not numeric";
                 throw eckit::BadValue(errStr.str());
             }
-
-            std::replace(data_.begin(),
-                         data_.end(),
-                         static_cast<T>(dataMissingValue),
-                         missingValue());
         }
 
         /// \brief Set the data associated with this data object (string DataObject).
@@ -691,7 +691,6 @@ namespace Ingester
         template<typename U = void>
         void _setData(
             const bufr::NodeLookupTable::DataVector& data,
-            double dataMissingValue,
             typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr)
         {
             if (std::holds_alternative<std::vector<double>>(data.data))
@@ -702,7 +701,8 @@ namespace Ingester
                     reinterpret_cast<const char*>(std::get<std::vector<double>> (data.data).data());
                 for (size_t row_idx = 0; row_idx < data.size(); row_idx++)
                 {
-                    if (std::get<std::vector<double>>(data.data)[row_idx] != dataMissingValue)
+                    if (std::get<std::vector<double>>(data.data)[row_idx] != \
+                        bufr::MissingDoubleValue)
                     {
                         std::string str = std::string(
                             charPtr + row_idx * sizeof(double), sizeof(double));
