@@ -480,22 +480,24 @@ namespace bufr {
         NodeLookupTable::DataVector output;
         if (std::holds_alternative<std::vector<std::string>>(targetField.data.data))
         {
-            output.data = std::move(std::vector<std::string>(product(dims), MissingStringValue));
+            output.data = std::vector<std::string>(product(dims), MissingStringValue);
 
             auto& src = std::get<std::vector<std::string>>(targetField.data.data);
+            auto& dest = std::get<std::vector<std::string>>(output.data);
             for (size_t i = 0; i < idxs.size(); ++i)
             {
-                std::get<std::vector<std::string>>(output.data)[idxs[i]] = src[i];
+                dest[idxs[i]] = src[i];
             }
         }
         else if (std::holds_alternative<std::vector<double>>(targetField.data.data))
         {
-            output.data = std::move(std::vector<double>(product(dims), MissingDoubleValue));
+            output.data = std::vector<double>(product(dims), MissingDoubleValue);
 
             auto& src = std::get<std::vector<double>>(targetField.data.data);
+            auto& dest = std::get<std::vector<double>>(output.data);
             for (size_t i = 0; i < idxs.size(); ++i)
             {
-                std::get<std::vector<double>>(output.data)[idxs[i]] = src[i];
+                dest[idxs[i]] = src[i];
             }
         }
 
