@@ -210,6 +210,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/ADPUPA.prepbufr
     testinput/gdas.t12z.adpupa_nc002103.tm00.bufr_d
     testinput/rtma_ru.t00z.msonet.tm00.bufr_d
+    testinput/rtma_ru.t0000z.adpsfc_nc000101.tm00.bufr_d
     testinput/bufr_mhs.yaml
     testinput/bufr_hrs.yaml
     testinput/bufr_query_filtering.yaml
@@ -291,6 +292,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_query_python_to_ioda_test.py
     testinput/bufr_query_fieldname_validation.py
     testinput/bufr_ncep_rtma_mesonet.yaml
+    testinput/bufr_ncep_rtma_adpsfc.yaml
   )
 
   list( APPEND test_output
@@ -351,6 +353,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/prepbufr_adpupa_api.nc
     testoutput/bufr_query_python_to_ioda_test.nc
     testoutput/rtma_ru.t00z.msonet.tm00.nc
+    testoutput/rtma_ru.t0000z.adpsfc_nc000101.tm00.nc
   )
 endif()
 
@@ -1592,6 +1595,15 @@ if(iodaconv_bufr_ENABLED)
                             netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_rtma_mesonet.yaml"
                     rtma_ru.t00z.msonet.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_rtma_adpsfc2ioda
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_rtma_adpsfc.yaml"
+                    rtma_ru.t0000z.adpsfc_nc000101.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_sevcsr
