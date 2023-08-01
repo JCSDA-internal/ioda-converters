@@ -4,9 +4,6 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 
 import numpy as np
-import numpy.ma as ma
-import pyiodaconv as iconv
-import pyiodaconv as iconio
 from pyiodaconv import bufr
 from pyioda import ioda
 import calendar
