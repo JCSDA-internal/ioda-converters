@@ -3,7 +3,7 @@
 list(APPEND _bufr_deps
             eckit
             gsl::gsl-lite
-            bufr::bufr_d)
+            bufr::bufr_4)
 
 list(APPEND _srcs
             print_queries.cpp
