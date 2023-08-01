@@ -145,6 +145,8 @@ namespace bufr {
                      &table_type,
                      &table_idx);
 
+            if (table_idx == 0) return info;
+
             nemtbb_f(bufrLoc_,
                      table_idx,
                      unitCStr,

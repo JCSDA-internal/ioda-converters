@@ -95,7 +95,7 @@ if ( iodaconv_bufr_ENABLED )
               ${oops_LIBRARIES}
               ioda_engines
               gsl::gsl-lite
-              bufr::bufr_d
+              bufr::bufr_4
               atms_lib
     )
 
@@ -135,7 +135,7 @@ if ( iodaconv_bufr_python_ENABLED )
               Eigen3::Eigen
               eckit
               gsl::gsl-lite
-              bufr::bufr_d
+              bufr::bufr_4
     )
 
   list (APPEND _query_srcs

@@ -20,5 +20,5 @@ list(APPEND bufr2nc_source
 
 ecbuild_add_executable( TARGET  bufr2nc_fortran.x
                         SOURCES ${bufr2nc_source}
-                        LIBS    bufr::bufr_d
+                        LIBS    bufr::bufr_4
                                 NetCDF::NetCDF_Fortran)
