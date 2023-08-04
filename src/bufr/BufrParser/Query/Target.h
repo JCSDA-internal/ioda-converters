@@ -84,6 +84,7 @@ namespace bufr {
         std::string unit;
         TypeInfo typeInfo;
         size_t nodeIdx;
+        std::string longStrId;
         TargetComponents path;
         size_t numDimensions = 0;
 

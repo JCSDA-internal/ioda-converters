@@ -50,16 +50,20 @@ namespace bufr {
     /// information for a given node.
     class NodeLookupTable
     {
-        typedef std::vector<double> DataVector;
+        typedef std::vector<double> OctetData;
+        typedef std::vector<std::string> StringData;
         typedef std::vector<int> CountsVector;
 
         struct NodeData
         {
-            DataVector data;
+            OctetData data;
+            StringData stringData;
             CountsVector counts;
             TargetComponent component;
+            std::string longStrId;
             bool collectedCounts = false;
             bool collectedData = false;
+            bool isLongString = false;
         };
 
         typedef __details::OffsetArray<NodeData> LookupTable;
