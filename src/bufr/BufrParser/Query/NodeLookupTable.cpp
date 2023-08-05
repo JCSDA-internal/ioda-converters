@@ -104,6 +104,11 @@ namespace bufr {
                 if (lookup[nodeId].isLongString)
                 {
                     auto longStr = dataProvider_->getLongStr(lookup[nodeId].longStrId);
+                    if (longStr.size() > 0 && longStr[0] == '\xff')
+                    {
+                        longStr = "";
+                    }
+
                     lookup[nodeId].data.push_back(longStr);
                 }
                 else
