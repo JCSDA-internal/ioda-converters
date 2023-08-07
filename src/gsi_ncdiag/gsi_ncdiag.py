@@ -1787,7 +1787,7 @@ class Ozone(BaseGSI):
                 LocVars.append(ncv)
 
         nlocs = self.nobs
-        vname = "ozoneTotal"
+        vname = "ozoneProfile"
         if (self.sensor in oz_lay_sensors):
             vname = "ozoneLayer"
         varDict[vname]['valKey'] = vname, iconv.OvalName()
