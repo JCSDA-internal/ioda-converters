@@ -89,6 +89,8 @@ list( APPEND test_input
   testinput/tempo_o3_proxy_20130801T100600Z_S002G02.nc
   testinput/tempo_o3_proxy_20130801T101200Z_S002G03.nc
   testinput/gdas.t18z.abias_air
+  testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t162415_small.h5
+  testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t180544_small.h5
 )
 
 list( APPEND test_output
@@ -167,6 +169,7 @@ list( APPEND test_output
   testoutput/tempo_no2_stratosphere.nc
   testoutput/tempo_hcho_troposphere.nc
   testoutput/gdas.t18z.abias_air_ascent.csv
+  testoutput/omps_o3_nm.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -207,6 +210,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/ADPUPA.prepbufr
     testinput/gdas.t12z.adpupa_nc002103.tm00.bufr_d
     testinput/rtma_ru.t00z.msonet.tm00.bufr_d
+    testinput/rtma_ru.t0000z.adpsfc_nc000101.tm00.bufr_d
     testinput/bufr_mhs.yaml
     testinput/bufr_hrs.yaml
     testinput/bufr_query_filtering.yaml
@@ -288,6 +292,7 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_query_python_to_ioda_test.py
     testinput/bufr_query_fieldname_validation.py
     testinput/bufr_ncep_rtma_mesonet.yaml
+    testinput/bufr_ncep_rtma_adpsfc.yaml
   )
 
   list( APPEND test_output
@@ -348,6 +353,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/prepbufr_adpupa_api.nc
     testoutput/bufr_query_python_to_ioda_test.nc
     testoutput/rtma_ru.t00z.msonet.tm00.nc
+    testoutput/rtma_ru.t0000z.adpsfc_nc000101.tm00.nc
   )
 endif()
 
@@ -1164,7 +1170,7 @@ foreach (coltype total troposphere stratosphere)
   endforeach()
 endforeach()
 
-# disable this test 
+# disable this test
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mopitt_co
                   TYPE    SCRIPT
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
@@ -1250,6 +1256,19 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_co_total
                           -q 0.5
                           -c total"
                           tropomi_co_total.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_omps_o3_nm
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/omps_o3_nm_h52ioda.py
+                          -i testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t162415_small.h5
+                             testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t180544_small.h5
+                          -o testrun/omps_o3_nm.nc
+                          -q 128"
+                          omps_o3_nm.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 #==============================================================================
 # Bufr Ingester tests
@@ -1576,6 +1595,15 @@ if(iodaconv_bufr_ENABLED)
                             netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_rtma_mesonet.yaml"
                     rtma_ru.t00z.msonet.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_rtma_adpsfc2ioda
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_rtma_adpsfc.yaml"
+                    rtma_ru.t0000z.adpsfc_nc000101.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_sevcsr
