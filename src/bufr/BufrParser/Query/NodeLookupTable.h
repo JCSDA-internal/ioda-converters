@@ -55,15 +55,19 @@ namespace bufr {
         typedef std::vector<std::string> StringData;
         typedef std::vector<int> CountsVector;
 
+        struct NodeMetaData
+        {
+            TargetComponent component;
+            std::string longStrId;
+            bool collectedCounts = false;
+            bool collectedData = false;
+        };
+
         struct NodeData
         {
             OctetData data;
             StringData stringData;
             CountsVector counts;
-            TargetComponent component;
-            std::string longStrId;
-            bool collectedCounts = false;
-            bool collectedData = false;
             bool isLongString = false;
 
 
@@ -127,6 +131,7 @@ namespace bufr {
         };
 
         typedef __details::OffsetArray<NodeData> LookupTable;
+        typedef __details::OffsetArray<NodeMetaData> MetaDataLookup;
 
         NodeLookupTable(const std::shared_ptr<DataProvider>& dataProvider, const Targets& targets);
 
@@ -147,12 +152,14 @@ namespace bufr {
         /// \brief Adds the counts data for the given targets to the lookup table.
         /// \param[in] targets The targets to add the counts data for.
         /// \param[in, out] lookup The lookup table to add the counts data to.
-        void addCounts(const Targets& targets, LookupTable& lookup) const;
+        void addCounts(const Targets& targets,
+                       LookupTable& lookup,
+                       MetaDataLookup& metaLookup) const;
 
         /// \brief Adds the data for the given targets to the lookup table.
         /// \param[in] targets The targets to add the data for.
         /// \param[in, out] lookup The lookup table to add the data to.
-        void addData(const Targets& targets, LookupTable& lookup) const;
+        void addData(const Targets& targets, LookupTable& lookup, MetaDataLookup& metaLookup) const;
     };
 }  // namespace bufr
 }  // namespace Ingester

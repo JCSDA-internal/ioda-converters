@@ -22,15 +22,20 @@ namespace bufr {
         auto lookupTable = LookupTable(dataProvider_->getInode(),
                                        dataProvider_->getIsc(dataProvider_->getInode()));
 
+        auto metaTable = MetaDataLookup(dataProvider_->getInode(),
+                                       dataProvider_->getIsc(dataProvider_->getInode()));
+
         // Populate the lookup table with the counts and data corresponding to each BUFR node
         // we care about.
-        addCounts(targets, lookupTable);
-        addData(targets, lookupTable);
+        addCounts(targets, lookupTable, metaTable);
+        addData(targets, lookupTable, metaTable);
 
         return lookupTable;
     }
 
-    void NodeLookupTable::addCounts(const Targets &targets, LookupTable &lookup) const
+    void NodeLookupTable::addCounts(const Targets &targets,
+                                    LookupTable &lookup,
+                                    MetaDataLookup& metaLookup) const
     {
         // Add entries for all the path nodes in the targets that are containers (can contain)
         // children. Uses merged data from the Subset metadata and Query strings.
@@ -40,8 +45,8 @@ namespace bufr {
             {
                 if (path.isContainer())
                 {
-                    lookup[path.nodeId].component = path;
-                    lookup[path.nodeId].collectedCounts = true;
+                    metaLookup[path.nodeId].component = path;
+                    metaLookup[path.nodeId].collectedCounts = true;
                 }
             }
         }
@@ -50,9 +55,9 @@ namespace bufr {
         for (size_t cursor = 1; cursor <= dataProvider_->getNVal(); ++cursor)
         {
             auto nodeId = static_cast<size_t>(dataProvider_->getInv(cursor));
-            if (lookup[nodeId].collectedCounts)
+            if (metaLookup[nodeId].collectedCounts)
             {
-                const auto &component = lookup[nodeId].component;
+                const auto &component = metaLookup[nodeId].component;
 
                 if (component.type == TargetComponent::Type::Subset)
                 {
@@ -73,7 +78,9 @@ namespace bufr {
         }
     }
 
-    void NodeLookupTable::addData(const Targets &targets, LookupTable &lookup) const
+    void NodeLookupTable::addData(const Targets &targets,
+                                  LookupTable &lookup,
+                                  MetaDataLookup& metaLookup) const
     {
         // Reserve space for the data in the lookup table by summing the counts for each node.
         for (const auto& target : targets)
@@ -81,20 +88,21 @@ namespace bufr {
             if (target->nodeIdx == 0) { continue; }
             const auto &path = target->path.back();
 
-            lookup[target->nodeIdx].data.reserve(sum(lookup[path.parentDimensionNodeId].counts));
-            lookup[target->nodeIdx].collectedData = true;
+            lookup[target->nodeIdx].data.reserve(
+                sum(lookup[path.parentDimensionNodeId].counts));
+            metaLookup[target->nodeIdx].collectedData = true;
             lookup[target->nodeIdx].isLongString = target->typeInfo.isLongString();
-            lookup[target->nodeIdx].longStrId = target->longStrId;
+            metaLookup[target->nodeIdx].longStrId = target->longStrId;
         }
 
         for (size_t cursor = 1; cursor <= dataProvider_->getNVal(); ++cursor)
         {
             const auto nodeId = dataProvider_->getInv(cursor);
-            if (lookup[nodeId].collectedData)
+            if (metaLookup[nodeId].collectedData)
             {
                 if (lookup[nodeId].isLongString)
                 {
-                    auto longStr = dataProvider_->getLongStr(lookup[nodeId].longStrId);
+                    auto longStr = dataProvider_->getLongStr(metaLookup[nodeId].longStrId);
                     lookup[nodeId].stringData.push_back(longStr);
                 }
                 else
