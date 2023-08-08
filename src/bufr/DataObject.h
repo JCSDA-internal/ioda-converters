@@ -221,7 +221,20 @@ namespace Ingester
     {
      public:
         typedef T value_type;
-        static constexpr T missingValue() { return std::numeric_limits<T>::max(); }
+
+        template<typename U = void>
+        static constexpr T missingValue
+            (typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr)
+        {
+            return std::numeric_limits<T>::max();
+        }
+
+        template<typename U = void>
+        static constexpr T missingValue
+            (typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr)
+        {
+            return "";
+        }
 
         /// \brief Constructor.
         /// \param dimensions The dimensions of the data object.

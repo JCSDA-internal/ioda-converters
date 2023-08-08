@@ -164,6 +164,11 @@ namespace bufr {
 
         readlc_f(FileUnit, longStrId.c_str(), charPtr, &longStrLen);
 
+        if (charPtr[0] == '\xff')
+        {
+            return "";
+        }
+
         return std::string(charPtr, longStrLen);
     }
 }  // namespace bufr
