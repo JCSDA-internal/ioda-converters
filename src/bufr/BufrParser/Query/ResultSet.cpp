@@ -481,6 +481,12 @@ namespace bufr {
             {
                 size_t numRows = product(dims);
                 dataRows.resize(numRows * maxCounts);
+
+                for (size_t idx = 0; idx < numRows; ++idx)
+                {
+                    dataRows[idx].resize(1);
+                }
+
                 for (size_t i = 0; i < numRows; ++i)
                 {
                     if (output.size())
@@ -504,6 +510,12 @@ namespace bufr {
 
                 size_t numsPerRow = static_cast<size_t>(product(rowDims));
                 dataRows.resize(numRows);
+
+                for (size_t idx = 0; idx < numRows; ++idx)
+                {
+                    dataRows[idx].resize(numsPerRow);
+                }
+
                 for (size_t i = 0; i < numRows; ++i)
                 {
                     for (size_t j = 0; j < numsPerRow; ++j)
