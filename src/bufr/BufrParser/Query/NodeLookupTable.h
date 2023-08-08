@@ -50,6 +50,7 @@ namespace bufr {
     /// information for a given node.
     class NodeLookupTable
     {
+     public:
         typedef std::vector<double> OctetData;
         typedef std::vector<std::string> StringData;
         typedef std::vector<int> CountsVector;
@@ -64,11 +65,69 @@ namespace bufr {
             bool collectedCounts = false;
             bool collectedData = false;
             bool isLongString = false;
+
+
+            void resize(size_t size)
+            {
+                if (isLongString)
+                {
+                    stringData.resize(size, "");
+                }
+                else
+                {
+                    data.resize(size, 10e10);
+                }
+            }
+
+            void reserve(size_t size)
+            {
+                if (isLongString)
+                {
+                    stringData.reserve(size);
+                }
+                else
+                {
+                    data.reserve(size);
+                }
+            }
+
+            void push_back(double value)
+            {
+                data.push_back(value);
+            }
+
+            void push_back(const std::string& value)
+            {
+                stringData.push_back(value);
+            }
+
+            bool empty() const
+            {
+                if (isLongString)
+                {
+                    return stringData.empty();
+                }
+                else
+                {
+                    return data.empty();
+                }
+            }
+
+            size_t size() const
+            {
+                if (isLongString)
+                {
+                    return stringData.size();
+                }
+                else
+                {
+                    return data.size();
+                }
+            }
         };
 
         typedef __details::OffsetArray<NodeData> LookupTable;
 
-     public:
         NodeLookupTable(const std::shared_ptr<DataProvider>& dataProvider, const Targets& targets);
 
         /// \brief Returns the NodeData for a given bufr node.

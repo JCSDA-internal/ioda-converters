@@ -163,7 +163,7 @@ namespace bufr
 
             if (targ->nodeIdx == 0)
             {
-                dataField.data = {MissingValue};
+                dataField.data = NodeLookupTable::NodeData();
                 dataField.seqCounts = SeqCounts(std::vector<std::vector<int>>(1, {1}));
             }
             else
@@ -220,13 +220,13 @@ namespace bufr
                 if (!hasFilter)
                 {
                     // No filters so just copy the data.
-                    dataField.data = lookupTable[targ->path.back().nodeId].data;
+                    dataField.data = lookupTable[targ->path.back().nodeId];
                 }
                 else
                 {
                     // There are filters, so we need to create a new data vector with the filtered
                     // values.
-                    dataField.data = makeFilteredData(lookupTable[targ->path.back().nodeId].data,
+                    dataField.data = makeFilteredData(lookupTable[targ->path.back().nodeId],
                                                       counts,
                                                       filters);
                 }
@@ -234,12 +234,12 @@ namespace bufr
         }
     }
 
-    std::vector<double> QueryRunner::makeFilteredData(
-                                            const std::vector<double>& srcData,
+    NodeLookupTable::NodeData QueryRunner::makeFilteredData(
+                                            const NodeLookupTable::NodeData& srcData,
                                             const SeqCounts& origCounts,
                                             const std::vector<std::vector<size_t>>& filter) const
     {
-        auto data = std::vector<double>();
+        auto data = NodeLookupTable::NodeData();
         data.reserve(sum(origCounts.back()));
 
         size_t offset = 0;
@@ -248,17 +248,25 @@ namespace bufr
         return data;
     }
 
-    void QueryRunner::_makeFilteredData(const std::vector<double>& srcData,
+    void QueryRunner::_makeFilteredData(const NodeLookupTable::NodeData& srcData,
                                         const SeqCounts& origCounts,
                                         const std::vector<std::vector<size_t>> &filters,
-                                        std::vector<double>& data,
+                                        NodeLookupTable::NodeData& data,
                                         size_t& offset,
                                         size_t depth,
                                         bool skipResult) const
     {
         if (depth > origCounts.size() - 1)
         {
-            if (!skipResult) data.push_back(srcData[offset]);
+            if (srcData.isLongString)
+            {
+                if (!skipResult) data.push_back(srcData.stringData[offset]);
+            }
+            else
+            {
+                if (!skipResult) data.push_back(srcData.data[offset]);
+            }
+
             offset++;
 
             return;

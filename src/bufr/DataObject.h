@@ -35,6 +35,7 @@
 
 #include "BufrParser/Query/Constants.h"
 #include "BufrParser/Query/QueryParser.h"
+#include "BufrParser/Query/NodeLookupTable.h"
 
 namespace Ingester
 {
@@ -113,7 +114,7 @@ namespace Ingester
         void setQuery(const std::string& query) { query_ = query; }
         void setDimPaths(const std::vector<bufr::Query>& dimPaths)
             { dimPaths_ = dimPaths; }
-        virtual void setData(const std::vector<double>& data, double dataMissingValue) = 0;
+        virtual void setData(const bufr::NodeLookupTable::NodeData& data) = 0;
 
         // Getters
         std::string getFieldName() const { return fieldName_; }
@@ -254,14 +255,9 @@ namespace Ingester
 
         /// \brief Set the data for this object
         /// \param data The data vector
-        void setData(const std::vector<T>& data) { data_ = data; }
-
-        /// \brief Set the data for this object
-        /// \param data The data vector
-        /// \param dataMissingValue The missing value used in the raw data
-        void setData(const std::vector<double>& data, double dataMissingValue) final
+        void setData(const bufr::NodeLookupTable::NodeData& data) final
         {
-            _setData(data, dataMissingValue);
+            _setData(data);
         }
 
 #ifdef BUILD_PYTHON_BINDING
@@ -674,15 +670,30 @@ namespace Ingester
         /// \param data - double vector of raw data
         /// \param dataMissingValue - The number that represents missing values within the raw data
         template<typename U = void>
-        void _setData(const std::vector<double>& data,
-                      double dataMissingValue,
+        void _setData(const bufr::NodeLookupTable::NodeData& data,
                       typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr)
         {
-            data_ = std::vector<T>(data.begin(), data.end());
-            std::replace(data_.begin(),
-                         data_.end(),
-                         static_cast<T>(dataMissingValue),
-                         missingValue());
+            if (data.isLongString)
+            {
+                std::ostringstream str;
+                str << "Can't make numerical field from string data.";
+                throw std::runtime_error(str.str());
+            }
+            else
+            {
+                data_ = std::vector<T>(data.data.size());
+                for (size_t idx = 0; idx < data.data.size(); ++idx)
+                {
+                    if (data.data[idx] != 10e10)
+                    {
+                        data_[idx] = data.data[idx];
+                    }
+                    else
+                    {
+                        data_[idx] = missingValue();
+                    }
+                }
+            }
         }
 
         /// \brief Set the data associated with this data object (string DataObject).
@@ -690,29 +701,35 @@ namespace Ingester
         /// \param dataMissingValue - The number that represents missing values within the raw data
         template<typename U = void>
         void _setData(
-            const std::vector<double>& data,
-            double dataMissingValue,
+            const bufr::NodeLookupTable::NodeData& data,
             typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr)
         {
             data_ = std::vector<std::string>();
-            auto charPtr = reinterpret_cast<const char*>(data.data());
-            for (size_t row_idx = 0; row_idx < data.size(); row_idx++)
+            if (data.isLongString)
             {
-                if (data[row_idx] != dataMissingValue)
+                data_ = data.stringData;
+            }
+            else
+            {
+                auto charPtr = reinterpret_cast<const char *>(data.data.data());
+                for (size_t row_idx = 0; row_idx < data.size(); row_idx++)
                 {
-                    std::string str = std::string(
-                        charPtr + row_idx * sizeof(double), sizeof(double));
+                    if (data.data[row_idx] != 10e10)
+                    {
+                        std::string str = std::string(
+                            charPtr + row_idx * sizeof(double), sizeof(double));
 
-                    // trim trailing whitespace from str
-                    str.erase(std::find_if(str.rbegin(), str.rend(),
-                                           [](char c){ return !std::isspace(c); }).base(),
-                              str.end());
+                        // trim trailing whitespace from str
+                        str.erase(std::find_if(str.rbegin(), str.rend(),
+                                               [](char c) { return !std::isspace(c); }).base(),
+                                  str.end());
 
-                    data_.push_back(str);
-                }
-                else
-                {
-                    data_.push_back("");
+                        data_.push_back(str);
+                    }
+                    else
+                    {
+                        data_.push_back("");
+                    }
                 }
             }
         }

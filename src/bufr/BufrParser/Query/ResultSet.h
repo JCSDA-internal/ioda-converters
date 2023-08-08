@@ -26,6 +26,7 @@
 #include "DataProvider/DataProvider.h"
 #include "DataObject.h"
 #include "Target.h"
+#include "NodeLookupTable.h"
 
 
 namespace Ingester {
@@ -39,7 +40,7 @@ namespace bufr {
     struct DataField
     {
         std::shared_ptr<Target> target;
-        std::vector<double> data;
+        NodeLookupTable::NodeData data;
         SeqCounts seqCounts;
     };
 
@@ -173,7 +174,7 @@ namespace bufr {
         /// \param info The meta data for the element.
         void getRawValues(const std::string& fieldName,
                           const std::string& groupByField,
-                          std::vector<double>& data,
+                          NodeLookupTable::NodeData& data,
                           std::vector<int>& dims,
                           std::vector<Query>& dimPaths,
                           TypeInfo& info) const;
@@ -186,7 +187,7 @@ namespace bufr {
         /// \param[in] dims Vector of dimension sizes.
         /// \param[in] groupbyIdx Idx of the group by field (which query component).
         void getRowsForField(const DataField& targetField,
-                             std::vector<std::vector<double>>& dataRows,
+                             std::vector<NodeLookupTable::NodeData>& dataRows,
                              const std::vector<int>& dims,
                              int groupbyIdx) const;
 
@@ -209,7 +210,7 @@ namespace bufr {
                                 const std::string& groupByFieldName,
                                 TypeInfo& info,
                                 const std::string& overrideType,
-                                const std::vector<double> data,
+                                const NodeLookupTable::NodeData data,
                                 const std::vector<int> dims,
                                 const std::vector<Query> dimPaths) const;
 

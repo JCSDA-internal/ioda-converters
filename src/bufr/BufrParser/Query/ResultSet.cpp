@@ -60,11 +60,12 @@ namespace bufr {
                                   groupByFieldName);
         }
 
-        std::vector<double> data;
+
         std::vector<int> dims;
         std::vector<Query> dimPaths;
         TypeInfo info;
 
+        NodeLookupTable::NodeData data;
         getRawValues(fieldName,
                      groupByFieldName,
                      data,
@@ -177,7 +178,7 @@ namespace bufr {
 
     void ResultSet::getRawValues(const std::string& fieldName,
                                  const std::string& groupByField,
-                                 std::vector<double>& data,
+                                 NodeLookupTable::NodeData& data,
                                  std::vector<int>& dims,
                                  std::vector<Query>& dimPaths,
                                  TypeInfo& info) const
@@ -362,11 +363,11 @@ namespace bufr {
             rowLength *= dims[dimIdx];
         }
 
-        data.resize(totalRows * rowLength, MissingValue);
+        data.resize(totalRows * rowLength);
         for (size_t frameIdx = 0; frameIdx < dataFrames_.size(); ++frameIdx)
         {
             auto& dataFrame = dataFrames_[frameIdx];
-            std::vector<std::vector<double>> frameData;
+            std::vector<NodeLookupTable::NodeData> frameData;
             auto& targetField = dataFrame.fieldAtIdx(targetFieldIdx);
 
             if (!targetField.data.empty()) {
@@ -381,7 +382,16 @@ namespace bufr {
                     auto &row = frameData[rowIdx];
                     for (size_t colIdx = 0; colIdx < row.size(); ++colIdx)
                     {
-                        data[dataRowIdx*rowLength + rowIdx * row.size() + colIdx] = row[colIdx];
+                        if (targetField.data.isLongString)
+                        {
+                            data.stringData[dataRowIdx * rowLength + rowIdx * row.size() +
+                                 colIdx] = row.stringData[colIdx];
+                        }
+                        else
+                        {
+                            data.data[dataRowIdx * rowLength + rowIdx * row.size() +
+                                 colIdx] = row.data[colIdx];
+                        }
                     }
                 }
             }
@@ -395,7 +405,7 @@ namespace bufr {
 //    subroutine result_set__get_rows_for_field(self, target_field, data_rows, dims, groupby_idx)
 
     void ResultSet::getRowsForField(const DataField& targetField,
-                                    std::vector<std::vector<double>>& dataRows,
+                                    std::vector<NodeLookupTable::NodeData>& dataRows,
                                     const std::vector<int>& dims,
                                     int groupbyIdx) const
     {
@@ -449,10 +459,19 @@ namespace bufr {
             }
         }
 
-        auto output = std::vector<double>(product(dims), MissingValue);
+        auto output = NodeLookupTable::NodeData();
+        output.resize(product(dims));
+
         for (size_t i = 0; i < idxs.size(); ++i)
         {
-            output[idxs[i]] = targetField.data[i];
+            if (targetField.data.isLongString)
+            {
+                output.stringData[idxs[i]] = targetField.data.stringData[i];
+            }
+            else
+            {
+                output.data[idxs[i]] = targetField.data.data[i];
+            }
         }
 
         // Apply groupBy and make output
@@ -461,12 +480,19 @@ namespace bufr {
             if (groupbyIdx > static_cast<int>(targetField.seqCounts.size()))
             {
                 size_t numRows = product(dims);
-                dataRows.resize(numRows * maxCounts, {MissingValue});
+                dataRows.resize(numRows * maxCounts);
                 for (size_t i = 0; i < numRows; ++i)
                 {
                     if (output.size())
                     {
-                        dataRows[i][0] = output[0];
+                        if (targetField.data.isLongString)
+                        {
+                            dataRows[i].stringData[0] = output.stringData[0];
+                        }
+                        else
+                        {
+                            dataRows[i].data[0] = output.data[0];
+                        }
                     }
                 }
             }
@@ -477,12 +503,19 @@ namespace bufr {
                 rowDims.assign(dims.begin() + groupbyIdx, dims.end());
 
                 size_t numsPerRow = static_cast<size_t>(product(rowDims));
-                dataRows.resize(numRows, std::vector<double>(numsPerRow, MissingValue));
+                dataRows.resize(numRows);
                 for (size_t i = 0; i < numRows; ++i)
                 {
                     for (size_t j = 0; j < numsPerRow; ++j)
                     {
-                        dataRows[i][j] = output[i * numsPerRow + j];
+                        if (targetField.data.isLongString)
+                        {
+                            dataRows[i].stringData[j] = output.stringData[i * numsPerRow + j];
+                        }
+                        else
+                        {
+                            dataRows[i].data[j] = output.data[i * numsPerRow + j];
+                        }
                     }
                 }
             }
@@ -505,7 +538,7 @@ namespace bufr {
                                 const std::string& groupByFieldName,
                                 TypeInfo& info,
                                 const std::string& overrideType,
-                                const std::vector<double> data,
+                                const NodeLookupTable::NodeData data,
                                 const std::vector<int> dims,
                                 const std::vector<Query> dimPaths) const
     {
@@ -528,7 +561,7 @@ namespace bufr {
             }
         }
 
-        object->setData(data, 10e10);
+        object->setData(data);
         object->setDims(dims);
         object->setFieldName(fieldName);
         object->setGroupByFieldName(groupByFieldName);
@@ -541,7 +574,7 @@ namespace bufr {
     {
         std::shared_ptr<DataObjectBase> object;
 
-        if (info.isString())
+        if (info.isString() || info.isLongString())
         {
             object = std::make_shared<DataObject<std::string>>();
         }
