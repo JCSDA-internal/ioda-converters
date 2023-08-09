@@ -426,7 +426,7 @@ namespace bufr {
         }
 
         // Compute insert array
-        std::vector<std::vector<int>> inserts(dims.size(), {0});
+        std::vector<std::vector<int>> inserts(dims.size());
         for (size_t repIdx = 0;
              repIdx < std::min(dims.size(), targetField.seqCounts.size());
              ++repIdx)
@@ -534,8 +534,7 @@ namespace bufr {
         }
         else
         {
-            dataRows.resize(1);
-            dataRows[0] = output;
+            dataRows.push_back(std::move(output));
         }
     }
 
