@@ -64,7 +64,7 @@ namespace Ingester
 
         // Declare and initialize scanline array
         // scanline has the same dimension as fovn
-        std::vector<float> scanpos(fovnObj->size(), DataObject<float>::missingValue());
+        std::vector<int> scanpos(fovnObj->size(), DataObject<int>::missingValue());
 
         // Get field-of-view number
         std::vector<int> fovn(fovnObj->size(), DataObject<int>::missingValue());
@@ -72,19 +72,19 @@ namespace Ingester
         {
            for (size_t idx = 0; idx < fovnObj->size(); idx++)
            {
-              scanpos[idx] = static_cast<float>((fovnObj->getAsInt(idx) - 1) / 2 + 1);
+              scanpos[idx] = (fovnObj->getAsInt(idx) - 1) / 2 + 1;
            }
         }
         else
         {
            for (size_t idx = 0; idx < fovnObj->size(); idx++)
            {
-              scanpos[idx] = static_cast<float>(fovnObj->getAsInt(idx));
+              scanpos[idx] = fovnObj->getAsInt(idx);
            }
         }
 
         // Export sensor scan angle (view angle)
-        return std::make_shared<DataObject<float>>(scanpos,
+        return std::make_shared<DataObject<int>>(scanpos,
                                                    getExportName(),
                                                    groupByField_,
                                                    fovnObj->getDims(),
