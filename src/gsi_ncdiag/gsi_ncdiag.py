@@ -1439,7 +1439,7 @@ class Radiances(BaseGSI):
         except IndexError:
             # obserr = 1./self.var('Inverse_Observation_Error')
             obserr = np.repeat(self.var('error_variance').astype(np.float32), nlocs, axis=0)
-        obserr[:] = self.FLOAT_FILL  # commented this line so the obserr stores initial obs error
+        #obserr[:] = self.FLOAT_FILL  # commented this line so the obserr stores initial obs error
         obsqc = self.var('QC_Flag').astype(np.int32)
         if (ObsBias):
             nametbc = [
@@ -1814,7 +1814,7 @@ class Ozone(BaseGSI):
         tmp[tmp < self.EPSILON] = 0
         obserr = tmp
         obserr[np.isinf(obserr)] = self.FLOAT_FILL
-        obserr[:] = self.FLOAT_FILL  # commented out this line so obserr stores the initial obs error
+        #obserr[:] = self.FLOAT_FILL  # commented out this line so obserr stores the initial obs error
         obsqc = self.var('Analysis_Use_Flag').astype(np.int32)
         for lvar in LocVars:
             loc_mdata_name = all_LocKeyList[lvar][0]
@@ -2018,7 +2018,7 @@ class Radar(BaseGSI):
             qcvarname = radar_qc[key]
             obserr = self.var(errvarname)
             obserr[np.isinf(obserr)] = self.FLOAT_FILL
-            obserr[:] = self.FLOAT_FILL
+            #obserr[:] = self.FLOAT_FILL
             obsqc = self.var(qcvarname).astype(np.int32)
             # observation data
             outdata[varDict[value]['valKey']] = obsdata
