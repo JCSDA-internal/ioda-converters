@@ -60,7 +60,6 @@ namespace bufr {
                                   groupByFieldName);
         }
 
-
         std::vector<int> dims;
         std::vector<Query> dimPaths;
         TypeInfo info;
@@ -363,6 +362,7 @@ namespace bufr {
             rowLength *= dims[dimIdx];
         }
 
+        data.isLongString = targetField.data.isLongString;
         data.resize(totalRows * rowLength);
         for (size_t frameIdx = 0; frameIdx < dataFrames_.size(); ++frameIdx)
         {
@@ -371,6 +371,7 @@ namespace bufr {
             auto& targetField = dataFrame.fieldAtIdx(targetFieldIdx);
 
             if (!targetField.data.empty()) {
+
                 getRowsForField(targetField,
                                 frameData,
                                 allDims,
@@ -460,6 +461,7 @@ namespace bufr {
         }
 
         auto output = NodeLookupTable::NodeData();
+        output.isLongString = targetField.data.isLongString;
         output.resize(product(dims));
 
         for (size_t i = 0; i < idxs.size(); ++i)
