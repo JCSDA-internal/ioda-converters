@@ -1574,9 +1574,10 @@ class Radiances(BaseGSI):
                         continue
                     key1 = 'Observation'
                     tmp = self.var(key1) - self.var(gsivar)
-                    # Save GsiHofXBc from "Forecast_adjusted" if some of "Obs_Minus_Forecast_adjusted" are
-                    # missing values, which results in the above tmp = zero.
-                    if min(tmp) < 1.0 and 'Forecast_adjusted' in self.df.variables:
+                    # If Obs_Minus_Forecast_adjusted is not avaible, save "Forecast_adjusted"
+                    # directly from GSI NC_diag.
+                    if "Obs_Minus_Forecast_adjusted" not in self.df.variables \
+                        and 'Forecast_adjusted' in self.df.variables:
                         tmp = self.var('Forecast_adjusted')
                 else:
                     tmp = self.var(gsivar)
