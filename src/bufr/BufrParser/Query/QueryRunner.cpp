@@ -258,7 +258,7 @@ namespace bufr
     {
         if (depth > origCounts.size() - 1)
         {
-            if (srcData.data.isLongString)
+            if (srcData.data.isLongStr())
             {
                 if (!skipResult) data.data.push_back(srcData.data.value.strings[offset]);
             }

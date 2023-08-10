@@ -362,7 +362,7 @@ namespace bufr {
             rowLength *= dims[dimIdx];
         }
 
-        data.isLongString = targetField.data.isLongString;
+        data.isLongStr(targetField.data.isLongStr());
         data.resize(totalRows * rowLength);
         for (size_t frameIdx = 0; frameIdx < dataFrames_.size(); ++frameIdx)
         {
@@ -383,7 +383,7 @@ namespace bufr {
                     auto &row = frameData[rowIdx];
                     for (size_t colIdx = 0; colIdx < row.size(); ++colIdx)
                     {
-                        if (targetField.data.isLongString)
+                        if (targetField.data.isLongStr())
                         {
                             data.value.strings[dataRowIdx * rowLength + rowIdx * row.size() +
                                  colIdx] = row.value.strings[colIdx];
@@ -461,12 +461,12 @@ namespace bufr {
         }
 
         auto output = Data();
-        output.isLongString = targetField.data.isLongString;
+        output.isLongStr(targetField.data.isLongStr());
         output.resize(product(dims));
 
         for (size_t i = 0; i < idxs.size(); ++i)
         {
-            if (targetField.data.isLongString)
+            if (targetField.data.isLongStr())
             {
                 output.value.strings[idxs[i]] = targetField.data.value.strings[i];
             }
@@ -493,7 +493,7 @@ namespace bufr {
                 {
                     if (output.size())
                     {
-                        if (targetField.data.isLongString)
+                        if (targetField.data.isLongStr())
                         {
                             dataRows[i].value.strings[0] = output.value.strings[0];
                         }
@@ -522,7 +522,7 @@ namespace bufr {
                 {
                     for (size_t j = 0; j < numsPerRow; ++j)
                     {
-                        if (targetField.data.isLongString)
+                        if (targetField.data.isLongStr())
                         {
                             dataRows[i].value.strings[j] = output.value.strings[i * numsPerRow + j];
                         }

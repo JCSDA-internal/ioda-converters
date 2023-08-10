@@ -62,16 +62,17 @@ namespace bufr {
             Value() {}
             ~Value() {}
 
-            void initOctet() {
+            void initOctet()
+            {
                 new (&octets) std::vector<double>();
             }
 
-            void initString() {
+            void initString()
+            {
                 new (&strings) std::vector<std::string>();
             }
         };
 
-        bool isLongString;
         Value value;
 
         Data() : isLongString(false)
@@ -211,6 +212,35 @@ namespace bufr {
                 return value.octets[idx] == MissingOctetValue;
             }
         }
+
+        void isLongStr(bool isLongString)
+        {
+            if (isLongString)
+            {
+                if (!this->isLongString)
+                {
+                    value.octets.~vector();
+                    value.initString();
+                }
+            }
+            else
+            {
+                if (this->isLongString)
+                {
+                    value.strings.~vector();
+                    value.initOctet();
+                }
+            }
+            this->isLongString = isLongString;
+        }
+
+        bool isLongStr() const
+        {
+            return isLongString;
+        }
+
+     private:
+        bool isLongString;
     };
 
 

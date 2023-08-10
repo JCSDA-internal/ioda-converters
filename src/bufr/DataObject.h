@@ -673,7 +673,7 @@ namespace Ingester
         void _setData(const bufr::Data& data,
                       typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr)
         {
-            if (data.isLongString)
+            if (data.isLongStr())
             {
                 std::ostringstream str;
                 str << "Can't make numerical field from string data.";
@@ -705,7 +705,7 @@ namespace Ingester
             typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr)
         {
             data_ = std::vector<std::string>();
-            if (data.isLongString)
+            if (data.isLongStr())
             {
                 data_ = data.value.strings;
             }
