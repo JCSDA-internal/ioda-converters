@@ -64,6 +64,8 @@ namespace bufr {
         std::vector<Query> dimPaths;
         TypeInfo info;
 
+        std::cout << "AA" << std::endl;
+
         Data data;
         getRawValues(fieldName,
                      groupByFieldName,
@@ -71,6 +73,8 @@ namespace bufr {
                      dims,
                      dimPaths,
                      info);
+
+        std::cout << "B" << std::endl;
 
         std::shared_ptr<Ingester::DataObjectBase> object = makeDataObject(fieldName,
                                                                           groupByFieldName,
@@ -80,6 +84,7 @@ namespace bufr {
                                                                           dims,
                                                                           dimPaths);
 
+        std::cout << "C" << std::endl;
         return object;
     }
 
