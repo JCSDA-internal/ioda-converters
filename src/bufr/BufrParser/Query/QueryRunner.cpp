@@ -163,7 +163,7 @@ namespace bufr
 
             if (targ->nodeIdx == 0)
             {
-                dataField.data = NodeLookupTable::NodeData();
+                dataField.data = Data();
                 dataField.seqCounts = SeqCounts(std::vector<std::vector<int>>(1, {1}));
             }
             else
@@ -220,7 +220,7 @@ namespace bufr
                 if (!hasFilter)
                 {
                     // No filters so just copy the data.
-                    dataField.data = lookupTable[targ->path.back().nodeId];
+                    dataField.data = lookupTable[targ->path.back().nodeId].data;
                 }
                 else
                 {
@@ -228,7 +228,7 @@ namespace bufr
                     // values.
                     dataField.data = makeFilteredData(lookupTable[targ->path.back().nodeId],
                                                       counts,
-                                                      filters);
+                                                      filters).data;
                 }
             }
         }
@@ -240,7 +240,7 @@ namespace bufr
                                             const std::vector<std::vector<size_t>>& filter) const
     {
         auto data = NodeLookupTable::NodeData();
-        data.reserve(sum(origCounts.back()));
+        data.data.reserve(sum(origCounts.back()));
 
         size_t offset = 0;
         _makeFilteredData(srcData, origCounts, filter, data, offset, 0);
@@ -258,13 +258,13 @@ namespace bufr
     {
         if (depth > origCounts.size() - 1)
         {
-            if (srcData.isLongString)
+            if (srcData.data.isLongString)
             {
-                if (!skipResult) data.push_back(srcData.stringData[offset]);
+                if (!skipResult) data.data.push_back(srcData.data.value.strings[offset]);
             }
             else
             {
-                if (!skipResult) data.push_back(srcData.data[offset]);
+                if (!skipResult) data.data.push_back(srcData.data.value.octets[offset]);
             }
 
             offset++;

@@ -64,7 +64,7 @@ namespace bufr {
         std::vector<Query> dimPaths;
         TypeInfo info;
 
-        NodeLookupTable::NodeData data;
+        Data data;
         getRawValues(fieldName,
                      groupByFieldName,
                      data,
@@ -177,7 +177,7 @@ namespace bufr {
 
     void ResultSet::getRawValues(const std::string& fieldName,
                                  const std::string& groupByField,
-                                 NodeLookupTable::NodeData& data,
+                                 Data& data,
                                  std::vector<int>& dims,
                                  std::vector<Query>& dimPaths,
                                  TypeInfo& info) const
@@ -367,7 +367,7 @@ namespace bufr {
         for (size_t frameIdx = 0; frameIdx < dataFrames_.size(); ++frameIdx)
         {
             auto& dataFrame = dataFrames_[frameIdx];
-            std::vector<NodeLookupTable::NodeData> frameData;
+            std::vector<Data> frameData;
             auto& targetField = dataFrame.fieldAtIdx(targetFieldIdx);
 
             if (!targetField.data.empty()) {
@@ -385,13 +385,13 @@ namespace bufr {
                     {
                         if (targetField.data.isLongString)
                         {
-                            data.stringData[dataRowIdx * rowLength + rowIdx * row.size() +
-                                 colIdx] = row.stringData[colIdx];
+                            data.value.strings[dataRowIdx * rowLength + rowIdx * row.size() +
+                                 colIdx] = row.value.strings[colIdx];
                         }
                         else
                         {
-                            data.data[dataRowIdx * rowLength + rowIdx * row.size() +
-                                 colIdx] = row.data[colIdx];
+                            data.value.octets[dataRowIdx * rowLength + rowIdx * row.size() +
+                                 colIdx] = row.value.octets[colIdx];
                         }
                     }
                 }
@@ -406,7 +406,7 @@ namespace bufr {
 //    subroutine result_set__get_rows_for_field(self, target_field, data_rows, dims, groupby_idx)
 
     void ResultSet::getRowsForField(const DataField& targetField,
-                                    std::vector<NodeLookupTable::NodeData>& dataRows,
+                                    std::vector<Data>& dataRows,
                                     const std::vector<int>& dims,
                                     int groupbyIdx) const
     {
@@ -460,7 +460,7 @@ namespace bufr {
             }
         }
 
-        auto output = NodeLookupTable::NodeData();
+        auto output = Data();
         output.isLongString = targetField.data.isLongString;
         output.resize(product(dims));
 
@@ -468,11 +468,11 @@ namespace bufr {
         {
             if (targetField.data.isLongString)
             {
-                output.stringData[idxs[i]] = targetField.data.stringData[i];
+                output.value.strings[idxs[i]] = targetField.data.value.strings[i];
             }
             else
             {
-                output.data[idxs[i]] = targetField.data.data[i];
+                output.value.octets[idxs[i]] = targetField.data.value.octets[i];
             }
         }
 
@@ -495,11 +495,11 @@ namespace bufr {
                     {
                         if (targetField.data.isLongString)
                         {
-                            dataRows[i].stringData[0] = output.stringData[0];
+                            dataRows[i].value.strings[0] = output.value.strings[0];
                         }
                         else
                         {
-                            dataRows[i].data[0] = output.data[0];
+                            dataRows[i].value.octets[0] = output.value.octets[0];
                         }
                     }
                 }
@@ -524,11 +524,11 @@ namespace bufr {
                     {
                         if (targetField.data.isLongString)
                         {
-                            dataRows[i].stringData[j] = output.stringData[i * numsPerRow + j];
+                            dataRows[i].value.strings[j] = output.value.strings[i * numsPerRow + j];
                         }
                         else
                         {
-                            dataRows[i].data[j] = output.data[i * numsPerRow + j];
+                            dataRows[i].value.octets[j] = output.value.octets[i * numsPerRow + j];
                         }
                     }
                 }
@@ -551,7 +551,7 @@ namespace bufr {
                                 const std::string& groupByFieldName,
                                 TypeInfo& info,
                                 const std::string& overrideType,
-                                const NodeLookupTable::NodeData data,
+                                const Data data,
                                 const std::vector<int> dims,
                                 const std::vector<Query> dimPaths) const
     {

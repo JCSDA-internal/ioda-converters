@@ -91,7 +91,7 @@ namespace bufr {
             lookup[target->nodeIdx].data.reserve(
                 sum(lookup[path.parentDimensionNodeId].counts));
             metaLookup[target->nodeIdx].collectedData = true;
-            lookup[target->nodeIdx].isLongString = target->typeInfo.isLongString();
+            lookup[target->nodeIdx].data.isLongString = target->typeInfo.isLongString();
             metaLookup[target->nodeIdx].longStrId = target->longStrId;
         }
 
@@ -100,10 +100,10 @@ namespace bufr {
             const auto nodeId = dataProvider_->getInv(cursor);
             if (metaLookup[nodeId].collectedData)
             {
-                if (lookup[nodeId].isLongString)
+                if (lookup[nodeId].data.isLongString)
                 {
                     auto longStr = dataProvider_->getLongStr(metaLookup[nodeId].longStrId);
-                    lookup[nodeId].stringData.push_back(longStr);
+                    lookup[nodeId].data.push_back(longStr);
                 }
                 else
                 {

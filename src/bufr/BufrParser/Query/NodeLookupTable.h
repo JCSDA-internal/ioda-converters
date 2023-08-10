@@ -16,6 +16,7 @@
 #include "DataProvider/DataProvider.h"
 #include "SubsetTable.h"
 #include "Target.h"
+#include "Constants.h"
 
 namespace Ingester {
 namespace bufr {
@@ -36,6 +37,12 @@ namespace bufr {
                 data_.resize(endIdx - startIdx + 1);
             }
 
+            OffsetArray(size_t startIdx, size_t endIdx, const T& initVal)
+                : offset_(startIdx)
+            {
+                data_.resize(endIdx - startIdx + 1, initVal);
+            }
+
             T& operator[](size_t idx) { return data_[idx - offset_]; }
 
          private:
@@ -45,14 +52,174 @@ namespace bufr {
     }  // namespace __details
 
 
+    struct Data
+    {
+        union Value
+        {
+            std::vector<double> octets;
+            std::vector<std::string> strings;
+
+            Value() {}
+            ~Value() {}
+
+            void initOctet() {
+                new (&octets) std::vector<double>();
+            }
+
+            void initString() {
+                new (&strings) std::vector<std::string>();
+            }
+        };
+
+        bool isLongString;
+        Value value;
+
+        Data() : isLongString(false)
+        {
+            value.initOctet();
+        }
+
+        Data(bool isLongString)
+            : isLongString(isLongString)
+        {
+            if (isLongString)
+            {
+                value.initString();
+            }
+            else
+            {
+                value.initOctet();
+            }
+        }
+
+        Data(const Data& other) : isLongString(other.isLongString)
+        {
+            if (isLongString)
+            {
+                value.initString();
+                value.strings = other.value.strings;
+            }
+            else
+            {
+                value.initOctet();
+                value.octets = other.value.octets;
+            }
+        }
+
+        ~Data()
+        {
+            if (isLongString)
+            {
+                value.strings.~vector();
+            }
+            else
+            {
+                value.octets.~vector();
+            }
+        }
+
+        void operator=(const Data& other)
+        {
+            if (isLongString)
+            {
+                value.strings = other.value.strings;
+            }
+            else
+            {
+                value.octets = other.value.octets;
+            }
+        }
+
+        void operator=(Data&& other)
+        {
+            if (isLongString)
+            {
+                value.strings = std::move(other.value.strings);
+            }
+            else
+            {
+                value.octets = std::move(other.value.octets);
+            }
+        }
+
+        size_t size() const
+        {
+            if (isLongString)
+            {
+                return value.strings.size();
+            }
+            else
+            {
+                return value.octets.size();
+            }
+        }
+
+        void resize(size_t size)
+        {
+            if (isLongString)
+            {
+                value.strings.resize(size, MissingStringValue);
+            }
+            else
+            {
+                value.octets.resize(size, MissingOctetValue);
+            }
+        }
+
+        void reserve(size_t size)
+        {
+            if (isLongString)
+            {
+                value.strings.reserve(size);
+            }
+            else
+            {
+                value.octets.reserve(size);
+            }
+        }
+
+        void push_back(double val)
+        {
+            value.octets.push_back(val);
+        }
+
+        void push_back(const std::string& val)
+        {
+            value.strings.push_back(val);
+        }
+
+        bool empty() const
+        {
+            if (isLongString)
+            {
+                return value.strings.empty();
+            }
+            else
+            {
+                return value.octets.empty();
+            }
+        }
+
+        bool isMissing(size_t idx) const
+        {
+            if (isLongString)
+            {
+                return value.strings[idx] == MissingStringValue;
+            }
+            else
+            {
+                return value.octets[idx] == MissingOctetValue;
+            }
+        }
+    };
+
+
     /// \brief Lookup table that maps BUFR subset node ids to the data and counts found in the BUFR
     /// message subset data section. This makes it possible to quickly access the data and counts
     /// information for a given node.
     class NodeLookupTable
     {
      public:
-        typedef std::vector<double> OctetData;
-        typedef std::vector<std::string> StringData;
         typedef std::vector<int> CountsVector;
 
         struct NodeMetaData
@@ -65,75 +232,14 @@ namespace bufr {
 
         struct NodeData
         {
-            OctetData data;
-            StringData stringData;
+            Data data;
             CountsVector counts;
-            bool isLongString = false;
-
-
-            void resize(size_t size)
-            {
-                if (isLongString)
-                {
-                    stringData.resize(size, "");
-                }
-                else
-                {
-                    data.resize(size, 10e10);
-                }
-            }
-
-            void reserve(size_t size)
-            {
-                if (isLongString)
-                {
-                    stringData.reserve(size);
-                }
-                else
-                {
-                    data.reserve(size);
-                }
-            }
-
-            void push_back(double value)
-            {
-                data.push_back(value);
-            }
-
-            void push_back(const std::string& value)
-            {
-                stringData.push_back(value);
-            }
-
-            bool empty() const
-            {
-                if (isLongString)
-                {
-                    return stringData.empty();
-                }
-                else
-                {
-                    return data.empty();
-                }
-            }
-
-            size_t size() const
-            {
-                if (isLongString)
-                {
-                    return stringData.size();
-                }
-                else
-                {
-                    return data.size();
-                }
-            }
         };
 
         typedef __details::OffsetArray<NodeData> LookupTable;
         typedef __details::OffsetArray<NodeMetaData> MetaDataLookup;
 
-        NodeLookupTable(const std::shared_ptr<DataProvider>& dataProvider, const Targets& targets);
+        NodeLookupTable(const std::shared_ptr<DataProvider>& dataProvider, const Targets& targets );
 
         /// \brief Returns the NodeData for a given bufr node.
         /// \param[in] nodeId The id of the node to get the data for.

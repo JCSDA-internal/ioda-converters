@@ -40,7 +40,7 @@ namespace bufr {
     struct DataField
     {
         std::shared_ptr<Target> target;
-        NodeLookupTable::NodeData data;
+        Data data;
         SeqCounts seqCounts;
     };
 
@@ -174,7 +174,7 @@ namespace bufr {
         /// \param info The meta data for the element.
         void getRawValues(const std::string& fieldName,
                           const std::string& groupByField,
-                          NodeLookupTable::NodeData& data,
+                          Data& data,
                           std::vector<int>& dims,
                           std::vector<Query>& dimPaths,
                           TypeInfo& info) const;
@@ -187,7 +187,7 @@ namespace bufr {
         /// \param[in] dims Vector of dimension sizes.
         /// \param[in] groupbyIdx Idx of the group by field (which query component).
         void getRowsForField(const DataField& targetField,
-                             std::vector<NodeLookupTable::NodeData>& dataRows,
+                             std::vector<Data>& dataRows,
                              const std::vector<int>& dims,
                              int groupbyIdx) const;
 
@@ -210,7 +210,7 @@ namespace bufr {
                                 const std::string& groupByFieldName,
                                 TypeInfo& info,
                                 const std::string& overrideType,
-                                const NodeLookupTable::NodeData data,
+                                const Data data,
                                 const std::vector<int> dims,
                                 const std::vector<Query> dimPaths) const;
 

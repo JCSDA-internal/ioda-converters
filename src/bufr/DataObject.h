@@ -114,7 +114,7 @@ namespace Ingester
         void setQuery(const std::string& query) { query_ = query; }
         void setDimPaths(const std::vector<bufr::Query>& dimPaths)
             { dimPaths_ = dimPaths; }
-        virtual void setData(const bufr::NodeLookupTable::NodeData& data) = 0;
+        virtual void setData(const bufr::Data& data) = 0;
 
         // Getters
         std::string getFieldName() const { return fieldName_; }
@@ -255,7 +255,7 @@ namespace Ingester
 
         /// \brief Set the data for this object
         /// \param data The data vector
-        void setData(const bufr::NodeLookupTable::NodeData& data) final
+        void setData(const bufr::Data& data) final
         {
             _setData(data);
         }
@@ -670,7 +670,7 @@ namespace Ingester
         /// \param data - double vector of raw data
         /// \param dataMissingValue - The number that represents missing values within the raw data
         template<typename U = void>
-        void _setData(const bufr::NodeLookupTable::NodeData& data,
+        void _setData(const bufr::Data& data,
                       typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr)
         {
             if (data.isLongString)
@@ -681,12 +681,12 @@ namespace Ingester
             }
             else
             {
-                data_ = std::vector<T>(data.data.size());
-                for (size_t idx = 0; idx < data.data.size(); ++idx)
+                data_ = std::vector<T>(data.size());
+                for (size_t idx = 0; idx < data.size(); ++idx)
                 {
-                    if (data.data[idx] != 10e10)
+                    if (!data.isMissing(idx))
                     {
-                        data_[idx] = data.data[idx];
+                        data_[idx] = data.value.octets[idx];
                     }
                     else
                     {
@@ -701,20 +701,20 @@ namespace Ingester
         /// \param dataMissingValue - The number that represents missing values within the raw data
         template<typename U = void>
         void _setData(
-            const bufr::NodeLookupTable::NodeData& data,
+            const bufr::Data& data,
             typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr)
         {
             data_ = std::vector<std::string>();
             if (data.isLongString)
             {
-                data_ = data.stringData;
+                data_ = data.value.strings;
             }
             else
             {
-                auto charPtr = reinterpret_cast<const char *>(data.data.data());
+                auto charPtr = reinterpret_cast<const char *>(data.value.octets.data());
                 for (size_t row_idx = 0; row_idx < data.size(); row_idx++)
                 {
-                    if (data.data[row_idx] != 10e10)
+                    if (!data.isMissing(row_idx))
                     {
                         std::string str = std::string(
                             charPtr + row_idx * sizeof(double), sizeof(double));
