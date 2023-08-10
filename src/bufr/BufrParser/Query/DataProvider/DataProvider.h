@@ -74,6 +74,8 @@ namespace bufr {
         bool isInteger() const { return scale <= 0; }
         bool is64Bit() const
         {
+            if (bits == 0) return false;
+
             bool is64Bit;
             if (isInteger() && !isSigned())
             {
