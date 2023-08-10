@@ -121,6 +121,8 @@ namespace bufr {
 
         void operator=(const Data& other)
         {
+            isLongStr(other.isLongString);
+
             if (isLongString)
             {
                 value.strings = other.value.strings;
@@ -133,6 +135,8 @@ namespace bufr {
 
         void operator=(Data&& other)
         {
+            isLongStr(other.isLongString);
+
             if (isLongString)
             {
                 value.strings = std::move(other.value.strings);
