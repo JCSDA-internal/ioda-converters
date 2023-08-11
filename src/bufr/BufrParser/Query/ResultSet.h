@@ -211,9 +211,9 @@ namespace bufr {
                                 const std::string& groupByFieldName,
                                 TypeInfo& info,
                                 const std::string& overrideType,
-                                const Data data,
-                                const std::vector<int> dims,
-                                const std::vector<Query> dimPaths) const;
+                                const Data& data,
+                                const std::vector<int>& dims,
+                                const std::vector<Query>& dimPaths) const;
 
         /// \brief Make an appropriate DataObject for data with the TypeInfo
         /// \param info The meta data for the element.

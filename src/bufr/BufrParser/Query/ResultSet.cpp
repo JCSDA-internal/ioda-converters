@@ -424,7 +424,7 @@ namespace bufr {
         }
 
         // Compute insert array
-        std::vector<std::vector<int>> inserts(dims.size(), {0});
+        std::vector<std::vector<int>> inserts(dims.size());
         for (size_t repIdx = 0;
              repIdx < std::min(dims.size(), targetField.seqCounts.size());
              ++repIdx)
@@ -439,19 +439,17 @@ namespace bufr {
         {
             for (size_t insert_idx = 0; insert_idx < inserts[dim_idx].size(); ++insert_idx)
             {
-                size_t num_inserts = inserts[dim_idx][insert_idx];
-                if (num_inserts > 0)
-                {
-                    int data_idx = product<int>(dims.begin() + dim_idx, dims.end()) *
-                            insert_idx + product<int>(dims.begin() + dim_idx, dims.end())
-                                    - num_inserts - 1;
+                const size_t num_inserts = inserts[dim_idx][insert_idx];
 
-                    for (size_t i = 0; i < idxs.size(); ++i)
+                int data_idx = product<int>(dims.begin() + dim_idx, dims.end()) *
+                        insert_idx + product<int>(dims.begin() + dim_idx, dims.end())
+                                - num_inserts - 1;
+
+                for (size_t i = 0; i < idxs.size(); ++i)
+                {
+                    if (static_cast<int>(idxs[i]) > data_idx)
                     {
-                        if (static_cast<int>(idxs[i]) > data_idx)
-                        {
-                            idxs[i] += num_inserts;
-                        }
+                        idxs[i] += num_inserts;
                     }
                 }
             }
@@ -548,9 +546,9 @@ namespace bufr {
                                 const std::string& groupByFieldName,
                                 TypeInfo& info,
                                 const std::string& overrideType,
-                                const Data data,
-                                const std::vector<int> dims,
-                                const std::vector<Query> dimPaths) const
+                                const Data& data,
+                                const std::vector<int>& dims,
+                                const std::vector<Query>& dimPaths) const
     {
         std::shared_ptr<DataObjectBase> object;
         if (overrideType.empty())
