@@ -402,8 +402,6 @@ namespace bufr {
         dims = slice(dims, exportDims);
     }
 
-//    subroutine result_set__get_rows_for_field(self, target_field, data_rows, dims, groupby_idx)
-
     void ResultSet::getRowsForField(const DataField& targetField,
                                     std::vector<Data>& dataRows,
                                     const std::vector<int>& dims,
