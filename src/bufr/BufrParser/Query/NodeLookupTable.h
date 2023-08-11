@@ -80,8 +80,7 @@ namespace bufr {
             value.initOctet();
         }
 
-        Data(bool isLongString)
-            : isLongString(isLongString)
+        explicit Data(bool isLongString) : isLongString(isLongString)
         {
             if (isLongString)
             {
@@ -273,7 +272,7 @@ namespace bufr {
         typedef __details::OffsetArray<NodeData> LookupTable;
         typedef __details::OffsetArray<NodeMetaData> MetaDataLookup;
 
-        NodeLookupTable(const std::shared_ptr<DataProvider>& dataProvider, const Targets& targets );
+        NodeLookupTable(const std::shared_ptr<DataProvider>& dataProvider, const Targets& targets);
 
         /// \brief Returns the NodeData for a given bufr node.
         /// \param[in] nodeId The id of the node to get the data for.

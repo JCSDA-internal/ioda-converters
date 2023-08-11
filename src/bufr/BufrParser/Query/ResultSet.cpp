@@ -371,7 +371,6 @@ namespace bufr {
             auto& targetField = dataFrame.fieldAtIdx(targetFieldIdx);
 
             if (!targetField.data.empty()) {
-
                 getRowsForField(targetField,
                                 frameData,
                                 allDims,
