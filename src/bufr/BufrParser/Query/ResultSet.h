@@ -170,7 +170,7 @@ namespace bufr {
         /// \param fieldName The name of the field to get the data for.
         /// \param groupByFieldName The name of the field to group the data by.
         /// \param[out] data The output data.
-        /// \param[out] dims The size of the dimensions of the result data (any number of dimensions).
+        /// \param[out] dims The size of the dimensions of the result data.
         /// \param[out] dimPaths The dimensioning sub-query path strings.
         /// \param[out] info The meta data for the element.
         void getRawValues(const std::string& fieldName,

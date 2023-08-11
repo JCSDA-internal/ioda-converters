@@ -239,7 +239,7 @@ namespace bufr {
             return isLongString;
         }
 
-    private:
+     private:
         bool isLongString;
     };
 }  // namespace bufr
