@@ -288,6 +288,8 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_query_python_to_ioda_test.py
     testinput/bufr_query_fieldname_validation.py
     testinput/bufr_ncep_rtma_mesonet.yaml
+    testinput/bufr_ncep_long_strs.yaml
+    /testinput/gdas.t06z.snocvr.tm00.bufr_d
   )
 
   list( APPEND test_output
@@ -348,6 +350,7 @@ if( iodaconv_bufr_ENABLED )
     testoutput/prepbufr_adpupa_api.nc
     testoutput/bufr_query_python_to_ioda_test.nc
     testoutput/rtma_ru.t00z.msonet.tm00.nc
+    testoutput/bufr_ncep_long_strs.nc
   )
 endif()
 
@@ -1621,6 +1624,15 @@ if(iodaconv_bufr_ENABLED)
                     netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_prepbufr_adpsfc_cloud_rrfs.yaml"
                     rrfs.t06z.adpsfc.prepbufr.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_long_strs
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    netcdf
+                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_long_strs.yaml"
+                    bufr_ncep_long_strs.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
 #  FIXME: Greg Thompson
