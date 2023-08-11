@@ -424,7 +424,7 @@ namespace bufr {
         }
 
         // Compute insert array
-        std::vector<std::vector<int>> inserts(dims.size());
+        std::vector<std::vector<int>> inserts(dims.size(), {0});
         for (size_t repIdx = 0;
              repIdx < std::min(dims.size(), targetField.seqCounts.size());
              ++repIdx)
