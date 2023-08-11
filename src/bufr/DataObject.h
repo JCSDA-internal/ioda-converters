@@ -35,7 +35,7 @@
 
 #include "BufrParser/Query/Constants.h"
 #include "BufrParser/Query/QueryParser.h"
-#include "BufrParser/Query/NodeLookupTable.h"
+#include "BufrParser/Query/Data.h"
 
 namespace Ingester
 {
@@ -254,7 +254,7 @@ namespace Ingester
         virtual ~DataObject() = default;
 
         /// \brief Set the data for this object
-        /// \param data The data vector
+        /// \param data The data
         void setData(const bufr::Data& data) final
         {
             _setData(data);
@@ -667,8 +667,8 @@ namespace Ingester
         }
 
         /// \brief Set the data associated with this data object (numeric DataObject).
-        /// \param data - double vector of raw data
-        /// \param dataMissingValue - The number that represents missing values within the raw data
+        /// \param data The raw data
+        /// \param dataMissingValue The number that represents missing values within the raw data
         template<typename U = void>
         void _setData(const bufr::Data& data,
                       typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr)
@@ -697,8 +697,8 @@ namespace Ingester
         }
 
         /// \brief Set the data associated with this data object (string DataObject).
-        /// \param data - double vector of raw data
-        /// \param dataMissingValue - The number that represents missing values within the raw data
+        /// \param data The raw data
+        /// \param dataMissingValue The number that represents missing values within the raw data
         template<typename U = void>
         void _setData(
             const bufr::Data& data,

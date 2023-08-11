@@ -70,6 +70,7 @@ if ( iodaconv_bufr_ENABLED )
     BufrParser/Query/Tokenizer.cpp
     BufrParser/Query/SubsetTable.h
     BufrParser/Query/SubsetTable.cpp
+    BufrParser/Query/Data.h
     BufrParser/Query/NodeLookupTable.h
     BufrParser/Query/NodeLookupTable.cpp
     IodaEncoder/IodaEncoder.cpp
@@ -165,6 +166,7 @@ if ( iodaconv_bufr_python_ENABLED )
     BufrParser/Query/Tokenizer.cpp
     BufrParser/Query/SubsetTable.h
     BufrParser/Query/SubsetTable.cpp
+    BufrParser/Query/Data.h
     BufrParser/Query/NodeLookupTable.h
     BufrParser/Query/NodeLookupTable.cpp
     BufrParser/Query/python_bindings.cpp

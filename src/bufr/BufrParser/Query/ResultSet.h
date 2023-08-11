@@ -26,7 +26,7 @@
 #include "DataProvider/DataProvider.h"
 #include "DataObject.h"
 #include "Target.h"
-#include "NodeLookupTable.h"
+#include "Data.h"
 
 
 namespace Ingester {
@@ -169,9 +169,10 @@ namespace bufr {
         /// getRowsForField to get the relevant data from each DataFrame.
         /// \param fieldName The name of the field to get the data for.
         /// \param groupByFieldName The name of the field to group the data by.
-        /// \param dims The size of the dimensions of the result data (any number of dimensions).
-        /// \param dimPaths The dimensioning sub-query path strings.
-        /// \param info The meta data for the element.
+        /// \param[out] data The output data.
+        /// \param[out] dims The size of the dimensions of the result data (any number of dimensions).
+        /// \param[out] dimPaths The dimensioning sub-query path strings.
+        /// \param[out] info The meta data for the element.
         void getRawValues(const std::string& fieldName,
                           const std::string& groupByField,
                           Data& data,
@@ -183,7 +184,7 @@ namespace bufr {
         /// The dims are used to determine the filling pattern so that that the resulting data can
         /// be reshaped to the dimensions specified.
         /// \param[in] targetField The target field to retrieve.
-        /// \param[out] dataRows The data.
+        /// \param[out] dataRows The output data.
         /// \param[in] dims Vector of dimension sizes.
         /// \param[in] groupbyIdx Idx of the group by field (which query component).
         void getRowsForField(const DataField& targetField,
