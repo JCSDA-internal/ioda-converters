@@ -440,6 +440,7 @@ namespace bufr {
             for (size_t insert_idx = 0; insert_idx < inserts[dim_idx].size(); ++insert_idx)
             {
                 const size_t num_inserts = inserts[dim_idx][insert_idx];
+                if (num_inserts == 0) continue;
 
                 int data_idx = product<int>(dims.begin() + dim_idx, dims.end()) *
                         insert_idx + product<int>(dims.begin() + dim_idx, dims.end())
