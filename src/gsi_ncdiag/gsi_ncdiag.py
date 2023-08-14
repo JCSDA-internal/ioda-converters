@@ -135,7 +135,8 @@ all_LocKeyList = {
     'process_center': ('dataProviderOrigin', 'integer'),
     'Elevation': ('heightOfSurface', 'float'),
     'Obs_Time': ('dateTime', 'string'),
-    'Scan_Position': ('sensorScanPosition', 'float'),
+#   'Scan_Position': ('sensorScanPosition', 'float'),     #orig
+    'Scan_Position': ('sensorScanPosition', 'integer'),   #emily
     'Sat_Zenith_Angle': ('sensorZenithAngle', 'float'),
     'Sat_Azimuth_Angle': ('sensorAzimuthAngle', 'float'),
     'Sol_Zenith_Angle': ('solarZenithAngle', 'float'),
@@ -147,11 +148,15 @@ all_LocKeyList = {
     'Reference_Pressure': ('pressure', 'float'),
     'Solar_Zenith_Angle': ('solarZenithAngle', 'float'),
     'Row_Anomaly_Index': ('row_anomaly_index', 'float'),
+    'Total_Ozone_Quality_Flag': ('totalOzoneQualityFlag', 'integer'),    #emily
     'TopLevelPressure': ('top_level_pressure', 'float'),
     'BottomLevelPressure': ('bottom_level_pressure', 'float'),
-    'Total_Ozone_Error_Flag': ('total_ozone_error_flag', 'float'),
-    'Profile_Ozone_Error_Flag': ('profile_ozone_error_flag', 'float'),
-    'Algorithm_Flag_For_Best_Ozone': ('bestOzoneAlgorithmFlag', 'float'),
+#   'Total_Ozone_Error_Flag': ('total_ozone_error_flag', 'float'),
+#   'Profile_Ozone_Error_Flag': ('profile_ozone_error_flag', 'float'),
+#   'Algorithm_Flag_For_Best_Ozone': ('bestOzoneAlgorithmFlag', 'float'),
+    'Total_Ozone_Error_Flag': ('total_ozone_error_flag', 'integer'),        #emily
+    'Profile_Ozone_Error_Flag': ('profile_ozone_error_flag', 'integer'),    #emily
+    'Algorithm_Flag_For_Best_Ozone': ('bestOzoneAlgorithmFlag', 'integer'), #emily
     'XoverR': ('radar_azimuth', 'float'),
     'YoverR': ('radar_tilt', 'float'),
     'ZoverR': ('radar_dir3', 'float'),
@@ -452,6 +457,7 @@ geovals_vars = {
     'Snow_Depth': 'surface_snow_thickness',
     'humidity_mixing_ratio': 'humidity_mixing_ratio',
     'Sfc_Height': 'surface_geopotential_height',
+    'model_height': 'height',    #emily
     'Wind_Reduction_Factor_at_10m': 'wind_reduction_factor_at_10m',
     'sulf': 'sulf',
     'bc1': 'bc1',
@@ -491,14 +497,30 @@ aod_sensors = [
     'viirs',
 ]
 
+#>>orig
+#oz_lay_sensors = [
+#    'gome',
+#    'sbuv2',
+#    'omi',
+#    'ompsnp',
+#    'ompstc8',
+#    'ompsnm',
+#]
+#<<orig
+
+#>>emily
 oz_lay_sensors = [
+     'sbuv2',
+     'ompsnp',
+]
+ 
+oz_total_sensors = [
     'gome',
-    'sbuv2',
     'omi',
-    'ompsnp',
     'ompstc8',
     'ompsnm',
 ]
+#<<emily
 
 oz_lev_sensors = [
     'ompslp',
@@ -596,6 +618,8 @@ units_values = {
     'row_anomaly_index': '1',
     'total_ozone_error_flag': '1',
     'profile_ozone_error_flag': '1',
+    'totalOzoneQuality': '1',      #emily 
+    'profileOzoneQuality': '1',    #emily
     'top_level_pressure': 'Pa',
     'bottom_level_pressure': 'Pa',
     'tropopausePressure': 'Pa',
@@ -1483,6 +1507,7 @@ class Radiances(BaseGSI):
                 ii += 1
         for lvar in LocVars:
             loc_mdata_name = all_LocKeyList[lvar][0]
+            dtype = all_LocKeyList[lvar][1]  #emily
             if lvar == 'Obs_Time':
                 tmp = self.var(lvar)[::nchans]
                 obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
@@ -1508,8 +1533,14 @@ class Radiances(BaseGSI):
                 # if loc_mdata_name in units_values.keys():
                 #     varAttrs[(loc_mdata_name, 'MetaData')]['units'] = units_values[loc_mdata_name]
             else:
-                tmp = self.var(lvar)[::nchans]
-                tmp[tmp > 4e8] = self.FLOAT_FILL
+                if dtype == 'integer': 
+                    tmp = self.var(lvar)[::nchans].astype(np.int32)
+                    tmp[tmp > 4e8] = self.INT_FILL
+                else:
+                    tmp = self.var(lvar)[::nchans]
+                    tmp[tmp > 4e8] = self.FLOAT_FILL
+#               tmp = self.var(lvar)[::nchans]
+#               tmp[tmp > 4e8] = self.FLOAT_FILL
                 outdata[(loc_mdata_name, 'MetaData')] = tmp
                 if loc_mdata_name in units_values.keys():
                     varAttrs[(loc_mdata_name, 'MetaData')]['units'] = units_values[loc_mdata_name]
@@ -1687,7 +1718,11 @@ class Ozone(BaseGSI):
         self.filename = filename
         splitfname = self.filename.split('/')[-1].split('_')
         i = False
-        oz_sensors = oz_lay_sensors + oz_lev_sensors
+        oz_sensors = oz_lay_sensors + oz_lev_sensors + oz_total_sensors #emily
+        print('emily checking oz_lay_sensors   = ', oz_lay_sensors)     #emily 
+        print('emily checking oz_lev_sensors   = ', oz_lev_sensors)     #emily 
+        print('emily checking oz_total_sensors = ', oz_total_sensors)   #emily 
+        print('emily checking oz_sensors       = ', oz_sensors)         #emily 
         for s in oz_sensors:
             if s in splitfname:
                 i = splitfname.index(s)
@@ -1697,10 +1732,13 @@ class Ozone(BaseGSI):
         # sensor and satellite
         self.sensor = splitfname[i]
         self.satellite = splitfname[i+1]
+        print('emily checking self.sensor    = ', self.sensor)    #emily 
+        print('emily checking self.satellite = ', self.satellite) #emily 
 
     def read(self):
         # get valid time
         df = nc.Dataset(self.filename)
+        print('emily checking self.filename = ',self.filename)  #emily 
         tstr = str(df.getncattr('date_time'))
         self.validtime = dt.datetime.strptime(tstr, "%Y%m%d%H")
         # number of observations
@@ -1740,7 +1778,8 @@ class Ozone(BaseGSI):
 
         # other dims
         ncout.createDimension("nlevs", self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
-        if (self.sensor in oz_lay_sensors):
+#       if (self.sensor in oz_lay_sensors):                        #orig
+        if (self.sensor in oz_lay_sensors + oz_total_sensors):     #emily
             ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
         for var in self.df.variables.values():
             vname = var.name
@@ -1787,9 +1826,20 @@ class Ozone(BaseGSI):
                 LocVars.append(ncv)
 
         nlocs = self.nobs
-        vname = "ozoneTotal"
-        if (self.sensor in oz_lay_sensors):
-            vname = "ozoneLayer"
+#>>orig
+#        vname = "ozoneTotal"
+#        if (self.sensor in oz_lay_sensors):
+#            vname = "ozoneLayer"
+#<<orig
+#>>emily
+        vname = "ozoneLayer"
+        if (self.sensor in oz_total_sensors):
+            vname = "ozoneTotal"
+        else:
+            vname = "ozoneProfile"   
+        print('emily checking self.sensor = ', self.sensor)
+        print('emily checking ozone vname = ', vname)
+#<<emily
         varDict[vname]['valKey'] = vname, iconv.OvalName()
         varDict[vname]['errKey'] = vname, iconv.OerrName()
         varDict[vname]['qcKey'] = vname, iconv.OqcName()
@@ -1806,6 +1856,7 @@ class Ozone(BaseGSI):
         varAttrs[varDict[vname]['qcKey']]['_FillValue'] = self.INT_FILL
 
         obsdata = self.var('Observation')
+        obsdata[obsdata > 4e8] = self.FLOAT_FILL  # 1e11 is fill value for ozone  #emily 
         try:
             tmp = self.var('Input_Observation_Error')
         except IndexError:
@@ -1818,6 +1869,7 @@ class Ozone(BaseGSI):
         obsqc = self.var('Analysis_Use_Flag').astype(np.int32)
         for lvar in LocVars:
             loc_mdata_name = all_LocKeyList[lvar][0]
+            dtype = all_LocKeyList[lvar][1]    #emily
             if lvar == 'Time' or lvar == 'time':
                 tmp = self.var(lvar)
                 obstimes = [self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
@@ -1827,7 +1879,18 @@ class Ozone(BaseGSI):
             else:
                 tmp = self.var(lvar)
                 tmp[tmp > 4e8] = self.FLOAT_FILL
-                outdata[(loc_mdata_name, 'MetaData')] = tmp
+              # outdata[(loc_mdata_name, 'MetaData')] = tmp   #orig
+#>>emily
+                if dtype == 'integer':
+                #  outdata[(loc_mdata_name, 'MetaData')] = self.var(lvar).astype(np.int32)
+                   outdata[(loc_mdata_name, 'MetaData')] = tmp.astype(np.int32)
+                elif dtype == 'long':
+                #  outdata[(loc_mdata_name, 'MetaData')] = self.var(lvar).astype(np.int64)
+                   outdata[(loc_mdata_name, 'MetaData')] = tmp.astype(np.int64)
+                else:
+                #  outdata[(loc_mdata_name, 'MetaData')] = self.var(lvar)
+                   outdata[(loc_mdata_name, 'MetaData')] = tmp
+ #<<emily
                 if loc_mdata_name in units_values.keys():
                     varAttrs[(loc_mdata_name, 'MetaData')]['units'] = units_values[loc_mdata_name]
             VarDims[(loc_mdata_name, 'MetaData')] = ['Location']

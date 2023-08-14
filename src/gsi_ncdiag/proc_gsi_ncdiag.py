@@ -135,9 +135,12 @@ if MyArgs.obs_dir:
             run_radiances_obs(radfile, ObsDir, ObsBias, QCVars, TestRefs)
     # atmospheric composition observations
     # ozone
+    print('emily checkint proc_gsi_ncdiag: radfiles = ', radfiles)
     for radfile in radfiles:
         process = False
-        oz_sensors = gsid.oz_lay_sensors + gsid.oz_lev_sensors
+#       oz_sensors = gsid.oz_lay_sensors + gsid.oz_lev_sensors
+        oz_sensors = gsid.oz_lay_sensors + gsid.oz_lev_sensors + gsid.oz_total_sensors
+        print('emily checkint proc_gsi_ncdiag: oz_sensors = ', oz_sensors)
         for p in oz_sensors:
             if p in radfile:
                 process = True
@@ -168,7 +171,8 @@ if MyArgs.geovals_dir:
     # ozone
     for radfile in radfiles:
         process = False
-        oz_sensors = gsid.oz_lay_sensors + gsid.oz_lev_sensors
+#       oz_sensors = gsid.oz_lay_sensors + gsid.oz_lev_sensors
+        oz_sensors = gsid.oz_lay_sensors + gsid.oz_lev_sensors + gsid.oz_total_sensors
         for p in oz_sensors:
             if p in radfile:
                 process = True
