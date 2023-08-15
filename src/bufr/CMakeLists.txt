@@ -70,6 +70,7 @@ if ( iodaconv_bufr_ENABLED )
     BufrParser/Query/Tokenizer.cpp
     BufrParser/Query/SubsetTable.h
     BufrParser/Query/SubsetTable.cpp
+    BufrParser/Query/Data.h
     BufrParser/Query/SubsetLookupTable.h
     BufrParser/Query/SubsetLookupTable.cpp
     IodaEncoder/IodaEncoder.cpp
@@ -97,6 +98,7 @@ if ( iodaconv_bufr_ENABLED )
               ${oops_LIBRARIES}
               ioda_engines
               bufr::bufr_4
+              gsl::gsl-lite
               atms_lib
     )
 
@@ -136,6 +138,7 @@ if ( iodaconv_bufr_python_ENABLED )
               Eigen3::Eigen
               eckit
               bufr::bufr_4
+              gsl::gsl-lite
     )
 
   list (APPEND _query_srcs
@@ -163,6 +166,7 @@ if ( iodaconv_bufr_python_ENABLED )
     BufrParser/Query/Tokenizer.cpp
     BufrParser/Query/SubsetTable.h
     BufrParser/Query/SubsetTable.cpp
+    BufrParser/Query/Data.h
     BufrParser/Query/SubsetLookupTable.h
     BufrParser/Query/SubsetLookupTable.cpp
     BufrParser/Query/python_bindings.cpp

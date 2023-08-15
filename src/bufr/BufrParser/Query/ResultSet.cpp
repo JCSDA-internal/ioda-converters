@@ -280,7 +280,7 @@ namespace bufr {
         return metaData;
     }
 
-    details::Data ResultSet::assembleData(const details::TargetMetaDataPtr& metaData) const
+    details::ResultData ResultSet::assembleData(const details::TargetMetaDataPtr& metaData) const
     {
         int rowLength = 1;
         for (size_t dimIdx = 1; dimIdx < metaData->rawDims.size(); ++dimIdx)
@@ -293,8 +293,9 @@ namespace bufr {
 
         // Allocate the output data
         auto totalRows = frames_.size();
-        auto data = details::Data();
-        data.buffer.resize(totalRows * rowLength, MissingValue);
+        auto data = details::ResultData();
+        data.buffer.isLongStr(metaData->typeInfo.isLongString());
+        data.buffer.resize(totalRows * rowLength);
         data.dims = metaData->dims;
         data.rawDims = metaData->rawDims;
 
@@ -322,9 +323,19 @@ namespace bufr {
             else
             {
                 const auto& fragment = frame[target->nodeIdx].data;
-                std::copy(fragment.begin(),
-                          fragment.end(),
-                          data.buffer.begin() + frameIdx * rowLength);
+
+                if (data.buffer.isLongStr())
+                {
+                    std::copy(fragment.value.strings.begin(),
+                              fragment.value.strings.end(),
+                              data.buffer.value.strings.begin() + frameIdx * rowLength);
+                }
+                else
+                {
+                    std::copy(fragment.value.octets.begin(),
+                              fragment.value.octets.end(),
+                              data.buffer.value.octets.begin() + frameIdx * rowLength);
+                }
             }
 
             if (target->usesFilters) needsFiltering = true;
@@ -338,8 +349,9 @@ namespace bufr {
                 filteredRowLength *= metaData->filteredDims[dimIdx];
             }
 
-            auto filteredData = details::Data();
-            filteredData.buffer.resize(totalRows * filteredRowLength, MissingValue);
+            auto filteredData = details::ResultData();
+            filteredData.buffer.isLongStr(metaData->typeInfo.isLongString());
+            filteredData.buffer.resize(totalRows * filteredRowLength);
 
             size_t outputOffset = 0;
             for (size_t frameIdx = 0; frameIdx < frames_.size(); ++frameIdx)
@@ -364,7 +376,7 @@ namespace bufr {
         return data;
     }
 
-    void ResultSet::copyJaggedData(details::Data& data,
+    void ResultSet::copyJaggedData(details::ResultData& data,
                                    const Frame& frame,
                                    const TargetPtr& target,
                                    size_t outputOffset) const
@@ -384,7 +396,7 @@ namespace bufr {
                         countOffset);
     }
 
-    void ResultSet::_copyJaggedData(details::Data& data,
+    void ResultSet::_copyJaggedData(details::ResultData& data,
                                    const Frame& frame,
                                    const TargetPtr& target,
                                    size_t& outputOffset,
@@ -424,9 +436,18 @@ namespace bufr {
             {
                 const auto& fragment = frame[target->nodeIdx].data;
 
-                std::copy(fragment.begin() + inputOffset,
-                          fragment.begin() + inputOffset + count,
-                          data.buffer.begin() + outputOffset);
+                if (fragment.isLongStr())
+                {
+                    std::copy(fragment.value.strings.begin() + inputOffset,
+                              fragment.value.strings.begin() + inputOffset + count,
+                              data.buffer.value.strings.begin() + outputOffset);
+                }
+                else
+                {
+                    std::copy(fragment.value.octets.begin() + inputOffset,
+                              fragment.value.octets.begin() + inputOffset + count,
+                              data.buffer.value.octets.begin() + outputOffset);
+                }
 
                 inputOffset += count;
                 outputOffset += totalDimSize;
@@ -447,33 +468,37 @@ namespace bufr {
         }
     }
 
-    void ResultSet::validateGroupByField(const details::TargetMetaDataPtr& targetMetaData,
-                                         const details::TargetMetaDataPtr& groupByMetaData) const
-    {
-        // Validate the groupby field is in the same path as the field
-        auto& groupByPath = groupByMetaData->dimPaths.back();
-        auto& targetPath = targetMetaData->dimPaths.back();
+//    void ResultSet::validateGroupByField(const details::TargetMetaDataPtr& targetMetaData,
+//                                         const details::TargetMetaDataPtr& groupByMetaData) const
+//    {
+//        // Validate the groupby field is in the same path as the field
+//        auto& groupByPath = groupByMetaData->dimPaths.back();
+//        auto& targetPath = targetMetaData->dimPaths.back();
+//
+//        auto groupByPathComps = splitPath(groupByPath.str());
+//        auto targetPathComps = splitPath(targetPath.str());
+//
+//        for (size_t i = 1;
+//             i < std::min(groupByPathComps.size(), targetPathComps.size());
+//             i++)
+//        {
+//            if (targetPathComps[i] != groupByPathComps[i])
+//            {
+//                output.value.strings[idxs[i]] = targetField.data.value.strings[i];
+//            }
+//            else
+//            {
+//                std::ostringstream errStr;
+//                errStr << "The GroupBy and Target Fields do not share a common path.\n";
+//                errStr << "GroupByField path: " << groupByPath.str()<< std::endl;
+//                errStr << "TargetField path: " << targetPath.str() << std::endl;
+//                throw eckit::BadParameter(errStr.str());
+//            }
+//        }
+//    }
 
-        auto groupByPathComps = splitPath(groupByPath.str());
-        auto targetPathComps = splitPath(targetPath.str());
-
-        for (size_t i = 1;
-             i < std::min(groupByPathComps.size(), targetPathComps.size());
-             i++)
-        {
-            if (targetPathComps[i] != groupByPathComps[i])
-            {
-                std::ostringstream errStr;
-                errStr << "The GroupBy and Target Fields do not share a common path.\n";
-                errStr << "GroupByField path: " << groupByPath.str()<< std::endl;
-                errStr << "TargetField path: " << targetPath.str() << std::endl;
-                throw eckit::BadParameter(errStr.str());
-            }
-        }
-    }
-
-    void ResultSet:: copyFilteredData(details::Data& resData,
-                                      const details::Data& srcData,
+    void ResultSet:: copyFilteredData(details::ResultData& resData,
+                                      const details::ResultData& srcData,
                                       const TargetPtr& target,
                                       size_t& inputOffset,
                                       size_t& outputOffset,
@@ -493,7 +518,17 @@ namespace bufr {
 //                }
 //                std::cout << std::endl;
 
-                resData.buffer[outputOffset] = srcData.buffer[inputOffset];
+                if (resData.buffer.isLongStr())
+                {
+                    resData.buffer.value.strings[outputOffset] =
+                        srcData.buffer.value.strings[inputOffset];
+                }
+                else
+                {
+                    resData.buffer.value.octets[outputOffset] =
+                        srcData.buffer.value.octets[inputOffset];
+                }
+
                 outputOffset++;
             }
 
@@ -546,9 +581,9 @@ namespace bufr {
                                 const std::string& groupByFieldName,
                                 const TypeInfo& info,
                                 const std::string& overrideType,
-                                const std::vector<double> data,
-                                const std::vector<int> dims,
-                                const std::vector<Query> dimPaths) const
+                                const Data& data,
+                                const std::vector<int>& dims,
+                                const std::vector<Query>& dimPaths) const
     {
         std::shared_ptr<DataObjectBase> object;
         if (overrideType.empty())
@@ -569,7 +604,7 @@ namespace bufr {
             }
         }
 
-        object->setData(data, 10e10);
+        object->setData(data);
         object->setDims(dims);
         object->setFieldName(fieldName);
         object->setGroupByFieldName(groupByFieldName);
@@ -582,7 +617,7 @@ namespace bufr {
     {
         std::shared_ptr<DataObjectBase> object;
 
-        if (info.isString())
+        if (info.isString() || info.isLongString())
         {
             object = std::make_shared<DataObject<std::string>>();
         }

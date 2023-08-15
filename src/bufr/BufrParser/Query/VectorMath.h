@@ -10,7 +10,6 @@
 
 #include <numeric>
 #include <vector>
-#include <Eigen/Dense>
 
 namespace Ingester {
 namespace bufr {

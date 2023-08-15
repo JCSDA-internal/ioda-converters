@@ -8,7 +8,7 @@ observations:
   - obs space:
       name: bufr
 
-      obsdatain: "testinput/gdas.t06z.adpsfc.tm00.bufr_d"
+      obsdatain: "testinput/gdas.t12z.adpsfc.tm00.bufr_d"
 
       exports:
         variables:
@@ -110,7 +110,7 @@ observations:
           path: "*/CLDSQ1"
         - name: MaxMinTemperatureSequence
           path: "*/MTTPSQ"
-        - name: SynopticWindSequence
+        - name: SynopticWindSequence 
           path: "*/BSYWND2"
         - name: PresentWeatherSequence
           path: "*/MTRPRW"

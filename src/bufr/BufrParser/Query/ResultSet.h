@@ -27,6 +27,7 @@
 #include "DataObject.h"
 #include "Target.h"
 #include "SubsetLookupTable.h"
+#include "Data.h"
 
 
 namespace Ingester {
@@ -47,9 +48,9 @@ namespace details
         bool jagged = false;
     };
 
-    struct Data
+    struct ResultData
     {
-        std::vector<double> buffer;
+        Data buffer;
         std::vector<int> dims;
         std::vector<int> rawDims;
     };
@@ -133,14 +134,15 @@ namespace details
         Frames frames_;
 
         details::TargetMetaDataPtr analyzeTarget(const std::string& name) const;
-        details::Data assembleData(const details::TargetMetaDataPtr& targetMetaData) const;
+        details::ResultData assembleData(const details::TargetMetaDataPtr& targetMetaData) const;
 
-        void copyJaggedData(details::Data& data,
+        void copyJaggedData(details::ResultData& data,
                             const Frame& frame,
                             const TargetPtr& target,
                             size_t outputOffset) const;
 
-        void _copyJaggedData(details::Data& data,
+
+        void _copyJaggedData(details::ResultData& data,
                              const Frame& frame,
                              const TargetPtr& target,
                              size_t& outputOffset,
@@ -149,11 +151,11 @@ namespace details
                              const size_t countNumber,
                              const size_t countOffset) const;
 
-        void validateGroupByField(const details::TargetMetaDataPtr& targetMetaData,
-                                  const details::TargetMetaDataPtr& groupByMetaData) const;
+//        void validateGroupByField(const details::TargetMetaDataPtr& targetMetaData,
+//                                  const details::TargetMetaDataPtr& groupByMetaData) const;
 
-        void copyFilteredData(details::Data& resData,
-                              const details::Data& srcData,
+        void copyFilteredData(details::ResultData& resData,
+                              const details::ResultData& srcData,
                               const TargetPtr& target,
                               size_t& inputOffset,
                               size_t& outputOffset,
@@ -179,9 +181,9 @@ namespace details
                                 const std::string& groupByFieldName,
                                 const TypeInfo& info,
                                 const std::string& overrideType,
-                                const std::vector<double> data,
-                                const std::vector<int> dims,
-                                const std::vector<Query> dimPaths) const;
+                                const Data& data,
+                                const std::vector<int>& dims,
+                                const std::vector<Query>& dimPaths) const;
 
         /// \brief Make an appropriate DataObject for data with the TypeInfo
         /// \param info The meta data for the element.

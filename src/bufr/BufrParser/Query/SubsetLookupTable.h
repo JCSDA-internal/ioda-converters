@@ -16,6 +16,8 @@
 #include "DataProvider/DataProvider.h"
 #include "SubsetTable.h"
 #include "Target.h"
+#include "Constants.h"
+#include "Data.h"
 
 namespace Ingester {
 namespace bufr {
@@ -45,32 +47,31 @@ namespace bufr {
         };
     }  // namespace __details
 
-
     /// \brief Lookup table that maps BUFR subset node ids to the data and counts found in the BUFR
     /// message subset data section. This makes it possible to quickly access the data and counts
     /// information for a given node.
     class SubsetLookupTable
     {
-        typedef std::vector<double> DataVector;
+     public:
         typedef std::vector<int> CountsVector;
-
-        struct NodeData
-        {
-            DataVector data;
-            CountsVector counts;
-        };
 
         struct NodeMetaData
         {
             TargetComponent component;
+            std::string longStrId;
             bool collectedCounts = false;
             bool collectedData = false;
+        };
+
+        struct NodeData
+        {
+            Data data;
+            CountsVector counts;
         };
 
         typedef __details::OffsetArray<NodeData> LookupTable;
         typedef __details::OffsetArray<NodeMetaData> LookupMetaTable;
 
-     public:
         SubsetLookupTable(const std::shared_ptr<DataProvider>& dataProvider,
                           const std::shared_ptr<Targets>& targets);
 
@@ -98,7 +99,6 @@ namespace bufr {
      private:
         const std::shared_ptr<Targets> targets_;
         LookupTable lookupTable_;
-        NodeMetaData lookupMetaTable_;
 
         /// \brief Creates a lookup table that maps node ids to NodeData objects.
         /// \param[in] targets The targets to create the lookup table for.

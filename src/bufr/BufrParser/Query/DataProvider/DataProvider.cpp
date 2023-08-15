@@ -156,5 +156,20 @@ namespace bufr {
 
         return info;
     }
+
+    std::string DataProvider::getLongStr(const std::string& longStrId) const
+    {
+        char charPtr[120];
+        int longStrLen;
+
+        readlc_f(FileUnit, longStrId.c_str(), charPtr, &longStrLen);
+
+        if (charPtr[0] == '\xff')
+        {
+            return "";
+        }
+
+        return std::string(charPtr, longStrLen);
+    }
 }  // namespace bufr
 }  // namespace Ingester

@@ -74,6 +74,8 @@ namespace bufr {
         bool isInteger() const { return scale <= 0; }
         bool is64Bit() const
         {
+            if (bits == 0) return false;
+
             bool is64Bit;
             if (isInteger() && !isSigned())
             {
@@ -90,6 +92,11 @@ namespace bufr {
             }
 
             return is64Bit;
+        }
+
+        bool isLongString() const
+        {
+            return isString() && bits > 64;
         }
     };
 
@@ -188,6 +195,8 @@ namespace bufr {
         /// \brief Get the value of the data element at the given data index.
         /// \param The index of the data object for which you want a value.
         inline gsl::span<const double> getVals() const { return val_; }
+
+        std::string getLongStr(const std::string& longStrId) const;
 
         /// \brief Get the TypeInfo object for the table node at the given idx.
         /// \param idx BUFR table node index
