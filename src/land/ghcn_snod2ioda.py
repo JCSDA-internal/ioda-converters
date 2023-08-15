@@ -19,7 +19,7 @@ from pyiodaconv.orddicts import DefaultOrderedDict
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("height", "float"),
+    ("stationElevation", "float"),
     ("dateTime", "string")
 ]
 
@@ -164,8 +164,8 @@ class ghcn(object):
         self.outdata[('stationIdentification', 'MetaData')] = sites
         self.outdata[('latitude', 'MetaData')] = lats
         self.outdata[('longitude', 'MetaData')] = lons
-        self.outdata[('height', 'MetaData')] = alts
-        self.varAttrs[('height', 'MetaData')]['units'] = 'm'
+        self.outdata[('stationElevation', 'MetaData')] = alts
+        self.varAttrs[('stationElevation', 'MetaData')]['units'] = 'm'
 
         self.outdata[self.varDict[iodavar]['valKey']] = vals
         self.outdata[self.varDict[iodavar]['errKey']] = errs
