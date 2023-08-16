@@ -64,11 +64,13 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     pob *= 100
 
     # Time variable
-    hrdr = r.get('timeOffset', 'prepbufrDataLevelCategory')
+    hrdr = r.get('timeOffset')
     print("cycleTimeSinceEpoch")
     cycleTimeSinceEpoch = np.int64(calendar.timegm(time.strptime(date, '%Y%m%d%H%M')))
     hrdr = np.int64(hrdr*3600)
     hrdr += cycleTimeSinceEpoch
+
+    ulan = np.tile(hrdr[:,0], (hrdr.shape[1],1))
 
     # ObsValue
     pob_ps   = np.full(pob.shape[0], pob.fill_value) # Extract stationPressure from pressure, which belongs to CAT=1
@@ -79,7 +81,7 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     tsen = np.where(tpc == 1, tob, tsen)
     tvo   = np.full(tob.shape[0], tob.fill_value) # Extract virtual temperature from tob, which belongs to TPC <= 8 and TPC>1
     tvo   = np.where(((tpc <= 8) & (tpc > 1)), tob, tvo)
-    qob = r.get('specificHumidity', 'prepbufrDataLevelCategory', type='float')
+    qob = r.get('specificHumidity', type='float')
     qob *= 1.0e-6
     uob = r.get('windEastward', 'prepbufrDataLevelCategory')
     vob = r.get('windNorthward', 'prepbufrDataLevelCategory')
@@ -108,6 +110,7 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     # Create the dimensions
     print("Create dimensions")
     num_locs = lat.shape[0]
+    
 
     dim_location = g.vars.create('Location', ioda.Types.int32, [num_locs])
     dim_location.scales.setIsScale('Location')
@@ -130,7 +133,7 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
 
     # Create the variables
     print("Create MetaData group variables")
-    prepbufrdatalevelcategory = g.vars.create('MetaData/prepbufrDataLevelCategory', ioda.Types.int,  scales=[dim_location], params=pint)
+    prepbufrdatalevelcategory = g.vars.create('MetaData/prepbufrDataLevelCategory', ioda.Types.int64,  scales=[dim_location], params=pint)
     prepbufrdatalevelcategory.atts.create('units', ioda.Types.str).writeVector.str([''])
     prepbufrdatalevelcategory.atts.create('long_name', ioda.Types.str).writeVector.str(['Prepbufr Data Level Category'])
 
@@ -154,7 +157,10 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     datetime = g.vars.create('MetaData/dateTime',  ioda.Types.int64,  scales=[dim_location], params=pint64)
     datetime.atts.create('units', ioda.Types.str).writeVector.str(['seconds since 1970-01-01T00:00:00Z'])
 
-    temperatureeventcode = g.vars.create('MetaData/temperatureEventCode', ioda.Types.int, scales=[dim_location], params=pint)
+    releasetime = g.vars.create('MetaData/releaseTime',  ioda.Types.int64,  scales=[dim_location], params=pint64)
+    releasetime.atts.create('units', ioda.Types.str).writeVector.str(['seconds since 1970-01-01T00:00:00Z'])
+
+    temperatureeventcode = g.vars.create('MetaData/temperatureEventCode', ioda.Types.int64, scales=[dim_location], params=pint)
     temperatureeventcode.atts.create('units', ioda.Types.str).writeVector.str(['1'])
     temperatureeventcode.atts.create('long_name', ioda.Types.str).writeVector.str(['temperatureEventCode'])
 
@@ -187,7 +193,7 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     windnorthward.atts.create('units', ioda.Types.str).writeVector.str(['m s-1'])
     windnorthward.atts.create('long_name', ioda.Types.str).writeVector.str(['Northward Wind'])
 
-    heightofobservation = g.vars.create('ObsValue/heightOfObservation', ioda.Types.int, scales=[dim_location], params=pint)
+    heightofobservation = g.vars.create('ObsValue/heightOfObservation', ioda.Types.float, scales=[dim_location], params=pint)
     heightofobservation.atts.create('units', ioda.Types.str).writeVector.str(['m'])
     heightofobservation.atts.create('long_name', ioda.Types.str).writeVector.str(['Height of Observation'])
 
@@ -228,6 +234,7 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     stationidentification.writeVector.str(sid.flatten())
     stationelevation.writeNPArray.float(elv.flatten())
     datetime.writeNPArray.int64(hrdr.flatten())
+    releasetime.writeNPArray.int64(ulan.flatten())
     temperatureeventcode.writeNPArray.int(tpc.flatten())
     pressure.writeNPArray.float(pob.flatten())
 
