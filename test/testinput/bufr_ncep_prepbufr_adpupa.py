@@ -53,14 +53,15 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
 
     # Use the ResultSet returned to get numpy arrays of the data
     # MetaData
-    cat = r.get('prepbufrDataLevelCategory', 'prepbufrDataLevelCategory')
-    lat = r.get('latitude', 'prepbufrDataLevelCategory')
-    lon = r.get('longitude', 'prepbufrDataLevelCategory')
+    cat = r.get('prepbufrDataLevelCategory')
+    lat = r.get('latitude')
+    lon = r.get('longitude')
     lon[lon>180] -= 360  # Convert Longitude from [0,360] to [-180,180]
-    sid = r.get('stationIdentification', 'prepbufrDataLevelCategory')
-    elv = r.get('stationElevation', 'prepbufrDataLevelCategory')
-    tpc = r.get('temperatureEventCode', 'prepbufrDataLevelCategory')
-    pob = r.get('pressure', 'prepbufrDataLevelCategory')
+    sid = r.get('stationIdentification')
+    sid = np.tile(sid, (lon.shape[1],1))
+    elv = r.get('stationElevation')
+    tpc = r.get('temperatureEventCode')
+    pob = r.get('pressure')
     pob *= 100
 
     # Time variable
@@ -73,32 +74,32 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     ulan = np.tile(hrdr[:,0], (hrdr.shape[1],1))
 
     # ObsValue
-    pob_ps   = np.full(pob.shape[0], pob.fill_value) # Extract stationPressure from pressure, which belongs to CAT=1
+    pob_ps   = np.full(pob.shape, pob.fill_value) # Extract stationPressure from pressure, which belongs to CAT=1
     pob_ps   = np.where(cat == 0, pob, pob_ps)  
-    tob = r.get('airTemperature', 'prepbufrDataLevelCategory')
+    tob = r.get('airTemperature')
     tob += 273.15
-    tsen = np.full(tob.shape[0], tob.fill_value) # Extract sensible temperature from tob, which belongs to TPC=1
+    tsen = np.full(tob.shape, tob.fill_value) # Extract sensible temperature from tob, which belongs to TPC=1
     tsen = np.where(tpc == 1, tob, tsen)
-    tvo   = np.full(tob.shape[0], tob.fill_value) # Extract virtual temperature from tob, which belongs to TPC <= 8 and TPC>1
+    tvo   = np.full(tob.shape, tob.fill_value) # Extract virtual temperature from tob, which belongs to TPC <= 8 and TPC>1
     tvo   = np.where(((tpc <= 8) & (tpc > 1)), tob, tvo)
     qob = r.get('specificHumidity', type='float')
     qob *= 1.0e-6
-    uob = r.get('windEastward', 'prepbufrDataLevelCategory')
-    vob = r.get('windNorthward', 'prepbufrDataLevelCategory')
-    zob = r.get('heightOfObservation', 'prepbufrDataLevelCategory')
+    uob = r.get('windEastward')
+    vob = r.get('windNorthward')
+    zob = r.get('heightOfObservation')
 
     # QualityMark
-    pobqm = r.get('pressureQM', 'prepbufrDataLevelCategory')
-    pob_psqm = np.full(pobqm.shape[0], pobqm.fill_value) # Extract stationPressureQM from pressureQM
+    pobqm = r.get('pressureQM')
+    pob_psqm = np.full(pobqm.shape, pobqm.fill_value) # Extract stationPressureQM from pressureQM
     pob_psqm   = np.where(cat == 0, pobqm, pob_psqm)
-    tobqm = r.get('airTemperatureQM', 'prepbufrDataLevelCategory')
-    tsenqm = np.full(tobqm.shape[0], tobqm.fill_value) # Extract airTemperature from tobqm, which belongs to TPC=1
+    tobqm = r.get('airTemperatureQM')
+    tsenqm = np.full(tobqm.shape, tobqm.fill_value) # Extract airTemperature from tobqm, which belongs to TPC=1
     tsenqm = np.where(tpc == 1, tobqm, tsenqm)
-    tvoqm   = np.full(tobqm.shape[0], tobqm.fill_value) # Extract virtual temperature from tob, which belongs to TPC <= 8 and TPC>1
+    tvoqm   = np.full(tobqm.shape, tobqm.fill_value) # Extract virtual temperature from tob, which belongs to TPC <= 8 and TPC>1
     tvoqm   = np.where(((tpc <= 8) & (tpc > 1)), tobqm, tvoqm)
-    qobqm = r.get('specificHumidityQM', 'prepbufrDataLevelCategory')
-    uobqm = r.get('windEastwardQM', 'prepbufrDataLevelCategory')
-    vobqm = r.get('windNorthwardQM', 'prepbufrDataLevelCategory')
+    qobqm = r.get('specificHumidityQM')
+    uobqm = r.get('windEastwardQM')
+    vobqm = r.get('windNorthwardQM')
 
     # Write the data to an IODA file
     path, fname = os.path.split(OUTPUT_PATH)
@@ -109,8 +110,7 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
 
     # Create the dimensions
     print("Create dimensions")
-    num_locs = lat.shape[0]
-    
+    num_locs = lat.flatten().shape[0]
 
     dim_location = g.vars.create('Location', ioda.Types.int32, [num_locs])
     dim_location.scales.setIsScale('Location')
@@ -237,14 +237,14 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     releasetime.writeNPArray.int64(ulan.flatten())
     temperatureeventcode.writeNPArray.int(tpc.flatten())
     pressure.writeNPArray.float(pob.flatten())
-
+ 
     stationpressure.writeNPArray.float(pob_ps.flatten())
     airtemperature.writeNPArray.float(tsen.flatten())
     virtualtemperature.writeNPArray.float(tvo.flatten())
     specifichumidity.writeNPArray.float(qob.flatten())
     windeastward.writeNPArray.float(uob.flatten())
     windnorthward.writeNPArray.float(vob.flatten())
-    heightofobservation.writeNPArray.int(zob.flatten())
+    heightofobservation.writeNPArray.float(zob.flatten())
 
     pressureqm.writeNPArray.int(pobqm.flatten())
     stationpressureqm.writeNPArray.int(pob_psqm.flatten())
