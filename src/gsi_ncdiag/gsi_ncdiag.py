@@ -123,6 +123,7 @@ all_LocKeyList = {
     'Longitude': ('longitude', 'float'),
     'Station_Elevation': ('stationElevation', 'float'),
     'Pressure': ('pressure', 'float'),
+    'Pressure_GSI': ('pressure_GSI', 'float'),
     'Height': ('height', 'float'),
     'Impact_Height': ('impactHeightRO', 'float'),
     'Observation_Type': ('satelliteIdentifier', 'integer'),
