@@ -147,7 +147,7 @@ def get_data(f, obs_data):
     # use latitude length to define total number of pixels
     nlocs = len(obs_data[('latitude', metaDataName)])
     # start at channel 5 as lowest frequencies are not included
-    obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(nchans), dtype='int32')
+    obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(nchans)+1, dtype='int32')
     k = 'sensorScanPosition'
     obs_data[(k, metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='int32')+1, (nscans, 1)).flatten()
     k = 'sensorZenithAngle'   # ~55.2 incidence angle
