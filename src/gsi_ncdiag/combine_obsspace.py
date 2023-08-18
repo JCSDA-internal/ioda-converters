@@ -4,7 +4,7 @@
 import netCDF4 as nc
 import numpy as np
 import argparse
-import ioda_obs_space as ios
+from pyioda import ioda_obs_space as ios
 from collections import defaultdict, OrderedDict
 
 import pyiodaconv.ioda_conv_engines as iconv
