@@ -57,7 +57,7 @@ namespace bufr {
         // Collect all the counts for the nodes that were flagged from the BUFR subset data section.
         for (size_t cursor = 1; cursor <= dataProvider->getNVal(); ++cursor)
         {
-            auto nodeId = static_cast<size_t>(dataProvider->getInv(cursor));
+            const auto& nodeId = dataProvider->getInv(cursor);
             if (lookupMeta[nodeId].collectedCounts)
             {
                 const auto &component = lookupMeta[nodeId].component;
