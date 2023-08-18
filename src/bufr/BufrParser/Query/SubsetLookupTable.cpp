@@ -92,15 +92,15 @@ namespace bufr {
             if (target->nodeIdx == 0) { continue; }
             const auto &path = target->path.back();
 
+            lookup[target->nodeIdx].data.isLongStr(target->typeInfo.isLongString());
             lookup[target->nodeIdx].data.reserve(sum(lookup[path.parentDimensionNodeId].counts));
             lookupMeta[target->nodeIdx].collectedData = true;
-            lookup[target->nodeIdx].data.isLongStr(target->typeInfo.isLongString());
             lookupMeta[target->nodeIdx].longStrId = target->longStrId;
         }
 
         for (size_t cursor = 1; cursor <= dataProvider->getNVal(); ++cursor)
         {
-            const auto nodeId = dataProvider->getInv(cursor);
+            const auto& nodeId = dataProvider->getInv(cursor);
             if (lookupMeta[nodeId].collectedData)
             {
                 if (lookup[nodeId].data.isLongStr())

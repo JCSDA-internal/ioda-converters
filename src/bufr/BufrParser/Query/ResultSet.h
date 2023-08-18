@@ -53,6 +53,7 @@ namespace details
         Data buffer;
         std::vector<int> dims;
         std::vector<int> rawDims;
+        std::vector<Query> dimPaths;
     };
 
     typedef std::shared_ptr<TargetMetaData> TargetMetaDataPtr;
@@ -161,6 +162,10 @@ namespace details
                               size_t& outputOffset,
                               size_t depth,
                               bool skipResult) const;
+
+        void applyGroupBy(details::ResultData& resData,
+                          const details::TargetMetaDataPtr& targetMetaData,
+                          const std::string& groupByFieldName) const;
 
         /// \brief Is the field a string field?
         /// \param fieldName The name of the field.

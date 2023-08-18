@@ -44,21 +44,12 @@ namespace bufr {
         const auto targetMetaData = analyzeTarget(fieldName);
 
         // Assemble Result Data
-        const auto data = assembleData(targetMetaData);
+        auto data = assembleData(targetMetaData);
 
-//        // Apply groupby
-//        if (!groupByFieldName.empty())
-//        {
-//            const auto groupByMetaData = analyzeTarget(groupByFieldName);
-//            validateGroupByField(targetMetaData, groupByMetaData);
-//
-//            if (groupByMetaData->dims.size() > targetMetaData->dims.size())
-//            {
-//            }
-//            else if (groupByMetaData->dims.size() < targetMetaData->dims.size())
-//            {
-//            }
-//        }
+        if (!groupByFieldName.empty())
+        {
+            applyGroupBy(data, targetMetaData, groupByFieldName);
+        }
 
         auto object = makeDataObject(fieldName,
                                      groupByFieldName,
@@ -66,7 +57,7 @@ namespace bufr {
                                      overrideType,
                                      data.buffer,
                                      data.dims,
-                                     targetMetaData->dimPaths);
+                                     data.dimPaths);
 
         return object;
     }
@@ -199,14 +190,15 @@ namespace bufr {
             auto exportIdxIdx = 0;
             for (auto p = target->path.begin(); p != target->path.end() - 1; ++p)
             {
-                if (frame[p->nodeId].counts.empty())
+                const auto& counts = frame[p->nodeId].counts;
+                if (counts.empty())
                 {
                     metaData->missingFrames[frameIdx] = true;
                     break;
                 }
 
                 metaData->rawDims[pathIdx] = std::max(metaData->rawDims[pathIdx],
-                                                      std::max(max(frame[p->nodeId].counts), 1));
+                                                      std::max(max(counts), 1));
 
                 if (target->exportDimIdxs[exportIdxIdx] != pathIdx)
                 {
@@ -215,11 +207,11 @@ namespace bufr {
                 }
 
                 const auto newDimVal = std::max(metaData->dims[exportIdxIdx],
-                                                std::max(max(frame[p->nodeId].counts), 1));
+                                                std::max(max(counts), 1));
 
                 if (!metaData->jagged)
                 {
-                    metaData->jagged = !allEqual(frame[p->nodeId].counts);
+                    metaData->jagged = !allEqual(counts);
 
                     if (!metaData->jagged && metaData->dims[exportIdxIdx] > 1)
                     {
@@ -298,6 +290,7 @@ namespace bufr {
         data.buffer.resize(totalRows * rowLength);
         data.dims = metaData->dims;
         data.rawDims = metaData->rawDims;
+        data.dimPaths = metaData->dimPaths;
 
         // Update the dims to reflect the actual size of the data
         data.dims[0] = totalRows;
@@ -567,7 +560,79 @@ namespace bufr {
         }
     }
 
-
+    void ResultSet::applyGroupBy(details::ResultData& resData,
+                                 const details::TargetMetaDataPtr& targetMetaData,
+                                 const std::string& groupByFieldName) const
+    {
+//        const auto groupByMetaData = analyzeTarget(groupByFieldName);
+////        validateGroupByField(targetMetaData, groupByMetaData);
+//
+//        // print queryPath
+//        std::cout << "targetMetaData: " << std::endl;
+//        for (size_t i = 0; i < targetMetaData->dimPaths.size(); i++)
+//        {
+//            std::cout << targetMetaData->dimPaths[i].str() << std::endl;
+//        }
+//
+//        std::cout << "targetMetaData dims (" << targetMetaData->dims.size() << "): ";
+//        for (size_t i = 0; i < targetMetaData->dims.size(); i++)
+//        {
+//            std::cout << targetMetaData->dims[i] << " ";
+//        }
+//        std::cout << std::endl;
+//
+//        // print queryPath
+//        std::cout << "groupByMetaData " << std::endl;
+//        for (size_t i = 0; i < targetMetaData->dimPaths.size(); i++)
+//        {
+//            std::cout << groupByMetaData->dimPaths[i].str() << std::endl;
+//        }
+//
+//        std::cout << "groupByMetaData dims (" << groupByMetaData->dims.size() << "): ";
+//        for (size_t i = 0; i < groupByMetaData->dims.size(); i++)
+//        {
+//            std::cout << groupByMetaData->dims[i] << " ";
+//        }
+//        std::cout << std::endl;
+//
+//        std::cout << resData.buffer.size() << std::endl;
+//
+//        // If the groupby field has more dims than the target data we must flatten and
+//        // then re-expand the data so there will be duplicate data for each groupby
+//        if (groupByMetaData->dims.size() > targetMetaData->dims.size())
+//        {
+//            auto newData = details::ResultData();
+//            newData.buffer.isLongStr(resData.buffer.isLongStr());
+//            newData.dims = {product(groupByMetaData->dims)};
+//            newData.buffer.resize(product(groupByMetaData->dims));
+//
+//            std::cout << "new size: " << product(groupByMetaData->dims) << std::endl;
+//
+//            for (size_t i = 0; i < groupByMetaData.dims; i++)
+//            {
+//                if (resData.buffer.isLongStr())
+//                {
+//                    newData.buffer.value.strings[i] = resData.buffer.value.strings[i];
+//                }
+//                else
+//                {
+//                    newData.buffer.value.octets[i] = resData.buffer.value.octets[i];
+//                }
+//            }
+//
+//            std::cout << resData.buffer.size() << " " << newData.buffer.size() << std::endl;
+//            newData.dimPaths = {groupByMetaData->dimPaths.back()};
+//
+//            resData = std::move(newData);
+//        }
+//        // If the groupby field has less dims than the target data we only need to change the
+//        // dimensions
+//        else
+//        {
+//        }
+//
+//        std::cout << resData.buffer.size() << std::endl << std::endl;
+    }
 
     std::string ResultSet::unit(const std::string& fieldName) const
     {
