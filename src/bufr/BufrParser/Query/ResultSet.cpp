@@ -356,12 +356,9 @@ namespace bufr {
                 copyFilteredData(filteredData, data, target, inputOffset, outputOffset, 1, false);
             }
 
-            filteredData.dims.resize(metaData->filteredDims.size());
+            filteredData.dimPaths = metaData->dimPaths;
+            filteredData.dims = metaData->filteredDims;
             filteredData.dims[0] = data.dims[0];
-            for (size_t dimIdx = 1; dimIdx < metaData->filteredDims.size(); ++dimIdx)
-            {
-                filteredData.dims[dimIdx] = metaData->filteredDims[dimIdx];
-            }
 
             data = std::move(filteredData);
         }
@@ -502,15 +499,6 @@ namespace bufr {
         {
             if (!skipResult)
             {
-//                std::cout << outputOffset << " " << srcData.buffer[inputOffset] << std::endl;
-//                //print srcData::buffer to std::cout
-//
-//                for (size_t i = 0; i < srcData.buffer.size(); i++)
-//                {
-//                    std::cout << srcData.buffer[i] << " ";
-//                }
-//                std::cout << std::endl;
-
                 if (resData.buffer.isLongStr())
                 {
                     resData.buffer.value.strings[outputOffset] =
@@ -542,7 +530,6 @@ namespace bufr {
         }
         else
         {
-//            std::cout << depth << " " << srcData.rawDims[0] << " " << srcData.rawDims[1] << std::endl;
             for (size_t count = 1; count <= static_cast<size_t>(srcData.rawDims[depth]); count++)
             {
                 bool skip = skipResult;
@@ -564,74 +551,62 @@ namespace bufr {
                                  const details::TargetMetaDataPtr& targetMetaData,
                                  const std::string& groupByFieldName) const
     {
-//        const auto groupByMetaData = analyzeTarget(groupByFieldName);
-////        validateGroupByField(targetMetaData, groupByMetaData);
-//
-//        // print queryPath
-//        std::cout << "targetMetaData: " << std::endl;
-//        for (size_t i = 0; i < targetMetaData->dimPaths.size(); i++)
-//        {
-//            std::cout << targetMetaData->dimPaths[i].str() << std::endl;
-//        }
-//
-//        std::cout << "targetMetaData dims (" << targetMetaData->dims.size() << "): ";
-//        for (size_t i = 0; i < targetMetaData->dims.size(); i++)
-//        {
-//            std::cout << targetMetaData->dims[i] << " ";
-//        }
-//        std::cout << std::endl;
-//
-//        // print queryPath
-//        std::cout << "groupByMetaData " << std::endl;
-//        for (size_t i = 0; i < targetMetaData->dimPaths.size(); i++)
-//        {
-//            std::cout << groupByMetaData->dimPaths[i].str() << std::endl;
-//        }
-//
-//        std::cout << "groupByMetaData dims (" << groupByMetaData->dims.size() << "): ";
-//        for (size_t i = 0; i < groupByMetaData->dims.size(); i++)
-//        {
-//            std::cout << groupByMetaData->dims[i] << " ";
-//        }
-//        std::cout << std::endl;
-//
-//        std::cout << resData.buffer.size() << std::endl;
-//
-//        // If the groupby field has more dims than the target data we must flatten and
-//        // then re-expand the data so there will be duplicate data for each groupby
-//        if (groupByMetaData->dims.size() > targetMetaData->dims.size())
-//        {
-//            auto newData = details::ResultData();
-//            newData.buffer.isLongStr(resData.buffer.isLongStr());
-//            newData.dims = {product(groupByMetaData->dims)};
-//            newData.buffer.resize(product(groupByMetaData->dims));
-//
-//            std::cout << "new size: " << product(groupByMetaData->dims) << std::endl;
-//
-//            for (size_t i = 0; i < groupByMetaData.dims; i++)
-//            {
-//                if (resData.buffer.isLongStr())
-//                {
-//                    newData.buffer.value.strings[i] = resData.buffer.value.strings[i];
-//                }
-//                else
-//                {
-//                    newData.buffer.value.octets[i] = resData.buffer.value.octets[i];
-//                }
-//            }
-//
-//            std::cout << resData.buffer.size() << " " << newData.buffer.size() << std::endl;
-//            newData.dimPaths = {groupByMetaData->dimPaths.back()};
-//
-//            resData = std::move(newData);
-//        }
-//        // If the groupby field has less dims than the target data we only need to change the
-//        // dimensions
-//        else
-//        {
-//        }
-//
-//        std::cout << resData.buffer.size() << std::endl << std::endl;
+        const auto groupByMetaData = analyzeTarget(groupByFieldName);
+//        validateGroupByField(targetMetaData, groupByMetaData);
+
+        // If the groupby field has more dims than the target then we must duplicate the
+        // target values to match the groupby field
+        if (groupByMetaData->dims.size() > targetMetaData->dims.size())
+        {
+            auto newData = details::ResultData();
+            newData.buffer.isLongStr(resData.buffer.isLongStr());
+            newData.dims = {resData.dims[0] * product(groupByMetaData->dims)};
+            newData.buffer.resize(resData.dims[0] * product(groupByMetaData->dims));
+
+            const auto numTargetVals =
+                static_cast<size_t>(product(targetMetaData->dims));
+            const auto numReps =
+                static_cast<size_t>(product(groupByMetaData->dims) / numTargetVals);
+
+            for (size_t targIdx = 0; targIdx < numTargetVals * resData.dims[0]; targIdx++)
+            {
+                for (size_t rep = 0; rep < numReps; rep++)
+                {
+                    if (resData.buffer.isLongStr())
+                    {
+                        newData.buffer.value.strings[targIdx * numReps + rep] =
+                            resData.buffer.value.strings[targIdx];
+                    }
+                    else
+                    {
+                        newData.buffer.value.octets[targIdx * numReps + rep] =
+                            resData.buffer.value.octets[targIdx];
+                    }
+                }
+            }
+
+            newData.dimPaths = {targetMetaData->dimPaths.back()};
+            resData = std::move(newData);
+        }
+        // If the group_by field has less dims than the target data we only need to change the
+        // dimensions around.
+        else
+        {
+            const auto sizeDiff = targetMetaData->dims.size() - groupByMetaData->dims.size();
+            auto newDims = std::vector<int>(sizeDiff + 1);
+            auto newDimPaths = std::vector<Query>(sizeDiff + 1);
+
+            newDims[0] = resData.dims[0] * product(groupByMetaData->dims);
+            newDimPaths[0] = targetMetaData->dimPaths.front();
+            for (size_t i = 1; i < sizeDiff; i++)
+            {
+                newDims[i] = targetMetaData->dims[groupByMetaData->dims.size() + i - 1];
+                newDimPaths[i] = targetMetaData->dimPaths[groupByMetaData->dims.size() + i - 1];
+            }
+
+            resData.dims = std::move(newDims);
+            resData.dimPaths = std::move(newDimPaths);
+        }
     }
 
     std::string ResultSet::unit(const std::string& fieldName) const

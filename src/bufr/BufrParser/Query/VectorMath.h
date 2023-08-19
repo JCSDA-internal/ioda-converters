@@ -78,6 +78,22 @@ namespace bufr {
         return result;
     }
 
+    /// \brief Slice a vector into a range of values.
+    /// \param begin The beginning of the range.
+    /// \param end The end of the range.
+    /// \return Sliced vector.
+    template<typename T>
+    std::vector<T> slice(const std::vector<T>& vec, size_t startIdx, size_t endIdx)
+    {
+        std::vector<T> result(endIdx - startIdx);
+        for (size_t i = startIdx; i < endIdx; ++i)
+        {
+            result[i] = vec[i];
+        }
+
+        return result;
+    }
+
     /// \brief Slice a vector according to a list of indices.
     /// \param vec The vector to slice.
     /// \param indices The indices to slice the vector.
