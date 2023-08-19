@@ -405,7 +405,8 @@ namespace bufr {
             dimIdx > data.rawDims.size() - 1 ||
             frame[target->nodeIdx].data.size() == 0) return;
 
-        if (frame[target->path[dimIdx].nodeId].counts.empty())
+        const auto& counts = frame[target->path[dimIdx].nodeId].counts;
+        if (counts.empty())
         {
             outputOffset += totalDimSize;
             return;
@@ -414,7 +415,7 @@ namespace bufr {
         size_t newOffset = 0;
         for (size_t countIdx = 0; countIdx < countNumber; ++countIdx)
         {
-            auto count = frame[target->path[dimIdx].nodeId].counts[countIdx + countOffset];
+            const auto& count = counts[countIdx + countOffset];
             if (count == 0)
             {
                 outputOffset += totalDimSize;
@@ -422,7 +423,8 @@ namespace bufr {
             }
 
             // When we reach the last layer of counts then copy the data
-            if (dimIdx == target->exportDimIdxs.size() - 1)
+            // Ignore the subset path element (reason for -2)
+            if (dimIdx == target->path.size() - 2)
             {
                 const auto& fragment = frame[target->nodeIdx].data;
 
@@ -598,7 +600,7 @@ namespace bufr {
 
             newDims[0] = resData.dims[0] * product(groupByMetaData->dims);
             newDimPaths[0] = targetMetaData->dimPaths.front();
-            for (size_t i = 1; i < sizeDiff; i++)
+            for (size_t i = 1; i < sizeDiff + 1; i++)
             {
                 newDims[i] = targetMetaData->dims[groupByMetaData->dims.size() + i - 1];
                 newDimPaths[i] = targetMetaData->dimPaths[groupByMetaData->dims.size() + i - 1];
