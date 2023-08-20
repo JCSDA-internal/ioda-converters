@@ -396,7 +396,7 @@ namespace bufr {
                                    const size_t countOffset) const
     {
         size_t totalDimSize = 1;
-        for (size_t i = dimIdx + 1; i < data.rawDims.size(); ++i)
+        for (size_t i = dimIdx; i < data.rawDims.size(); ++i)
         {
             totalDimSize *= data.rawDims[i];
         }
