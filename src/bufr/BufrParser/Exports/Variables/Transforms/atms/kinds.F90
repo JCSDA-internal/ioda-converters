@@ -47,12 +47,14 @@ module kinds
   integer, parameter, public  :: i_byte  = int8
   integer, parameter, public  :: i_short = int16      ! short integer
   integer, parameter, public  :: i_int  = int32      ! long  integer
+  integer, parameter, public  :: i_long = int64
   integer, parameter, public  :: i_llong = int64
 
 ! Expected 8-bit byte sizes of the integer kinds
   integer, parameter, public :: num_bytes_for_i_byte  = 1
   integer, parameter, public :: num_bytes_for_i_short = 2
   integer, parameter, public :: num_bytes_for_i_int  = 4
+  integer, parameter, public :: num_bytes_for_i_long = 8
   integer, parameter, public :: num_bytes_for_i_llong = 8
 
   integer, parameter, public :: i_kind = i_int
