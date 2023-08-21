@@ -308,28 +308,7 @@ namespace bufr {
 
             const auto& frame = frames_[frameIdx];
             const auto& target = frame.targetAtIdx(metaData->targetIdx);
-
-            if (metaData->jagged)
-            {
-                copyJaggedData(data, frame, target, frameIdx * rowLength);
-            }
-            else
-            {
-                const auto& fragment = frame[target->nodeIdx].data;
-
-                if (data.buffer.isLongStr())
-                {
-                    std::copy(fragment.value.strings.begin(),
-                              fragment.value.strings.end(),
-                              data.buffer.value.strings.begin() + frameIdx * rowLength);
-                }
-                else
-                {
-                    std::copy(fragment.value.octets.begin(),
-                              fragment.value.octets.end(),
-                              data.buffer.value.octets.begin() + frameIdx * rowLength);
-                }
-            }
+            copyData(data, frame, target, frameIdx * rowLength);
 
             if (target->usesFilters) needsFiltering = true;
         }
@@ -366,34 +345,34 @@ namespace bufr {
         return data;
     }
 
-    void ResultSet::copyJaggedData(details::ResultData& data,
-                                   const Frame& frame,
-                                   const TargetPtr& target,
-                                   size_t outputOffset) const
+    void ResultSet::copyData(details::ResultData& data,
+                             const Frame& frame,
+                             const TargetPtr& target,
+                             size_t outputOffset) const
     {
         size_t inputOffset = 0;
         size_t dimIdx = 0;
         size_t countNumber = 1;
         size_t countOffset = 0;
 
-        _copyJaggedData(data,
-                        frame,
-                        target,
-                        outputOffset,
-                        inputOffset,
-                        dimIdx,
-                        countNumber,
-                        countOffset);
+        _copyData(data,
+                  frame,
+                  target,
+                  outputOffset,
+                  inputOffset,
+                  dimIdx,
+                  countNumber,
+                  countOffset);
     }
 
-    void ResultSet::_copyJaggedData(details::ResultData& data,
-                                   const Frame& frame,
-                                   const TargetPtr& target,
-                                   size_t& outputOffset,
-                                   size_t& inputOffset,
-                                   const size_t dimIdx,
-                                   const size_t countNumber,
-                                   const size_t countOffset) const
+    void ResultSet::_copyData(details::ResultData& data,
+                              const Frame& frame,
+                              const TargetPtr& target,
+                              size_t& outputOffset,
+                              size_t& inputOffset,
+                              const size_t dimIdx,
+                              const size_t countNumber,
+                              const size_t countOffset) const
     {
         size_t totalDimSize = 1;
         for (size_t i = dimIdx; i < data.rawDims.size(); ++i)
@@ -446,14 +425,14 @@ namespace bufr {
             }
             else
             {
-                _copyJaggedData(data,
-                                frame,
-                                target,
-                                outputOffset,
-                                inputOffset,
-                                dimIdx + 1,
-                                count,
-                                newOffset);
+                _copyData(data,
+                          frame,
+                          target,
+                          outputOffset,
+                          inputOffset,
+                          dimIdx + 1,
+                          count,
+                          newOffset);
             }
 
             newOffset++;
@@ -565,8 +544,16 @@ namespace bufr {
             newData.dims = {resData.dims[0] * product(groupByMetaData->dims)};
             newData.buffer.resize(resData.dims[0] * product(groupByMetaData->dims));
 
-            const auto numTargetVals =
-                static_cast<size_t>(product(targetMetaData->dims));
+            const auto numTargetVals = static_cast<size_t>(product(targetMetaData->dims));
+
+            // There is no data
+            if (numTargetVals == 0)
+            {
+                newData.dimPaths = {targetMetaData->dimPaths.back()};
+                resData = std::move(newData);
+                return;
+            }
+
             const auto numReps =
                 static_cast<size_t>(product(groupByMetaData->dims) / numTargetVals);
 

@@ -137,20 +137,20 @@ namespace details
         details::TargetMetaDataPtr analyzeTarget(const std::string& name) const;
         details::ResultData assembleData(const details::TargetMetaDataPtr& targetMetaData) const;
 
-        void copyJaggedData(details::ResultData& data,
-                            const Frame& frame,
-                            const TargetPtr& target,
-                            size_t outputOffset) const;
+        void copyData(details::ResultData& data,
+                      const Frame& frame,
+                      const TargetPtr& target,
+                      size_t outputOffset) const;
 
 
-        void _copyJaggedData(details::ResultData& data,
-                             const Frame& frame,
-                             const TargetPtr& target,
-                             size_t& outputOffset,
-                             size_t& inputOffset,
-                             const size_t dimIdx,
-                             const size_t countNumber,
-                             const size_t countOffset) const;
+        void _copyData(details::ResultData& data,
+                       const Frame& frame,
+                       const TargetPtr& target,
+                       size_t& outputOffset,
+                       size_t& inputOffset,
+                       const size_t dimIdx,
+                       const size_t countNumber,
+                       const size_t countOffset) const;
 
 //        void validateGroupByField(const details::TargetMetaDataPtr& targetMetaData,
 //                                  const details::TargetMetaDataPtr& groupByMetaData) const;
