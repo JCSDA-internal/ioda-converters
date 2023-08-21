@@ -5,7 +5,7 @@
 * amsua
 * mhs
 * gpsro is supported but the recommended converter to use is `src/gnssro/gnssro_bufr2ioda.f90`
-* prepBUFR which outputs ascan, satwind, aircraft and radiosonde
+* prepBUFR which outputs ascan, satwind, aircraft, surface observations and radiosonde
 
 ## Usage:
 ```
