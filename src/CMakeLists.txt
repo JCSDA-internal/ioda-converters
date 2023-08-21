@@ -1,5 +1,4 @@
 
-add_subdirectory(utils)
 add_subdirectory(compo)
 add_subdirectory(gsi_ncdiag)
 add_subdirectory(goes)
