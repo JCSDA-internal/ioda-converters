@@ -1,4 +1,4 @@
-module kinds
+module iodaconv_kinds
 !$$$  module documentation block
 !                .      .    .                                       .
 ! module:   kinds
@@ -77,4 +77,4 @@ module kinds
    integer, parameter, public  :: r_kind = r_single
    integer, parameter, public  :: num_bytes_for_r_kind = num_bytes_for_r_single
 
-end module kinds
+end module iodaconv_kinds
