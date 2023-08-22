@@ -8,7 +8,7 @@
 ################################################################################
 
 list( APPEND test_input
-  testinput/gmi_gpm.nc4
+  testinput/gmi_gpm.h5
   testinput/icethk_coperl4.nc
   testinput/nsidc_l4_icec.nc
   testinput/amsr2_icec_l2p.nc
@@ -1285,7 +1285,7 @@ if(iodaconv_bufr_ENABLED)
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                     "${CMAKE_BINARY_DIR}/bin/gmi_2ioda.py
-                    -i testinput/gmi_gpm.nc4
+                    -i testinput/gmi_gpm.h5
                     -o testrun/gmi_gpm.nc4
                     -d 2022021600"
                     gmi_gpm.nc4 ${IODA_CONV_COMP_TOL_ZERO} )
