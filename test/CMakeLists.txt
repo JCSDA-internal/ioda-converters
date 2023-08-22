@@ -1284,8 +1284,11 @@ if(iodaconv_bufr_ENABLED)
                     COMMAND bash
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
-                    "${CMAKE_BINARY_DIR}/bin/gmi_2ioda.py testinput/gmi_gpm.nc4"
-                    gmi_gpm.nc4 ${IODA_CONV_COMP_TOL_ZERO})
+                    "${CMAKE_BINARY_DIR}/bin/gmi_2ioda.py
+                    -i testinput/gmi_gpm.nc4
+                    -o testrun/gmi_gpm.nc4
+                    -d 2022021600"
+                    gmi_gpm.nc4 ${IODA_CONV_COMP_TOL_ZERO} )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_bufrdescription
                     SOURCES bufr/TestBufrDescription.cpp
