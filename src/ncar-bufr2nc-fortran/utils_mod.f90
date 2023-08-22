@@ -2,7 +2,7 @@ module utils_mod
 
 ! adapated from WRFDA/var/da/da_tools/da_advance_time.inc
 
-   use iodaconv_kinds, only: r_kind, i_kind, r_double, i_llong
+   use kinds, only: r_kind, i_kind, r_double, i_llong
 
    implicit none
    private
