@@ -176,21 +176,35 @@ def get_data(f, obs_data):
     nlocs = len(obs_data[('latitude', metaDataName)])
     k = 'brightnessTemperature'
     # have to reorder the channel axis to be last then merge ( nscans x nspots = nlocs )
+    channel_name = ['Brightness Temperature (6.9GHz,H)',
+        'Brightness Temperature (6.9GHz,V)',
+        'Brightness Temperature (7.3GHz,H)',
+        'Brightness Temperature (7.3GHz,V)',
+        'Brightness Temperature (10.7GHz,H)',
+        'Brightness Temperature (10.7GHz,V)',
+        'Brightness Temperature (18.7GHz,H)',
+        'Brightness Temperature (18.7GHz,V)',
+        'Brightness Temperature (23.8GHz,H)',
+        'Brightness Temperature (23.8GHz,V)',
+        'Brightness Temperature (36.5GHz,H)',
+        'Brightness Temperature (36.5GHz,V)',
+        'Brightness Temperature (89.0GHz-A,H)',
+        'Brightness Temperature (89.0GHz-A,V)']
     obs_data[(k, "ObsValue")] = np.transpose(
-        (np.array(f['Brightness Temperature (6.9GHz,H)'], dtype='float32').flatten(),
-         np.array(f['Brightness Temperature (6.9GHz,V)'], dtype='float32').flatten(),
-         np.array(f['Brightness Temperature (7.3GHz,H)'], dtype='float32').flatten(),
-         np.array(f['Brightness Temperature (7.3GHz,V)'], dtype='float32').flatten(),
-         np.array(f['Brightness Temperature (10.7GHz,H)'], dtype='float32').flatten(),
-         np.array(f['Brightness Temperature (10.7GHz,V)'], dtype='float32').flatten(),
-         np.array(f['Brightness Temperature (18.7GHz,H)'], dtype='float32').flatten(),
-         np.array(f['Brightness Temperature (18.7GHz,V)'], dtype='float32').flatten(),
-         np.array(f['Brightness Temperature (23.8GHz,H)'], dtype='float32').flatten(),
-         np.array(f['Brightness Temperature (23.8GHz,V)'], dtype='float32').flatten(),
-         np.array(f['Brightness Temperature (36.5GHz,H)'], dtype='float32').flatten(),
-         np.array(f['Brightness Temperature (36.5GHz,V)'], dtype='float32').flatten(),
-         np.array(f['Brightness Temperature (89.0GHz-A,H)'][:, ::2], dtype='float32').flatten(),
-         np.array(f['Brightness Temperature (89.0GHz-A,V)'][:, ::2], dtype='float32').flatten()))
+        (np.array(f[channel_name[0]]*f[channel_name[0]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[1]]*f[channel_name[0]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[2]]*f[channel_name[0]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[3]]*f[channel_name[0]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[4]]*f[channel_name[0]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[5]]*f[channel_name[0]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[6]]*f[channel_name[0]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[7]]*f[channel_name[0]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[8]]*f[channel_name[0]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[9]]*f[channel_name[0]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[10]]*f[channel_name[0]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[11]]*f[channel_name[0]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[12]][:, ::2]*f[channel_name[12]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[13]][:, ::2]*f[channel_name[13]].attrs['SCALE FACTOR'][0], dtype='float32').flatten()))
     obs_data[(k, "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
     obs_data[(k, "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
 
