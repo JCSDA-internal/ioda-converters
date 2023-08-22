@@ -2,7 +2,7 @@ program obs2ioda
 
    use define_mod, only: write_nc_conv, write_nc_radiance, write_nc_radiance_geo, StrLen, xdata, &
                          ninst
-   use kinds, only: i_kind
+   use iodaconv_kinds, only: i_kind
    use prepbufr_mod, only: read_prepbufr, sort_obs_conv, filter_obs_conv, do_tv_to_ts
    use radiance_mod, only: read_amsua_amsub_mhs, read_airs_colocate_amsua, sort_obs_radiance, &
                            read_iasi, read_cris, radiance_to_temperature
