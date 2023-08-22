@@ -192,17 +192,17 @@ def get_data(f, obs_data):
         'Brightness Temperature (89.0GHz-A,V)']
     obs_data[(k, "ObsValue")] = np.transpose(
         (np.array(f[channel_name[0]]*f[channel_name[0]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
-         np.array(f[channel_name[1]]*f[channel_name[0]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
-         np.array(f[channel_name[2]]*f[channel_name[0]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
-         np.array(f[channel_name[3]]*f[channel_name[0]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
-         np.array(f[channel_name[4]]*f[channel_name[0]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
-         np.array(f[channel_name[5]]*f[channel_name[0]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
-         np.array(f[channel_name[6]]*f[channel_name[0]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
-         np.array(f[channel_name[7]]*f[channel_name[0]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
-         np.array(f[channel_name[8]]*f[channel_name[0]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
-         np.array(f[channel_name[9]]*f[channel_name[0]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
-         np.array(f[channel_name[10]]*f[channel_name[0]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
-         np.array(f[channel_name[11]]*f[channel_name[0]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[1]]*f[channel_name[1]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[2]]*f[channel_name[2]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[3]]*f[channel_name[3]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[4]]*f[channel_name[4]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[5]]*f[channel_name[5]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[6]]*f[channel_name[6]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[7]]*f[channel_name[7]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[8]]*f[channel_name[8]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[9]]*f[channel_name[9]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[10]]*f[channel_name[10]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[11]]*f[channel_name[11]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
          np.array(f[channel_name[12]][:, ::2]*f[channel_name[12]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
          np.array(f[channel_name[13]][:, ::2]*f[channel_name[13]].attrs['SCALE FACTOR'][0], dtype='float32').flatten()))
     obs_data[(k, "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
