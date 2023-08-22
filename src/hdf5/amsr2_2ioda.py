@@ -151,7 +151,7 @@ def get_data(f, obs_data):
     k = 'sensorScanPosition'
     obs_data[(k, metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='int32')+1, (nscans, 1)).flatten()
     k = 'sensorZenithAngle'   # ~55.2 incidence angle
-    obs_data[(k, metaDataName)] = np.array(f['Earth Incidence'], dtype='float32').flatten()
+    obs_data[(k, metaDataName)] = np.array(f['Earth Incidence']*f['Earth Incidence'].attrs['SCALE FACTOR'][0], dtype='float32').flatten()
     instr_scan_ang = obs_data[(k, metaDataName)]
     k = 'sensorAzimuthAngle'
     obs_data[(k, metaDataName)] = np.array(f['Earth Azimuth'], dtype='float32').flatten()
