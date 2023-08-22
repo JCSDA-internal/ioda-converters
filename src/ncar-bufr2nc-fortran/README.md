@@ -1,5 +1,13 @@
 # bufr2nc_fortran.x
 
+## Current instruments supported:
+* iasi
+* amsua
+* mhs
+* gpsro is supported but the recommended converter to use is `src/gnssro/gnssro_bufr2ioda.f90`
+* prepBUFR which outputs ascan, satwind, aircraft, surface observations and radiosonde
+
+## Usage:
 ```
 Usage: bufr2nc_fortran.x -i input_dir -o output_dir bufr_filename(s)_to_convert
 ```
