@@ -86,7 +86,7 @@ if ( iodaconv_bufr_ENABLED )
   ecbuild_add_library( TARGET   atms_lib
                        SOURCES  ${_atmslib_srcs}
                        TYPE STATIC
-                       INSTALL_HEADERS LISTED	
+                       INSTALL_HEADERS LISTED
     )
 
   target_link_libraries( atms_lib PUBLIC iodaconv_utils)   
