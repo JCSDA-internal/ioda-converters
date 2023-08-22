@@ -177,19 +177,19 @@ def get_data(f, obs_data):
     k = 'brightnessTemperature'
     # have to reorder the channel axis to be last then merge ( nscans x nspots = nlocs )
     channel_name = ['Brightness Temperature (6.9GHz,H)',
-        'Brightness Temperature (6.9GHz,V)',
-        'Brightness Temperature (7.3GHz,H)',
-        'Brightness Temperature (7.3GHz,V)',
-        'Brightness Temperature (10.7GHz,H)',
-        'Brightness Temperature (10.7GHz,V)',
-        'Brightness Temperature (18.7GHz,H)',
-        'Brightness Temperature (18.7GHz,V)',
-        'Brightness Temperature (23.8GHz,H)',
-        'Brightness Temperature (23.8GHz,V)',
-        'Brightness Temperature (36.5GHz,H)',
-        'Brightness Temperature (36.5GHz,V)',
-        'Brightness Temperature (89.0GHz-A,H)',
-        'Brightness Temperature (89.0GHz-A,V)']
+         'Brightness Temperature (6.9GHz,V)',
+         'Brightness Temperature (7.3GHz,H)',
+         'Brightness Temperature (7.3GHz,V)',
+         'Brightness Temperature (10.7GHz,H)',
+         'Brightness Temperature (10.7GHz,V)',
+         'Brightness Temperature (18.7GHz,H)',
+         'Brightness Temperature (18.7GHz,V)',
+         'Brightness Temperature (23.8GHz,H)',
+         'Brightness Temperature (23.8GHz,V)',
+         'Brightness Temperature (36.5GHz,H)',
+         'Brightness Temperature (36.5GHz,V)',
+         'Brightness Temperature (89.0GHz-A,H)',
+         'Brightness Temperature (89.0GHz-A,V)']
     obs_data[(k, "ObsValue")] = np.transpose(
         (np.array(f[channel_name[0]]*f[channel_name[0]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
          np.array(f[channel_name[1]]*f[channel_name[0]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
