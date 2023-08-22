@@ -71,7 +71,8 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     hrdr = np.int64(hrdr*3600)
     hrdr += cycleTimeSinceEpoch
 
-    ulan = np.tile(hrdr[:,0], (hrdr.shape[1],1))
+    ulan = np.repeat(hrdr[:,0], hrdr.shape[1])
+    ulan = ulan.reshape(hrdr.shape)
 
     # ObsValue
     pob_ps   = np.full(pob.shape, pob.fill_value) # Extract stationPressure from pressure, which belongs to CAT=1
