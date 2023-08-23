@@ -8,7 +8,7 @@
 ################################################################################
 
 list( APPEND test_input
-  testinput/amsr2_gcom-w1.h5
+  testinput/amsr2_gcom-w1_20220216.h5
   testinput/icethk_coperl4.nc
   testinput/nsidc_l4_icec.nc
   testinput/amsr2_icec_l2p.nc
@@ -95,7 +95,7 @@ list( APPEND test_input
 )
 
 list( APPEND test_output
-  testoutput/amsr2_gcom-w1.nc4
+  testoutput/amsr2_gcom-w1_20220216.nc4
   testoutput/icethk_coperl4.nc
   testoutput/nsidc_l4_icec.nc
   testoutput/amsr2_icec_l2p.nc
@@ -483,18 +483,6 @@ set(IODACONV_PYTHONPATH "${python_path_str}")
 #===============================================================================
 # Marine converters
 #===============================================================================
-
-ecbuild_add_test( TARGET  test_iodaconv_amsr2_gcom-w1
-                  TYPE    SCRIPT
-                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
-                  COMMAND bash
-                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                          netcdf
-                  "${CMAKE_BINARY_DIR}/bin/amsr2_gcom-w1.py
-                  -i testinput/amsr2_gcom-w1.h5
-                  -o testrun/amsr2_gcom-w1.nc4
-                  -d 2022021600"
-                  amsr2_gcom-w1.nc4 ${IODA_CONV_COMP_TOL_ZERO} )
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_nsidc_l4cdr_icec
                   TYPE    SCRIPT
@@ -905,6 +893,18 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_sondetac
 # MISC converters
 #===============================================================================
 
+ecbuild_add_test( TARGET  test_iodaconv_amsr2_gcom-w1
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                  "${CMAKE_BINARY_DIR}/bin/amsr2_2ioda.py
+                  -i testinput/amsr2_gcom-w1_20220216.h5
+                  -o testrun/amsr2_gcom-w1_20220216.nc4
+                  -d 2022021600"
+                  amsr2_gcom-w1_20220216.nc4 ${IODA_CONV_COMP_TOL_ZERO} )
+
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_jpss1_oc_l2
                   TYPE    SCRIPT
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
@@ -1289,18 +1289,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_omps_o3_nm
 #==============================================================================
 
 if(iodaconv_bufr_ENABLED)
-   ecbuild_add_test( TARGET  test_iodaconv_amsr2_gcom-w1
-                     TYPE    SCRIPT
-                     ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
-                     COMMAND bash
-                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                             netcdf
-                     "${CMAKE_BINARY_DIR}/bin/gmi_2ioda.py
-                     -i testinput/gmi_gpm.nc4
-                     -o testrun/gmi_gpm.nc4
-                     -d 2022021600"
-                     gmi_gpm.nc4 ${IODA_CONV_COMP_TOL_ZERO} )
- 
+
   ecbuild_add_test( TARGET  test_iodaconv_bufr_bufrdescription
                     SOURCES bufr/TestBufrDescription.cpp
                     ARGS    testinput/bufr_mhs.yaml
