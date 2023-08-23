@@ -14,7 +14,7 @@ module ahi_HSD_mod
 
 !https://www.jstage.jst.go.jp/article/jmsj/94/2/94_2016-009/_pdf/-char/en
 
-   use kinds, only: i_byte, i_short, i_long, i_llong, i_kind, r_single, r_double, r_kind
+   use iodaconv_kinds, only: i_byte, i_short, i_long, i_llong, i_kind, r_single, r_double, r_kind
    use define_mod, only: missing_r, missing_i, nstring, ndatetime, &
                          ninst, inst_list, set_name_satellite, set_name_sensor, xdata, name_sen_info, &
                          nvar_info, name_var_info, type_var_info, nsen_info, type_sen_info, set_brit_obserr, strlen
