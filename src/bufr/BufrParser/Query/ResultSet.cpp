@@ -325,13 +325,14 @@ namespace bufr {
             filteredData.buffer.isLongStr(metaData->typeInfo.isLongString());
             filteredData.buffer.resize(totalRows * filteredRowLength);
 
-            size_t outputOffset = 0;
             for (size_t frameIdx = 0; frameIdx < frames_.size(); ++frameIdx)
             {
                 const auto &frame = frames_[frameIdx];
                 const auto &target = frame.targetAtIdx(metaData->targetIdx);
 
                 size_t inputOffset = frameIdx * rowLength;
+                size_t outputOffset = frameIdx * filteredRowLength;
+
                 copyFilteredData(filteredData, data, target, inputOffset, outputOffset, 1, false);
             }
 
@@ -503,7 +504,7 @@ namespace bufr {
 
         if (layerFilter.empty())
         {
-            for (size_t countIdx = 0; countIdx < srcData.rawDims.size(); countIdx++)
+            for (size_t count = 1; count <= static_cast<size_t>(srcData.rawDims[depth]); count++)
             {
                 copyFilteredData(
                     resData, srcData, target, inputOffset, outputOffset, depth + 1, skipResult);
