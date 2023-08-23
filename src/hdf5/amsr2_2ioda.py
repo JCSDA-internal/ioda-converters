@@ -155,10 +155,10 @@ def get_data(f, obs_data):
     instr_scan_ang = obs_data[(k, metaDataName)]
     k = 'sensorAzimuthAngle'
     obs_data[(k, metaDataName)] = np.array(f['Earth Azimuth']*f['Earth Azimuth'].attrs['SCALE FACTOR'][0], dtype='float32').flatten()
-    # k = 'solarZenithAngle'  ??? compute
-    # obs_data[(k, metaDataName)] = np.array(f['Sun Elevation'], dtype='float32').flatten()
+    k = 'solarZenithAngle'
+    obs_data[(k, metaDataName)] = np.array(90.0 - f['Sun Elevation']*f['Sun Elevation'].attrs['SCALE FACTOR'][0], dtype='float32').flatten()
     k = 'solarAzimuthAngle'
-    obs_data[(k, metaDataName)] = np.array(f['Sun Azimuth'], dtype='float32').flatten()
+    obs_data[(k, metaDataName)] = np.array(f['Sun Azimuth']*f['Sun Azimuth'].attrs['SCALE FACTOR'][0], dtype='float32').flatten()
     orbit_direction = f.attrs['OrbitDirection'].item()
     iasc = get_asc_dsc(orbit_direction)
     obs_data[('satelliteAscendingFlag', metaDataName)] = np.full((nlocs), iasc, dtype='int32')
@@ -176,20 +176,20 @@ def get_data(f, obs_data):
     nlocs = len(obs_data[('latitude', metaDataName)])
     k = 'brightnessTemperature'
     # have to reorder the channel axis to be last then merge ( nscans x nspots = nlocs )
-    channel_name = ['Brightness Temperature (6.9GHz,H)',
-                    'Brightness Temperature (6.9GHz,V)',
-                    'Brightness Temperature (7.3GHz,H)',
+    channel_name = ['Brightness Temperature (6.9GHz,V)',
+                    'Brightness Temperature (6.9GHz,H)',
                     'Brightness Temperature (7.3GHz,V)',
-                    'Brightness Temperature (10.7GHz,H)',
+                    'Brightness Temperature (7.3GHz,H)',
                     'Brightness Temperature (10.7GHz,V)',
-                    'Brightness Temperature (18.7GHz,H)',
+                    'Brightness Temperature (10.7GHz,H)',
                     'Brightness Temperature (18.7GHz,V)',
-                    'Brightness Temperature (23.8GHz,H)',
+                    'Brightness Temperature (18.7GHz,H)',
                     'Brightness Temperature (23.8GHz,V)',
-                    'Brightness Temperature (36.5GHz,H)',
+                    'Brightness Temperature (23.8GHz,H)',
                     'Brightness Temperature (36.5GHz,V)',
-                    'Brightness Temperature (89.0GHz-A,H)',
-                    'Brightness Temperature (89.0GHz-A,V)']
+                    'Brightness Temperature (36.5GHz,H)',
+                    'Brightness Temperature (89.0GHz-A,V)',
+                    'Brightness Temperature (89.0GHz-A,H)']
     obs_data[(k, "ObsValue")] = np.transpose(
         (np.array(f[channel_name[0]]*f[channel_name[0]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
          np.array(f[channel_name[1]]*f[channel_name[1]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
