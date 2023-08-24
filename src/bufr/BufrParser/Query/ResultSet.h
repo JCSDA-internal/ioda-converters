@@ -45,7 +45,6 @@ namespace details
         std::vector<int> groupedDims = {};
         std::vector<char> missingFrames;
         std::vector<Query> dimPaths;
-        bool jagged = false;
     };
 
     struct ResultData

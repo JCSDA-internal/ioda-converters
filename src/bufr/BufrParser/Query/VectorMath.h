@@ -162,18 +162,15 @@ namespace bufr {
     /// \param vec The vector to find the max value in.
     /// \return Max value.
     template<typename T>
-    T max(const std::vector<T>& vec)
+    const T& max(const std::vector<T>& vec)
     {
-        T result = vec[0];
+        size_t maxIdx = 0;
         for (size_t i = 1; i < vec.size(); i++)
         {
-            if (vec[i] > result)
-            {
-                result = vec[i];
-            }
+            if (vec[i] > vec[maxIdx]) maxIdx = i;
         }
 
-        return result;
+        return vec[maxIdx];
     }
 
     /// \brief Are all values in the vector equal?

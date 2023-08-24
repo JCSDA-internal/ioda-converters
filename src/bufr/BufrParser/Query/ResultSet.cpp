@@ -178,11 +178,6 @@ namespace bufr {
             {
                 metaData->dims.resize(target->exportDimIdxs.size(), 1);
                 metaData->filteredDims.resize(target->exportDimIdxs.size(), 0);
-
-                if (&frame != &frames_.front())
-                {
-                    metaData->jagged = true;
-                }
             }
 
             // Capture the dimensional information
@@ -208,16 +203,6 @@ namespace bufr {
 
                 const auto newDimVal = std::max(metaData->dims[exportIdxIdx],
                                                 std::max(max(counts), 1));
-
-                if (!metaData->jagged)
-                {
-                    metaData->jagged = !allEqual(counts);
-
-                    if (!metaData->jagged && metaData->dims[exportIdxIdx] > 1)
-                    {
-                        metaData->jagged = (metaData->dims[exportIdxIdx] != newDimVal);
-                    }
-                }
 
                 metaData->dims[exportIdxIdx] = newDimVal;
 
@@ -383,7 +368,7 @@ namespace bufr {
 
         if (!totalDimSize ||
             dimIdx > data.rawDims.size() - 1 ||
-            frame[target->nodeIdx].data.size() == 0) return;
+            frame[target->nodeIdx].data.empty()) return;
 
         const auto& counts = frame[target->path[dimIdx].nodeId].counts;
         if (counts.empty())
