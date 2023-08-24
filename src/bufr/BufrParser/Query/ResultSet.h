@@ -66,12 +66,12 @@ namespace details
     /// the BUFR querying process in the form of SubsetLookupTable instances.
     ///
     /// \par The getter functions for the data construct the final output based on the data and
-    /// metadata in these lookup tables. There are many complications. For one the data may be jagged
-    /// (lookup table instances don't necessarily all have the same number of elements [repeated data
-    /// could have a different number of repeats per instance]). Another is the application group_by
-    /// fields which affect the dimensionality of the data. In order to make the data into
-    /// rectangular arrays it may be necessary to strategically fill in missing values so that the
-    /// data is organized correctly in each dimension.
+    /// metadata in these lookup tables. There are many complications. For one the data may be
+    /// jagged (lookup table instances don't necessarily all have the same number of elements
+    /// [repeated data could have a different number of repeats per instance]). Another is the
+    /// application group_by fields which affect the dimensionality of the data. In order to make
+    /// the data into rectangular arrays it may be necessary to strategically fill in missing values
+    /// so that the data is organized correctly in each dimension.
     ///
     class ResultSet
     {
