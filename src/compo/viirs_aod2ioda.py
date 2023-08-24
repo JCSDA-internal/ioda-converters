@@ -98,7 +98,13 @@ class AOD(object):
             lats = ncd.variables['Latitude'][:].ravel()
             vals = ncd.variables['AOD550'][:].ravel()
             errs = ncd.variables['Residual'][:].ravel()
-            qcpath = ncd.variables['QCPath'][:].ravel()
+
+            # QCPath is the flag for retrieval path. The valid range is 0-127 in the
+            # ATBD: https://www.star.nesdis.noaa.gov/jpss/documents/ATBD/ATBD_EPS_Aerosol_AOD_v3.4.pdf.
+            # QCPath's valid range in the input file is not correct, so we define the valid range here.
+            qcpath = ncd.variables['QCPath'][:].data.ravel()
+            qcpath = np.ma.masked_array(qcpath, np.logical_or(qcpath < 0, qcpath > 127))
+
             qcall = ncd.variables['QCAll'][:].ravel().astype('int32')
             obs_time = np.full(np.shape(qcall), base_datetime, dtype=object)
             if self.mask == "maskout":

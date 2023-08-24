@@ -1,4 +1,13 @@
-module kinds
+!/*
+! * (C) Copyright 2009-2032 UCAR
+! *
+! * This software is licensed under the terms of the Apache Licence Version 2.0
+! * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+! * In applying this licence, ECMWF does not waive the privileges and immunities
+! * granted to it by virtue of its status as an intergovernmental organisation nor
+! * does it submit to any jurisdiction.
+! */
+module iodaconv_kinds
 !$$$  module documentation block
 !                .      .    .                                       .
 ! module:   kinds
@@ -77,4 +86,4 @@ module kinds
    integer, parameter, public  :: r_kind = r_single
    integer, parameter, public  :: num_bytes_for_r_kind = num_bytes_for_r_single
 
-end module kinds
+end module iodaconv_kinds
