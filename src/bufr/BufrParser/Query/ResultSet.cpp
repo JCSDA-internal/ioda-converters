@@ -192,8 +192,11 @@ namespace bufr {
                     break;
                 }
 
-                metaData->rawDims[pathIdx] = std::max(metaData->rawDims[pathIdx],
-                                                      std::max(max(counts), 1));
+                const auto& maxCount = std::max(max(counts), 1);
+                if (maxCount > metaData->rawDims[pathIdx])
+                {
+                    metaData->rawDims[pathIdx] = maxCount;
+                }
 
                 if (target->exportDimIdxs[exportIdxIdx] != pathIdx)
                 {
@@ -485,7 +488,7 @@ namespace bufr {
             return;
         }
 
-        auto& layerFilter = target->path[depth].queryComponent->filter;
+        const auto& layerFilter = target->path[depth].queryComponent->filterSet;
 
         if (layerFilter.empty())
         {

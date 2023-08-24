@@ -30,13 +30,7 @@ namespace bufr {
     T product(typename std::vector<T>::const_iterator begin,
               typename std::vector<T>::const_iterator end)
     {
-        T result = 1;
-        for (auto i = begin; i < end; ++i)
-        {
-            result *= *i;
-        }
-
-        return result;
+        return std::accumulate(begin, end, 1, std::multiplies<T>());
     }
 
     /// \breif Sum all the values in a vector.
