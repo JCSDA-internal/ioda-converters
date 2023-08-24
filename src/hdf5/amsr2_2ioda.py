@@ -150,13 +150,16 @@ def get_data(f, obs_data):
     obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(nchans)+1, dtype='int32')
     k = 'sensorScanPosition'
     obs_data[(k, metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='int32')+1, (nscans, 1)).flatten()
-    k = 'sensorZenithAngle'   # ~55.2 incidence angle
+    k = 'sensorZenithAngle'   # ~55 degrees
     obs_data[(k, metaDataName)] = np.array(f['Earth Incidence']*f['Earth Incidence'].attrs['SCALE FACTOR'][0], dtype='float32').flatten()
     instr_scan_ang = obs_data[(k, metaDataName)]
     k = 'sensorAzimuthAngle'
     obs_data[(k, metaDataName)] = np.array(f['Earth Azimuth']*f['Earth Azimuth'].attrs['SCALE FACTOR'][0], dtype='float32').flatten()
+    # get sun zenith angle from weird  "Sun Elevation" which is defined as Solar Zenith Angle - Satellite Zenith Angle
+    # add back Satellite Zenith to give required Solar Zenith Angle!
     k = 'solarZenithAngle'
-    obs_data[(k, metaDataName)] = np.array(90.0 - f['Sun Elevation']*f['Sun Elevation'].attrs['SCALE FACTOR'][0], dtype='float32').flatten()
+    obs_data[(k, metaDataName)] = np.array(f['Sun Elevation']*f['Sun Elevation'].attrs['SCALE FACTOR'][0], dtype='float32').flatten()
+    obs_data[(k, metaDataName)] += obs_data[('sensorZenithAngle', metaDataName)]
     k = 'solarAzimuthAngle'
     obs_data[(k, metaDataName)] = np.array(f['Sun Azimuth']*f['Sun Azimuth'].attrs['SCALE FACTOR'][0], dtype='float32').flatten()
     orbit_direction = f.attrs['OrbitDirection'].item()
