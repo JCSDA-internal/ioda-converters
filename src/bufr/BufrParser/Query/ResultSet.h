@@ -63,14 +63,11 @@ namespace details
     typedef std::vector<Frame> Frames;
 
     /// \brief This class acts as the container for all the data that is collected during the
-    /// the BUFR querying process. Internally it arranges the data as DataFrames for each message
-    /// subset observation. Each DataFrame contains a list of DataFields, one for each named element
-    /// that was collected. Because of the way the collection process works, each DataFrame is
-    /// organized the same way (indexes of DataFields line up).
+    /// the BUFR querying process in the form of SubsetLookupTable instances.
     ///
     /// \par The getter functions for the data construct the final output based on the data and
-    /// metadata in these DataFields. There are many complications. For one the data may be jagged
-    /// (DataFields instances don't necessarily all have the same number of elements [repeated data
+    /// metadata in these lookup tables. There are many complications. For one the data may be jagged
+    /// (lookup table instances don't necessarily all have the same number of elements [repeated data
     /// could have a different number of repeats per instance]). Another is the application group_by
     /// fields which affect the dimensionality of the data. In order to make the data into
     /// rectangular arrays it may be necessary to strategically fill in missing values so that the

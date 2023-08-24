@@ -80,8 +80,9 @@ namespace bufr {
         /// \return The NodeData for the given node.
         const NodeData& operator[](size_t nodeId) const { return lookupTable_[nodeId]; }
 
-        std::shared_ptr<Targets> getTargets() const { return targets_; }
-
+        /// \brief Gets the idx for the target with the given name.
+        /// \param[in] name The name of the target to get the idx for.
+        /// \return The idx of the target with the given name.
         size_t getTargetIdx(std::string name) const
         {
             size_t idx = 0;
@@ -94,6 +95,9 @@ namespace bufr {
             return idx;
         }
 
+        /// \brief Gets the target at the given idx.
+        /// \param[in] idx The idx of the target to get.
+        /// \return The target at the given idx.
         std::shared_ptr<Target>& targetAtIdx(size_t idx) const { return targets_->at(idx); }
 
      private:
