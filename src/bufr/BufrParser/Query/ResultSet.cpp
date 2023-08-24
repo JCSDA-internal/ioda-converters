@@ -428,34 +428,30 @@ namespace bufr {
         }
     }
 
-//    void ResultSet::validateGroupByField(const details::TargetMetaDataPtr& targetMetaData,
-//                                         const details::TargetMetaDataPtr& groupByMetaData) const
-//    {
-//        // Validate the groupby field is in the same path as the field
-//        auto& groupByPath = groupByMetaData->dimPaths.back();
-//        auto& targetPath = targetMetaData->dimPaths.back();
-//
-//        auto groupByPathComps = splitPath(groupByPath.str());
-//        auto targetPathComps = splitPath(targetPath.str());
-//
-//        for (size_t i = 1;
-//             i < std::min(groupByPathComps.size(), targetPathComps.size());
-//             i++)
-//        {
-//            if (targetPathComps[i] != groupByPathComps[i])
-//            {
-//                output.value.strings[idxs[i]] = targetField.data.value.strings[i];
-//            }
-//            else
-//            {
-//                std::ostringstream errStr;
-//                errStr << "The GroupBy and Target Fields do not share a common path.\n";
-//                errStr << "GroupByField path: " << groupByPath.str()<< std::endl;
-//                errStr << "TargetField path: " << targetPath.str() << std::endl;
-//                throw eckit::BadParameter(errStr.str());
-//            }
-//        }
-//    }
+    void ResultSet::validateGroupByField(const details::TargetMetaDataPtr& targetMetaData,
+                                         const details::TargetMetaDataPtr& groupByMetaData) const
+    {
+        // Validate the groupby field is in the same path as the field
+        auto& groupByPath = groupByMetaData->dimPaths.back();
+        auto& targetPath = targetMetaData->dimPaths.back();
+
+        auto groupByPathComps = splitPath(groupByPath.str());
+        auto targetPathComps = splitPath(targetPath.str());
+
+        for (size_t i = 1;
+             i < std::min(groupByPathComps.size(), targetPathComps.size());
+             i++)
+        {
+            if (targetPathComps[i] != groupByPathComps[i])
+            {
+                std::ostringstream errStr;
+                errStr << "The GroupBy and Target Fields do not share a common path.\n";
+                errStr << "GroupByField path: " << groupByPath.str()<< std::endl;
+                errStr << "TargetField path: " << targetPath.str() << std::endl;
+                throw eckit::BadParameter(errStr.str());
+            }
+        }
+    }
 
     void ResultSet:: copyFilteredData(details::ResultData& resData,
                                       const details::ResultData& srcData,
@@ -522,7 +518,7 @@ namespace bufr {
                                  const std::string& groupByFieldName) const
     {
         const auto groupByMetaData = analyzeTarget(groupByFieldName);
-//        validateGroupByField(targetMetaData, groupByMetaData);
+        validateGroupByField(targetMetaData, groupByMetaData);
 
         // If the groupby field has more dims than the target then we must duplicate the
         // target values to match the groupby field

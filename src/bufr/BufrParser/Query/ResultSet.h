@@ -151,8 +151,8 @@ namespace details
                        const size_t countNumber,
                        const size_t countOffset) const;
 
-//        void validateGroupByField(const details::TargetMetaDataPtr& targetMetaData,
-//                                  const details::TargetMetaDataPtr& groupByMetaData) const;
+        void validateGroupByField(const details::TargetMetaDataPtr& targetMetaData,
+                                  const details::TargetMetaDataPtr& groupByMetaData) const;
 
         void copyFilteredData(details::ResultData& resData,
                               const details::ResultData& srcData,
