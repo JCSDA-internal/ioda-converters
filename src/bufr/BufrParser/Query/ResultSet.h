@@ -57,7 +57,7 @@ namespace details
 
     typedef std::shared_ptr<TargetMetaData> TargetMetaDataPtr;
 
-}  // details
+}  // namespace details
 
     typedef SubsetLookupTable Frame;
     typedef std::vector<Frame> Frames;
@@ -79,7 +79,7 @@ namespace details
     class ResultSet
     {
      public:
-        explicit ResultSet() = default;
+        ResultSet() = default;
         ~ResultSet() = default;
 
         /// \brief Gets the resulting data for a specific field with a given name grouped by the
