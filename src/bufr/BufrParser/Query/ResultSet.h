@@ -133,15 +133,35 @@ namespace details
      private:
         Frames frames_;
 
+        /// \brief Computes and returns metadata associated with a target.
+        /// \param name The name of the target to get the metadata for.
+        /// \return A TargetMetaData object containing the metadata.
         details::TargetMetaDataPtr analyzeTarget(const std::string& name) const;
+
+        /// \brief Assembles the data fragments for a target into a single ResultData object.
+        /// \param targetMetaData The metadata for the target to assemble the data for.
+        /// \return A ResultData object containing the data.
         details::ResultData assembleData(const details::TargetMetaDataPtr& targetMetaData) const;
 
+        /// \brief Copies the data from a frame into a ResultData object.
+        /// \param data The ResultData object to copy the data into.
+        /// \param frame The frame to copy the data from.
+        /// \param target The target to copy the data for.
+        /// \param outputOffset The offset into the ResultData object to copy the data to.
         void copyData(details::ResultData& data,
                       const Frame& frame,
                       const TargetPtr& target,
                       size_t outputOffset) const;
 
-
+        /// \brief Copies the data from a frame into a ResultData object.
+        /// \param data The ResultData object to copy the data into.
+        /// \param frame The frame to copy the data from.
+        /// \param target The target to copy the data for.
+        /// \param outputOffset The offset into the ResultData object to copy the data to.
+        /// \param inputOffset The offset into the frame to copy the data from.
+        /// \param dimIdx The index of the dimension to copy the data for.
+        /// \param countNumber The current count
+        /// \param countOffset The offset into the count array.
         void _copyData(details::ResultData& data,
                        const Frame& frame,
                        const TargetPtr& target,
@@ -151,9 +171,24 @@ namespace details
                        const size_t countNumber,
                        const size_t countOffset) const;
 
+        /// \brief Validates that the group_by field is valid for the target. Throws an exception if
+        ///        it is not.
+        /// \param targetMetaData The metadata for the target.
+        /// \param groupByMetaData The metadata for the group_by field.
         void validateGroupByField(const details::TargetMetaDataPtr& targetMetaData,
                                   const details::TargetMetaDataPtr& groupByMetaData) const;
 
+
+        /// \brief Copies filtered data from a source ResultData object into a destination
+        ///        ResultData object.
+        /// \param resData The ResultData object to copy the data into.
+        /// \param srcData The ResultData object to copy the data from.
+        /// \param target The target to copy the data for.
+        /// \param inputOffset The offset into the source ResultData object to copy the data from.
+        /// \param outputOffset The offset into the destination ResultData object to copy the data
+        ///        to.
+        /// \param depth The depth of the dimension to copy the data for.
+        /// \param skipResult Whether to skip copying the result data.
         void copyFilteredData(details::ResultData& resData,
                               const details::ResultData& srcData,
                               const TargetPtr& target,
@@ -162,6 +197,10 @@ namespace details
                               size_t depth,
                               bool skipResult) const;
 
+        /// \brief Modify the ResultData object to apply the group_by field.
+        /// \param resData The ResultData object to modify.
+        /// \param targetMetaData The metadata for the target.
+        /// \param groupByFieldName The name of the field to group the data by.
         void applyGroupBy(details::ResultData& resData,
                           const details::TargetMetaDataPtr& targetMetaData,
                           const std::string& groupByFieldName) const;
