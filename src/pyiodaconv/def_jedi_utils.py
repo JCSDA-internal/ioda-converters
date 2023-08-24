@@ -16,6 +16,9 @@ obsErrName = iconv.OerrName()
 qcName = iconv.OqcName()
 
 iso8601_string = "seconds since 1970-01-01T00:00:00Z"
+epoch = datetime.fromisoformat(iso8601_string[14:-1])
+ioda_float_type = 'float32'
+ioda_int_type = 'int32'
 float_missing_value = iconv.get_default_fill_val(np.float32)
 int_missing_value = iconv.get_default_fill_val(np.int32)
 long_missing_value = iconv.get_default_fill_val(np.int64)
