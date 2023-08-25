@@ -23,7 +23,6 @@ namespace bufr {
         std::string name;
         size_t index = 0;
         std::vector<size_t> filter;
-        std::unordered_set<size_t> filterSet;
 
         virtual ~QueryComponent() = default;
     };
@@ -103,8 +102,6 @@ namespace bufr {
                 else if (auto filterToken = std::dynamic_pointer_cast<FilterToken>(token))
                 {
                     component->filter = filterToken->indices();
-                    component->filterSet = std::unordered_set<size_t>(component->filter.begin(),
-                                                                      component->filter.end());
                 }
             }
 
