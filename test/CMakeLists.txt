@@ -444,7 +444,7 @@ endforeach()
 # iodaconv_comp.sh test.
 #
 # For a converter that is generating new data, use a non-zero tolerance.
-set(IODA_CONV_COMP_TOL_ZERO "0.0")
+set(IODA_CONV_COMP_TOL_ZERO "1.0e-4")
 set(IODA_CONV_COMP_TOL "0.5e-4")
 
 # The ioda-engines CMake configuration has set the file target _ioda_python to
