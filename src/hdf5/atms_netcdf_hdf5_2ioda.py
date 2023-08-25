@@ -17,6 +17,7 @@ import numpy as np
 from apply_BG.apply_BG import apply_BG_class
 import pyiodaconv.ioda_conv_engines as iconv
 from pyiodaconv.def_jedi_utils import set_metadata_attributes, set_obspace_attributes
+from pyiodaconv.def_jedi_utils import epoch
 from pyiodaconv.orddicts import DefaultOrderedDict
 from pyiodaconv.def_jedi_utils import concat_obs_dict
 
@@ -53,9 +54,6 @@ locationKeyList = [
     ("longitude", "float"),
     ("dateTime", "long"),
 ]
-
-iso8601_string = "seconds since 1970-01-01T00:00:00Z"
-epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 
 def main(args):
