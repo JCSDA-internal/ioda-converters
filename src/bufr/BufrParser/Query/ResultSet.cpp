@@ -484,7 +484,7 @@ namespace bufr {
             return;
         }
 
-        const auto& layerFilter = target->path[depth].queryComponent->filterSet;
+        const auto& layerFilter = target->path[depth].queryComponent->filter;
 
         if (layerFilter.empty())
         {
@@ -496,15 +496,23 @@ namespace bufr {
         }
         else
         {
+            size_t filterIdx = 0;
+            auto nextFilterCount = layerFilter[filterIdx];
             for (size_t count = 1; count <= static_cast<size_t>(srcData.rawDims[depth]); count++)
             {
                 bool skip = skipResult;
-
                 if (!skip)
                 {
-                    skip = std::find(layerFilter.begin(),
-                                     layerFilter.end(),
-                                     count) == layerFilter.end();
+                    if (nextFilterCount == count)
+                    {
+                        filterIdx++;
+                        if (filterIdx < layerFilter.size())
+                            nextFilterCount = layerFilter.at(filterIdx);
+                    }
+                    else
+                    {
+                        skip = true;
+                    }
                 }
 
                 copyFilteredData(
