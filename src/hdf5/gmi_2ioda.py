@@ -38,7 +38,7 @@ GPM_WMO_sat_ID = 288
 GlobalAttrs = {
     "platformCommonName": "GMI",
     "platformLongDescription": "GMI Brightness Temperature Data",
-    "sensorCentralFrequency": "[10.65V, 10.65H, 18.7V, 18.7H, 23.8V, 36.64V, 36.64H, 89.0V, 89.0H, 166.0V, 166.0H, 183.31+/-3V, 183.31+/-7V]"
+    "sensorCentralFrequency": "[10.65V, 10.65H, 18.7V, 18.7H, 23.8V, 36.5V, 36.5H, 89.0V, 89.0H, 166.5V, 166.5H, 183.31+/-3V, 183.31+/-7V]"
 }
 
 locationKeyList = [
@@ -137,19 +137,17 @@ def get_data(f, obs_data):
     # \nSatelliteName=GCOMW1;
     # WMO_sat_ID = get_WMO_satellite_ID(f.attrs['ShortName'].decode("utf-8"))
     WMO_sat_ID = GPM_WMO_sat_ID
-    # pdb.set_trace()
-    # sys.exit()
 
     nscans = np.shape(f['S1']['Latitude'])[0]
     nbeam_pos = np.shape(f['S1']['Latitude'])[1]
-    nchans = 12
+    nchans = 13
     # Two-swaths covering 10.65 to 183 GHz
     obs_data[('latitude', metaDataName)] = np.array(f['S1']['Latitude'], dtype='float32').flatten()
     obs_data[('longitude', metaDataName)] = np.array(f['S1']['Longitude'], dtype='float32').flatten()
     # start at channel 5 as lowest frequencies are not included
     obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(nchans)+1, dtype='int32')
     k = 'sensorScanPosition'
-    obs_data[(k, metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='float32')+1, (nscans, 1)).flatten()
+    obs_data[(k, metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='int32')+1, (nscans, 1)).flatten()
     k = 'sensorZenithAngle'   # ~52.85 low freq incidence angle (~49.16 higher freq)
     obs_data[(k, metaDataName)] = np.array(f['S1']['incidenceAngle'], dtype='float32').flatten()
     instr_scan_ang = obs_data[(k, metaDataName)]
@@ -236,9 +234,9 @@ def set_missing_value(f, obs_key, obs_data):
 #       (obs_data[(tb_key, obsValName)][:, 12] != float_missing_value)
     for k in obs_data:
         if metaDataName in k[1] and 'sensorChannelNumber' not in k[0]:
-            obs_data[k] = obs_data[k][good]     # [::24] ## add as skip
+            obs_data[k] = obs_data[k][good]      # [::36] ## add as skip
         elif tb_key in k[0]:
-            obs_data[k] = obs_data[k][good, :]  # [::24] ## add as skip
+            obs_data[k] = obs_data[k][good, :]   # [::36] ## add as skip
 
     return obs_data
 
