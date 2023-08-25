@@ -903,7 +903,7 @@ ecbuild_add_test( TARGET  test_iodaconv_amsr2_gcom-w1
                   -i testinput/amsr2_gcom-w1_20220216.h5
                   -o testrun/amsr2_gcom-w1_20220216.nc4
                   -d 2022021600"
-                  amsr2_gcom-w1_20220216.nc4 ${IODA_CONV_COMP_TOL_ZERO} )
+                  amsr2_gcom-w1_20220216.nc4 ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_jpss1_oc_l2
                   TYPE    SCRIPT
