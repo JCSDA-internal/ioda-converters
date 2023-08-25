@@ -192,6 +192,7 @@ namespace details
                               size_t& inputOffset,
                               size_t& outputOffset,
                               size_t depth,
+                              size_t maxDepth,
                               bool skipResult) const;
 
         /// \brief Modify the ResultData object to apply the group_by field.

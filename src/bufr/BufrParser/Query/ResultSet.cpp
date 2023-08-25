@@ -320,8 +320,9 @@ namespace bufr {
 
                 size_t inputOffset = frameIdx * rowLength;
                 size_t outputOffset = frameIdx * filteredRowLength;
+                size_t maxDepth = target->path.size() - 1;
 
-                copyFilteredData(filteredData, data, target, inputOffset, outputOffset, 1, false);
+                copyFilteredData(filteredData, data, target, inputOffset, outputOffset, 1, maxDepth, false);
             }
 
             filteredData.dimPaths = metaData->dimPaths;
@@ -459,9 +460,10 @@ namespace bufr {
                                       size_t& inputOffset,
                                       size_t& outputOffset,
                                       size_t depth,
+                                      size_t maxDepth,
                                       bool skipResult) const
     {
-        if (depth == target->path.size() - 1)
+        if (depth == maxDepth)
         {
             if (!skipResult)
             {
@@ -491,7 +493,7 @@ namespace bufr {
             for (size_t count = 1; count <= static_cast<size_t>(srcData.rawDims[depth]); count++)
             {
                 copyFilteredData(
-                    resData, srcData, target, inputOffset, outputOffset, depth + 1, skipResult);
+                    resData, srcData, target, inputOffset, outputOffset, depth + 1, maxDepth, skipResult);
             }
         }
         else
@@ -516,7 +518,7 @@ namespace bufr {
                 }
 
                 copyFilteredData(
-                    resData, srcData, target, inputOffset, outputOffset, depth + 1, skip);
+                    resData, srcData, target, inputOffset, outputOffset, depth + 1, maxDepth, skip);
             }
         }
     }
