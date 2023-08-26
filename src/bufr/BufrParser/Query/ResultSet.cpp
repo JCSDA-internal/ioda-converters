@@ -322,7 +322,15 @@ namespace bufr {
                 size_t outputOffset = frameIdx * filteredRowLength;
                 size_t maxDepth = target->path.size() - 1;
 
-                copyFilteredData(filteredData, data, target, inputOffset, outputOffset, 1, maxDepth, false);
+                copyFilteredData(filteredData,
+                                 data,
+                                 target,
+                                 inputOffset,
+                                 outputOffset,
+                                 1,
+                                 maxDepth,
+                                 target->filterDataList,
+                                 false);
             }
 
             filteredData.dimPaths = metaData->dimPaths;
@@ -461,6 +469,7 @@ namespace bufr {
                                       size_t& outputOffset,
                                       size_t depth,
                                       size_t maxDepth,
+                                      const FilterDataList& filterDataList,
                                       bool skipResult) const
     {
         if (depth == maxDepth)
@@ -486,20 +495,27 @@ namespace bufr {
             return;
         }
 
-        const auto& layerFilter = target->path[depth].queryComponent->filter;
+        const auto& filterData = filterDataList[depth];
 
-        if (layerFilter.empty())
+        if (filterData.isEmpty)
         {
             for (size_t count = 1; count <= static_cast<size_t>(srcData.rawDims[depth]); count++)
             {
-                copyFilteredData(
-                    resData, srcData, target, inputOffset, outputOffset, depth + 1, maxDepth, skipResult);
+                copyFilteredData(resData,
+                                 srcData,
+                                 target,
+                                 inputOffset,
+                                 outputOffset,
+                                 depth + 1,
+                                 maxDepth,
+                                 filterDataList,
+                                 skipResult);
             }
         }
         else
         {
             size_t filterIdx = 0;
-            auto nextFilterCount = layerFilter[filterIdx];
+            auto nextFilterCount = filterData.filter[filterIdx];
             for (size_t count = 1; count <= static_cast<size_t>(srcData.rawDims[depth]); count++)
             {
                 bool skip = skipResult;
@@ -508,8 +524,8 @@ namespace bufr {
                     if (nextFilterCount == count)
                     {
                         filterIdx++;
-                        if (filterIdx < layerFilter.size())
-                            nextFilterCount = layerFilter.at(filterIdx);
+                        if (filterIdx < filterData.filter.size())
+                            nextFilterCount = filterData.filter.at(filterIdx);
                     }
                     else
                     {
@@ -517,8 +533,15 @@ namespace bufr {
                     }
                 }
 
-                copyFilteredData(
-                    resData, srcData, target, inputOffset, outputOffset, depth + 1, maxDepth, skip);
+                copyFilteredData(resData,
+                                 srcData,
+                                 target,
+                                 inputOffset,
+                                 outputOffset,
+                                 depth + 1,
+                                 maxDepth,
+                                 filterDataList,
+                                 skip);
             }
         }
     }

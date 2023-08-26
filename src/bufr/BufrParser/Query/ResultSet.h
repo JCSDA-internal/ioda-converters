@@ -185,6 +185,7 @@ namespace details
         /// \param outputOffset The offset into the destination ResultData object to copy the data
         ///        to.
         /// \param depth The depth of the dimension to copy the data for.
+        /// \param filterDataList The list of filter data to apply.
         /// \param skipResult Whether to skip copying the result data.
         void copyFilteredData(details::ResultData& resData,
                               const details::ResultData& srcData,
@@ -193,6 +194,7 @@ namespace details
                               size_t& outputOffset,
                               size_t depth,
                               size_t maxDepth,
+                              const FilterDataList& filterDataList,
                               bool skipResult) const;
 
         /// \brief Modify the ResultData object to apply the group_by field.
