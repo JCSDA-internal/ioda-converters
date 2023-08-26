@@ -12,9 +12,9 @@ import os
 from datetime import datetime, timedelta
 import logging
 
-import pygrib
 import numpy as np
 import netCDF4 as nc
+import eccodes
 
 # These modules need the path to lib-python modules
 from collections import defaultdict, OrderedDict
@@ -170,8 +170,14 @@ def main(file_names, output_file):
 
 def read_grib(input_file, obsvars):
     logging.debug(f"Reading file: {input_file}")
-    grbs = pygrib.open(input_file)
-    grbs.seek(0)
+
+
+    with open(input_file, "rb") as f:
+        try:
+            gid = eccodes.codes_grib_new_from_file(f)
+        except Exception as e:
+            logging.warning(f"ABORT, failure to open file: {input_file}. MSG: {e}")
+            sys.exit()
 
     dt = None
     heights = []
@@ -179,54 +185,63 @@ def read_grib(input_file, obsvars):
     for obsvar in obsvars:
         mrms_data[obsvar] = []
 
-    for grb in grbs:
-        product_id = ''
-        for key in grib_keys:
-            product_id = product_id + str(grb[key]) + '-'
-        product_id = product_id[:-1]
+    product_id = ''
+    for key in grib_keys:
+        product_id = product_id + str(eccodes.codes_get(gid, key)) + '-'
+    product_id = product_id[:-1]
+    logging.debug(f"DEBUG: the grib file has variable reference: {product_id}")
 
-        '''
-        # Use a mask to remove the missing value points entirely from the dataset.
-        # This is FLAWED because there could be different missing values on different
-        # height levels, or potentially different missing values depending on product.
-        '''
+    '''
+    # Use a mask to remove the missing value points entirely from the dataset.
+    # This is FLAWED because there could be different missing values on different
+    # height levels, or potentially different missing values depending on product.
+    '''
 
-        mask = None
-        if product_id in mrms_products.keys():
-            obsvar = mrms_products[product_id]
-            dt = grb.validDate
-            height = grb['level']
-            heights.append(height)
-            lats, lons = grb.latlons()
-            nj = lats.shape[0]
-            ni = lats.shape[1]
-            logging.debug(f"  capturing data for variable {obsvar} [{product_id}]")
-            Z = grb.values
-            Z = Z.reshape(ni*nj)
-            if obsvar == 'reflectivity':
-                mask = np.logical_and(Z >= -25, Z <= 80)
-                Z = Z[mask]
-            Z = Z.tolist()
-            mrms_data[obsvar].extend(Z)
-            Z.clear()
-        else:
-            pass
+    mask = None
+    if product_id in mrms_products.keys():
+        obsvar = mrms_products[product_id]
+        d = eccodes.codes_get(gid, "dataDate")
+        t = eccodes.codes_get(gid, "dataTime")
+        dt = datetime.strptime(str(d)+str(t), "%Y%m%d%H%M")
+        logging.debug(f"DEBUG: date info: {d} {t}Z")
 
-    grbs.close()
+        height = eccodes.codes_get(gid, "level")
+        heights.append(height)
+        ni = eccodes.codes_get(gid, "Ni")
+        nj = eccodes.codes_get(gid, "Nj")
+        #lats = eccodes.codes_get_array(gid, "latitudes")
+        #lons = eccodes.codes_get_array(gid, "longitudes")
+        logging.debug(f"DEBUG: number of x,y points {ni}, {nj} and level: {height}")
+
+        Z = eccodes.codes_get_double_array(gid, 'values')
+
+        Z = Z.reshape(ni*nj).astype('float')
+        if obsvar == 'reflectivity':
+            mask = np.logical_and(Z >= -25, Z <= 80)
+            Z = Z[mask]
+        Z = Z.tolist()
+        mrms_data[obsvar].extend(Z)
+        Z.clear()
+    else:
+        pass
+
+    ecc.codes_release(gid)
 
     if dt is None:
         print("No GRIB messages match the requested product(s) in variable mrms_products")
         sys.exit()
 
-    lats = lats.reshape(ni*nj)
-    if mask is not None and (len(heights) == 1):
-        lats = lats[mask]
-    lats = lats.tolist()
-    lons = lons.reshape(ni*nj)
-    lons[lons > 180.0] = lons - 360.0
-    if mask is not None and (len(heights) == 1):
-        lons = lons[mask]
-    lons = lons.tolist()
+    lats = mrms_data[obsvar]*0.0
+    lons = mrms_data[obsvar]*0.0
+    #lats = lats.reshape(ni*nj)
+    #if mask is not None and (len(heights) == 1):
+    #    lats = lats[mask]
+    #lats = lats.tolist()
+    #lons = lons.reshape(ni*nj)
+    #lons[lons > 180.0] = lons - 360.0
+    #if mask is not None and (len(heights) == 1):
+    #    lons = lons[mask]
+    #lons = lons.tolist()
 
     return dt, heights, lats, lons, mrms_data
 
