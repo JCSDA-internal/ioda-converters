@@ -60,6 +60,8 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     sid = r.get('stationIdentification')
     sid = np.tile(sid, (lon.shape[1],1))
     elv = r.get('stationElevation')
+    elv = np.repeat(elv, lon.shape[1])
+    elv = elv.reshape(lon.shape)
     tpc = r.get('temperatureEventCode')
     pob = r.get('pressure')
     pob *= 100
@@ -263,7 +265,7 @@ if __name__ == '__main__':
     )
 
     DATA_PATH = './testinput/ADPUPA.prepbufr'
-    OUTPUT_PATH = './testrun/prepbufr_adpupa_api.nc'
+    OUTPUT_PATH = './testoutput/prepbufr_adpupa_api.nc'
 
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument('-f', '--filename', type=str, default=DATA_PATH,
