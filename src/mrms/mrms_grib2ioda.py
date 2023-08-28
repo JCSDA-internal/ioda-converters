@@ -209,9 +209,10 @@ def read_grib(input_file, obsvars):
         heights.append(height)
         ni = eccodes.codes_get(gid, "Ni")
         nj = eccodes.codes_get(gid, "Nj")
-        #lats = eccodes.codes_get_array(gid, "latitudes")
-        #lons = eccodes.codes_get_array(gid, "longitudes")
         logging.debug(f"DEBUG: number of x,y points {ni}, {nj} and level: {height}")
+
+        lats = eccodes.codes_get_array(gid, "latitudes")
+        lons = eccodes.codes_get_array(gid, "longitudes")
 
         Z = eccodes.codes_get_double_array(gid, 'values')
 
@@ -220,28 +221,27 @@ def read_grib(input_file, obsvars):
             mask = np.logical_and(Z >= -25, Z <= 80)
             Z = Z[mask]
         Z = Z.tolist()
+        print(f"DEBUG: min, max of data: {min(Z)}, {max(Z)}")
         mrms_data[obsvar].extend(Z)
         Z.clear()
     else:
         pass
 
-    ecc.codes_release(gid)
+    eccodes.codes_release(gid)
 
     if dt is None:
         print("No GRIB messages match the requested product(s) in variable mrms_products")
         sys.exit()
 
-    lats = mrms_data[obsvar]*0.0
-    lons = mrms_data[obsvar]*0.0
-    #lats = lats.reshape(ni*nj)
-    #if mask is not None and (len(heights) == 1):
-    #    lats = lats[mask]
-    #lats = lats.tolist()
-    #lons = lons.reshape(ni*nj)
-    #lons[lons > 180.0] = lons - 360.0
-    #if mask is not None and (len(heights) == 1):
-    #    lons = lons[mask]
-    #lons = lons.tolist()
+    lats = lats.reshape(ni*nj).astype('float')
+    if mask is not None and (len(heights) == 1):
+        lats = lats[mask]
+    lats = lats.tolist()
+    lons = lons.reshape(ni*nj).astype('float')
+    lons[lons > 180.0] = lons - 360.0
+    if mask is not None and (len(heights) == 1):
+        lons = lons[mask]
+    lons = lons.tolist()
 
     return dt, heights, lats, lons, mrms_data
 
