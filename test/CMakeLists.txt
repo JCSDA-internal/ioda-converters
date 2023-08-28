@@ -893,18 +893,16 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_sondetac
 # MRMS (multi-radar, multi-sensor) radar reflectivity CONUS converter
 #===============================================================================
 
-if( iodaconv_pygrib_ENABLED )
-  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mrms
-                    TYPE    SCRIPT
-                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
-                    COMMAND bash
-                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                            netcdf
-                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/mrms_grib2ioda.py
-                            -i testinput/MRMS_MergedReflectivityQC_01.50_20230712-152241.grib2
-                            -o testrun/mrms_reflectivity_Z1500m.nc"
-                            mrms_reflectivity_Z1500m.nc ${IODA_CONV_COMP_TOL_ZERO})
-endif()
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mrms
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/mrms_grib2ioda.py
+                          -i testinput/MRMS_MergedReflectivityQC_01.50_20230712-152241.grib2
+                          -o testrun/mrms_reflectivity_Z1500m.nc"
+                          mrms_reflectivity_Z1500m.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
 # MISC converters
