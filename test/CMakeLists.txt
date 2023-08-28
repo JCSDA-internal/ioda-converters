@@ -445,7 +445,7 @@ endforeach()
 #
 # For a converter that is generating new data, use a non-zero tolerance.
 set(IODA_CONV_COMP_TOL_ZERO "0.0")
-set(IODA_CONV_COMP_TOL "1.0")
+set(IODA_CONV_COMP_TOL "0.5e-4")
 
 # The ioda-engines CMake configuration has set the file target _ioda_python to
 # the full path to the library file containing the python bindings created
