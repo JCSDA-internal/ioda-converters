@@ -265,7 +265,7 @@ if __name__ == '__main__':
     )
 
     DATA_PATH = './testinput/ADPUPA.prepbufr'
-    OUTPUT_PATH = './testoutput/prepbufr_adpupa_api.nc'
+    OUTPUT_PATH = './testrun/prepbufr_adpupa_api.nc'
 
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument('-f', '--filename', type=str, default=DATA_PATH,
