@@ -196,7 +196,7 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     windnorthward.atts.create('units', ioda.Types.str).writeVector.str(['m s-1'])
     windnorthward.atts.create('long_name', ioda.Types.str).writeVector.str(['Northward Wind'])
 
-    heightofobservation = g.vars.create('ObsValue/heightOfObservation', ioda.Types.float, scales=[dim_location], params=pint)
+    heightofobservation = g.vars.create('ObsValue/heightOfObservation', ioda.Types.float, scales=[dim_location], params=pfloat)
     heightofobservation.atts.create('units', ioda.Types.str).writeVector.str(['m'])
     heightofobservation.atts.create('long_name', ioda.Types.str).writeVector.str(['Height of Observation'])
 
