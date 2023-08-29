@@ -171,7 +171,6 @@ def main(file_names, output_file):
 def read_grib(input_file, obsvars):
     logging.debug(f"Reading file: {input_file}")
 
-
     with open(input_file, "rb") as f:
         try:
             gid = eccodes.codes_grib_new_from_file(f)
