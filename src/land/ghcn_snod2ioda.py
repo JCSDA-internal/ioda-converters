@@ -9,24 +9,21 @@ import os
 import argparse
 import numpy as np
 import pandas as pd
+import time
 from datetime import datetime, timedelta
 from dateutil.parser import parse
 
 import pyiodaconv.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from pyiodaconv.orddicts import DefaultOrderedDict
+from pyiodaconv.def_jedi_utils import record_time
 
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("height", "float"),
-#   ("stationElevation", "float"),
+    ("stationElevation", "float"),
     ("dateTime", "string")
 ]
-
-obsvars = {
-    'snow_depth': 'totalSnowDepth',
-}
 
 AttrData = {
 }
@@ -55,7 +52,6 @@ class ghcn(object):
     def _read(self):
 
         # set up variable names for IODA
-
         iodavar = 'totalSnowDepth'
         self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
         self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
@@ -84,7 +80,9 @@ class ghcn(object):
         # Fix dtypeWarning with mixed types via set low_memory=False
         df20all = pd.read_csv(self.filename, header=None, names=cols, low_memory=False)
         df20 = df20all[sub_cols]
+        df20all = None
         df30_list.append(df20)
+        df20 = None
 
         df30 = pd.concat(df30_list, ignore_index=True)
         df30 = df30[df30["ELEMENT"] == "SNWD"]
@@ -103,6 +101,7 @@ class ghcn(object):
         df10all = pd.read_csv(self.fixfile, header=None, sep='\r\n')
         df10all = df10all[0].str.split('\\s+', expand=True)
         df10 = df10all.iloc[:, 0:4]
+        df10all = None
         sub_cols = {0: "ID", 1: "LATITUDE", 2: "LONGITUDE", 3: "ELEVATION"}
         df10 = df10.rename(columns=sub_cols)
         df10 = df10.drop_duplicates(subset=["ID"])
@@ -129,6 +128,7 @@ class ghcn(object):
         df100.assign(DATA_VALUE=-999.0)
         df30Temp = df30.loc[df30["DATETIME"] == new_date]
         df100["DATA_VALUE"] = df100.apply(lambda row: assignValue(row['ID'], df30Temp), axis=1)
+        df30Temp = None
 
         vals = df100["DATA_VALUE"].values
         vals = vals.astype('float32')
@@ -159,18 +159,14 @@ class ghcn(object):
         my_date = datetime.strptime(startdate, "%Y%m%d%H")
         base_datetime = my_date.strftime('%Y-%m-%dT%H:00:00Z')
 
-        for i in range(len(vals)):
-            if vals[i] >= 0.0:
-                errs[i] = 0.04
-                vals[i] = 0.001*vals[i]
-            times[i] = base_datetime
+        # vals[vals >= 0.0] *= 0.001      # mm to meters
+        errs[:] = 0.04
+        times[:] = base_datetime
         # add metadata variables
         self.outdata[('dateTime', 'MetaData')] = times
         self.outdata[('stationIdentification', 'MetaData')] = sites
         self.outdata[('latitude', 'MetaData')] = lats
         self.outdata[('longitude', 'MetaData')] = lons
-        # self.outdata[('height', 'MetaData')] = alts
-        # self.varAttrs[('height', 'MetaData')]['units'] = 'm'
         self.outdata[('stationElevation', 'MetaData')] = alts
         self.varAttrs[('stationElevation', 'MetaData')]['units'] = 'm'
 
@@ -207,14 +203,23 @@ def main():
 
     args = parser.parse_args()
 
+    # start timer
+    tic = record_time()
+
     # Read in the GHCN snow depth data
     snod = ghcn(args.input, args.fixfile, args.date, args.mask)
+
+    # report time
+    toc = record_time(tic=tic)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     # write all data out
     writer.BuildIoda(snod.outdata, VarDims, snod.varAttrs, AttrData)
+
+    # report time
+    toc = record_time(tic=tic)
 
 
 if __name__ == '__main__':
