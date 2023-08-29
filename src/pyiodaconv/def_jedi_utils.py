@@ -94,3 +94,17 @@ def compute_scan_angle(instr_scan_ang, sensor_altitude, sensor_zenith, qc_flag=[
     scanang = np.arcsin(ratio*np.sin(abs(sensor_zenith)*d2r))*r2d
 
     return scanang
+
+
+def record_time(tic=None, print_log=True):
+
+    if not tic:
+        tic = time.perf_counter()
+        if print_log:
+            print(f"  ... starting timer: {tic:0.3f}")
+        return tic
+    else:
+        toc = time.perf_counter()
+        if print_log:
+            print(f"  ... elapsed time (sec): {toc - tic:0.3f}")
+        return toc
