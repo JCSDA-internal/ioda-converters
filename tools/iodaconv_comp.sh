@@ -14,7 +14,9 @@ file_name=$3
 tol=${4:-"0.0"}
 verbose=${5:-${VERBOSE:-"N"}}
 
-[[ $verbose =~ 'yYtT' ]] && set -x
+[[ $verbose == [YyTt] || \
+   $verbose == [Yy][Ee][Ss] || \
+   $verbose == [Tt][Rr][Uu][Ee] ]] && set -x
 
 rc="-1"
 case $file_type in
