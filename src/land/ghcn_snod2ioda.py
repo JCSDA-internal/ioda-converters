@@ -9,7 +9,7 @@ import os
 import argparse
 import numpy as np
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil.parser import parse
 
 import pyiodaconv.ioda_conv_engines as iconv
@@ -19,7 +19,8 @@ from pyiodaconv.orddicts import DefaultOrderedDict
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("stationElevation", "float"),
+    ("height", "float"),
+#   ("stationElevation", "float"),
     ("dateTime", "string")
 ]
 
@@ -90,7 +91,13 @@ class ghcn(object):
         df30["DATETIME"] = df30.apply(lambda row: parse(str(row["DATETIME"])).date(), axis=1)
         # select data with Start date
         startdate = self.date
-        df30 = df30[df30["DATETIME"] == parse(startdate).date()]
+        valid_date = datetime.strptime(startdate, "%Y%m%d%H")
+        select_hour = int(valid_date.strftime('%H'))
+        if select_hour < 12:
+            valid_date -= timedelta(days=1)
+        select_date = valid_date.strftime('%Y%m%d')
+        new_date = parse(select_date).date()
+        df30 = df30[df30["DATETIME"] == new_date]
         # Read station files
         cols = ["ID", "LATITUDE", "LONGITUDE", "ELEVATION", "STATE", "NAME", "GSN_FLAG", "HCNCRN_FLAG", "WMO_ID"]
         df10all = pd.read_csv(self.fixfile, header=None, sep='\r\n')
@@ -103,7 +110,6 @@ class ghcn(object):
         # use stations list as the number of obs points
         # if no data for a station and a given date, leave -999.0
         num_obs = len(df10.index)
-        new_date = parse(startdate).date()
 
         # Initialzed data array
         vals = np.full((num_obs), -999.0)
@@ -150,9 +156,8 @@ class ghcn(object):
             times = times[mask]
 
         # get datetime from input
-        my_date = datetime.strptime(startdate, "%Y%m%d")
-        start_datetime = my_date.strftime('%Y-%m-%d')
-        base_datetime = start_datetime + 'T18:00:00Z'
+        my_date = datetime.strptime(startdate, "%Y%m%d%H")
+        base_datetime = my_date.strftime('%Y-%m-%dT%H:00:00Z')
 
         for i in range(len(vals)):
             if vals[i] >= 0.0:
@@ -164,6 +169,8 @@ class ghcn(object):
         self.outdata[('stationIdentification', 'MetaData')] = sites
         self.outdata[('latitude', 'MetaData')] = lats
         self.outdata[('longitude', 'MetaData')] = lons
+        # self.outdata[('height', 'MetaData')] = alts
+        # self.varAttrs[('height', 'MetaData')]['units'] = 'm'
         self.outdata[('stationElevation', 'MetaData')] = alts
         self.varAttrs[('stationElevation', 'MetaData')]['units'] = 'm'
 
@@ -191,7 +198,7 @@ def main():
                         help="name of ioda output file",
                         type=str, required=True)
     parser.add_argument('-d', '--date',
-                        help="base date", type=str, required=True)
+                        help="base date (YYYYMMDDHH)", type=str, required=True)
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
         '-m', '--mask',
