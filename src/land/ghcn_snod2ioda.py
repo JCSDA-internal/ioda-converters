@@ -48,6 +48,19 @@ def get_epoch_time(adatetime):
     return time_offset
 
 
+def assignValue(colrowValue, df400):
+    if colrowValue == '' or pd.isnull(colrowValue):
+        outList = float_missing_value
+    else:
+        ml = df400.loc[df400['ID'] == colrowValue, "DATA_VALUE"]
+    # check if the series is empty
+    if not(ml.empty):
+        outList = ml.iloc[0]
+    else:
+        outList = float_missing_value
+    return outList
+
+
 class ghcn(object):
 
     def __init__(self, filename, fixfile, date, mask):
@@ -74,18 +87,7 @@ class ghcn(object):
         self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'mm'
         self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'mm'
 
-        def assignValue(colrowValue, df400):
-            if colrowValue == '' or pd.isnull(colrowValue):
-                outList = float_missing_value
-            else:
-                ml = df400.loc[df400['ID'] == colrowValue, "DATA_VALUE"]
-            # check if the series is empty
-            if not(ml.empty):
-                outList = ml.iloc[0]  # watersourceSer.append(ml.iloc[0])
-            else:
-                outList = float_missing_value
-            return outList
-
+        # read in the GHCN data csv file
         cols = ["ID", "DATETIME", "ELEMENT", "DATA_VALUE", "M_FLAG", "Q_FLAG", "S_FLAG", "OBS_TIME"]
         sub_cols = ["ID", "DATETIME", "ELEMENT", "DATA_VALUE"]
         df30_list = []
@@ -99,14 +101,14 @@ class ghcn(object):
         df30 = pd.concat(df30_list, ignore_index=True)
         df30 = df30[df30["ELEMENT"] == "SNWD"]
         df30["DATETIME"] = df30.apply(lambda row: parse(str(row["DATETIME"])).date(), axis=1)
-        # select data with Start date
+        # select data which matches the Start date
         startdate = self.date
         valid_date = datetime.strptime(startdate, "%Y%m%d%H")
-        select_hour = int(valid_date.strftime('%H'))
         select_date = valid_date.strftime('%Y%m%d')
         new_date = parse(select_date).date()
         df30 = df30[df30["DATETIME"] == new_date]
-        # Read station files
+
+        # Read in the GHCN station files
         cols = ["ID", "LATITUDE", "LONGITUDE", "ELEVATION", "STATE", "NAME", "GSN_FLAG", "HCNCRN_FLAG", "WMO_ID"]
         df10all = pd.read_csv(self.fixfile, header=None, sep='\r\n')
         df10all = df10all[0].str.split('\\s+', expand=True)
@@ -166,9 +168,7 @@ class ghcn(object):
 
         # get datetime from input
         my_date = datetime.strptime(startdate, "%Y%m%d%H")
-        # base_datetime = my_date.strftime('%Y-%m-%dT%H:00:00Z')  # not needed
         epoch_time = np.int64(get_epoch_time(my_date))
-        print(f' calculated epoch_time: {epoch_time}')
 
         # vals[vals >= 0.0] *= 0.001      # mm to meters
         # errs[:] = 0.04                  # error in meters
