@@ -172,7 +172,7 @@ class ghcn(object):
 
         # vals[vals >= 0.0] *= 0.001      # mm to meters
         # errs[:] = 0.04                  # error in meters
-        # errs[:] = 40.0
+        errs[:] = 40.0                                   # error in mm
         times[:] = epoch_time
         # add metadata variables
         self.outdata[('dateTime', 'MetaData')] = times
