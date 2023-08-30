@@ -9,6 +9,7 @@
 
 import numpy as np
 import pyiodaconv.ioda_conv_engines as iconv
+import time
 
 metaDataName = iconv.MetaDataName()
 obsValName = iconv.OvalName()
