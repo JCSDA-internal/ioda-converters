@@ -154,7 +154,7 @@ class ghcn(object):
         if self.mask == "maskout":
 
             with np.errstate(invalid='ignore'):
-                mask = vals >= 0.0
+                mask = (vals >= 0.0) & (vals < float_missing_value)
             vals = vals[mask]
             errs = errs[mask]
             qflg = qflg[mask]
@@ -172,7 +172,7 @@ class ghcn(object):
 
         # vals[vals >= 0.0] *= 0.001      # mm to meters
         # errs[:] = 0.04                  # error in meters
-        errs[:] = 40.0                                   # error in mm
+        errs[:] = 40.0                    # error in mm
         times[:] = epoch_time
         # add metadata variables
         self.outdata[('dateTime', 'MetaData')] = times
