@@ -171,7 +171,7 @@ class ghcn(object):
         print(f' calculated epoch_time: {epoch_time}')
 
         # vals[vals >= 0.0] *= 0.001      # mm to meters
-        errs[:] = 0.04                  # error in meters
+        # errs[:] = 0.04                  # error in meters
         # errs[:] = 40.0
         times[:] = epoch_time
         # add metadata variables
