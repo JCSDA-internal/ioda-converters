@@ -103,7 +103,6 @@ class ghcn(object):
         startdate = self.date
         valid_date = datetime.strptime(startdate, "%Y%m%d%H")
         select_hour = int(valid_date.strftime('%H'))
-        if select_hour < 12:
         select_date = valid_date.strftime('%Y%m%d')
         new_date = parse(select_date).date()
         df30 = df30[df30["DATETIME"] == new_date]
