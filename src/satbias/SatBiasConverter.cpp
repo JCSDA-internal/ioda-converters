@@ -66,7 +66,7 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
   float_params.setFillValue<float>(missing_value);
 
   // Loop over the predictors and create variables for each
-  for (int ipred = 0, ipred < numPreds, ipred++) {
+  for (int ipred = 0; ipred < numPreds; ipred++) {
     // create and write the bias coeffs
     ioda::Variable biasVar = ogrp.vars.createWithScales<float>("biasCoefficients/"+predictors[ipred],
                        {ogrp.vars['nrecs'], ogrp.vars['nvars']}, float_params);
