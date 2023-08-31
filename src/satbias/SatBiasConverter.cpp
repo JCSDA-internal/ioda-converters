@@ -55,10 +55,9 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
   // Save the dimension variable values
   ioda::Variable chansVar = ogrp.vars.createWithScales<int>("channels", {ogrp.vars["nvars"]});
   chansVar.write(channels);
-  ioda::Variable recsVar = ogrp.vars.createWithScales<std::string>("records", {ogrp.vars["nrecs"]});
-  std::vector<std::string> records(numRecs);
-  records[0] = ' '
-  recsVar.write(records)
+  //ioda::Variable recsVar = ogrp.vars.createWithScales<int>("records", {ogrp.vars["nrecs"]});
+  //std::vector<int> records(numRecs);
+  //recsVar.write(records);
 
   // Set up the creation parameters for the bias coefficients variable
   ioda::VariableCreationParameters float_params;
@@ -71,24 +70,30 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
   for (int ipred = 0; ipred < numPreds; ipred++) {
     // create and write the bias coeffs
     ioda::Variable biasVar = ogrp.vars.createWithScales<float>("biasCoefficients/"+predictors[ipred],
-    //                   {recsVar, chansVar}, float_params);
-                        {chansVar}, float_params);
-    Eigen::ArrayXf  biascoeff(numChans);
-    biascoeff = biascoeffs(ipred);
+                       {ogrp.vars["nrecs"], ogrp.vars["nvars"]}, float_params);
+    Eigen::ArrayXXf biascoeff(1, numChans);
+    for (int ich = 0; ich < numChans; ich++) {
+      biascoeff(0,ich) = biascoeffs(ipred, ich);
+    }
     biasVar.writeWithEigenRegular(biascoeff);
     // create and write the error variances
     ioda::Variable biaserrVar = ogrp.vars.createWithScales<float>("biasCoeffErrors/"+predictors[ipred],
-    //                   {recsVar, chansVar}, float_params);
-                        {chansVar}, float_params);
-    Eigen::ArrayXf  biascoefferr(numChans);
-    biascoefferr = biascoefferrs(ipred);
+                       {ogrp.vars["nrecs"], ogrp.vars["nvars"]}, float_params);
+    Eigen::ArrayXXf biascoefferr(1, numChans);
+    for (int ich = 0; ich < numChans; ich++) {
+      biascoefferr(0,ich) = biascoefferrs(ipred, ich);
+    }
     biaserrVar.writeWithEigenRegular(biascoefferr);
   }
 
   // Create a variable for number of obs (used in the bias coeff error covariance)
   ioda::Variable nobsVar = ogrp.vars.createWithScales<float>("number_obs_assimilated",
-                     {recsVar, chansVar}, float_params);
-  nobsVar.writeWithEigenRegular(nobs);
+                     {ogrp.vars["nrecs"], ogrp.vars["nvars"]}, float_params);
+  Eigen::ArrayXXf nobs_out(1, numChans);
+  for (int ich = 0; ich < numChans; ich++) {
+    nobs_out(0,ich) = nobs(ich);
+  }
+  nobsVar.writeWithEigenRegular(nobs_out);
   return ogrp;
 }
 
