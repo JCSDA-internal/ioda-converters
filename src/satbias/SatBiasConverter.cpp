@@ -66,19 +66,21 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
   // Loop over the predictors and create variables for each
   for (int ipred = 0; ipred < numPreds; ipred++) {
     // create and write the bias coeffs
-    ioda::Variable biasVar = ogrp.vars.createWithScales<float>("biasCoefficients/"+predictors[ipred],
+    ioda::Variable biasVar = ogrp.vars.createWithScales<float>(
+                       "biasCoefficients/"+predictors[ipred],
                        {ogrp.vars["nrecs"], ogrp.vars["nvars"]}, float_params);
     Eigen::ArrayXXf biascoeff(1, numChans);
     for (int ich = 0; ich < numChans; ich++) {
-      biascoeff(0,ich) = biascoeffs(ipred, ich);
+      biascoeff(0, ich) = biascoeffs(ipred, ich);
     }
     biasVar.writeWithEigenRegular(biascoeff);
     // create and write the error variances
-    ioda::Variable biaserrVar = ogrp.vars.createWithScales<float>("biasCoeffErrors/"+predictors[ipred],
+    ioda::Variable biaserrVar = ogrp.vars.createWithScales<float>(
+                       "biasCoeffErrors/"+predictors[ipred],
                        {ogrp.vars["nrecs"], ogrp.vars["nvars"]}, float_params);
     Eigen::ArrayXXf biascoefferr(1, numChans);
     for (int ich = 0; ich < numChans; ich++) {
-      biascoefferr(0,ich) = biascoefferrs(ipred, ich);
+      biascoefferr(0, ich) = biascoefferrs(ipred, ich);
     }
     biaserrVar.writeWithEigenRegular(biascoefferr);
   }
@@ -88,7 +90,7 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
                      {ogrp.vars["nrecs"], ogrp.vars["nvars"]});
   Eigen::ArrayXXf nobs_out(1, numChans);
   for (int ich = 0; ich < numChans; ich++) {
-    nobs_out(0,ich) = nobs(ich);
+    nobs_out(0, ich) = nobs(ich);
   }
   nobsVar.writeWithEigenRegular(nobs_out);
   return ogrp;
