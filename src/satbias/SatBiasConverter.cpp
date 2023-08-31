@@ -55,9 +55,6 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
   // Save the dimension variable values
   ioda::Variable chansVar = ogrp.vars.createWithScales<int>("channels", {ogrp.vars["nvars"]});
   chansVar.write(channels);
-  //ioda::Variable recsVar = ogrp.vars.createWithScales<int>("records", {ogrp.vars["nrecs"]});
-  //std::vector<int> records(numRecs);
-  //recsVar.write(records);
 
   // Set up the creation parameters for the bias coefficients variable
   ioda::VariableCreationParameters float_params;
