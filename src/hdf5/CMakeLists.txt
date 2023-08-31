@@ -1,5 +1,7 @@
 list(APPEND scripts
   atms_netcdf_hdf5_2ioda.py
+  amsr2_2ioda.py
+  gmi_2ioda.py
 )
 
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )

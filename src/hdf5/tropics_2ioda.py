@@ -22,9 +22,9 @@ import numpy as np
 
 import pyiodaconv.ioda_conv_engines as iconv
 from pyiodaconv.orddicts import DefaultOrderedDict
-from hdf5.atms_netcdf_hdf5_2ioda import set_metadata_attributes, set_obspace_attributes
-from hdf5.cowvr_hdf5_2ioda import compute_scan_angle
-from gnssro.gnssro_bufr2ioda import ioda_int_type, ioda_float_type
+from pyiodaconv.def_jedi_utils import set_metadata_attributes, set_obspace_attributes
+from pyiodaconv.def_jedi_utils import compute_scan_angle
+from pyiodaconv.def_jedi_utils import ioda_int_type, ioda_float_type, epoch
 from pyiodaconv.def_jedi_utils import concat_obs_dict
 
 float_missing_value = iconv.get_default_fill_val(np.float32)
@@ -52,9 +52,6 @@ locationKeyList = [
     ("longitude", "float"),
     ("dateTime", "long"),
 ]
-
-iso8601_string = "seconds since 1970-01-01T00:00:00Z"
-epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 
 def main(args):
@@ -152,7 +149,7 @@ def get_data(f, obs_data):
     obs_data[('longitude', metaDataName)] = np.array(f['losLon_deg'][iband, :, :].flatten(), dtype='float32')
     obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(nchans)+1, dtype='int32')
     k = 'sensorScanPosition'
-    obs_data[(k, metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='float32')+1, (nscans, 1)).flatten()
+    obs_data[(k, metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='int32')+1, (nscans, 1)).flatten()
     k = 'solarZenithAngle'
     obs_data[(k, metaDataName)] = np.array(f['losSolZen_deg'][iband, :, :].flatten(), dtype='float32')
     k = 'solarAzimuthAngle'

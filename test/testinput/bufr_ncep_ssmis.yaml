@@ -31,7 +31,6 @@ observations:
 
           fieldOfViewNumber:
             query: "*/FOVN"
-            type: float # The type should be integer. However, UFO/CRTM required this variable to be float.
 
           sensorChannelNumber:
             query: "*/SSMISCHN/CHNM"

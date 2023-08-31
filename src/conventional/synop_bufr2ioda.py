@@ -374,6 +374,7 @@ def read_bufr_message(f, count, start_pos, data):
     except ecc.KeyValueNotFoundError:
         nsubsets = 1
         pass
+    target_number = nsubsets
 
     # Are the data compressed or uncompressed?  If the latter, then when nsubsets>1, we
     # have to do things differently.
@@ -452,7 +453,6 @@ def read_bufr_message(f, count, start_pos, data):
     ecc.codes_release(bufr)
 
     # Transfer the meta data from its temporary vector into final its meta data var.
-    target_number = nsubsets
     empty = []
     for k, v in metaDataKeyList.items():
         meta_data[k] = assign_missing_meta(empty, k, target_number, 0)
