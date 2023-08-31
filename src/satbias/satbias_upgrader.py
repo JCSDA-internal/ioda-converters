@@ -45,34 +45,6 @@ variables:
 		string :_ioda_layout = "ObsGroup" ;
 		:_ioda_layout_version = 0 ;
 
-group: biasCoeffErrors {
-  variables:
-  	float cloud_liquid_water(nrecs, nvars) ;
-  		cloud_liquid_water:_FillValue = -3.368795e+38f ;
-  	float constant(nrecs, nvars) ;
-  		constant:_FillValue = -3.368795e+38f ;
-  	float cosine_of_latitude_times_orbit_node(nrecs, nvars) ;
-  		cosine_of_latitude_times_orbit_node:_FillValue = -3.368795e+38f ;
-  	float emissivity(nrecs, nvars) ;
-  		emissivity:_FillValue = -3.368795e+38f ;
-  	float lapse_rate(nrecs, nvars) ;
-  		lapse_rate:_FillValue = -3.368795e+38f ;
-  	float lapse_rate_order_2(nrecs, nvars) ;
-  		lapse_rate_order_2:_FillValue = -3.368795e+38f ;
-  	float scan_angle(nrecs, nvars) ;
-  		scan_angle:_FillValue = -3.368795e+38f ;
-  	float scan_angle_order_2(nrecs, nvars) ;
-  		scan_angle_order_2:_FillValue = -3.368795e+38f ;
-  	float scan_angle_order_3(nrecs, nvars) ;
-  		scan_angle_order_3:_FillValue = -3.368795e+38f ;
-  	float scan_angle_order_4(nrecs, nvars) ;
-  		scan_angle_order_4:_FillValue = -3.368795e+38f ;
-  	float sine_of_latitude(nrecs, nvars) ;
-  		sine_of_latitude:_FillValue = -3.368795e+38f ;
-  	float zenith_angle(nrecs, nvars) ;
-  		zenith_angle:_FillValue = -3.368795e+38f ;
-  } // group biasCoeffErrors
-
 group: biasCoefficients {
   variables:
   	float cloud_liquid_water(nrecs, nvars) ;
@@ -140,7 +112,6 @@ def satbias_upgrader(infile, outfile):
         print(predictor)
         var1_out = newnc.createVariable(f"biasCoefficients/{pred}", "f4", ("nrecs", "nvars"))
         var2_out = newnc.createVariable(f"biasCoeffErrors/{pred}", "f4", ("nrecs", "nvars"))
-
 
 
 def main():
