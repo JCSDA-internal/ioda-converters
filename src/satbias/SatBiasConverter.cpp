@@ -84,8 +84,8 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
   }
 
   // Create a variable for number of obs (used in the bias coeff error covariance)
-  ioda::Variable nobsVar = ogrp.vars.createWithScales<float>("number_obs_assimilated",
-                     {ogrp.vars["nrecs"], ogrp.vars["nvars"]}, float_params);
+  ioda::Variable nobsVar = ogrp.vars.createWithScales<int>("number_obs_assimilated",
+                     {ogrp.vars["nrecs"], ogrp.vars["nvars"]});
   Eigen::ArrayXXf nobs_out(1, numChans);
   for (int ich = 0; ich < numChans; ich++) {
     nobs_out(0,ich) = nobs(ich);

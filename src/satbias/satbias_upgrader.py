@@ -36,8 +36,8 @@ variables:
 		channels:_FillValue = -2147483647 ;
 	int nrecs(nrecs) ;
 		nrecs:suggested_chunk_dim = 1LL ;
-	float number_obs_assimilated(nrecs, nvars) ;
-		number_obs_assimilated:_FillValue = -3.368795e+38f ;
+	int number_obs_assimilated(nrecs, nvars) ;
+		number_obs_assimilated:_FillValue = -2147483647 ;
 	int nvars(nvars) ;
 		nvars:suggested_chunk_dim = 15LL ;
 
@@ -110,7 +110,7 @@ def satbias_upgrader(infile, outfile):
     oldnc = nc.Dataset(infile, 'r')
 
     # get the list of predictors
-    preds = oldnc.variables['predictors'][:]
+    predictors = oldnc.variables['predictors'][:]
 
     # open the output file for writing
     newnc = nc.Dataset(outfile, 'w')
@@ -124,9 +124,22 @@ def satbias_upgrader(infile, outfile):
     nvars = newnc.createDimension("nvars", len(oldnc.dimensions['nchannels']))
 
     # create top level variables
+    channels_in = oldnc.variables['channels'][:]
+    channels_out = newnc.createVariable("channels","i4",("nvars",))
+    channels_out[:] = channels_in
+    nrecs_out = newnc.createVariable("nrecs", "i4", ("nrecs"))
+    nvars_out = newnc.createVariable("nvars", "i4", ("nvars"))
+    nrecs_out[:] = 0
+    nvars_out[:] = 0
+    nobs_assim_in = oldnc.variables['number_obs_assimilated'][:]
+    nobs_assim_out = newnc.createVariable("number_obs_assimilated", "i4", ("nrecs", "nvars"))
+    nobs_assim_out[0,:] = nobs_assim_in
 
     # loop through predictors and create predictor variables
-
+    for predictor in predictors:
+        print(predictor)
+        var1_out = newnc.createVariable(f"biasCoefficients/{pred}", "f4", ("nrecs", "nvars"))
+        var2_out = newnc.createVariable(f"biasCoeffErrors/{pred}", "f4", ("nrecs", "nvars"))
 
 
 
