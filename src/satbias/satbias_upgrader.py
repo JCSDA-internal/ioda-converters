@@ -3,6 +3,7 @@
 # netCDF satbias files from the old to new format
 import argparse
 import netCDF4 as nc
+import numpy as np
 
 """
 The old format is like so:
@@ -89,7 +90,7 @@ def satbias_upgrader(infile, outfile):
 
     # global attributes
     newnc._ioda_layout = "ObsGroup"
-    newnc._ioda_layout_version = 0
+    newnc._ioda_layout_version = np.int32(0)
 
     # create dimensions
     nrecs = newnc.createDimension("nrecs", 1)
@@ -108,10 +109,18 @@ def satbias_upgrader(infile, outfile):
     nobs_assim_out[0,:] = nobs_assim_in
 
     # loop through predictors and create predictor variables
-    for predictor in predictors:
-        print(predictor)
-        var1_out = newnc.createVariable(f"biasCoefficients/{pred}", "f4", ("nrecs", "nvars"))
-        var2_out = newnc.createVariable(f"biasCoeffErrors/{pred}", "f4", ("nrecs", "nvars"))
+    if 'bias_coefficients' in oldnc.variables.keys():
+        bias_coeff = oldnc.variables['bias_coefficients'][:]
+        for i, pred in enumerate(predictors):
+            var1_out = newnc.createVariable(f"biasCoefficients/{pred}", "f4", ("nrecs", "nvars"),
+                                            fill_value=-3.36879526e+38)
+            var1_out[0,:] = bias_coeff[i,:]
+    if 'bias_coeff_errors' in oldnc.variables.keys():
+        bias_coeff_err = oldnc.variables['bias_coeff_errors'][:]
+        for i, pred in enumerate(predictors):
+            var2_out = newnc.createVariable(f"biasCoeffErrors/{pred}", "f4", ("nrecs", "nvars"),
+                                            fill_value=-3.36879526e+38)
+            var2_out[0,:] = bias_coeff_err[i,:]
 
 
 def main():
