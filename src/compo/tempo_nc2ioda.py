@@ -70,6 +70,7 @@ class tempo(object):
         # loop through input filenames
         first = True
         for f in self.filenames:
+            print(f)
             ncd = nc.Dataset(f, 'r')
 
             # conversion factor fron constants
@@ -95,6 +96,8 @@ class tempo(object):
             # there are inconsitencies in masking between different variables
             # choose one from one variable and apply it to all the other variables
             mask = np.ma.getmask(qa_value)
+            if np.ndim(mask) == 0:
+                mask = [mask] * np.shape(qa_value)[0]
             lats = np.ma.array(lats, mask=mask)
             lons = np.ma.array(lons, mask=mask)
             qc_flag = np.ma.array(qc_flag, mask=mask)
@@ -121,6 +124,7 @@ class tempo(object):
                 sfp = np.ma.array(sfp, mask=mask)
                 ak = ncd.groups['support_data'].variables['surface_pressure'].Eta_A
                 bk = ncd.groups['support_data'].variables['surface_pressure'].Eta_B
+                print(np.shape(mask))
                 preslev = hPa2Pa * np.transpose(ak[:, np.newaxis] + np.outer(bk, sfp))
                 preslev = np.ma.array(preslev, mask=np.repeat(mask, levels+1))
 
@@ -166,13 +170,17 @@ class tempo(object):
 
                 # obs value and error
                 col_amf = ncd.groups['support_data'].variables[col_amf_name][:].ravel()
+                col_amf.mask = False
+                col_amf = np.ma.array(col_amf, mask=mask)
                 obs = ncd.groups['product'].variables[obs_name][:]\
                     .ravel() * conv
+                obs.mask = False
                 obs = np.ma.array(obs, mask=mask)
 
                 # error calculation:
                 err = ncd.groups['product'].variables[err_name+'_uncertainty'][:]\
                     .ravel() * conv * col_amf / tot_amf
+                err.mask = False
                 err = np.ma.array(err, mask=mask)
 
             # O3
