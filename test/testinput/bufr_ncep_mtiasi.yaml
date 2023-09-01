@@ -52,6 +52,9 @@ observations:
           solarAzimuthAngle:
             query: "*/SOLAZI"
 
+          centralWavenumberAssignMethod:
+            query: "*/WCWN"
+
           sensorZenithAngle:
             query: "*/SAZA"
 
@@ -200,6 +203,12 @@ observations:
           longName: "Solar Azimuth Angle"
           units: "degree"
           range: [ 0, 360 ]
+
+        - name: "MetaData/centralWavenumberAssignMethod"
+          source: variables/centralWavenumberAssignMethod
+          longName: "Waveband central wave number"
+          units: "m-1"
+          range: [ 0, 1000000 ]
 
         - name: "MetaData/sensorZenithAngle"
           source: variables/sensorZenithAngle
