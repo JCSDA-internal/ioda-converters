@@ -1,0 +1,24 @@
+/*
+ *  * (C) Copyright 2021 UCAR
+ *   *
+ *    * This software is licensed under the terms of the Apache Licence Version 2.0
+ *     * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ *      */
+
+#pragma once
+
+#include <string>
+#include <vector>
+#include <fstream>
+
+#include <Eigen/Dense>
+
+/// Number of predictors in GSI aircraft bias file
+constexpr size_t gsi_npredictors = 9;
+
+/// Find all tail ids in file
+void findTailIds(const std::string& filename);
+
+/// Read bias coefficients from GSI bias coefficients files
+void ReadObsBiasCoefficients(const std::string& inputFilePath,
+                             std::vector<std::vector<std::string>>& biascoeffs)
