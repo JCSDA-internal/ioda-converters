@@ -6,7 +6,7 @@
 observations:
   - obs space:
       name: bufr
-      obsdatain: "./testinput/gdas.mtiasi.t00z.20220216.bufr
+      obsdatain: "test/testinput/gdas.mtiasi.t00z.20220216.bufr"
 
       exports:
         variables:
