@@ -124,7 +124,6 @@ class tempo(object):
                 sfp = np.ma.array(sfp, mask=mask)
                 ak = ncd.groups['support_data'].variables['surface_pressure'].Eta_A
                 bk = ncd.groups['support_data'].variables['surface_pressure'].Eta_B
-                print(np.shape(mask))
                 preslev = hPa2Pa * np.transpose(ak[:, np.newaxis] + np.outer(bk, sfp))
                 preslev = np.ma.array(preslev, mask=np.repeat(mask, levels+1))
 
