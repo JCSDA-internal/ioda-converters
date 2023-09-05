@@ -70,7 +70,6 @@ class tempo(object):
         # loop through input filenames
         first = True
         for f in self.filenames:
-            print(f)
             ncd = nc.Dataset(f, 'r')
 
             # conversion factor fron constants
