@@ -5,11 +5,10 @@
 # This software is licensed under the terms of the Apache Licence Version 2.0
 #
 
-import os
 import argparse
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime
 from dateutil.parser import parse
 
 import pyiodaconv.ioda_conv_engines as iconv
@@ -54,7 +53,7 @@ def assignValue(colrowValue, df400):
     else:
         ml = df400.loc[df400['ID'] == colrowValue, "DATA_VALUE"]
     # check if the series is empty
-    if not(ml.empty):
+    if not ml.empty:
         outList = ml.iloc[0]
     else:
         outList = float_missing_value
