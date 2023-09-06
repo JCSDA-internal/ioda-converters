@@ -110,7 +110,7 @@ class ghcn(object):
 
         # Read in the GHCN station files
         cols = ["ID", "LATITUDE", "LONGITUDE", "ELEVATION", "STATE", "NAME", "GSN_FLAG", "HCNCRN_FLAG", "WMO_ID"]
-        df10all = pd.read_csv(self.fixfile, header=None, sep='\r\n')
+        df10all = pd.read_csv(self.fixfile, header=None, sep='\r\n', engine='python')
         df10all = df10all[0].str.split('\\s+', expand=True)
         df10 = df10all.iloc[:, 0:4]
         df10all = None
