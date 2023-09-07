@@ -136,10 +136,6 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
 
     # Create the variables
     print("Create MetaData group variables")
-    prepbufrdatalevelcategory = g.vars.create('MetaData/prepbufrDataLevelCategory', ioda.Types.int64,  scales=[dim_location], params=pint)
-    prepbufrdatalevelcategory.atts.create('units', ioda.Types.str).writeVector.str([''])
-    prepbufrdatalevelcategory.atts.create('long_name', ioda.Types.str).writeVector.str(['Prepbufr Data Level Category'])
-
     latitude = g.vars.create('MetaData/latitude', ioda.Types.float,  scales=[dim_location], params=pfloat)
     latitude.atts.create('valid_range', ioda.Types.float, [2]).writeVector.float([-90, 90])
     latitude.atts.create('units', ioda.Types.str).writeVector.str(['degree_north'])
@@ -163,15 +159,15 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     releasetime = g.vars.create('MetaData/releaseTime',  ioda.Types.int64,  scales=[dim_location], params=pint64)
     releasetime.atts.create('units', ioda.Types.str).writeVector.str(['seconds since 1970-01-01T00:00:00Z'])
 
-    temperatureeventcode = g.vars.create('MetaData/temperatureEventCode', ioda.Types.int64, scales=[dim_location], params=pint)
-    temperatureeventcode.atts.create('units', ioda.Types.str).writeVector.str(['1'])
-    temperatureeventcode.atts.create('long_name', ioda.Types.str).writeVector.str(['temperatureEventCode'])
-
     pressure = g.vars.create('MetaData/pressure', ioda.Types.float, scales=[dim_location], params=pfloat)
     pressure.atts.create('units', ioda.Types.str).writeVector.str(['Pa'])
     pressure.atts.create('long_name', ioda.Types.str).writeVector.str(['Pressure'])
 
     print("Create ObsValue group variables")
+    prepbufrdatalevelcategory = g.vars.create('ObsValue/verticalSignificance', ioda.Types.int64,  scales=[dim_location], params=pint)
+    prepbufrdatalevelcategory.atts.create('units', ioda.Types.str).writeVector.str([''])
+    prepbufrdatalevelcategory.atts.create('long_name', ioda.Types.str).writeVector.str(['Prepbufr Data Level Category'])
+
     stationpressure = g.vars.create('ObsValue/stationPressure', ioda.Types.float, scales=[dim_location], params=pfloat)
     stationpressure.atts.create('units', ioda.Types.str).writeVector.str(['Pa'])
     stationpressure.atts.create('long_name', ioda.Types.str).writeVector.str(['Station Pressure'])
@@ -201,6 +197,10 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     heightofobservation.atts.create('long_name', ioda.Types.str).writeVector.str(['Height of Observation'])
 
     print("Create QualityMarker group variables")
+    temperatureeventcode = g.vars.create('QCFlags/qualityFlags', ioda.Types.int64, scales=[dim_location], params=pint)
+    temperatureeventcode.atts.create('units', ioda.Types.str).writeVector.str(['1'])
+    temperatureeventcode.atts.create('long_name', ioda.Types.str).writeVector.str(['temperatureEventCode'])
+
     pressureqm = g.vars.create('QualityMarker/pressure', ioda.Types.int, scales=[dim_location], params=pint)
     pressureqm.atts.create('units', ioda.Types.str).writeVector.str(['1'])
     pressureqm.atts.create('long_name', ioda.Types.str).writeVector.str(['Pressure Quality Marker'])
