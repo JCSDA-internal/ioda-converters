@@ -170,7 +170,7 @@ def get_data(f, obs_data):
     nlocs = len(obs_data[('latitude', metaDataName)])
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
     # obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f), dtype='int64')
-    obs_data[('dateTime', metaDataName)] = np.array(f['time'][:, :].flatten() + tet_offset, dtype='int32')
+    obs_data[('dateTime', metaDataName)] = np.array(f['time'][:, :].flatten() + tet_offset, dtype='int64')
 
     nlocs = len(obs_data[('latitude', metaDataName)])
     k = 'brightnessTemperature'
