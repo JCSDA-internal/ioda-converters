@@ -2099,7 +2099,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ghcn_snod
                           -i testinput/ghcn_20200228.csv
                           -o testrun/ghcn_snod_20200228.nc
                           -f ${PROJECT_BINARY_DIR}/doc/fix/ghcn-stations.txt
-                          -d 20200228
+                          -d 2020022818
                           -m maskout"
                           ghcn_snod_20200228.nc ${IODA_CONV_COMP_TOL_ZERO})
 
