@@ -13,7 +13,7 @@ Module ATMS_Spatial_Average_Mod
 !    2017-07-13   yanqiu zhu - fix index bugs in subroutine ATMS_Spatial_Average
 ! 
 
-  use kinds, only: r_kind,r_double,i_kind, i_llong
+  use iodaconv_kinds, only: r_kind,r_double,i_kind, i_llong
 
   implicit none     
 
@@ -819,7 +819,7 @@ SUBROUTINE MODIFY_BEAMWIDTH ( nx, ny, image, sampling_dist,&
 !
       SUBROUTINE SFFTCB( X, N, M )
 
-      use kinds, only: r_kind,r_double,i_kind
+      use iodaconv_kinds, only: r_kind,r_double,i_kind
 
       IMPLICIT NONE
 
