@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include <Eigen/Dense>
 
@@ -21,12 +22,12 @@
 
 #include "oops/util/missingValues.h"
 
-#include "GsiSatBiasReader.h"
+#include "GsiAircraftBiasReader.h"
 
-oda::ObsGroup make ObsBiasObject(ioda::Group &empty_base_object,
-                                  const std::string & coeffile,
-                                  const std::string & tailIds,
-                                  const std::vector<std::string> & predictors) {
+ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
+                                 const std::string & coeffile,
+                                 const std::vector<std::string> & tailIds,
+                                 const std::vector<std::string> & predictors) {
   /// Predictors
   long numPreds = predictors.size();
   long numIds = tailIds.size();
@@ -38,15 +39,19 @@ oda::ObsGroup make ObsBiasObject(ioda::Group &empty_base_object,
   };
   
   /// Construct an ObsGroup object, with 2 dimensions npred, nobs
-  ioda::ObsGroup ogrp = ioda::ObsGroup::generate(empty_base_object, newDims)
-    
+  ioda::ObsGroup ogrp = ioda::ObsGroup::generate(empty_base_object, newDims);
+  
+  /// Create tail IDs and predictors variable
+  ioda::Variable tailIdsVar = ogrp.vars.createWithScales<std::string>("tail_ids",
+                                    {ogrp.vars["ntailids"]});
+  tailIdsVar.write(tailIds);
     
   /// Create 2D bias coefficient variable
-  Eigen::ArrayXXf biascoeffs(predictor.size(), numIds);
+  Eigen::ArrayXXf biascoeffs(numIds, numPreds);
 
-  ReadObsBiasCoefficients(coeffile, biascoeffs);
-    
-  for (size_t i = 0; i < numPreds; ++i) {
+  readObsBiasCoefficients(coeffile, biascoeffs); 
+
+  for (int i = 0; i < numPreds; ++i) {
     /// Set up the creation parameters for the bias coefficients variable
     ioda::VariableCreationParameters float_params;
     float_params.chunk = true;               // allow chunking
@@ -55,12 +60,14 @@ oda::ObsGroup make ObsBiasObject(ioda::Group &empty_base_object,
     float_params.setFillValue<float>(missing_value);
     
     // Access first predictor and
-    const std::vector<std::string>& subVar = biascoeffs[i];
+    Eigen::ArrayXf subVar = biascoeffs.col(i);
       
     // Create a variable for bias coefficients, save bias coeffs to the variable
     ioda::Variable biasVar = ogrp.vars.createWithScales<float>(predictors[i],
                        {ogrp.vars["nvars"], ogrp.vars["ntailids"]}, float_params);
     biasVar.writeWithEigenRegular(subVar);
+  }
+
     
   return ogrp;
 }
@@ -76,9 +83,7 @@ int main(int argc, char** argv) {
   const std::string coeffile = config.getString("input coeff file");
 
   /// Use function to grab tail IDs from input coeff file
-  std::vector<std::string> tailIds = findTailIds(coeffile);
-
-  std::cout << "Found " << tailIds.size() << " tail IDs." << std::endl;
+  const std::vector<std::string> tailIds = findTailIds(coeffile);
 
   /// Read from config file "output"
   std::vector<eckit::LocalConfiguration> configs = config.getSubConfigurations("output");

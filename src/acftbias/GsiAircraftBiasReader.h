@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <iostream>
 
 #include <Eigen/Dense>
 
@@ -17,8 +18,8 @@
 constexpr size_t gsi_npredictors = 9;
 
 /// Find all tail ids in file
-void findTailIds(const std::string& filename);
+std::vector<std::string> findTailIds(const std::string& filename);
 
 /// Read bias coefficients from GSI bias coefficients files
-void ReadObsBiasCoefficients(const std::string& inputFilePath,
-                             std::vector<std::vector<std::string>>& biascoeffs)
+void readObsBiasCoefficients(const std::string& inputFilePath,
+                             Eigen::ArrayXXf & biascoeffs);

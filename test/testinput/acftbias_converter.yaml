@@ -1,0 +1,14 @@
+input coeff file: /scratch1/NCEPDEV/rstprod/prod/com/gfs/v16.3/gdas.20230908/00/atmos/gdas.t00z.abias_air
+default predictors: &default_preds
+- constant
+- vertical_velocity
+- vertical_velocity_squared
+- constant_ob_error
+- vertical_velocity_ob_error
+- vertical_velocity_squared_ob_error
+- constant_background_error
+- vertical_velocity_background_error
+- vertical_velocity_squared_background_error
+output:
+- output file: acft_out.nc4
+  predictors: *default_preds

@@ -29,6 +29,10 @@ if(iodaconv_satbias_ENABLED)
   add_subdirectory(satbias)
 endif()
 
+if(iodaconv_satbias_ENABLED)
+  add_subdirectory(acftbias)
+endif()
+
 if(iodaconv_obserror_ENABLED)
   add_subdirectory(obserror)
 endif()

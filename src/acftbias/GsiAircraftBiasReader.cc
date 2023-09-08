@@ -5,22 +5,24 @@
  *     * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
  *      */
 
-#include "GsiSatBiasReader.h"
+#include "GsiAircraftBiasReader.h"
 
 #include <string>
 #include <vector>
 #include <fstream>
+#include <iostream>
 
 #include <Eigen/Dense>
 
 std::vector<std::string> findTailIds(const std::string& filename) {
+
     std::vector<std::string> tailIds;
 
     // Open the input file
     std::ifstream fin(filename);
 
     if (!fin.is_open()) {
-        std::cerr << "Could not open the file." << std::endl;
+        std::cout << "Could not open the file." << std::endl;
         return tailIds;
     }
 
@@ -41,31 +43,31 @@ std::vector<std::string> findTailIds(const std::string& filename) {
 }
 
 //---------------------------------------------------------------------------------------
-void ReadObsBiasCoefficients(const std::string& inputFilePath, std::vector<std::vector<std::string>>& biascoeffs) {
-    // Open the input file
-    std::ifstream fin(inputFilePath);
+void readObsBiasCoefficients(const std::string &filename, Eigen::ArrayXXf &coeffs) {
 
-    if (!fin.is_open()) {
-        std::cerr << "Could not open the input file." << std::endl;
-        return;
+  std::ifstream infile(filename);
+
+  if (!infile.is_open()) {
+    std::cerr << "Error: Unable to open file." << std::endl;
+    return;
+  }
+
+  // Grab total rows of file 
+  std::size_t nrows = coeffs.rows();
+
+  // Define vars and loop through rows
+  std::string tailIds;
+  int ich;
+  float par;
+  int datetime;
+  for (std::size_t row = 0; row < nrows; ++row) {
+    infile >> tailIds; // Skip the first two columns
+    infile >> ich;
+    for (std::size_t col = 0; col < 9; ++col) {
+      infile >> coeffs(row, col); // Read data from columns 3 to 11
     }
+    infile >> datetime;
+  }
 
-    std::string line;
-    while (std::getline(fin, line)) {
-        std::istringstream ss(line);
-        std::string value;
-        int col = 1;
-
-        std::vector<std::string> rowData;
-        while (ss >> value) {
-            if (col >= 3 && col <= 11) {
-                rowData.push_back(value);
-            }
-            ++col;
-        }
-
-        extractedData.push_back(rowData);
-    }
-
-    fin.close();
+  infile.close();
 }
