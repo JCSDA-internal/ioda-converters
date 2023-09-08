@@ -45,7 +45,7 @@ col_types = {
 location_key_list = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("height", "integer"),
+    ("stationElevation", "float"),
     ("dateTime", "string"), ]
 
 dim_dict = {}
@@ -164,9 +164,9 @@ class OwpSnowObs(object):
         self.data[('latitude', 'MetaData')] = obs_df.latitude.values.astype('float32')
         self.data[('longitude', 'MetaData')] = obs_df.longitude.values.astype('float32')
 
-        self.data[('height', 'MetaData')] = obs_df.rec_elev_m.values.astype('float32')
+        self.data[('stationElevation', 'MetaData')] = obs_df.rec_elev_m.values.astype('float32')
         self.data[('stationIdentification', 'MetaData')] = obs_df.StnID.values
-        self.var_metadata[('height', 'MetaData')]['units'] = 'm'
+        self.var_metadata[('stationElevation', 'MetaData')]['units'] = 'm'
 
         for obs_var, ioda_var in output_var_dict.items():
             # define the ioda variable

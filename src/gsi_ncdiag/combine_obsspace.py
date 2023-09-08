@@ -276,21 +276,53 @@ def combine_obsspace(FileList, OutFile, GeoDir):
         GeoVarData31 = np.dstack(GeoVarData31)
         GeoVarIdx31 = np.dstack(GeoVarIdx31)
         GeoVarUnique31 = np.ones((len(idx), len(GeoVarData31[0]), len(GeoVarData31[0, 0, :])))*np.abs(nc.default_fillvals['f4'])
-        for ii, jj in np.ndindex(GeoVarData2.shape):
-            j = GeoVarIdx2[ii, jj]
-            i = inv[ii]
-            if GeoVarData2[ii, jj] != nc.default_fillvals['i4'] and GeoVarData2[ii, jj] != np.abs(nc.default_fillvals['f4']):
-                GeoVarUnique2[i, j] = GeoVarData2[ii, jj]
-        for ii, kk, jj in np.ndindex(GeoVarData3.shape):
-            j = GeoVarIdx3[ii, kk, jj]
-            i = inv[ii]
-            if GeoVarData3[ii, kk, jj] != nc.default_fillvals['i4'] and GeoVarData3[ii, kk, jj] != np.abs(nc.default_fillvals['f4']):
-                GeoVarUnique3[i, kk, j] = GeoVarData3[ii, kk, jj]
-        for ii, kk, jj in np.ndindex(GeoVarData31.shape):
-            j = GeoVarIdx31[ii, kk, jj]
-            i = inv[ii]
-            if GeoVarData31[ii, kk, jj] != nc.default_fillvals['i4'] and GeoVarData31[ii, kk, jj] != np.abs(nc.default_fillvals['f4']):
-                GeoVarUnique31[i, kk, j] = GeoVarData31[ii, kk, jj]
+
+        # Data2
+        # -----
+
+        # Create a mask to check for the conditions where GeoVarData2 is not equal to the fill values
+        non_fill_mask = (GeoVarData2 != nc.default_fillvals['i4']) & (GeoVarData2 != np.abs(nc.default_fillvals['f4']))
+
+        # Use np.where to find the indices that meet the condition
+        ii, jj = np.where(non_fill_mask)
+
+        # Calculate corresponding i and j values
+        i = inv[ii]
+        j = GeoVarIdx2[ii, jj]
+
+        # Update GeoVarUnique2 using the calculated indices
+        GeoVarUnique2[i, j] = GeoVarData2[ii, jj]
+
+        # Data 3
+        # ------
+        # Find the indices where GeoVarData3 is not equal to the fill values
+        non_fill_mask = (GeoVarData3 != nc.default_fillvals['i4']) & (GeoVarData3 != np.abs(nc.default_fillvals['f4']))
+
+        # Use np.where to get the indices that meet the condition
+        ii, kk, jj = np.where(non_fill_mask)
+
+        # Calculate corresponding i and j values
+        i = inv[ii]
+        j = GeoVarIdx3[ii, kk, jj]
+
+        # Update GeoVarUnique3 using the calculated indices
+        GeoVarUnique3[i, kk, j] = GeoVarData3[ii, kk, jj]
+
+        # Data 31
+        # -------
+        # Create a mask to check for the conditions where GeoVarData31 is not equal to the fill values
+        non_fill_mask = (GeoVarData31 != nc.default_fillvals['i4']) & (GeoVarData31 != np.abs(nc.default_fillvals['f4']))
+
+        # Use np.where to find the indices that meet the condition
+        ii, kk, jj = np.where(non_fill_mask)
+
+        # Calculate corresponding i and j values
+        i = inv[ii]
+        j = GeoVarIdx31[ii, kk, jj]
+
+        # Update GeoVarUnique31 using the calculated indices
+        GeoVarUnique31[i, kk, j] = GeoVarData31[ii, kk, jj]
+
         outgeo = OutFile.split('/')[-1]
         OutGeoFile = outgeo.replace('obs', 'geoval')
         OutGeoFile = GeoDir + '/' + OutGeoFile
