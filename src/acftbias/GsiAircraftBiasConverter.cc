@@ -35,7 +35,7 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
   /// Creating dimensions: n
   ioda::NewDimensionScales_t newDims {
       ioda::NewDimensionScale<int>("nvars", 1),
-      ioda::NewDimensionScale<int>("ntailids", numIds)
+      ioda::NewDimensionScale<int>("nrecs", numIds)
   };
   
   /// Construct an ObsGroup object, with 2 dimensions npred, nobs
@@ -43,7 +43,7 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
   
   /// Create tail IDs and predictors variable
   ioda::Variable tailIdsVar = ogrp.vars.createWithScales<std::string>("tail_ids",
-                                    {ogrp.vars["ntailids"]});
+                                    {ogrp.vars["nrecs"]});
   tailIdsVar.write(tailIds);
     
   /// Create 2D bias coefficient variable
@@ -63,8 +63,8 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
     Eigen::ArrayXf subVar = biascoeffs.col(i);
       
     // Create a variable for bias coefficients, save bias coeffs to the variable
-    ioda::Variable biasVar = ogrp.vars.createWithScales<float>(predictors[i],
-                       {ogrp.vars["nvars"], ogrp.vars["ntailids"]}, float_params);
+    ioda::Variable biasVar = ogrp.vars.createWithScales<float>("biasCoefficients/"+predictors[i],
+                       {ogrp.vars["nvars"], ogrp.vars["nrecs"]}, float_params);
     biasVar.writeWithEigenRegular(subVar);
   }
 
