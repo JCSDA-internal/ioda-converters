@@ -1,4 +1,4 @@
-input coeff file: /scratch1/NCEPDEV/rstprod/prod/com/gfs/v16.3/gdas.20230908/00/atmos/gdas.t00z.abias_air
+input coeff file: testinput/acftbias_in 
 default predictors: &default_preds
 - constant
 - vertical_velocity
