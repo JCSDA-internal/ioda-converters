@@ -24,14 +24,15 @@ def satbias_upgrader(infile, outfile):
 
     # create dimensions
     nrecs = newnc.createDimension("nrecs", 1)
-    nvars = newnc.createDimension("nvars", len(oldnc.dimensions['nchannels']))
 
     # create top level variables
     if 'channels' in oldnc.variables.keys():
+        nvars = newnc.createDimension("nvars", len(oldnc.dimensions['nchannels']))
         channels_in = oldnc.variables['channels'][:]
         channels_out = newnc.createVariable("channels", "i4", ("nvars",))
         channels_out[:] = channels_in
     if 'variables' in oldnc.variables.keys():
+        nvars = newnc.createDimension("nvars", len(oldnc.dimensions['nvariables']))
         vars_in = oldnc.variables['variables'][:]
         vars_out = newnc.createVariable("variables", str, ("nvars",))
         vars_out[:] = vars_in
