@@ -1,5 +1,5 @@
 /*
- *  * (C) Copyright 2021 UCAR
+ *  * (C) Copyright 2023 UCAR
  *   *
  *    * This software is licensed under the terms of the Apache Licence Version 2.0
  *     * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -15,7 +15,6 @@
 #include <Eigen/Dense>
 
 std::vector<std::string> findTailIds(const std::string& filename) {
-
     std::vector<std::string> tailIds;
 
     // Open the input file
@@ -44,7 +43,6 @@ std::vector<std::string> findTailIds(const std::string& filename) {
 
 //---------------------------------------------------------------------------------------
 void readObsBiasCoefficients(const std::string &filename, Eigen::ArrayXXf &coeffs) {
-
   std::ifstream infile(filename);
 
   if (!infile.is_open()) {
@@ -52,7 +50,7 @@ void readObsBiasCoefficients(const std::string &filename, Eigen::ArrayXXf &coeff
     return;
   }
 
-  // Grab total rows of file 
+  // Grab total rows of file
   std::size_t nrows = coeffs.rows();
 
   // Define vars and loop through rows
@@ -61,10 +59,10 @@ void readObsBiasCoefficients(const std::string &filename, Eigen::ArrayXXf &coeff
   float par;
   int datetime;
   for (std::size_t row = 0; row < nrows; ++row) {
-    infile >> tailIds; // Skip the first two columns
+    infile >> tailIds;  // Skip the first two columns
     infile >> ich;
     for (std::size_t col = 0; col < 9; ++col) {
-      infile >> coeffs(row, col); // Read data from columns 3 to 11
+      infile >> coeffs(row, col);  // Read data from columns 3 to 11
     }
     infile >> datetime;
   }
