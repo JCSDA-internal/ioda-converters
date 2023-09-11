@@ -59,13 +59,26 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
     float missing_value = util::missingValue(missing_value);
     float_params.setFillValue<float>(missing_value);
 
-    // Access first predictor and
+    // Access predictor coefficient values column and create variable
     Eigen::ArrayXf subVar = biascoeffs.col(i);
 
-    // Create a variable for bias coefficients, save bias coeffs to the variable
     ioda::Variable biasVar = ogrp.vars.createWithScales<float>("biasCoefficients/"+predictors[i],
                        {ogrp.vars["nvars"], ogrp.vars["nrecs"]}, float_params);
     biasVar.writeWithEigenRegular(subVar);
+
+    // Access predictor observation error values column and create variable
+    Eigen::ArrayXf subVarObError = biascoeffs.col(i+3);
+
+    ioda::Variable biasVarObError = ogrp.vars.createWithScales<float>("biasCoefficients/"+predictors[i]+"_ObError",
+                       {ogrp.vars["nvars"], ogrp.vars["nrecs"]}, float_params);
+    biasVarObError.writeWithEigenRegular(subVarObError);
+
+    // Access predictor background error values column and create variable
+    Eigen::ArrayXf subVarBkgError = biascoeffs.col(i+6);
+
+    ioda::Variable biasVarBkgError = ogrp.vars.createWithScales<float>("biasCoefficients/"+predictors[i]+"_BiasCoeffErrors",
+                       {ogrp.vars["nvars"], ogrp.vars["nrecs"]}, float_params);
+    biasVarBkgError.writeWithEigenRegular(subVarBkgError);
   }
 
   return ogrp;
@@ -90,17 +103,17 @@ int main(int argc, char** argv) {
   const std::string output_filename = configs[0].getString("output file");
   const std::vector<std::string> predictors = configs[0].getStringVector("predictors");
 
-  /// I am defining this because the other code is not and I dont know where it came from
-  const int gsi_npredictors = 9;
+  /// Define n number of predictors 
+  const int gsi_npredictors = 3;
 
-  /// check if predictors are the same length as what the gsi predictors are
+  /// Check if predictors are the same length as what the gsi predictors are
   if (predictors.size() != gsi_npredictors) {
     const std::string error = "Number of predictors specified in yaml must be " +
           std::to_string(gsi_npredictors) + " (same as number of predictors in GSI aircraft yaml)";
     throw eckit::BadValue(error, Here());
   }
 
-  /// No loop necessary, lets just create the ncfile with this function
+  /// Create ncfile
   ioda::Group group = ioda::Engines::HH::createFile(output_filename,
                       ioda::Engines::BackendCreateModes::Truncate_If_Exists);
   makeObsBiasObject(group, coeffile, tailIds, predictors);
