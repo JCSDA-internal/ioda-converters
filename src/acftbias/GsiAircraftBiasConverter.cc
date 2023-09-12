@@ -1,5 +1,5 @@
 /*
- *  * (C) Copyright 2023 UCAR
+ *  * (C) Copyright 2023 NOAA/NWS/NCEP/EMC
  *   *
  *    * This software is licensed under the terms of the Apache Licence Version 2.0
  *     * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -29,8 +29,8 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
                                  const std::vector<std::string> & tailIds,
                                  const std::vector<std::string> & predictors) {
   /// Predictors
-  long numPreds = predictors.size();
-  long numIds = tailIds.size();
+  int numPreds = predictors.size();
+  int numIds = tailIds.size();
 
   /// Creating dimensions: n
   ioda::NewDimensionScales_t newDims {
@@ -69,15 +69,19 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
     // Access predictor observation error values column and create variable
     Eigen::ArrayXXf subVarObError = biascoeffs.col(i+3);
 
-    ioda::Variable biasVarObError = ogrp.vars.createWithScales<float>("biasCoeffObError/"+predictors[i],
-                       {ogrp.vars["nvars"], ogrp.vars["nrecs"]}, float_params);
+    ioda::Variable biasVarObError = ogrp.vars.createWithScales<float>(
+                                                "biasCoeffObError/"+predictors[i],
+                                                {ogrp.vars["nvars"], ogrp.vars["nrecs"]},
+                                                float_params);
     biasVarObError.writeWithEigenRegular(subVarObError);
 
     // Access predictor background error values column and create variable
     Eigen::ArrayXXf subVarBkgError = biascoeffs.col(i+6);
 
-    ioda::Variable biasVarBkgError = ogrp.vars.createWithScales<float>("biasCoeffError/"+predictors[i],
-                       {ogrp.vars["nvars"], ogrp.vars["nrecs"]}, float_params);
+    ioda::Variable biasVarBkgError = ogrp.vars.createWithScales<float>(
+                                                "biasCoeffError/"+predictors[i],
+                                                {ogrp.vars["nvars"], ogrp.vars["nrecs"]},
+                                                float_params);
     biasVarBkgError.writeWithEigenRegular(subVarBkgError);
   }
 

@@ -367,6 +367,7 @@ if (iodaconv_satbias_ENABLED )
     testinput/satbias_converter_cris.yaml
     testinput/satbias_converter_gmi_gpm.yaml
     testinput/satbias_converter_ssmis.yaml
+    testinput/acftbias_converter.yaml
     testinput/satbias_crtm_in
     testinput/satbias_crtm_pc
   )
@@ -377,6 +378,7 @@ if (iodaconv_satbias_ENABLED )
     testoutput/satbias_gmi_gpm.nc4
     testoutput/satbias_ssmis_f16.nc4
     testoutput/viirs_bias.nc
+    testoutput/acft_out.nc4
   )
 endif()
 
@@ -2039,6 +2041,14 @@ if( iodaconv_satbias_ENABLED )
                             "${CMAKE_BINARY_DIR}/bin/satbias2ioda.x testinput/satbias_converter_ssmis.yaml"
                             satbias_ssmis_f16.nc4 ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS satbias2ioda.x )
+  ecbuild_add_test( TARGET  test_iodaconv_acftbias_gsi
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/acftbias2ioda.x testinput/acftbias_converter.yaml"
+                            acft_out.nc4 ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS acftbias2ioda.x )
 endif()
 
 
