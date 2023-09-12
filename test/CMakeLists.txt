@@ -2181,7 +2181,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_land_owp_snow_obs_dup_thin
 #  For these tests we check the testoutput directory
 #  since it already exists with valid data.
 
-file( GLOB_RECURSE TESTOUTPUT_IODA_FILES testoutput/*.nc4 testoutput/*.nc testoutput/*.ioda )
+file( GLOB TESTOUTPUT_IODA_FILES testoutput/*.nc4 testoutput/*.nc testoutput/*.ioda )
 
 foreach ( f ${TESTOUTPUT_IODA_FILES} )
     get_filename_component(filename ${f} NAME)
