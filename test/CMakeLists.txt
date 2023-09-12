@@ -412,7 +412,9 @@ endif()
 # create test directories and make links to the input files
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testinput)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testoutput)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testoutput/varbc)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testrun)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testrun/varbc)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Data)
 foreach(FILENAME ${test_input} ${test_output})
     execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink
