@@ -41,6 +41,40 @@ std::vector<std::string> findTailIds(const std::string& filename) {
     return tailIds;
 }
 
+
+//---------------------------------------------------------------------------------------
+std::vector<int> findDatetimes(const std::string& filename) {
+    std::vector<int> datetimes;   
+
+    std::ifstream inputFile(filename);
+
+    if (!inputFile) {
+        std::cout << "Could not open the file." << std::endl;
+        return datetimes;
+    }
+
+    std::string line;
+    while (std::getline(inputFile, line)) {
+        std::istringstream iss(line);
+        int value;
+        std::string datetime;
+
+        // Read and discard other columns, keeping only the last one
+        while (iss >> datetime) {
+            // Try to convert the last column value to an integer
+            std::istringstream(datetime) >> value;
+        }
+
+        // Store the integer value from the last column
+        datetimes.push_back(value);
+    }
+
+    inputFile.close(); // Close the input file
+    
+    return datetimes;
+}
+
+
 //---------------------------------------------------------------------------------------
 void readObsBiasCoefficients(const std::string &filename, Eigen::ArrayXXf &coeffs) {
   std::ifstream infile(filename);

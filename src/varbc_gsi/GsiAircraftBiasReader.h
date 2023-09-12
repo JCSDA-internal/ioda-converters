@@ -20,6 +20,9 @@ constexpr size_t gsi_npredictors = 3;
 /// Find all tail ids in file
 std::vector<std::string> findTailIds(const std::string& filename);
 
+/// Find datetimes in file
+std::vector<int> findDatetimes(const std::string& filename);
+
 /// Read bias coefficients from GSI bias coefficients files
 void readObsBiasCoefficients(const std::string& inputFilePath,
                              Eigen::ArrayXXf & biascoeffs);

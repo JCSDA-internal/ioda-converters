@@ -27,6 +27,7 @@
 ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
                                  const std::string & coeffile,
                                  const std::vector<std::string> & tailIds,
+                                 const std::vector<int> & lastCycleUpdated,
                                  const std::vector<std::string> & predictors) {
   /// Predictors
   int numPreds = predictors.size();
@@ -41,10 +42,14 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
   /// Construct an ObsGroup object, with 2 dimensions nrecs, nvars
   ioda::ObsGroup ogrp = ioda::ObsGroup::generate(empty_base_object, newDims);
 
-  /// Create tail IDs and records variable
+  /// Create tail IDs and cycles variable
   ioda::Variable tailIdsVar = ogrp.vars.createWithScales<std::string>("records",
                                     {ogrp.vars["nrecs"]});
   tailIdsVar.write(tailIds);
+
+  ioda::Variable lastCycleUpdatedVar = ogrp.vars.createWithScales<int>("datetimes",
+                                            {ogrp.vars["nrecs"]});
+  lastCycleUpdatedVar.write(lastCycleUpdated);
 
   /// Create 2D bias coefficient variable
   Eigen::ArrayXXf biascoeffs(numIds, numPreds*3);
@@ -101,6 +106,9 @@ int main(int argc, char** argv) {
   /// Use function to grab tail IDs from input coeff file
   const std::vector<std::string> tailIds = findTailIds(coeffile);
 
+  /// Use function to grab datetimes
+  const std::vector<int> lastCycleUpdated = findDatetimes(coeffile);
+
   /// Read from config file "output"
   std::vector<eckit::LocalConfiguration> configs = config.getSubConfigurations("output");
 
@@ -117,5 +125,5 @@ int main(int argc, char** argv) {
   /// Create ncfile
   ioda::Group group = ioda::Engines::HH::createFile(output_filename,
                       ioda::Engines::BackendCreateModes::Truncate_If_Exists);
-  makeObsBiasObject(group, coeffile, tailIds, predictors);
+  makeObsBiasObject(group, coeffile, tailIds, lastCycleUpdated, predictors);
 }
