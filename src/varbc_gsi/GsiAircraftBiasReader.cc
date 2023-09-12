@@ -44,7 +44,7 @@ std::vector<std::string> findTailIds(const std::string& filename) {
 
 //---------------------------------------------------------------------------------------
 std::vector<int> findDatetimes(const std::string& filename) {
-    std::vector<int> datetimes;   
+    std::vector<int> datetimes;
 
     std::ifstream inputFile(filename);
 
@@ -69,8 +69,8 @@ std::vector<int> findDatetimes(const std::string& filename) {
         datetimes.push_back(value);
     }
 
-    inputFile.close(); // Close the input file
-    
+    inputFile.close();  // Close the input file
+
     return datetimes;
 }
 
