@@ -28,7 +28,6 @@ endif()
 
 if(iodaconv_varbc_gsi_ENABLED)
   add_subdirectory(varbc_gsi)
-  add_subdirectory(acftbias)
 endif()
 
 if(iodaconv_obserror_ENABLED)
