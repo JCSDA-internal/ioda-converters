@@ -1,8 +1,8 @@
-input coeff file: testinput/gdas.t18z.abias_air 
+input coeff file: testinput/gdas.t18z.abias_air
 default predictors: &default_preds
 - constant
 - vertical_velocity
 - vertical_velocity_squared
 output:
-- output file: testrun/acft_out.nc4
+- output file: testrun/varbc/acft_out.nc4
   predictors: *default_preds
