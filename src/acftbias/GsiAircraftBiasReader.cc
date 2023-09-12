@@ -56,7 +56,6 @@ void readObsBiasCoefficients(const std::string &filename, Eigen::ArrayXXf &coeff
   // Define vars and loop through rows
   std::string tailIds;
   int ich;
-  float par;
   int datetime;
   for (std::size_t row = 0; row < nrows; ++row) {
     infile >> tailIds;  // Skip the first two columns

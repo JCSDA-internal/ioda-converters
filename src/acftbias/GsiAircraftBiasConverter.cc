@@ -29,8 +29,8 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
                                  const std::vector<std::string> & tailIds,
                                  const std::vector<std::string> & predictors) {
   /// Predictors
-  int numPreds = predictors.size();
-  int numIds = tailIds.size();
+  long numPreds = predictors.size();
+  long numIds = tailIds.size();
 
   /// Creating dimensions: n
   ioda::NewDimensionScales_t newDims {
@@ -47,7 +47,7 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
   tailIdsVar.write(tailIds);
 
   /// Create 2D bias coefficient variable
-  Eigen::ArrayXXf biascoeffs(numIds, numPreds);
+  Eigen::ArrayXXf biascoeffs(numIds, numPreds*3);
 
   readObsBiasCoefficients(coeffile, biascoeffs);
 
@@ -60,23 +60,23 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
     float_params.setFillValue<float>(missing_value);
 
     // Access predictor coefficient values column and create variable
-    Eigen::ArrayXf subVar = biascoeffs.col(i);
+    Eigen::ArrayXXf subVar = biascoeffs.col(i);
 
     ioda::Variable biasVar = ogrp.vars.createWithScales<float>("biasCoefficients/"+predictors[i],
                        {ogrp.vars["nvars"], ogrp.vars["nrecs"]}, float_params);
     biasVar.writeWithEigenRegular(subVar);
 
     // Access predictor observation error values column and create variable
-    Eigen::ArrayXf subVarObError = biascoeffs.col(i+3);
+    Eigen::ArrayXXf subVarObError = biascoeffs.col(i+3);
 
-    ioda::Variable biasVarObError = ogrp.vars.createWithScales<float>("biasCoefficients/"+predictors[i]+"_ObError",
+    ioda::Variable biasVarObError = ogrp.vars.createWithScales<float>("biasCoeffObError/"+predictors[i],
                        {ogrp.vars["nvars"], ogrp.vars["nrecs"]}, float_params);
     biasVarObError.writeWithEigenRegular(subVarObError);
 
     // Access predictor background error values column and create variable
-    Eigen::ArrayXf subVarBkgError = biascoeffs.col(i+6);
+    Eigen::ArrayXXf subVarBkgError = biascoeffs.col(i+6);
 
-    ioda::Variable biasVarBkgError = ogrp.vars.createWithScales<float>("biasCoefficients/"+predictors[i]+"_BiasCoeffErrors",
+    ioda::Variable biasVarBkgError = ogrp.vars.createWithScales<float>("biasCoeffError/"+predictors[i],
                        {ogrp.vars["nvars"], ogrp.vars["nrecs"]}, float_params);
     biasVarBkgError.writeWithEigenRegular(subVarBkgError);
   }
@@ -102,9 +102,6 @@ int main(int argc, char** argv) {
 
   const std::string output_filename = configs[0].getString("output file");
   const std::vector<std::string> predictors = configs[0].getStringVector("predictors");
-
-  /// Define n number of predictors 
-  const int gsi_npredictors = 3;
 
   /// Check if predictors are the same length as what the gsi predictors are
   if (predictors.size() != gsi_npredictors) {

@@ -15,7 +15,7 @@
 #include <Eigen/Dense>
 
 /// Number of predictors in GSI aircraft bias file
-constexpr size_t gsi_npredictors = 9;
+constexpr size_t gsi_npredictors = 3;
 
 /// Find all tail ids in file
 std::vector<std::string> findTailIds(const std::string& filename);
