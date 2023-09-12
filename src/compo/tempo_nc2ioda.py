@@ -73,7 +73,7 @@ class tempo(object):
             ncd = nc.Dataset(f, 'r')
 
             # conversion factor fron constants
-            conv = cm2m2 * molarmass[self.varname] / Na
+            conv = cm2m2 / Na
 
             # get dimensions
             mirror = ncd.dimensions['mirror_step'].size
