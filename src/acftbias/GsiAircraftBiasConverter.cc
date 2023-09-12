@@ -110,7 +110,7 @@ int main(int argc, char** argv) {
   /// Check if predictors are the same length as what the gsi predictors are
   if (predictors.size() != gsi_npredictors) {
     const std::string error = "Number of predictors specified in yaml must be " +
-          std::to_string(gsi_npredictors) + " (same as number of predictors in GSI aircraft yaml)";
+          std::to_string(gsi_npredictors) + " (same as number of predictors in GSI aircraft bias file)";
     throw eckit::BadValue(error, Here());
   }
 
