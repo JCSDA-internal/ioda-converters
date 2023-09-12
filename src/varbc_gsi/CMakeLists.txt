@@ -33,7 +33,11 @@ ecbuild_add_executable( TARGET  satbias2ioda.x
                         SOURCES SatBiasConverter.cpp GsiSatBiasReader.cpp GsiSatBiasReader.h
                         LIBS    Eigen3::Eigen ${oops_LIBRARIES} ioda_engines )
 
-ecbuild_add_test( TARGET  ${PROJECT_NAME}_satbias_coding_norms
+ecbuild_add_executable( TARGET  acftbias2ioda.x
+                        SOURCES GsiAircraftBiasConverter.cc GsiAircraftBiasReader.cc GsiAircraftBiasReader.h
+                        LIBS    Eigen3::Eigen ${oops_LIBRARIES} ioda_engines )
+
+ecbuild_add_test( TARGET  ${PROJECT_NAME}_varbc_gsi_coding_norms
                   TYPE    SCRIPT
                   COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_cpplint.py
                   ARGS    --quiet --recursive ${CMAKE_CURRENT_SOURCE_DIR}
