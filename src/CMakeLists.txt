@@ -26,11 +26,8 @@ if(iodaconv_pbfortran_ENABLED)
     add_subdirectory(ncar-bufr2nc-fortran)
 endif()
 
-if(iodaconv_satbias_ENABLED)
-  add_subdirectory(satbias)
-endif()
-
-if(iodaconv_satbias_ENABLED)
+if(iodaconv_varbc_gsi_ENABLED)
+  add_subdirectory(varbc_gsi)
   add_subdirectory(acftbias)
 endif()
 
