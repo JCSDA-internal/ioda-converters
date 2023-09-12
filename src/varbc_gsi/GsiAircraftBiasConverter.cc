@@ -75,7 +75,7 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
     Eigen::ArrayXXf subVarObError = biascoeffs.col(i+3);
 
     ioda::Variable biasVarObError = ogrp.vars.createWithScales<float>(
-                                                "biasCoeffObError/"+predictors[i],
+                                                "biasCoeffObErrors/"+predictors[i],
                                                 {ogrp.vars["nvars"], ogrp.vars["nrecs"]},
                                                 float_params);
     biasVarObError.writeWithEigenRegular(subVarObError);
@@ -84,7 +84,7 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
     Eigen::ArrayXXf subVarBkgError = biascoeffs.col(i+6);
 
     ioda::Variable biasVarBkgError = ogrp.vars.createWithScales<float>(
-                                                "biasCoeffError/"+predictors[i],
+                                                "biasCoeffErrors/"+predictors[i],
                                                 {ogrp.vars["nvars"], ogrp.vars["nrecs"]},
                                                 float_params);
     biasVarBkgError.writeWithEigenRegular(subVarBkgError);
