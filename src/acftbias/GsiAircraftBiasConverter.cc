@@ -42,7 +42,7 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
   ioda::ObsGroup ogrp = ioda::ObsGroup::generate(empty_base_object, newDims);
 
   /// Create tail IDs and records variable
-  ioda::Variable tailIdsVar = ogrp.vars.createWithScales<std::string>("tail_ids",
+  ioda::Variable tailIdsVar = ogrp.vars.createWithScales<std::string>("records",
                                     {ogrp.vars["nrecs"]});
   tailIdsVar.write(tailIds);
 
