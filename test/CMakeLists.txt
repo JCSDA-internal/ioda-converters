@@ -2182,7 +2182,6 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_land_owp_snow_obs_dup_thin
 file( GLOB_RECURSE TESTOUTPUT_IODA_FILES testoutput/*.nc4 testoutput/*.nc testoutput/*.ioda )
 
 foreach ( f ${TESTOUTPUT_IODA_FILES} )
-    message(${f})
     get_filename_component(filename ${f} NAME)
 
     # Note: IODA_YAML_ROOT is provided by find_package(ioda).
