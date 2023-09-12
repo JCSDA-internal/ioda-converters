@@ -1161,8 +1161,8 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_satbias_viirs_aod
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/viirs_biaswriter.py
-                          -o testrun/viirs_bias.nc"
-                          viirs_bias.nc ${IODA_CONV_COMP_TOL_ZERO})
+                          -o testrun/varbc/viirs_bias.nc"
+                          varbc/viirs_bias.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 foreach (coltype total tropo)
         ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2_${coltype}
