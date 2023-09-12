@@ -1004,7 +1004,7 @@ ecbuild_add_test( TARGET  test_gen_aircraft_bias_csv_python
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           ascii
-                          "${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/src/acftbias/generate_aircraft_bias_csv.py ./testinput/gdas.t18z.abias_air ./testrun/gdas.t18z.abias_air_ascent.csv MetaData/stationIdentification string 0 BiasCoefficientValue/ascentPredictor float 3"
+                          "${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/src/varbc_gsi/generate_aircraft_bias_csv.py ./testinput/gdas.t18z.abias_air ./testrun/gdas.t18z.abias_air_ascent.csv MetaData/stationIdentification string 0 BiasCoefficientValue/ascentPredictor float 3"
                           gdas.t18z.abias_air_ascent.csv ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
