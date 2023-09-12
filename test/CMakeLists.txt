@@ -361,7 +361,7 @@ if( iodaconv_bufr_ENABLED )
   )
 endif()
 
-if (iodaconv_satbias_ENABLED )
+if (iodaconv_varbc_gsi_ENABLED )
   list( APPEND test_input
     testinput/satbias_converter_amsua.yaml
     testinput/satbias_converter_cris.yaml
@@ -372,11 +372,11 @@ if (iodaconv_satbias_ENABLED )
   )
 
   list( APPEND test_output
-    testoutput/satbias_amsua_n18.nc4
-    testoutput/satbias_cris_npp.nc4
-    testoutput/satbias_gmi_gpm.nc4
-    testoutput/satbias_ssmis_f16.nc4
-    testoutput/viirs_bias.nc
+    testoutput/varbc/satbias_amsua_n18.nc4
+    testoutput/varbc/satbias_cris_npp.nc4
+    testoutput/varbc/satbias_gmi_gpm.nc4
+    testoutput/varbc/satbias_ssmis_f16.nc4
+    testoutput/varbc/viirs_bias.nc
   )
 endif()
 
@@ -2002,7 +2002,7 @@ endif()
 # SatBias tests
 #==============================================================================
 
-if( iodaconv_satbias_ENABLED )
+if( iodaconv_varbc_gsi_ENABLED )
 
   ecbuild_add_test( TARGET  test_iodaconv_satbias_amsua
                     TYPE    SCRIPT
@@ -2010,7 +2010,7 @@ if( iodaconv_satbias_ENABLED )
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/satbias2ioda.x testinput/satbias_converter_amsua.yaml"
-                            satbias_amsua_n18.nc4 ${IODA_CONV_COMP_TOL_ZERO}
+                            varbc/satbias_amsua_n18.nc4 ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS satbias2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_satbias_cris
@@ -2019,7 +2019,7 @@ if( iodaconv_satbias_ENABLED )
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/satbias2ioda.x testinput/satbias_converter_cris.yaml"
-                            satbias_cris_npp.nc4 ${IODA_CONV_COMP_TOL_ZERO}
+                            varbc/satbias_cris_npp.nc4 ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS satbias2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_satbias_gmi
@@ -2028,7 +2028,7 @@ if( iodaconv_satbias_ENABLED )
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/satbias2ioda.x testinput/satbias_converter_gmi_gpm.yaml"
-                            satbias_gmi_gpm.nc4 ${IODA_CONV_COMP_TOL_ZERO}
+                            varbc/satbias_gmi_gpm.nc4 ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS satbias2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_satbias_ssmis
@@ -2037,7 +2037,7 @@ if( iodaconv_satbias_ENABLED )
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/satbias2ioda.x testinput/satbias_converter_ssmis.yaml"
-                            satbias_ssmis_f16.nc4 ${IODA_CONV_COMP_TOL_ZERO}
+                            varbc/satbias_ssmis_f16.nc4 ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS satbias2ioda.x )
 endif()
 
@@ -2180,9 +2180,9 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_land_owp_snow_obs_dup_thin
 #  since it already exists with valid data.
 
 file( GLOB_RECURSE TESTOUTPUT_IODA_FILES testoutput/*.nc4 testoutput/*.nc testoutput/*.ioda )
-list(REMOVE_ITEM TESTOUTPUT_IODA_FILES testoutput/satbias_*.nc4)
 
 foreach ( f ${TESTOUTPUT_IODA_FILES} )
+    message(${f})
     get_filename_component(filename ${f} NAME)
 
     # Note: IODA_YAML_ROOT is provided by find_package(ioda).
