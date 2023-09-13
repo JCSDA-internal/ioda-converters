@@ -60,7 +60,7 @@ conv_platforms = {
 # bufr codes
 uv_bufrtypes = {
     "aircraft": [230, 231, 233, 235],  # 234 is TAMDAR; always rstprod
-    "sondes": [220,222],
+    "sondes": [220, 222],
     "pibal": [221],
     "satwind": range(240, 261),
     "vadwind": [224],
