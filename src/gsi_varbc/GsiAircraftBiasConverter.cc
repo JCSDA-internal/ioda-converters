@@ -71,15 +71,6 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
                        {ogrp.vars["nvars"], ogrp.vars["nrecs"]}, float_params);
     biasVar.writeWithEigenRegular(subVar);
 
-    // Access predictor observation error values column and create variable
-    Eigen::ArrayXXf subVarObError = biascoeffs.col(i+3);
-
-    ioda::Variable biasVarObError = ogrp.vars.createWithScales<float>(
-                                                "biasCoeffObErrors/"+predictors[i],
-                                                {ogrp.vars["nvars"], ogrp.vars["nrecs"]},
-                                                float_params);
-    biasVarObError.writeWithEigenRegular(subVarObError);
-
     // Access predictor background error values column and create variable
     Eigen::ArrayXXf subVarBkgError = biascoeffs.col(i+6);
 
@@ -89,6 +80,13 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
                                                 float_params);
     biasVarBkgError.writeWithEigenRegular(subVarBkgError);
   }
+
+  // write out number of obs assimilated
+  Eigen::ArrayXXf numObs = biascoeffs.col(3);
+  ioda::Variable numObsAssim = ogrp.vars.createWithScales<int>(
+                                           "number_obs_assimilated",
+                                           {ogrp.vars["nvars"], ogrp.vars["nrecs"]});
+  numObsAssim.writeWithEigenRegular(numObs);
 
   return ogrp;
 }
