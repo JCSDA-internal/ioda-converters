@@ -753,7 +753,7 @@ class Conv(BaseGSI):
                 if (v == 'sst'):
                     outname = OutDir + '/' + v + '_geoval_' + \
                         self.validtime.strftime("%Y%m%d%H") + '.nc4'
-                if (p == 'windprof' or p == 'satwind' or p == 'scatwind' or p == 'vadwind'):
+                if (p == 'windprof' or p == 'satwind' or p == 'scatwind' or p == 'vadwind' or p == 'pibal'):
                     outname = OutDir + '/' + p + '_geoval_' + \
                         self.validtime.strftime("%Y%m%d%H") + '.nc4'
                 if not clobber:
@@ -876,7 +876,7 @@ class Conv(BaseGSI):
                 if (v == 'sst'):
                     outname = OutDir + '/' + v + '_obs_' + \
                         self.validtime.strftime("%Y%m%d%H") + '.nc4'
-                if (p == 'windprof' or p == 'satwind' or p == 'scatwind' or p == 'vadwind'):
+                if (p == 'windprof' or p == 'satwind' or p == 'scatwind' or p == 'vadwind' or p == 'pibal'):
                     outname = OutDir + '/' + p + '_obs_' + \
                         self.validtime.strftime("%Y%m%d%H") + '.nc4'
                 if not clobber:
