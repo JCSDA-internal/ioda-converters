@@ -361,7 +361,7 @@ if( iodaconv_bufr_ENABLED )
   )
 endif()
 
-if (iodaconv_varbc_gsi_ENABLED )
+if (iodaconv_gsi_varbc_ENABLED )
   list( APPEND test_input
     testinput/satbias_converter_amsua.yaml
     testinput/satbias_converter_cris.yaml
@@ -1004,7 +1004,7 @@ ecbuild_add_test( TARGET  test_gen_aircraft_bias_csv_python
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           ascii
-                          "${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/src/varbc_gsi/generate_aircraft_bias_csv.py ./testinput/gdas.t18z.abias_air ./testrun/gdas.t18z.abias_air_ascent.csv MetaData/stationIdentification string 0 BiasCoefficientValue/ascentPredictor float 3"
+                          "${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/src/gsi_varbc/generate_aircraft_bias_csv.py ./testinput/gdas.t18z.abias_air ./testrun/gdas.t18z.abias_air_ascent.csv MetaData/stationIdentification string 0 BiasCoefficientValue/ascentPredictor float 3"
                           gdas.t18z.abias_air_ascent.csv ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
@@ -2006,7 +2006,7 @@ endif()
 # SatBias tests
 #==============================================================================
 
-if( iodaconv_varbc_gsi_ENABLED )
+if( iodaconv_gsi_varbc_ENABLED )
 
   ecbuild_add_test( TARGET  test_iodaconv_satbias_amsua
                     TYPE    SCRIPT
