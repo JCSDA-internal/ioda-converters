@@ -119,6 +119,7 @@ def read_input(input_args):
     time = time[mask]
     lons = lons[mask]
     lats = lats[mask]
+    data_in['l2_flags'] = data_in['l2_flags'][mask]
 
     # create a string version of the date for each observation
     dates = np.empty(len(lons), dtype=np.int64)
@@ -131,11 +132,9 @@ def read_input(input_args):
 
     # as there is not any obs error in data  we use the same obs error for all chans for now
     err = np.zeros((obs_dim, nchans))+0.5
-
-    qc = data_in['l2_flags']
+    qc = np.tile((data_in['l2_flags']), (nchans, 1)).T
 
     # allocate space for output depending on which variables are to be saved
-
     obs_data = {}
     obs_data[('dateTime', 'MetaData')] = dates
     obs_data[('latitude', 'MetaData')] = lats
