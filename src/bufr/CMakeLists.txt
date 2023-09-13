@@ -77,11 +77,11 @@ if ( iodaconv_bufr_ENABLED )
     )
 
   list (APPEND _atmslib_srcs
-    BufrParser/Exports/Variables/Transforms/atms/kinds.F90
     BufrParser/Exports/Variables/Transforms/atms/atms_spatial_average_mod.f90
     BufrParser/Exports/Variables/Transforms/atms/atms_spatial_average_interface.h
     BufrParser/Exports/Variables/Transforms/atms/atms_spatial_average_interface.f90
     )
+
 
   ecbuild_add_library( TARGET   atms_lib
                        SOURCES  ${_atmslib_srcs}
@@ -89,12 +89,16 @@ if ( iodaconv_bufr_ENABLED )
                        INSTALL_HEADERS LISTED
     )
 
+  target_link_libraries( atms_lib PUBLIC iodaconv_utils)   
+
+
   list(APPEND _ingester_deps
               Eigen3::Eigen
               eckit
               ${oops_LIBRARIES}
               ioda_engines
-              bufr::bufr_d
+              gsl::gsl-lite
+              bufr::bufr_4
               atms_lib
     )
 
@@ -133,7 +137,8 @@ if ( iodaconv_bufr_python_ENABLED )
   list(APPEND _query_libs
               Eigen3::Eigen
               eckit
-              bufr::bufr_d
+              gsl::gsl-lite
+              bufr::bufr_4
     )
 
   list (APPEND _query_srcs

@@ -200,8 +200,8 @@ class GoesConverter:
         Creates the /MetaData/sensorScanPosition variable in an output netCDF4 dataset.
         output_dataset - A netCDF4 Dataset object
         """
-        scan_position_data_array = self._latlon_dataset['MetaData'].variables['sensorScanPosition'][:].real
-        output_dataset.createVariable('/MetaData/sensorScanPosition', 'f4', 'Location', fill_value=-999)
+        scan_position_data_array = self._latlon_dataset['MetaData'].variables['sensorScanPosition'][:]
+        output_dataset.createVariable('/MetaData/sensorScanPosition', 'i4', 'Location', fill_value=-999)
         output_dataset['/MetaData/sensorScanPosition'][:] = scan_position_data_array
 
     def _create_metadata_sensor_zenith_angle_variable(self, output_dataset):

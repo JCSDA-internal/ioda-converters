@@ -105,6 +105,8 @@ class ompsnm(object):
                     self.varAttrs[vkey]['units'] = 'degrees'
                 elif('prior' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'ppmv'
+                elif('scanposition' in v.lower()):
+                    self.varAttrs[vkey]['units'] = '1'
         self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'DU'
 
         vkey = ('pressure', 'MetaData')
@@ -124,7 +126,7 @@ class ompsnm(object):
         time_vec = d['dateTime']
         scan_position_vec = np.arange(1, d['valKey'].shape[1]+1)
         d['sensorScanPosition'], d['dateTime'] = np.meshgrid(scan_position_vec, time_vec)
-        d['sensorScanPosition'] = d['sensorScanPosition'].astype('float32')
+        d['sensorScanPosition'] = d['sensorScanPosition'].astype('int32')
         d['measurement_quality_flags'].mask = False
         d['instrument_quality_flags'].mask = False
         d['measurement_quality_flags'] = np.tile(d['measurement_quality_flags'], (scan_position_vec.shape[0], 1)).T

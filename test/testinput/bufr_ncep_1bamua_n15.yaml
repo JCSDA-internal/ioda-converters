@@ -33,7 +33,6 @@ observations:
 
           fieldOfViewNumber:
             query: "*/FOVN"
-            type: float
 
           landOrSeaQualifier:
             query: "*/LSQL"
@@ -78,6 +77,7 @@ observations:
               variable: satelliteIdentifier
               map:
                 _206: n15
+                _207: n16
 
     ioda:
       backend: netcdf
@@ -123,10 +123,6 @@ observations:
         - name: "MetaData/satelliteInstrument"
           source: variables/satelliteInstrument
           longName: "Satellite Instrument"
-
-        - name: "MetaData/fieldOfViewNumber"
-          source: variables/fieldOfViewNumber
-          longName: "Field of View Number"
 
         - name: "MetaData/landOrSeaQualifier"
           source: variables/landOrSeaQualifier
@@ -184,6 +180,6 @@ observations:
           source: variables/brightnessTemperature
           longName: "Brightness Temperature"
           units: "K"
-#         range: [100, 500]
+          range: [90, 380]
           chunks: [1000, 15]
           compressionLevel: 4

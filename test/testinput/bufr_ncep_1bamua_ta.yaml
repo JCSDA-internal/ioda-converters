@@ -33,7 +33,6 @@ observations:
 
           fieldOfViewNumber:
             query: "*/FOVN"
-            type: float
 
           landOrSeaQualifier:
             query: "*/LSQL"
@@ -80,8 +79,6 @@ observations:
                 _3: metop-b
                 _4: metop-a
                 _5: metop-c
-                _206: n15
-                _207: n16
                 _208: n17
                 _209: n18
                 _223: n19
@@ -130,10 +127,6 @@ observations:
         - name: "MetaData/satelliteInstrument"
           source: variables/satelliteInstrument
           longName: "Satellite Instrument"
-
-        - name: "MetaData/fieldOfViewNumber"
-          source: variables/fieldOfViewNumber
-          longName: "Field of View Number"
 
         - name: "MetaData/landOrSeaQualifier"
           source: variables/landOrSeaQualifier
@@ -192,6 +185,6 @@ observations:
           source: variables/antennaTemperature
           longName: "Antenna Temperature"
           units: "K"
-#         range: [100, 500]
+          range: [90, 380]
           chunks: [1000, 15]
           compressionLevel: 4
