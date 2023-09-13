@@ -41,6 +41,7 @@ conv_platforms = {
         'sfc',
         'aircraft',
         'sondes',
+        'pibal',
         'vadwind',
         'windprof',
         'sfcship',
@@ -59,7 +60,8 @@ conv_platforms = {
 # bufr codes
 uv_bufrtypes = {
     "aircraft": [230, 231, 233, 235],  # 234 is TAMDAR; always rstprod
-    "sondes": range(220, 223),
+    "sondes": [220,222],
+    "pibal": [221],
     "satwind": range(240, 261),
     "vadwind": [224],
     "windprof": range(227, 230),
@@ -1079,7 +1081,7 @@ class Conv(BaseGSI):
                             #     tmp = hgt
                             outdata[(loc_mdata_name, 'MetaData')] = tmp
                             varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'm'
-                        elif p == 'sondes' or p == 'aircraft' or p == 'satwind':
+                        elif p == 'sondes' or p == 'aircraft' or p == 'satwind' or p == 'pibal':
                             tmp = self.var(lvar)[idx]
                             tmp[tmp > 4e8] = self.FLOAT_FILL  # 1e11 is fill value for sondes, etc.
                             outdata[(loc_mdata_name, 'MetaData')] = tmp
