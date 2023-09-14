@@ -13,7 +13,6 @@ import netCDF4 as nc
 from datetime import datetime, timedelta
 import dateutil.parser
 import numpy as np
-from multiprocessing import Pool
 import os
 from pathlib import Path
 
