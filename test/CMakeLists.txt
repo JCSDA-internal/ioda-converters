@@ -363,22 +363,24 @@ if( iodaconv_bufr_ENABLED )
   )
 endif()
 
-if (iodaconv_satbias_ENABLED )
+if (iodaconv_gsi_varbc_ENABLED )
   list( APPEND test_input
     testinput/satbias_converter_amsua.yaml
     testinput/satbias_converter_cris.yaml
     testinput/satbias_converter_gmi_gpm.yaml
     testinput/satbias_converter_ssmis.yaml
+    testinput/acftbias_converter.yaml
     testinput/satbias_crtm_in
     testinput/satbias_crtm_pc
   )
 
   list( APPEND test_output
-    testoutput/satbias_amsua_n18.nc4
-    testoutput/satbias_cris_npp.nc4
-    testoutput/satbias_gmi_gpm.nc4
-    testoutput/satbias_ssmis_f16.nc4
-    testoutput/viirs_bias.nc
+    testoutput/varbc/satbias_amsua_n18.nc4
+    testoutput/varbc/satbias_cris_npp.nc4
+    testoutput/varbc/satbias_gmi_gpm.nc4
+    testoutput/varbc/satbias_ssmis_f16.nc4
+    testoutput/varbc/viirs_bias.nc
+    testoutput/varbc/acft_out.nc4
   )
 endif()
 
@@ -414,7 +416,9 @@ endif()
 # create test directories and make links to the input files
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testinput)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testoutput)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testoutput/varbc)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testrun)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testrun/varbc)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Data)
 foreach(FILENAME ${test_input} ${test_output})
     execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink
@@ -1014,7 +1018,7 @@ ecbuild_add_test( TARGET  test_gen_aircraft_bias_csv_python
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           ascii
-                          "${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/src/acftbias/generate_aircraft_bias_csv.py ./testinput/gdas.t18z.abias_air ./testrun/gdas.t18z.abias_air_ascent.csv MetaData/stationIdentification string 0 BiasCoefficientValue/ascentPredictor float 3"
+                          "${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/src/gsi_varbc/generate_aircraft_bias_csv.py ./testinput/gdas.t18z.abias_air ./testrun/gdas.t18z.abias_air_ascent.csv MetaData/stationIdentification string 0 BiasCoefficientValue/ascentPredictor float 3"
                           gdas.t18z.abias_air_ascent.csv ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
@@ -1173,8 +1177,8 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_satbias_viirs_aod
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/viirs_biaswriter.py
-                          -o testrun/viirs_bias.nc"
-                          viirs_bias.nc ${IODA_CONV_COMP_TOL_ZERO})
+                          -o testrun/varbc/viirs_bias.nc"
+                          varbc/viirs_bias.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 foreach (coltype total tropo)
         ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2_${coltype}
@@ -2016,7 +2020,7 @@ endif()
 # SatBias tests
 #==============================================================================
 
-if( iodaconv_satbias_ENABLED )
+if( iodaconv_gsi_varbc_ENABLED )
 
   ecbuild_add_test( TARGET  test_iodaconv_satbias_amsua
                     TYPE    SCRIPT
@@ -2024,7 +2028,7 @@ if( iodaconv_satbias_ENABLED )
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/satbias2ioda.x testinput/satbias_converter_amsua.yaml"
-                            satbias_amsua_n18.nc4 ${IODA_CONV_COMP_TOL_ZERO}
+                            varbc/satbias_amsua_n18.nc4 ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS satbias2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_satbias_cris
@@ -2033,7 +2037,7 @@ if( iodaconv_satbias_ENABLED )
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/satbias2ioda.x testinput/satbias_converter_cris.yaml"
-                            satbias_cris_npp.nc4 ${IODA_CONV_COMP_TOL_ZERO}
+                            varbc/satbias_cris_npp.nc4 ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS satbias2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_satbias_gmi
@@ -2042,7 +2046,7 @@ if( iodaconv_satbias_ENABLED )
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/satbias2ioda.x testinput/satbias_converter_gmi_gpm.yaml"
-                            satbias_gmi_gpm.nc4 ${IODA_CONV_COMP_TOL_ZERO}
+                            varbc/satbias_gmi_gpm.nc4 ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS satbias2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_satbias_ssmis
@@ -2051,8 +2055,16 @@ if( iodaconv_satbias_ENABLED )
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/satbias2ioda.x testinput/satbias_converter_ssmis.yaml"
-                            satbias_ssmis_f16.nc4 ${IODA_CONV_COMP_TOL_ZERO}
+                            varbc/satbias_ssmis_f16.nc4 ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS satbias2ioda.x )
+  ecbuild_add_test( TARGET  test_iodaconv_acftbias_gsi
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/acftbias2ioda.x testinput/acftbias_converter.yaml"
+                            varbc/acft_out.nc4 ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS acftbias2ioda.x )
 endif()
 
 
@@ -2193,7 +2205,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_land_owp_snow_obs_dup_thin
 #  For these tests we check the testoutput directory
 #  since it already exists with valid data.
 
-file( GLOB_RECURSE TESTOUTPUT_IODA_FILES testoutput/*.nc4 testoutput/*.nc testoutput/*.ioda )
+file( GLOB TESTOUTPUT_IODA_FILES testoutput/*.nc4 testoutput/*.nc testoutput/*.ioda )
 
 foreach ( f ${TESTOUTPUT_IODA_FILES} )
     get_filename_component(filename ${f} NAME)

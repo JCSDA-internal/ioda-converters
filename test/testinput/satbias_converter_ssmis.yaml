@@ -15,4 +15,4 @@ output:
   - scan_angle_order_3
   - scan_angle_order_2
   - scan_angle
-  output file: testrun/satbias_ssmis_f16.nc4
+  output file: testrun/varbc/satbias_ssmis_f16.nc4
