@@ -47,7 +47,7 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
                                     {ogrp.vars["nrecs"]});
   tailIdsVar.write(tailIds);
 
-  ioda::Variable lastCycleUpdatedVar = ogrp.vars.createWithScales<int>("datetimes",
+  ioda::Variable lastCycleUpdatedVar = ogrp.vars.createWithScales<int>("lastUpdateTime",
                                             {ogrp.vars["nrecs"]});
   lastCycleUpdatedVar.write(lastCycleUpdated);
 
@@ -84,7 +84,7 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
   // write out number of obs assimilated
   Eigen::ArrayXXf numObs = biascoeffs.col(3);
   ioda::Variable numObsAssim = ogrp.vars.createWithScales<int>(
-                                           "number_obs_assimilated",
+                                           "numObsUsed",
                                            {ogrp.vars["nvars"], ogrp.vars["nrecs"]});
   numObsAssim.writeWithEigenRegular(numObs);
 
