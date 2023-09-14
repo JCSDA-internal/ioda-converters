@@ -63,6 +63,9 @@ def read_input(input_args):
     global_config = input_args[1]
     ncd = nc.Dataset(input_file, 'r')
 
+    wavelength = ncd.groups['sensor_band_parameters'].variables['wavelength'][:].ravel()
+    wavelength = wavelength[wavelength < 700]  # we just have Rrs for wavelength less than 700
+
     # since OC L2 files are quite empty, need a mask applied immediately
     # to avoid using too much memory)
     Rrs_412 = ncd.groups['geophysical_data'].variables['Rrs_412'][:].ravel()
@@ -84,32 +87,14 @@ def read_input(input_args):
             pixels).ravel() - sla.variables['msec'][0])/1000.0
     time = time[mask]
 
-    obs_vars = (
-        'Rrs_412',
-        'Rrs_443',
-        'Rrs_469',
-        'Rrs_488',
-        'Rrs_531',
-        'Rrs_547',
-        'Rrs_555',
-        'Rrs_645',
-        'Rrs_667',
-        'Rrs_678')
-
-    input_vars = obs_vars
-
     sol_z = ncd.groups['scan_line_attributes'].variables['csol_z'][:].ravel()
     data_in['csol_z'] = np.tile((sol_z), (pixels)).ravel()[mask]
     data_in['l2_flags'] = ncd.groups['geophysical_data'].variables['l2_flags'][:].ravel()[mask]
-    val_radiance = np.zeros((len(obs_vars), len(lats)))
-    wavelength = np.zeros((len(obs_vars),))
+    val_radiance = np.zeros((len(lats), len(wavelength)))
 
-    i = 0
-    for v in obs_vars:
-        Sorar_radiance = ncd.groups['geophysical_data'].variables[v].solar_irradiance
-        val_radiance[i, :] = ncd.groups['geophysical_data'].variables[v][:].ravel()[mask] * Sorar_radiance
-        wavelength[i] = int(v[4:])
-        i = i+1
+    for i in range(len(wavelength)):
+        Sorar_radiance = ncd.groups['geophysical_data'].variables['Rrs_'+str(wavelength[i])].solar_irradiance
+        val_radiance[:, i] = ncd.groups['geophysical_data'].variables['Rrs_'+str(wavelength[i])][:].ravel()[mask] * Sorar_radiance
 
     ncd.close()
 
