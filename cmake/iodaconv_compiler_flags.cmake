@@ -13,9 +13,9 @@ endif()
 
 if( CMAKE_Fortran_COMPILER_ID MATCHES "GNU" )
   if ( APPLE )
-	if (CMAKE_CXX_COMPILER_ID_MARTCHES "GNU") 
- 	   include(compiler_flags_GNU_Fortran)
-        else 
+	if (CMAKE_CXX_COMPILER_ID MATCHES "GNU") 
+ 	   include( compiler_flags_GNU_Fortran )
+        else()
            include( compiler_flags_Clang_GNU_Fortran )	
         endif()  
   else()
