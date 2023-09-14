@@ -164,9 +164,9 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     pressure.atts.create('long_name', ioda.Types.str).writeVector.str(['Pressure'])
 
     print("Create ObsValue group variables")
-    prepbufrdatalevelcategory = g.vars.create('ObsValue/verticalSignificance', ioda.Types.int64,  scales=[dim_location], params=pint)
-    prepbufrdatalevelcategory.atts.create('units', ioda.Types.str).writeVector.str([''])
-    prepbufrdatalevelcategory.atts.create('long_name', ioda.Types.str).writeVector.str(['Prepbufr Data Level Category'])
+#   prepbufrdatalevelcategory = g.vars.create('ObsValue/verticalSignificance', ioda.Types.int64,  scales=[dim_location], params=pint)
+#   prepbufrdatalevelcategory.atts.create('units', ioda.Types.str).writeVector.str([''])
+#   prepbufrdatalevelcategory.atts.create('long_name', ioda.Types.str).writeVector.str(['Prepbufr Data Level Category'])
 
     stationpressure = g.vars.create('ObsValue/stationPressure', ioda.Types.float, scales=[dim_location], params=pfloat)
     stationpressure.atts.create('units', ioda.Types.str).writeVector.str(['Pa'])
@@ -231,7 +231,7 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
 
     # Write data to the variables
     print("Write data to variables")
-    prepbufrdatalevelcategory.writeNPArray.int(cat.flatten())
+#   prepbufrdatalevelcategory.writeNPArray.int(cat.flatten())
     latitude.writeNPArray.float(lat.flatten())
     longitude.writeNPArray.float(lon.flatten())
     stationidentification.writeVector.str(sid.flatten())
