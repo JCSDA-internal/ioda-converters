@@ -93,7 +93,7 @@ module define_mod
                                                'iasi_metop-b    ', &
                                                'iasi_metop-c    ', &
                                                'cris_npp        ', &
-                                               'cris_n20        ' &
+                                               'cris_n20        ', &
                                                'cris_n21        ' &
                                                /)
 
