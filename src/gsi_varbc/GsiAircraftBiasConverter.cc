@@ -47,6 +47,13 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
                                     {ogrp.vars["nrecs"]});
   tailIdsVar.write(tailIds);
 
+  /// Create list of variables
+  std::vector<std::string> varlist;
+  varlist.push_back("airTemperature");
+  ioda::Variable variableVar = ogrp.vars.createWithScales<std::string>("variables",
+                                     {ogrp.vars["nvars"]});
+  variableVar.write(varlist);
+
   ioda::Variable lastCycleUpdatedVar = ogrp.vars.createWithScales<int>("lastUpdateTime",
                                             {ogrp.vars["nrecs"]});
   lastCycleUpdatedVar.write(lastCycleUpdated);
