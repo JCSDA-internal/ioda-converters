@@ -155,10 +155,10 @@ else()
 endif()
 
 if( eckit_FOUND AND oops_FOUND AND ioda_FOUND )
-    set(iodaconv_varbc_gsi_ENABLED True)
+    set(iodaconv_gsi_varbc_ENABLED True)
     message(STATUS "Enabled Component: gsi bias converter")
 else()
-    set(iodaconv_varbc_gsi_ENABLED False)
+    set(iodaconv_gsi_varbc_ENABLED False)
     message(STATUS "Disabled Component: gsi bias converter")
 endif()
 
