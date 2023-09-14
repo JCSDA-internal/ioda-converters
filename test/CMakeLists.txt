@@ -76,7 +76,7 @@ list( APPEND test_input
   testinput/satwinds_ssec2021080103.txt
   testinput/pace_oc_l2.nc
   testinput/pace_radiance_L1B.nc
-  testinput/modis_radiance_L2.nc
+  testinput/modis_aqua_Rrs_OC_L2.nc
   testinput/mls_o3_l2.he5
   testinput/omi_o3_l2.he5
   testinput/ompsnm_o3_l2.he5
@@ -165,7 +165,7 @@ list( APPEND test_output
   testoutput/satwinds_ssec2021080103.nc
   testoutput/pace_oc_l2.nc
   testoutput/pace_radiance_L1B.nc
-  testoutput/modis_radiance_L2.nc
+  testoutput/modis_water_leaving_radiance_L2.nc
   testoutput/mls_o3_l2.nc
   testoutput/omi_o3_l2.nc
   testoutput/ompsnm_o3_l2.nc
@@ -801,17 +801,17 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pace_radiance_L1B
                           -d 2019032112"
                           pace_radiance_L1B.nc ${IODA_CONV_COMP_TOL_ZERO})
 
-ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_radiance_L2                                               
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_water_leaving_radiance_L2                                               
                   TYPE    SCRIPT                                                                               
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"                                              
                   COMMAND bash                                                                                 
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh                                             
                           netcdf                                                                               
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/oc_l2_radiance2ioda.py                 
-                          -i testinput/modis_radiance_L2.nc                                                    
-                          -o testrun/modis_radiance_L2.nc                                                      
+                          -i testinput/modis_aqua_Rrs_OC_L2.nc                                                    
+                          -o testrun/modis_water_leaving_radiance_L2.nc                                                      
                           -d 2021080112"
-                          modis_radiance_L2.nc ${IODA_CONV_COMP_TOL_ZERO})
+                          modis_water_leaving_radiance_L2.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mls_o3_l2
                   TYPE    SCRIPT
