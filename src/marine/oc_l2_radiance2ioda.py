@@ -41,8 +41,6 @@ DimDict = {}
 
 VarDims = {}
 
-chan_number = range(1, 11)  # we have 10 channels
-
 
 def read_input(input_args):
     """
@@ -56,7 +54,7 @@ def read_input(input_args):
 
     Returns:
 
-        A tuple of (obs_data, GlobalAttrs) needed by the IODA writer.
+        A tuple of (obs_data, GlobalAttrs, chan_number) needed by the IODA writer.
     """
     data_in = {}
     input_file = input_args[0]
@@ -65,11 +63,12 @@ def read_input(input_args):
 
     wavelength = ncd.groups['sensor_band_parameters'].variables['wavelength'][:].ravel()
     wavelength = wavelength[wavelength < 700]  # we just have Rrs for wavelength less than 700
+    chan_number = range(1, len(wavelength)+1)  # we have 10 channels
 
     # since OC L2 files are quite empty, need a mask applied immediately
     # to avoid using too much memory)
-    Rrs_412 = ncd.groups['geophysical_data'].variables['Rrs_412'][:].ravel()
-    mask = Rrs_412 >= -3000  # min valid value
+    Rrs_ch1 = ncd.groups['geophysical_data'].variables['Rrs_'+str(wavelength[0])][:].ravel()
+    mask = Rrs_ch1 >= -3000  # min valid value
 
     # Determine the lat/lon grid.
     lons = ncd.groups['navigation_data'].variables['longitude'][:].ravel()[mask]
@@ -131,7 +130,7 @@ def read_input(input_args):
     obs_data[output_var_names[0], global_config['oerr_name']] = err.astype('float32')
     obs_data[output_var_names[0], global_config['opqc_name']] = qc.astype('int32')
 
-    return (obs_data, GlobalAttrs)
+    return (obs_data, GlobalAttrs, chan_number)
 
 
 def main():
@@ -203,6 +202,7 @@ def main():
         'sensorCentralWavenumber': ['Channel']
     }
 
+    chan_number = read_input((args.input[0], global_config))[2]
     nchans = len(chan_number)
     nlocs = len(obs_data[('longitude', 'MetaData')])
     DimDict = {
