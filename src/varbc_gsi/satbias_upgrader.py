@@ -42,7 +42,7 @@ def satbias_upgrader(infile, outfile):
     nvars_out[:] = 0
     if 'number_obs_assimilated' in oldnc.variables.keys():
         nobs_assim_in = oldnc.variables['number_obs_assimilated'][:]
-        nobs_assim_out = newnc.createVariable("number_obs_assimilated", "i4", ("nrecs", "nvars"))
+        nobs_assim_out = newnc.createVariable("numObsUsed", "i4", ("nrecs", "nvars"))
         nobs_assim_out[0, :] = nobs_assim_in
 
     # loop through predictors and create predictor variables
