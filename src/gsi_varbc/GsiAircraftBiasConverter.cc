@@ -57,12 +57,11 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
 
   // need to convert the time YYYYMM to seconds sinc 1970
   std::vector<int64_t> lastCycleUpdated;
-  oops::util::DateTime refTime(1970, 1, 1, 0, 0, 0);
-  for (size_t itime = 0; itime < lastCycleUpdatedYYYYMM.size(); ++itime) {
-    int year = lastCycleUpdated / 100;
-    int month = lastCycleUpdated % 100;
-    std::cout << year << "-" << month << std::endl;
-    oops::util::DateTime lastTime(year, month, 1, 0, 0, 0);
+  util::DateTime refTime(1970, 1, 1, 0, 0, 0);
+  for (size_t itime = 0; itime < numIds; ++itime) {
+    int year = lastCycleUpdatedYYYYMM[itime] / 100;
+    int month = lastCycleUpdatedYYYYMM[itime] % 100;
+    util::DateTime lastTime(year, month, 1, 0, 0, 0);
     lastCycleUpdated.push_back((lastTime - refTime).toSeconds());
   }
   ioda::Variable lastCycleUpdatedVar = ogrp.vars.createWithScales<int64_t>("lastUpdateTime",
