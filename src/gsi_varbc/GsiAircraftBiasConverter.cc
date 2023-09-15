@@ -66,7 +66,8 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
   }
   ioda::Variable lastCycleUpdatedVar = ogrp.vars.createWithScales<int64_t>("lastUpdateTime",
                                             {ogrp.vars["nrecs"]});
-  lastCycleUpdatedVar.atts.add<std::string>("units", std::string("seconds since 1970-01-01T00:00:00Z"));
+  lastCycleUpdatedVar.atts.add<std::string>("units",
+                                            std::string("seconds since 1970-01-01T00:00:00Z"));
   lastCycleUpdatedVar.write(lastCycleUpdated);
 
   /// Create 2D bias coefficient variable
