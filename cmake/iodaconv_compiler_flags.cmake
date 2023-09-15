@@ -7,35 +7,42 @@ if( NOT CMAKE_BUILD_TYPE MATCHES "Debug" )
   add_definitions( -DNDEBUG )
 endif()
 
-#######################################################################################
-# Fortran
-#######################################################################################
 
-if( CMAKE_Fortran_COMPILER_ID MATCHES "GNU" )
-  if ( APPLE )
-    include( compiler_flags_Clang_GNU_Fortran )	
-  else()
-    include( compiler_flags_GNU_Fortran )
-  endif()
-elseif( CMAKE_Fortran_COMPILER_ID MATCHES "Intel" )
-  include( compiler_flags_Intel_Fortran )
-elseif( CMAKE_Fortran_COMPILER_ID MATCHES "Cray" )
-  include( compiler_flags_Cray_Fortran )
+if ( APPLE )
+###
+#   Mac is different from other platforms in that there is only one fortran
+#	compiler but two different c++ compiled, gnu and clang
+###
+    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU") 
+        include( compiler_flags_GNU_Fortran )
+	include( compiler_flags_GNU_CXX )
+    else()
+        include( compiler_flags_Clang_GNU_Fortran )
+	include( compiler_flags_Clang_CXX )   
+    endif() 
 else()
-  message( STATUS "Fortran compiler with ID ${CMAKE_Fortran_COMPILER_ID} will be used with CMake default options")
-endif()
-
-
+#################
+# Fortran
+################
+    if( CMAKE_Fortran_COMPILER_ID MATCHES "GNU" )
+        include( compiler_flags_GNU_Fortran )
+    elseif( CMAKE_Fortran_COMPILER_ID MATCHES "Intel" )
+        include( compiler_flags_Intel_Fortran )
+    elseif( CMAKE_Fortran_COMPILER_ID MATCHES "Cray" )
+        include( compiler_flags_Cray_Fortran )
+    else()
+        message( STATUS "Fortran compiler with ID ${CMAKE_Fortran_COMPILER_ID} will be used with CMake default options")
+    endif()
 #######################################################################################
 # C++
 #######################################################################################
-
-if( CMAKE_CXX_COMPILER_ID MATCHES "GNU" )
-  include( compiler_flags_GNU_CXX )
-elseif( CMAKE_CXX_COMPILER_ID MATCHES "Intel" )
-  include( compiler_flags_Intel_CXX )
-elseif( CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
-  include( compiler_flags_Clang_CXX )
-else()
-  message( STATUS "C++ compiler with ID ${CMAKE_CXX_COMPILER_ID} will be used with CMake default options")
+    if( CMAKE_CXX_COMPILER_ID MATCHES "GNU" )
+	include( compiler_flags_GNU_CXX )
+    elseif( CMAKE_CXX_COMPILER_ID MATCHES "Intel" )
+	include( compiler_flags_Intel_CXX )
+    elseif( CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
+	include( compiler_flags_Clang_CXX )
+    else()
+        message( STATUS "C++ compiler with ID ${CMAKE_CXX_COMPILER_ID} will be used with CMake default options")
+    endif()
 endif()
