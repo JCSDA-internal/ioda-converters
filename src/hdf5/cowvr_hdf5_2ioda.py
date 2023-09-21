@@ -233,7 +233,6 @@ def get_cowvr_data(f, obs_data, add_qc=True):
 
     WMO_sat_ID = get_WMO_satellite_ID(f['Metadata']['InstrumentShortName'][0].decode("utf-8"))
 
-
     level = get_processing_level(f)
     # "Geolocation and flags"
     # fore: instr_scan_ang < 180 and aft: instr_scan_ang > 180
