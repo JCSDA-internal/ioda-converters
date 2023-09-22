@@ -262,17 +262,19 @@ def get_cowvr_data(f, obs_data, add_qc=True):
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
     obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f['GeolocationAndFlags']['time_string']), dtype='int64')
     if level == 1:
-        qc_flag = f['CalibratedSceneTemperatures']['obs_qual_flag']
+        qc_flag = f['CalibratedSceneTemperatures']['obs_qual_flag']  # do not use -- calval team advice
         solar_array_flag = f['CalibratedSceneTemperatures']['solar_array_flag']
         support_arm_flag = f['CalibratedSceneTemperatures']['support_arm_flag']
         rain_flag = None
         rfi_flag = None
+        ufo_flag = None
     elif level == 2:
-        qc_flag = f['GeolocationAndFlags']['obs_qual_flag']
+        qc_flag = f['GeolocationAndFlags']['obs_qual_flag']  # do not use -- calval team advice
         solar_array_flag = f['GeolocationAndFlags']['solar_array_flag']
         support_arm_flag = f['GeolocationAndFlags']['support_arm_flag']
         rain_flag = f['GeolocationAndFlags']['rain_flag']
         rfi_flag = f['GeolocationAndFlags']['rfi_flag']
+        ufo_flag = f['GeolocationAndFlags']['ufo_obstruct_flag']
 
     nchans = len(obs_data[('sensorChannelNumber', metaDataName)])
     obs_data[('brightnessTemperature', obsValName)] = np.array(
@@ -283,12 +285,12 @@ def get_cowvr_data(f, obs_data, add_qc=True):
     obs_data[('brightnessTemperature', qcName)] = np.full((nlocs, nchans), 0, dtype='int32')
 
     if add_qc:
-        obs_data = cowvr_gross_quality_control(obs_data, qc_flag, solar_array_flag, support_arm_flag, rain_flag=rain_flag, rfi_flag=rfi_flag)
+        obs_data = cowvr_gross_quality_control(obs_data, solar_array_flag, support_arm_flag, rain_flag, rfi_flag, ufo_flag)
 
     return obs_data
 
 
-def cowvr_gross_quality_control(obs_data, qc_flag, solar_array_flag, support_arm_flag, rain_flag, rfi_flag):
+def cowvr_gross_quality_control(obs_data, solar_array_flag, support_arm_flag, rain_flag, rfi_flag, ufo_flag):
 
     tb_key = 'brightnessTemperature'
     good = \
@@ -297,7 +299,10 @@ def cowvr_gross_quality_control(obs_data, qc_flag, solar_array_flag, support_arm
         (obs_data[(tb_key, obsValName)][:, 8] > 10) & (obs_data[(tb_key, obsValName)][:, 8] < 400) & \
         (obs_data[('latitude', metaDataName)] >= -90) & (obs_data[('latitude', metaDataName)] <= 90) & \
         (obs_data[('sensorZenithAngle', metaDataName)] <= 56) & \
-        (qc_flag[:] == 0) & (solar_array_flag[:] == 0) & (support_arm_flag[:] == 0)
+        (solar_array_flag[:] == 0) & (support_arm_flag[:] == 0)
+
+    if rfi_flag:
+        good = good & (rain_flag[:] == 0) & (rfi_flag[:] == 0) & (ufo_flag[:] == 0)
 
     for k in obs_data:
         if metaDataName in k[1] and 'sensorChannelNumber' not in k[0]:
