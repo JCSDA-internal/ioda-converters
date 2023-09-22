@@ -704,7 +704,7 @@ contains
 
             jstart = 1
             chan_loop: do i = 1, nchan
-               if (data1b8(1, i) > r8bfms .or. data1b8(2, i) > r8bfms) cycle chan_loop
+               if (data1b8(1, i) == r8bfms .or. data1b8(2, i) == r8bfms) cycle chan_loop
                ichan = nint(data1b8(1, i))
                radiance = data1b8(2, i)
                ! scale factors are stored in 10 channel groups
@@ -804,6 +804,9 @@ contains
       integer(i_kind) :: iyear, imonth, iday, ihour, imin, isec
       real(r_double)  :: ref_time, obs_time
 
+      integer(i_kind) :: sat_last
+      logical :: sat_found
+
       character(len=3) :: cmtyp
       real(r_double) :: r8mtyp(1)
       equivalence(r8mtyp, cmtyp)
@@ -815,6 +818,8 @@ contains
       lalostr = 'CLATH CLONH'
 
       num_report_infile = 0
+      sat_last = 0
+      sat_found = .false.
 
       iunit = 96
 
@@ -930,6 +935,10 @@ contains
 
             rlink%satid = nint(infodat(1))  ! SAID satellite identifier
             rlink%instid = nint(infodat(2))  ! SIID instrument identifier
+            if ( nint(infodat(1)) /= sat_last ) then
+               sat_last = nint(infodat(1))
+               write(*, '(a,i8)') '  ... found sat: ', sat_last
+            end if
 
             if (infodat(3) < r8bfms) rlink%satzen = infodat(3)        ! SAZA satellite zenith angle (degree)
             if (infodat(4) < r8bfms) rlink%satazi = infodat(4)        ! BEARAZ satellite azimuth (degree true)
@@ -940,11 +949,12 @@ contains
             !if ( infodat(9)  < r8bfms ) rlink % scanpos = nint(infodat(9))  ! FOVN field of view number 1-9
             if (infodat(10) < r8bfms) rlink%elv = infodat(10)           ! HMSL height or altitude (eg. 836410.0 m)
 
-            chan_loop: do i = 1, nchan
-               if (data1b8(1, i) > r8bfms .or. data1b8(2, i) > r8bfms) cycle chan_loop
-               rlink%ch(i) = nint(data1b8(1, i))
-               rlink%tb(i) = data1b8(2, i)*1000.0  ! radiance for now
-            end do chan_loop
+            if ( nchan > 0 ) then
+               chan_loop: do i = 1, nchan
+                  if ( data1b8(1,i) < r8bfms ) rlink % ch(i) = nint(data1b8(1,i))
+                  if ( data1b8(2,i) < r8bfms ) rlink % tb(i) = data1b8(2,i) * 1000.0  ! radiance for now
+               end do chan_loop
+            end if
 
             allocate (rlink%next)
             rlink => rlink%next
@@ -1272,6 +1282,7 @@ contains
 
             if (trim(inst_list(i)) /= 'cris_npp' .and. &
                 trim(inst_list(i)) /= 'cris_n20' .and. &
+                trim(inst_list(i)) /= 'cris_n21' .and. &
                 trim(inst_list(i)) /= 'iasi_metop-a' .and. &
                 trim(inst_list(i)) /= 'iasi_metop-b' .and. &
                 trim(inst_list(i)) /= 'iasi_metop-c') then
