@@ -21,13 +21,14 @@
 #include "ioda/Engines/HH.h"
 
 #include "oops/util/missingValues.h"
+#include "oops/util/DateTime.h"
 
 #include "GsiAircraftBiasReader.h"
 
 ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
                                  const std::string & coeffile,
                                  const std::vector<std::string> & tailIds,
-                                 const std::vector<int> & lastCycleUpdated,
+                                 const std::vector<int> & lastCycleUpdatedYYYYMM,
                                  const std::vector<std::string> & predictors) {
   /// Predictors
   int numPreds = predictors.size();
@@ -54,8 +55,19 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
                                      {ogrp.vars["nvars"]});
   variableVar.write(varlist);
 
-  ioda::Variable lastCycleUpdatedVar = ogrp.vars.createWithScales<int>("lastUpdateTime",
+  // need to convert the time YYYYMM to seconds sinc 1970
+  std::vector<int64_t> lastCycleUpdated;
+  util::DateTime refTime(1970, 1, 1, 0, 0, 0);
+  for (size_t itime = 0; itime < numIds; ++itime) {
+    int year = lastCycleUpdatedYYYYMM[itime] / 100;
+    int month = lastCycleUpdatedYYYYMM[itime] % 100;
+    util::DateTime lastTime(year, month, 1, 0, 0, 0);
+    lastCycleUpdated.push_back((lastTime - refTime).toSeconds());
+  }
+  ioda::Variable lastCycleUpdatedVar = ogrp.vars.createWithScales<int64_t>("lastUpdateTime",
                                             {ogrp.vars["nrecs"]});
+  lastCycleUpdatedVar.atts.add<std::string>("units",
+                                            std::string("seconds since 1970-01-01T00:00:00Z"));
   lastCycleUpdatedVar.write(lastCycleUpdated);
 
   /// Create 2D bias coefficient variable
@@ -112,7 +124,7 @@ int main(int argc, char** argv) {
   const std::vector<std::string> tailIds = findTailIds(coeffile);
 
   /// Use function to grab datetimes
-  const std::vector<int> lastCycleUpdated = findDatetimes(coeffile);
+  const std::vector<int> lastCycleUpdatedYYYYMM = findDatetimes(coeffile);
 
   /// Read from config file "output"
   std::vector<eckit::LocalConfiguration> configs = config.getSubConfigurations("output");
@@ -131,5 +143,5 @@ int main(int argc, char** argv) {
   /// Create ncfile
   ioda::Group group = ioda::Engines::HH::createFile(output_filename,
                       ioda::Engines::BackendCreateModes::Truncate_If_Exists);
-  makeObsBiasObject(group, coeffile, tailIds, lastCycleUpdated, predictors);
+  makeObsBiasObject(group, coeffile, tailIds, lastCycleUpdatedYYYYMM, predictors);
 }
