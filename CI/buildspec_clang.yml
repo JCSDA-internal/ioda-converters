@@ -88,7 +88,7 @@ phases:
       - echo $CODEBUILD_BUILD_SUCCEEDING
 
       - cd /build_container
-      - source /etc/profile.d/z10_spack_environment.sh
+      - source /opt/spack-environment/activate.sh
       # Set PYTHONPATH for pyioda before calling cmake
       - export PYTHONPATH="/jcsda/ioda-bundle/ioda/src/engines/ioda/python/pyioda:$PYTHONPATH"
       - export PYTHONPATH="/build_container/lib/python3.10/pyioda:$PYTHONPATH"

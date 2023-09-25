@@ -22,9 +22,9 @@ import numpy as np
 
 import pyiodaconv.ioda_conv_engines as iconv
 from pyiodaconv.orddicts import DefaultOrderedDict
-from hdf5.atms_netcdf_hdf5_2ioda import set_metadata_attributes, set_obspace_attributes
-from hdf5.cowvr_hdf5_2ioda import compute_scan_angle
-from gnssro.gnssro_bufr2ioda import ioda_int_type, ioda_float_type
+from pyiodaconv.def_jedi_utils import set_metadata_attributes, set_obspace_attributes
+from pyiodaconv.def_jedi_utils import compute_scan_angle
+from pyiodaconv.def_jedi_utils import ioda_int_type, ioda_float_type, epoch
 from pyiodaconv.def_jedi_utils import concat_obs_dict
 
 float_missing_value = iconv.get_default_fill_val(np.float32)
@@ -35,11 +35,16 @@ metaDataName = iconv.MetaDataName()
 obsValName = iconv.OvalName()
 
 # globals
-TROPICS01_WMO_sat_ID = 691
+TROPICS01_WMO_sat_ID = 933  # 691  did this ID get updated by WMO
 TROPICS02_WMO_sat_ID = 895
 TROPICS03_WMO_sat_ID = 896
-TROPICS04_WMO_sat_ID = 897
-TROPICS05_WMO_sat_ID = 898
+TROPICS04_WMO_sat_ID = 966
+TROPICS05_WMO_sat_ID = 967
+TROPICS06_WMO_sat_ID = 968
+TROPICS07_WMO_sat_ID = 969
+
+# TROPICS Epoch Time (TET) offset
+tet_offset = 946684721.0
 
 GlobalAttrs = {
     "platformCommonName": "TROPICS",
@@ -52,9 +57,6 @@ locationKeyList = [
     ("longitude", "float"),
     ("dateTime", "long"),
 ]
-
-iso8601_string = "seconds since 1970-01-01T00:00:00Z"
-epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 
 def main(args):
@@ -114,12 +116,12 @@ def main(args):
     set_obspace_attributes(VarAttrs)
     set_metadata_attributes(VarAttrs)
 
-    # k = 'brightnessTemperature'
-    # VarAttrs[(k, 'ObsValue')]['_FillValue'] = float_missing_value
-    # VarAttrs[(k, 'ObsError')]['_FillValue'] = float_missing_value
-    # VarAttrs[(k, 'PreQC')]['_FillValue'] = int_missing_value
-    # VarAttrs[(k, 'ObsValue')]['units'] = 'K'
-    # VarAttrs[(k, 'ObsError')]['units'] = 'K'
+    k = 'brightnessTemperature'
+    VarAttrs[(k, 'ObsValue')]['_FillValue'] = float_missing_value
+    VarAttrs[(k, 'ObsError')]['_FillValue'] = float_missing_value
+    VarAttrs[(k, 'PreQC')]['_FillValue'] = int_missing_value
+    VarAttrs[(k, 'ObsValue')]['units'] = 'K'
+    VarAttrs[(k, 'ObsError')]['units'] = 'K'
     # VarAttrs[(k, 'PreQC')]['units'] = 'unitless'
 
     # final write to IODA file
@@ -132,13 +134,80 @@ def get_data_from_files(afile):
     obs_data = init_obs_loc()
 
     f = h5py.File(afile, 'r')
-    obs_data = get_data(f, obs_data)
+    software_version = f.attrs['L1b_SW_Ver'].decode("utf-8").split('.')
+    if int(software_version[0]) >= 3:
+        obs_data = get_data(f, obs_data)
+    elif int(software_version[0]) == 2:
+        obs_data = get_data_deprecated(f, obs_data)
+    else:
+        print(f'unknown software version: {software_version}')
+        obs_data = None
     f.close()
 
     return obs_data
 
 
 def get_data(f, obs_data):
+
+    WMO_sat_ID = get_WMO_satellite_ID(f.attrs['ShortName'].decode("utf-8"))
+
+    nscans = len(f['scans'])
+    nbeam_pos = len(f['spots'])
+    nchans = len(f['channels'])
+    nbands = len(f['bands'])
+    # Bands_to_Channel = "Band 1 = Ch 1; Band 2 = Ch 2-4; Band 3 = Ch 5-8; Band 4 = Ch 9-11; Band 5 = Ch 12"
+    iband = 0   # at this point arbitrarily select a band
+    obs_data[('latitude', metaDataName)] = np.array(f['latitude'][iband, :, :].flatten(), dtype='float32')
+    obs_data[('longitude', metaDataName)] = np.array(f['longitude'][iband, :, :].flatten(), dtype='float32')
+    obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(nchans)+1, dtype='int32')
+    obs_data[('sensorScanPosition', metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='int32')+1, (nscans, 1)).flatten()
+    obs_data[('solarZenithAngle', metaDataName)] = np.array(f['solar_zenith_angle'][iband, :, :].flatten(), dtype='float32')
+    obs_data[('solarAzimuthAngle', metaDataName)] = np.array(f['solar_azimuth_angle'][iband, :, :].flatten(), dtype='float32')
+    obs_data[('sensorZenithAngle', metaDataName)] = np.array(f['sensor_zenith_angle'][iband, :, :].flatten(), dtype='float32')
+    obs_data[('sensorAzimuthAngle', metaDataName)] = np.array(f['sensor_azimuth_angle'][iband, :, :].flatten(), dtype='float32')
+    obs_data[('sensorViewAngle', metaDataName)] = np.array(f['sensor_view_angle'][iband, :, :].flatten(), dtype='float32')
+
+    nlocs = len(obs_data[('latitude', metaDataName)])
+    obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
+    # obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f), dtype='int64')
+    obs_data[('dateTime', metaDataName)] = np.array(f['time'][:, :].flatten() + tet_offset, dtype='int64')
+
+    nlocs = len(obs_data[('latitude', metaDataName)])
+    k = 'brightnessTemperature'
+    # have to reorder the channel axis to be last then merge ( nscans x nspots = nlocs )
+    obs_data[(k, "ObsValue")] = np.array(np.vstack(np.stack(
+        np.where(f['brightness_temperature'] == f['brightness_temperature'].fillvalue,
+                 float_missing_value, f['brightness_temperature']), axis=2)), dtype='float32')
+    obs_data[(k, "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
+    obs_data[(k, "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
+
+    # Bit 1: Non-ocean
+    # Bit 2: Lunar/solar intrusion
+    # Bit 3: Spacecraft Maneuver
+    # Bit 4: Cold Cal. Inconsistency
+    # Bit 5: Hot Cal. Inconsistency
+    # Bit 6: Descending Orbit
+    # Bit 7: Night
+    # Bit 8: Payload rear orientation'
+    quality_word = np.vstack(np.stack(f['calQualityFlag'], axis=2))
+    obs_data[('satelliteAscendingFlag', metaDataName)] = np.array(get_normalized_bit(quality_word[:, 0], bit_index=6), dtype='int32')
+
+    # check some global satellite geometry will compress all data using this
+    chk_geolocation = (obs_data[('latitude', metaDataName)] > 90) | (obs_data[('latitude', metaDataName)] < -90) | \
+        (obs_data[('longitude', metaDataName)] > 180) | (obs_data[('longitude', metaDataName)] < -180) | \
+        (obs_data[('sensorZenithAngle', metaDataName)] > 80) | (obs_data[('sensorZenithAngle', metaDataName)] < 0)
+
+    obs_data[('latitude', metaDataName)][chk_geolocation] = float_missing_value
+    obs_data[('longitude', metaDataName)][chk_geolocation] = float_missing_value
+    obs_data[('sensorZenithAngle', metaDataName)][chk_geolocation] = float_missing_value
+
+    obs_key = (k, "ObsValue")
+    obs_data = set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data)
+
+    return obs_data
+
+
+def get_data_deprecated(f, obs_data):
 
     WMO_sat_ID = get_WMO_satellite_ID(f.attrs['ShortName'].decode("utf-8"))
 
@@ -262,6 +331,10 @@ def get_WMO_satellite_ID(attrs_shortname):
         WMO_sat_ID = TROPICS04_WMO_sat_ID
     elif 'TROPICS05' in attrs_shortname:
         WMO_sat_ID = TROPICS05_WMO_sat_ID
+    elif 'TROPICS06' in attrs_shortname:
+        WMO_sat_ID = TROPICS06_WMO_sat_ID
+    elif 'TROPICS07' in attrs_shortname:
+        WMO_sat_ID = TROPICS07_WMO_sat_ID
     else:
         WMO_sat_ID = -1
         print("could not determine satellite from filename: %s" % afile)

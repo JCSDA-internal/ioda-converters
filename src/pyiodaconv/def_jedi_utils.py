@@ -9,6 +9,8 @@
 
 import numpy as np
 import pyiodaconv.ioda_conv_engines as iconv
+import time
+from datetime import datetime
 
 metaDataName = iconv.MetaDataName()
 obsValName = iconv.OvalName()
@@ -16,6 +18,9 @@ obsErrName = iconv.OerrName()
 qcName = iconv.OqcName()
 
 iso8601_string = "seconds since 1970-01-01T00:00:00Z"
+epoch = datetime.fromisoformat(iso8601_string[14:-1])
+ioda_float_type = 'float32'
+ioda_int_type = 'int32'
 float_missing_value = iconv.get_default_fill_val(np.float32)
 int_missing_value = iconv.get_default_fill_val(np.int32)
 long_missing_value = iconv.get_default_fill_val(np.int64)
@@ -94,3 +99,17 @@ def compute_scan_angle(instr_scan_ang, sensor_altitude, sensor_zenith, qc_flag=[
     scanang = np.arcsin(ratio*np.sin(abs(sensor_zenith)*d2r))*r2d
 
     return scanang
+
+
+def record_time(tic=None, print_log=True):
+
+    if not tic:
+        tic = time.perf_counter()
+        if print_log:
+            print(f"  ... starting timer: {tic:0.3f}")
+        return tic
+    else:
+        toc = time.perf_counter()
+        if print_log:
+            print(f"  ... elapsed time (sec): {toc - tic:0.3f}")
+        return toc
