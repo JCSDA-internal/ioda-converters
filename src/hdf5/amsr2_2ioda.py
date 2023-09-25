@@ -147,18 +147,21 @@ def get_data(f, obs_data):
     # use latitude length to define total number of pixels
     nlocs = len(obs_data[('latitude', metaDataName)])
     # start at channel 5 as lowest frequencies are not included
-    obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(nchans), dtype='int32')
+    obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(nchans)+1, dtype='int32')
     k = 'sensorScanPosition'
-    obs_data[(k, metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='float32')+1, (nscans, 1)).flatten()
-    k = 'sensorZenithAngle'   # ~55.2 incidence angle
-    obs_data[(k, metaDataName)] = np.array(f['Earth Incidence'], dtype='float32').flatten()
+    obs_data[(k, metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='int32')+1, (nscans, 1)).flatten()
+    k = 'sensorZenithAngle'   # ~55 degrees
+    obs_data[(k, metaDataName)] = np.array(f['Earth Incidence']*f['Earth Incidence'].attrs['SCALE FACTOR'][0], dtype='float32').flatten()
     instr_scan_ang = obs_data[(k, metaDataName)]
     k = 'sensorAzimuthAngle'
-    obs_data[(k, metaDataName)] = np.array(f['Earth Azimuth'], dtype='float32').flatten()
-    # k = 'solarZenithAngle'  ??? compute
-    # obs_data[(k, metaDataName)] = np.array(f['Sun Elevation'], dtype='float32').flatten()
+    obs_data[(k, metaDataName)] = np.array(f['Earth Azimuth']*f['Earth Azimuth'].attrs['SCALE FACTOR'][0], dtype='float32').flatten()
+    # get sun zenith angle from weird  "Sun Elevation" which is defined as Solar Zenith Angle - Satellite Zenith Angle
+    # add back Satellite Zenith to give required Solar Zenith Angle!
+    k = 'solarZenithAngle'
+    obs_data[(k, metaDataName)] = np.array(f['Sun Elevation']*f['Sun Elevation'].attrs['SCALE FACTOR'][0], dtype='float32').flatten()
+    obs_data[(k, metaDataName)] += obs_data[('sensorZenithAngle', metaDataName)]
     k = 'solarAzimuthAngle'
-    obs_data[(k, metaDataName)] = np.array(f['Sun Azimuth'], dtype='float32').flatten()
+    obs_data[(k, metaDataName)] = np.array(f['Sun Azimuth']*f['Sun Azimuth'].attrs['SCALE FACTOR'][0], dtype='float32').flatten()
     orbit_direction = f.attrs['OrbitDirection'].item()
     iasc = get_asc_dsc(orbit_direction)
     obs_data[('satelliteAscendingFlag', metaDataName)] = np.full((nlocs), iasc, dtype='int32')
@@ -176,21 +179,35 @@ def get_data(f, obs_data):
     nlocs = len(obs_data[('latitude', metaDataName)])
     k = 'brightnessTemperature'
     # have to reorder the channel axis to be last then merge ( nscans x nspots = nlocs )
+    channel_name = ['Brightness Temperature (6.9GHz,V)',
+                    'Brightness Temperature (6.9GHz,H)',
+                    'Brightness Temperature (7.3GHz,V)',
+                    'Brightness Temperature (7.3GHz,H)',
+                    'Brightness Temperature (10.7GHz,V)',
+                    'Brightness Temperature (10.7GHz,H)',
+                    'Brightness Temperature (18.7GHz,V)',
+                    'Brightness Temperature (18.7GHz,H)',
+                    'Brightness Temperature (23.8GHz,V)',
+                    'Brightness Temperature (23.8GHz,H)',
+                    'Brightness Temperature (36.5GHz,V)',
+                    'Brightness Temperature (36.5GHz,H)',
+                    'Brightness Temperature (89.0GHz-A,V)',
+                    'Brightness Temperature (89.0GHz-A,H)']
     obs_data[(k, "ObsValue")] = np.transpose(
-        (np.array(f['Brightness Temperature (6.9GHz,H)'], dtype='float32').flatten(),
-         np.array(f['Brightness Temperature (6.9GHz,V)'], dtype='float32').flatten(),
-         np.array(f['Brightness Temperature (7.3GHz,H)'], dtype='float32').flatten(),
-         np.array(f['Brightness Temperature (7.3GHz,V)'], dtype='float32').flatten(),
-         np.array(f['Brightness Temperature (10.7GHz,H)'], dtype='float32').flatten(),
-         np.array(f['Brightness Temperature (10.7GHz,V)'], dtype='float32').flatten(),
-         np.array(f['Brightness Temperature (18.7GHz,H)'], dtype='float32').flatten(),
-         np.array(f['Brightness Temperature (18.7GHz,V)'], dtype='float32').flatten(),
-         np.array(f['Brightness Temperature (23.8GHz,H)'], dtype='float32').flatten(),
-         np.array(f['Brightness Temperature (23.8GHz,V)'], dtype='float32').flatten(),
-         np.array(f['Brightness Temperature (36.5GHz,H)'], dtype='float32').flatten(),
-         np.array(f['Brightness Temperature (36.5GHz,V)'], dtype='float32').flatten(),
-         np.array(f['Brightness Temperature (89.0GHz-A,H)'][:, ::2], dtype='float32').flatten(),
-         np.array(f['Brightness Temperature (89.0GHz-A,V)'][:, ::2], dtype='float32').flatten()))
+        (np.array(f[channel_name[0]]*f[channel_name[0]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[1]]*f[channel_name[1]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[2]]*f[channel_name[2]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[3]]*f[channel_name[3]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[4]]*f[channel_name[4]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[5]]*f[channel_name[5]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[6]]*f[channel_name[6]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[7]]*f[channel_name[7]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[8]]*f[channel_name[8]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[9]]*f[channel_name[9]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[10]]*f[channel_name[10]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[11]]*f[channel_name[11]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[12]][:, ::2]*f[channel_name[12]].attrs['SCALE FACTOR'][0], dtype='float32').flatten(),
+         np.array(f[channel_name[13]][:, ::2]*f[channel_name[13]].attrs['SCALE FACTOR'][0], dtype='float32').flatten()))
     obs_data[(k, "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
     obs_data[(k, "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
 

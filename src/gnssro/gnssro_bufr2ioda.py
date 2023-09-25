@@ -19,16 +19,15 @@ from itertools import repeat
 import netCDF4 as nc
 
 import pyiodaconv.ioda_conv_engines as iconv
+from pyiodaconv.def_jedi_utils import ioda_int_type, ioda_float_type
 from pyiodaconv.orddicts import DefaultOrderedDict
 
 from eccodes import *
 
 # globals
-ioda_float_type = 'float32'
-ioda_int_type = 'int32'
-float_missing_value = nc.default_fillvals['f4']
-int_missing_value = nc.default_fillvals['i4']
-long_missing_value = nc.default_fillvals['i8']
+float_missing_value = iconv.get_default_fill_val(np.float32)
+int_missing_value = iconv.get_default_fill_val(np.int32)
+long_missing_value = iconv.get_default_fill_val(np.int64)
 string_missing_value = '_'
 
 iso8601_string = 'seconds since 1970-01-01T00:00:00Z'
