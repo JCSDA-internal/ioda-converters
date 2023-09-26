@@ -8,7 +8,7 @@
 ################################################################################
 
 list( APPEND test_input
-  testinput/TROPICS01.L1B.V03-04.ST20220216-012443.ET20220216-025955.nc
+  testinput/tropics_2022021600.nc
   testinput/amsr2_gcom-w1_20220216.h5
   testinput/gmi_gpm_20220216.h5
   testinput/icethk_coperl4.nc
@@ -918,7 +918,7 @@ ecbuild_add_test( TARGET  test_iodaconv_tropics
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
                   "${CMAKE_BINARY_DIR}/bin/tropics_2ioda.py
-                  -i testinput/TROPICS01.L1B.V03-04.ST20220216-012443.ET20220216-025955.nc
+                  -i testinput/tropics_2022021600.nc
                   -o testrun/20220216T00Z_PT3H_tms_tropics-01.nc4
                   -d 2022021600"
                   20220216T00Z_PT3H_tms_tropics-01.nc4 ${IODA_CONV_COMP_TOL})
