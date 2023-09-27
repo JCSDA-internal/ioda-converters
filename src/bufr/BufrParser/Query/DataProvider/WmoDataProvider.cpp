@@ -90,6 +90,9 @@ namespace bufr {
             get_jmpb_f(&intPtr, &size);
             tableData->jmpb = std::vector<int>(intPtr, intPtr + size);
 
+            get_irf_f(&intPtr, &size);
+            tableData->irf = std::vector<int>(intPtr, intPtr + size);
+
             if (variantCount_.find(subset) == variantCount_.end())
             {
                 variantCount_.insert({subset, 0});
