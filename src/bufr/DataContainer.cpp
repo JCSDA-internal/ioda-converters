@@ -67,7 +67,7 @@ namespace Ingester
                                                               const py::array& pyData,
                                                               T dummy)
     {
-        if (pyData.dtype() != py::dtype::of<T>())
+        if (!pyData.dtype().is(py::dtype::of<T>()))
         {
             throw std::runtime_error("DataContainer::makeObject: Type mismatch");
         }
@@ -118,24 +118,26 @@ namespace Ingester
         std::shared_ptr<DataObjectBase> dataObj;
 
         py::dtype dt = pyData.dtype();
-        std::string dtype_str = py::cast<std::string>(dt);
+       // TODO: this line cause RuntimeError: Unable to cast Python instance to C++ type (compile in debug mode for details)
+       //  std::string dtype_str = py::cast<std::string>(dt);
+        std::string dtype_str =  "aa";
         if (dtype_str[0] == 'U' || dtype_str[0] == 'S')
         {
             dataObj = makeObject<std::string>(fieldName, pyData);
         }
-        else if (pyData.dtype() == py::dtype::of<float>())
+        else if (pyData.dtype().is(py::dtype::of<float>()))
         {
             dataObj = makeObject<float>(fieldName, pyData);
         }
-        else if (pyData.dtype() == py::dtype::of<double>())
+        else if (pyData.dtype().is(py::dtype::of<double>()))
         {
             dataObj = makeObject<double>(fieldName, pyData);
         }
-        else if (pyData.dtype() == py::dtype::of<int>())
+        else if (pyData.dtype().is(py::dtype::of<int>()))
         {
             dataObj = makeObject<int>(fieldName, pyData);
         }
-        else if (pyData.dtype() == py::dtype::of<int64_t>())
+        else if (pyData.dtype().is(py::dtype::of<int64_t>()))
         {
             dataObj = makeObject<int64_t>(fieldName, pyData);
         }

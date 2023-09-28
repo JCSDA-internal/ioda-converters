@@ -94,8 +94,8 @@ namespace Ingester
 
 #ifdef BUILD_PYTHON_BINDING
         void set(const std::string& fieldName,
-                         const py::array& pyData,
-                         const SubCategory& categoryId = {});
+                 const py::array& pyData,
+                 const SubCategory& categoryId = {});
 
         /// \brief Gets a numpy array for the resulting data for a specific field with a given
         /// name grouped by the optional groupByFieldName.
