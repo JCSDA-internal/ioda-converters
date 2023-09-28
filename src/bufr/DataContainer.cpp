@@ -80,6 +80,7 @@ namespace Ingester
         dataObj->setFieldName(fieldName);
         dataObj->setRawData(std::move(strData));
         dataObj->setDims(std::vector<int> (pyData.shape(), pyData.shape() + pyData.ndim()));
+        dataObj->setDimPaths(std::vector<std::string> (pyData.shape().size(), ""));
 
         return dataObj;
     }
@@ -90,7 +91,7 @@ namespace Ingester
         const py::array& pyData,
         std::string dummy)
     {
-        std::string dtype_str = py::cast<std::string>(pyData.dtype());
+        const auto dtype_str = py::cast<std::string>(py::str(pyData.dtype()));
         if (dtype_str[0] != 'U' && dtype_str[0] != 'S')
         {
             throw std::runtime_error("DataContainer::makeObject: Type mismatch");
