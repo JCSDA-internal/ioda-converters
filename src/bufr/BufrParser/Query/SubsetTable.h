@@ -32,7 +32,6 @@ namespace bufr {
         size_t copyIdx;
         bool hasDuplicates;
         TypeInfo typeInfo;
-        size_t fixedRepCount;
 
         /// \brief Do this nodes child sequences appear as parts of the query string?
         /// \return True if this node is a parent of a query path node.
@@ -272,37 +271,6 @@ namespace bufr {
 
             return nullptr;
         }
-
-        /// \brief Get the dimensioning parent of this node.
-        /// \return The dimensioning parent of this node.
-        std::shared_ptr<BufrNode> getParent()
-        {
-            if (!parent.expired())
-            {
-                return parent.lock();
-            }
-
-            return nullptr;
-        }
-
-        /// \brief Get the dimensioning parent of this node.
-        /// \return The dimensioning parent of this node.
-        std::shared_ptr<BufrNode> getDimensionParent()
-        {
-            if (!parent.expired())
-            {
-                if (parent.lock()->isDimensioningNode())
-                {
-                    return parent.lock();
-                }
-                else
-                {
-                    return parent.lock()->getDimensionParent();
-                }
-            }
-
-            return nullptr;
-        }
     };
 
     typedef std::vector<std::shared_ptr<Ingester::bufr::BufrNode>> BufrNodeVector;
@@ -332,7 +300,6 @@ namespace bufr {
         const DataProviderType dataProvider_;
         std::shared_ptr<BufrNode> root_;
         BufrNodeVector leaves_;
-        std::unordered_map<size_t, std::shared_ptr<BufrNode>> nodeIdxMap_;
 
         /// \brief Initializes the subset table.
         void initialize();

@@ -107,7 +107,6 @@ namespace bufr {
         std::vector<int> link;
         std::vector<int> itp;
         std::vector<int> jmpb;
-        std::vector<int> irf;
         std::vector<Typ> typ;
         std::vector<std::string> tag;
         int varientNumber;
@@ -190,10 +189,6 @@ namespace bufr {
         /// \param The index of the data object for which you want a value.
         inline double getVal(FortranIdx idx) const { return val_[idx - 1]; }
 
-        /// \brief Get the value of the data element at the given data index.
-        /// \param The index of the data object for which you want a value.
-        inline gsl::span<const double> getVals() const { return val_; }
-
         /// \brief Get the TypeInfo object for the table node at the given idx.
         /// \param idx BUFR table node index
         TypeInfo getTypeInfo(FortranIdx idx) const;
@@ -219,10 +214,6 @@ namespace bufr {
         ///        of any sequence. Valid while executing "run".
         /// \param idx BUFR table node index
         inline FortranIdx getJmpb(FortranIdx idx) const { return getTableData()->jmpb[idx - 1]; }
-
-        /// \brief Given a BUFR table node index, gives you a way to discover the number of repeats
-        ///        in a fixed replication sequence. Valid while executing "run".
-        inline FortranIdx getIrf(FortranIdx idx) const { return getTableData()->irf[idx - 1]; }
 
         /// \breif Given a BUFR table node index, returns the type (see the Typ enum and maps above)
         ///        Valid while executing "run".
