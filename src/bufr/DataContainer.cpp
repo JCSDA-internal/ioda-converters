@@ -13,6 +13,7 @@
 #include "eckit/exception/Exceptions.h"
 
 #include "DataContainer.h"
+#include "BufrParser/Query/QueryParser.h"
 
 
 namespace Ingester
