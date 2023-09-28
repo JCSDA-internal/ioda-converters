@@ -81,7 +81,7 @@ namespace Ingester
         dataObj->setRawData(std::move(strData));
         dataObj->setDims(std::vector<int> (pyData.shape(), pyData.shape() + pyData.ndim()));
 
-        auto dimPaths = std::vector<std::string> (pyData.ndim(), "");
+        auto dimPaths = std::vector<bufr::Query> (pyData.ndim());
         dimPaths[0] = "*";
         dataObj->setDimPaths(dimPaths);
 ush-am
