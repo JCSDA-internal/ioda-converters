@@ -7,6 +7,7 @@
 
 
 #include <string>
+#include <vector>
 #include <ostream>
 
 #include "eckit/exception/Exceptions.h"
@@ -58,6 +59,108 @@ namespace Ingester
 
         return dataSets_.at(categoryId).at(fieldName);
     }
+
+#ifdef BUILD_PYTHON_BINDING
+
+    template<typename T>
+    std::shared_ptr<DataObjectBase> DataContainer::makeObject(const std::string& fieldName,
+                                                              const py::array& pyData,
+                                                              T dummy)
+    {
+        if (pyData.dtype() != py::dtype::of<T>())
+        {
+            throw std::runtime_error("DataContainer::makeObject: Type mismatch");
+        }
+
+        auto dataObj = std::make_shared<DataObject<T>>();
+        auto strData = std::vector<T>
+            (static_cast<const T*>(pyData.data()),
+             static_cast<const T*>(pyData.data()) + pyData.size());
+
+        dataObj->setFieldName(fieldName);
+        dataObj->setRawData(std::move(strData));
+        dataObj->setDims(std::vector<int> (pyData.shape(), pyData.shape() + pyData.ndim()));
+
+        return dataObj;
+    }
+
+    template<>
+    std::shared_ptr<DataObjectBase> DataContainer::makeObject<std::string>(
+        const std::string& fieldName,
+        const py::array& pyData,
+        std::string dummy)
+    {
+        std::string dtype_str = py::cast<std::string>(pyData.dtype());
+        if (dtype_str[0] != 'U' && dtype_str[0] != 'S')
+        {
+            throw std::runtime_error("DataContainer::makeObject: Type mismatch");
+        }
+
+        auto dataObj = std::make_shared<DataObject<std::string>>();
+
+        std::vector<std::string> strVec(pyData.size());
+        for (size_t i = 0; i < static_cast<size_t>(pyData.size()); i++)
+        {
+            strVec[i] = py::cast<std::string>(pyData(i));
+        }
+
+        dataObj->setFieldName(fieldName);
+        dataObj->setRawData(std::move(strVec));
+        dataObj->setDims(std::vector<int> (pyData.shape(), pyData.shape() + pyData.ndim()));
+
+        return dataObj;
+    }
+
+    void DataContainer::set(const std::string& fieldName,
+                            const py::array& pyData,
+                            const SubCategory& categoryId)
+    {
+        std::shared_ptr<DataObjectBase> dataObj;
+
+        py::dtype dt = pyData.dtype();
+        std::string dtype_str = py::cast<std::string>(dt);
+        if (dtype_str[0] == 'U' || dtype_str[0] == 'S')
+        {
+            dataObj = makeObject<std::string>(fieldName, pyData);
+        }
+        else if (pyData.dtype() == py::dtype::of<float>())
+        {
+            dataObj = makeObject<float>(fieldName, pyData);
+        }
+        else if (pyData.dtype() == py::dtype::of<double>())
+        {
+            dataObj = makeObject<double>(fieldName, pyData);
+        }
+        else if (pyData.dtype() == py::dtype::of<int>())
+        {
+            dataObj = makeObject<int>(fieldName, pyData);
+        }
+        else if (pyData.dtype() == py::dtype::of<int64_t>())
+        {
+            dataObj = makeObject<int64_t>(fieldName, pyData);
+        }
+        else
+        {
+            throw eckit::BadParameter("ERROR: Unsupported data type.");
+        }
+
+        if (hasKey(fieldName, categoryId))
+        {
+            dataSets_.at(categoryId).at(fieldName) = dataObj;
+        }
+        else
+        {
+            dataSets_.at(categoryId).insert({fieldName, dataObj});
+        }
+    }
+
+    py::array DataContainer::getNumpyArray(const std::string& fieldName,
+                                           const SubCategory& categoryId) const
+    {
+        auto dataObj = get(fieldName, categoryId);
+        return dataObj->getNumpyArray();
+    }
+#endif
 
     std::shared_ptr<DataObjectBase> DataContainer::getGroupByObject(
         const std::string& fieldName,

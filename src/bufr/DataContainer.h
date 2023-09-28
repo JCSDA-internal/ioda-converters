@@ -12,6 +12,16 @@
 #include <vector>
 #include <memory>
 
+#ifdef BUILD_PYTHON_BINDING
+    #include <pybind11/pybind11.h>
+    #include <pybind11/numpy.h>
+    #include <pybind11/stl.h>
+    #include <pybind11/stl_bind.h>
+
+    namespace py = pybind11;
+#endif
+
+
 #include "DataObject.h"
 #include "IngesterTypes.h"
 
@@ -82,6 +92,21 @@ namespace Ingester
         /// \brief Get the map of categories
         inline CategoryMap getCategoryMap() const { return categoryMap_; }
 
+#ifdef BUILD_PYTHON_BINDING
+        void set(const std::string& fieldName,
+                         const py::array& pyData,
+                         const SubCategory& categoryId = {});
+
+        /// \brief Gets a numpy array for the resulting data for a specific field with a given
+        /// name grouped by the optional groupByFieldName.
+        /// \param fieldName The name of the field to get the data for.
+        /// \param groupByFieldName The name of the field to group the data by.
+        /// \param type The name of the type to convert the data to. Possible values are int, uint,
+        /// int32, uint32, int64, uint64, float, double
+        py::array getNumpyArray(const std::string& fieldName,
+                                const SubCategory& categoryId = {}) const;
+#endif
+
      private:
         /// Category map given (see constructor).
         const CategoryMap categoryMap_;
@@ -95,5 +120,12 @@ namespace Ingester
         /// \brief Convenience function used to make a string out of a subcategory listing.
         /// \param categoryId Subcategory (ie: vector<string>) listing.
         static std::string makeSubCategoryStr(const SubCategory& categoryId);
+
+#ifdef BUILD_PYTHON_BINDING
+        template<typename T>
+        std::shared_ptr<DataObjectBase> makeObject(const std::string& fieldName,
+                                                   const py::array& pyData,
+                                                   T dummy = 0);
+#endif
     };
 }  // namespace Ingester
