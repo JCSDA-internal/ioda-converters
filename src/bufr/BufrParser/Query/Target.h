@@ -30,10 +30,12 @@ namespace bufr {
             Unknown
         };
 
-        std::shared_ptr<QueryComponent> queryComponent;
-        size_t branch;
         Type type;
-
+        std::shared_ptr<QueryComponent> queryComponent;
+        size_t nodeId;
+        size_t parentNodeId;
+        size_t parentDimensionNodeId;
+        size_t fixedRepeatCount;
 
         /// \brief Check if this component adds a dimension to the data.
         bool addsDimension() const
@@ -42,8 +44,16 @@ namespace bufr {
                    (queryComponent->filter.empty() || queryComponent->filter.size() > 1);
         }
 
-        /// \brief Sets the TargetComponent type based on the type of the BUFR query node type.
-        /// \param bufrTyp The type of the BUFR query node.
+        /// \brief Is this node a contatiner (node that can have children)?
+        bool isContainer() const
+        {
+            return type == Type::Subset ||
+                   type == Type::Repeat ||
+                   type == Type::Binary;
+        }
+
+        /// \brief Sets the TargetComponent type based on the type of the BUFR query node TYP.
+        /// \param bufrTyp The TYP of the BUFR query node.
         void setType(const Typ& bufrTyp)
         {
             static std::unordered_map<Typ, Type> typMap = {
@@ -118,7 +128,7 @@ namespace bufr {
                 if (component.type == TargetComponent::Type::Repeat ||
                     component.type == TargetComponent::Type::Binary)
                 {
-                    seqPath.push_back(component.branch);
+                    seqPath.push_back(component.nodeId);
                 }
 
                 componentIdx++;

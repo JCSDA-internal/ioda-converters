@@ -94,8 +94,7 @@ phases:
       # These are not permitted
       #- ulimit -S -s unlimited
       #- ulimit -S -v unlimited
-      - source /etc/profile.d/z10_spack_environment.sh
-      - cat /etc/profile.d/z10_spack_environment.sh
+      - source /opt/spack-environment/activate.sh
       - source /opt/intel/oneapi/compiler/latest/env/vars.sh
       - source /opt/intel/oneapi/mpi/latest/env/vars.sh
 
