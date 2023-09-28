@@ -60,6 +60,15 @@ namespace bufr {
             newNode->type = dataProvider_->getTyp(nodeIdx);
             newNode->parent = parent;
 
+            if (newNode->type == Typ::FixedRep)
+            {
+                newNode->fixedRepCount = dataProvider_->getIrf(nodeIdx);
+            }
+            else
+            {
+                newNode->fixedRepCount = 1;
+            }
+
             // add to and increment duplicate mnemonic count, update duplicate status if there are
             // duplicates
             const auto& mnemonic = newNode->mnemonic;
