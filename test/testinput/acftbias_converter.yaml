@@ -2,7 +2,7 @@ input coeff file: testinput/gdas.t18z.abias_air
 default predictors: &default_preds
 - constant
 - aircraftVerticalVelocity
-- aircraftVerticalVelocity_order_2
+- aircraftVerticalVelocityOrder2
 output:
 - output file: testrun/varbc/acft_out.nc4
   predictors: *default_preds
