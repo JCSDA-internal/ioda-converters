@@ -80,8 +80,11 @@ namespace Ingester
         dataObj->setFieldName(fieldName);
         dataObj->setRawData(std::move(strData));
         dataObj->setDims(std::vector<int> (pyData.shape(), pyData.shape() + pyData.ndim()));
-        dataObj->setDimPaths(std::vector<std::string> (pyData.shape().size(), ""));
 
+        auto dimPaths = std::vector<std::string> (pyData.ndim(), "");
+        dimPaths[0] = "*";
+        dataObj->setDimPaths(dimPaths);
+ush-am
         return dataObj;
     }
 
