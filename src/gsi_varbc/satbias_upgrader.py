@@ -41,7 +41,7 @@ def satbias_upgrader(infile, outfile):
         vars_out[:] = vars_in
         dimname = 'Variable'
     nrecs_out = newnc.createVariable("Record", str, ("Record"))
-    nrecs_out[:] = ''
+    nrecs_out[0] = ' '
     if 'number_obs_assimilated' in oldnc.variables.keys():
         nobs_assim_in = oldnc.variables['number_obs_assimilated'][:]
         nobs_assim_out = newnc.createVariable("numberObservationsUsed", "i4", ("Record", dimname))
@@ -51,6 +51,10 @@ def satbias_upgrader(infile, outfile):
     if 'bias_coefficients' in oldnc.variables.keys():
         bias_coeff = oldnc.variables['bias_coefficients'][:]
         for i, pred in enumerate(predictors):
+            temp = pred.split('_')
+            predOut = temp[0] + ''.join(ele.title() for ele in temp[1:])
+            if predOut == 'emissivity':
+                predOut = 'emissivityK'
             var1_out = newnc.createVariable(f"BiasCoefficients/{predOut}", "f4", ("Record", dimname),
                                             fill_value=-3.36879526e+38)
             var1_out[0, :] = bias_coeff[i, :]
@@ -59,6 +63,8 @@ def satbias_upgrader(infile, outfile):
         for i, pred in enumerate(predictors):
             temp = pred.split('_')
             predOut = temp[0] + ''.join(ele.title() for ele in temp[1:])
+            if predOut == 'emissivity':
+                predOut = 'emissivityK'
             var2_out = newnc.createVariable(f"BiasCoefficientErrors/{predOut}", "f4", ("Record", dimname),
                                             fill_value=-3.36879526e+38)
             var2_out[0, :] = bias_coeff_err[i, :]
