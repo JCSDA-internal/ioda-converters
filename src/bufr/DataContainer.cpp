@@ -64,9 +64,9 @@ namespace Ingester
 #ifdef BUILD_PYTHON_BINDING
 
     template<typename T>
-    std::shared_ptr<DataObjectBase> DataContainer::makeObject(const std::string& fieldName,
-                                                              const py::array& pyData,
-                                                              T dummy)
+    std::shared_ptr<DataObjectBase> DataContainer::_makeObject(const std::string& fieldName,
+                                                               const py::array& pyData,
+                                                               T dummy)
     {
         if (!pyData.dtype().is(py::dtype::of<T>()))
         {
@@ -87,10 +87,10 @@ namespace Ingester
     }
 
     template<>
-    std::shared_ptr<DataObjectBase> DataContainer::makeObject<std::string>(
-        const std::string& fieldName,
-        const py::array& pyData,
-        std::string dummy)
+    std::shared_ptr<DataObjectBase> DataContainer::_makeObject<std::string>(
+                                                                const std::string& fieldName,
+                                                                const py::array& pyData,
+                                                                std::string dummy)
     {
         const auto dtype_str = py::cast<std::string>(py::str(pyData.dtype()));
         if (dtype_str[0] != 'U' && dtype_str[0] != 'S')
@@ -113,48 +113,85 @@ namespace Ingester
         return dataObj;
     }
 
-    void DataContainer::set(const std::string& fieldName,
-                            const py::array& pyData,
-                            const SubCategory& categoryId)
+    std::shared_ptr<DataObjectBase> DataContainer::makeObject(const std::string& fieldName,
+                                                               const py::array& pyData)
     {
         std::shared_ptr<DataObjectBase> dataObj;
 
         py::dtype dt = pyData.dtype();
-       // TODO: this line cause RuntimeError: Unable to cast Python instance to C++ type (compile in debug mode for details)
-       //  std::string dtype_str = py::cast<std::string>(dt);
-        std::string dtype_str =  "aa";
+        std::string dtype_str = py::cast<std::string>(py::str(dt));
         if (dtype_str[0] == 'U' || dtype_str[0] == 'S')
         {
-            dataObj = makeObject<std::string>(fieldName, pyData);
+            dataObj = _makeObject<std::string>(fieldName, pyData);
         }
         else if (pyData.dtype().is(py::dtype::of<float>()))
         {
-            dataObj = makeObject<float>(fieldName, pyData);
+            dataObj = _makeObject<float>(fieldName, pyData);
         }
         else if (pyData.dtype().is(py::dtype::of<double>()))
         {
-            dataObj = makeObject<double>(fieldName, pyData);
+            dataObj = _makeObject<double>(fieldName, pyData);
         }
         else if (pyData.dtype().is(py::dtype::of<int>()))
         {
-            dataObj = makeObject<int>(fieldName, pyData);
+            dataObj = _makeObject<int>(fieldName, pyData);
         }
         else if (pyData.dtype().is(py::dtype::of<int64_t>()))
         {
-            dataObj = makeObject<int64_t>(fieldName, pyData);
+            dataObj = _makeObject<int64_t>(fieldName, pyData);
         }
         else
         {
             throw eckit::BadParameter("ERROR: Unsupported data type.");
         }
 
-        if (hasKey(fieldName, categoryId))
+        return dataObj;
+    }
+
+    void DataContainer::addNumpyArray(const std::string& fieldName,
+                             const py::array& pyData,
+                             const std::vector<std::string>& dimPaths,
+                             const SubCategory& categoryId)
+     {
+        if (!hasKey(fieldName, categoryId))
         {
-            dataSets_.at(categoryId).at(fieldName) = dataObj;
+            auto paths = std::vector<bufr::Query>(dimPaths.size());
+            for (size_t i = 0; i < dimPaths.size(); i++)
+            {
+                auto queries = bufr::QueryParser::parse(dimPaths[i]);
+
+                if (queries.size() > 1)
+                {
+                    throw eckit::BadParameter("ERROR: Dimensioning path " + \
+                                              dimPaths[i] + " can't be multi-query");
+                }
+
+                paths[i] = queries[0];
+            }
+
+            auto dataObj = makeObject(fieldName, pyData);
+            dataObj->setDimPaths(paths);
+            dataSets_.at(categoryId).at(fieldName) = makeObject(fieldName, pyData);
         }
         else
         {
-            dataSets_.at(categoryId).insert({fieldName, dataObj});
+            throw eckit::BadParameter("ERROR: Field does not exist.");
+        }
+     }
+
+    void DataContainer::set(const std::string& fieldName,
+                            const py::array& pyData,
+                            const SubCategory& categoryId)
+    {
+        if (hasKey(fieldName, categoryId))
+        {
+            auto dataObj = makeObject(fieldName, pyData);
+            dataObj->setDimPaths(dataSets_.at(categoryId).at(fieldName)->getDimPaths());
+            dataSets_.at(categoryId).at(fieldName) = makeObject(fieldName, pyData);
+        }
+        else
+        {
+            throw eckit::BadParameter("ERROR: Field does not exist.");
         }
     }
 

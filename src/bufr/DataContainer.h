@@ -93,9 +93,17 @@ namespace Ingester
         inline CategoryMap getCategoryMap() const { return categoryMap_; }
 
 #ifdef BUILD_PYTHON_BINDING
+        void addNumpyArray(const std::string& fieldName,
+                 const py::array& pyData,
+                 const std::vector<std::string>& dimPaths,
+                 const SubCategory& categoryId = {});
+
         void set(const std::string& fieldName,
                  const py::array& pyData,
                  const SubCategory& categoryId = {});
+
+        std::vector<std::string> getPaths(const std::string& fieldName,
+                                          const SubCategory& categoryId = {}) const;
 
         /// \brief Gets a numpy array for the resulting data for a specific field with a given
         /// name grouped by the optional groupByFieldName.
@@ -123,9 +131,13 @@ namespace Ingester
 
 #ifdef BUILD_PYTHON_BINDING
         template<typename T>
+        std::shared_ptr<DataObjectBase> _makeObject(const std::string& fieldName,
+                                                                   const py::array& pyData,
+                                                                   T dummy = T());
+
         std::shared_ptr<DataObjectBase> makeObject(const std::string& fieldName,
-                                                   const py::array& pyData,
-                                                   T dummy = 0);
+                                                   const py::array& pyData);
+
 #endif
     };
 }  // namespace Ingester
