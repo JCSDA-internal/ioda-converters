@@ -38,7 +38,7 @@ set( IODACONV_PYLINT_CFG_DIR ${CMAKE_CURRENT_SOURCE_DIR} )
 # Python-finding settings
 set(Python3_FIND_REGISTRY "LAST")
 set(Python3_FIND_FRAMEWORK "LAST")
-find_package( Python3 COMPONENTS Interpreter Development)
+find_package( Python3 REQUIRED COMPONENTS Interpreter Development)
 
 set(pyver python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR})
 set(PYDIR ${pyver}/pyiodaconv)
