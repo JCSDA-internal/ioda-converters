@@ -35,7 +35,10 @@ set(CMAKE_FORTRAN_EXTENSIONS OFF)
 # Location of .pycodestyle for norm checking within IODA-converters
 set( IODACONV_PYLINT_CFG_DIR ${CMAKE_CURRENT_SOURCE_DIR} )
 
-find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+# Python-finding settings
+set(Python3_FIND_REGISTRY "LAST")
+set(Python3_FIND_FRAMEWORK "LAST")
+find_package( Python3 COMPONENTS Interpreter Development)
 
 set(pyver python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR})
 set(PYDIR ${pyver}/pyiodaconv)
