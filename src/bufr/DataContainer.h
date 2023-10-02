@@ -92,6 +92,13 @@ namespace Ingester
         /// \brief Get the map of categories
         inline CategoryMap getCategoryMap() const { return categoryMap_; }
 
+        /// \brief Get dim paths for a given field name
+        /// \param fieldName The name of the field to get the dim paths for
+        /// \param categoryId The vector<string> for the subcategory
+        std::vector<std::string> getPaths(const std::string& fieldName,
+                                          const SubCategory& categoryId = {}) const;
+
+
 #ifdef BUILD_PYTHON_BINDING
         void addNumpyArray(const std::string& fieldName,
                  const py::array& pyData,
@@ -101,9 +108,6 @@ namespace Ingester
         void set(const std::string& fieldName,
                  const py::array& pyData,
                  const SubCategory& categoryId = {});
-
-        std::vector<std::string> getPaths(const std::string& fieldName,
-                                          const SubCategory& categoryId = {}) const;
 
         /// \brief Gets a numpy array for the resulting data for a specific field with a given
         /// name grouped by the optional groupByFieldName.

@@ -65,6 +65,7 @@ using Ingester::encode_save;
                         py::arg("category_id") = std::vector<std::string>(),
                         "Get the number of queries in the query set.")
             .def("get", &DataContainer::getNumpyArray, "Add a query to the query set.")
+            .def("getPaths", &DataContainer::getPaths, "Get path names for a field.")
             .def("set", &DataContainer::set, "Add a query to the query set.")
             .def("getCategoryMap", &DataContainer::getCategoryMap, "Add a query to the query set.")
             .def("allSubCategories", &DataContainer::allSubCategories, "Add a query to the query set.");

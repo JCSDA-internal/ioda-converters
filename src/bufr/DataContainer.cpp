@@ -61,6 +61,19 @@ namespace Ingester
         return dataSets_.at(categoryId).at(fieldName);
     }
 
+    std::vector<std::string> DataContainer::getPaths(const std::string& fieldName,
+                                                     const SubCategory& categoryId) const
+    {
+        auto dimPaths = get(fieldName, categoryId)->getDimPaths();
+        std::vector<std::string> paths(dimPaths.size());
+        for (const auto& path : dimPaths)
+        {
+            paths.push_back(path.str());
+        }
+
+        return paths;
+    }
+
 #ifdef BUILD_PYTHON_BINDING
 
     template<typename T>
@@ -153,46 +166,59 @@ namespace Ingester
                              const std::vector<std::string>& dimPaths,
                              const SubCategory& categoryId)
      {
-        if (!hasKey(fieldName, categoryId))
+
+         // Guard statements
+         if (hasKey(fieldName, categoryId))
+         {
+             throw eckit::BadParameter("ERROR: Field does not exist.");
+         }
+
+        auto paths = std::vector<bufr::Query>(dimPaths.size());
+        for (size_t i = 0; i < dimPaths.size(); i++)
         {
-            auto paths = std::vector<bufr::Query>(dimPaths.size());
-            for (size_t i = 0; i < dimPaths.size(); i++)
+            auto queries = bufr::QueryParser::parse(dimPaths[i]);
+
+            if (queries.size() > 1)
             {
-                auto queries = bufr::QueryParser::parse(dimPaths[i]);
-
-                if (queries.size() > 1)
-                {
-                    throw eckit::BadParameter("ERROR: Dimensioning path " + \
-                                              dimPaths[i] + " can't be multi-query");
-                }
-
-                paths[i] = queries[0];
+                throw eckit::BadParameter("ERROR: Dimensioning path " + \
+                                          dimPaths[i] + " can't be multi-query");
             }
 
-            auto dataObj = makeObject(fieldName, pyData);
-            dataObj->setDimPaths(paths);
-            dataSets_.at(categoryId).at(fieldName) = makeObject(fieldName, pyData);
+            paths[i] = queries[0];
         }
-        else
-        {
-            throw eckit::BadParameter("ERROR: Field does not exist.");
-        }
+
+        auto dataObj = makeObject(fieldName, pyData);
+        dataObj->setDimPaths(paths);
+        dataSets_.at(categoryId).at(fieldName) = makeObject(fieldName, pyData);
      }
 
     void DataContainer::set(const std::string& fieldName,
                             const py::array& pyData,
                             const SubCategory& categoryId)
     {
-        if (hasKey(fieldName, categoryId))
-        {
-            auto dataObj = makeObject(fieldName, pyData);
-            dataObj->setDimPaths(dataSets_.at(categoryId).at(fieldName)->getDimPaths());
-            dataSets_.at(categoryId).at(fieldName) = makeObject(fieldName, pyData);
-        }
-        else
+
+        // Guard statements
+        if (!hasKey(fieldName, categoryId))
         {
             throw eckit::BadParameter("ERROR: Field does not exist.");
         }
+
+        if (pyData.ndim() != dataSets_.at(categoryId).at(fieldName)->getDims().size())
+        {
+            throw eckit::BadParameter("ERROR: Dimension mismatch.");
+        }
+
+        for (size_t idx = 0; idx < pyData.ndim(); idx++)
+        {
+            if (pyData.shape(idx) != dataSets_.at(categoryId).at(fieldName)->getDims()[idx])
+            {
+                throw eckit::BadParameter("ERROR: Dimension mismatch.");
+            }
+        }
+
+        auto dataObj = makeObject(fieldName, pyData);
+        dataObj->setDimPaths(dataSets_.at(categoryId).at(fieldName)->getDimPaths());
+        dataSets_.at(categoryId).at(fieldName) = makeObject(fieldName, pyData);
     }
 
     py::array DataContainer::getNumpyArray(const std::string& fieldName,
