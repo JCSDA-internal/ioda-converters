@@ -1901,6 +1901,8 @@ if( iodaconv_eccodes_ENABLED )
                            --date 2021-02-01T12:00:00Z"
                            wmo_raob_double.nc4 ${IODA_CONV_COMP_TOL_ZERO})
 
+endif()
+
 if( iodaconv_bufr_ENABLED )
 #===============================================================================
 # Conventional data, aircraft Obs - AMDAR BUFR (WMO) converter
@@ -1953,8 +1955,6 @@ if( iodaconv_bufr_ENABLED )
                             -i testinput/synop_wmo_multi.bufr
                             -o testrun/synop_wmo_multi2.nc"
                             synop_wmo_multi2.nc ${IODA_CONV_COMP_TOL_ZERO})
-
-endif()
 
 endif()
 
