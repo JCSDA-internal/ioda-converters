@@ -19,6 +19,15 @@ package Query <<Folder>>
     -collectData(targets, masks, resultSet)
   }
 
+  class NodeLookupTable
+  {
+    +NodeLookupTable(dataProvider, targets)
+    +operator[](nodeId : size_t) : NodeData&
+    -makeLookupTable(targets)
+    -addCounts(targets, lookup : LookupTable&)
+    -addData(targets, lookup : LookupTable&)
+  }
+
 class TargetComponent {
   - Type
   - queryComponent: shared_ptr<QueryComponent>
@@ -95,6 +104,7 @@ class Target {
     + getLink(idx : FortranIdx) : FortranIdx
     + getItp(idx : FortranIdx) : FortranIdx
     + getJmpb(idx : FortranIdx) : FortranIdx
+    + getIrf(idx : FortranIdx) : FortranIdx
     + getTyp(idx : FortranIdx) : Typ
     + getTag(idx : FortranIdx) :  string
     + variantId() : virtual size_t
@@ -118,6 +128,7 @@ class Target {
   QuerySet <-o File
   File *--> QueryRunner
   QueryRunner --> Target
+  QueryRunner -> NodeLookupTable
   TargetComponent -right-* Target
   ResultSet *-> DataFrame
   DataFrame *-> DataField
