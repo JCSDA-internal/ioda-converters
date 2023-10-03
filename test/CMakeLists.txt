@@ -194,7 +194,7 @@ if( iodaconv_gnssro_ENABLED )
   )
 endif()
 
-if( iodaconv_bufr_ENABLED )
+if( iodaconv_bufr_query_ENABLED )
   list( APPEND test_input
     testinput/bufr_tables
     testinput/gdas.t12z.1bamua.tm00.bufr_d
@@ -1330,7 +1330,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_omps_o3_nm
 # Bufr Ingester tests
 #==============================================================================
 
-if(iodaconv_bufr_ENABLED)
+if(iodaconv_bufr_query_ENABLED)
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_bufrdescription
                     SOURCES bufr/TestBufrDescription.cpp
@@ -1903,7 +1903,7 @@ if( iodaconv_eccodes_ENABLED )
 
 endif()
 
-if( iodaconv_bufr_ENABLED )
+if( iodaconv_bufr_query_ENABLED )
 #===============================================================================
 # Conventional data, aircraft Obs - AMDAR BUFR (WMO) converter
 #===============================================================================
