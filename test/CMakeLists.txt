@@ -9,7 +9,7 @@
 
 list( APPEND test_input
   testinput/tropics_2022021600.nc
-  testinput/sample.amsr2_gcom-w1_20220216.h5
+  testinput/sample.amsr2.gcom-w1.20220216.h5
   testinput/gmi_gpm_20220216.h5
   testinput/icethk_coperl4.nc
   testinput/nsidc_l4_icec.nc
