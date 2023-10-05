@@ -98,8 +98,8 @@ list( APPEND test_input
 )
 
 list( APPEND test_output
-  testoutput/20220216T00Z_PT6H_atms.nc4
-  testoutput/20220216T00Z_PT3H_tms_tropics-01.nc4
+  testoutput/gdas.t00z.atms_n20_ta_remap.tm00.nc
+  eestoutput/20220216T00Z_PT3H_tms_tropics-01.nc4
   testoutput/amsr2_gcom-w1_20220216.nc4
   testoutput/gmi_gpm_20220216.nc4
   testoutput/icethk_coperl4.nc
@@ -912,18 +912,6 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_sondetac
 # MISC converters
 #===============================================================================
 
-ecbuild_add_test( TARGET  test_iodaconv_atms
-                  TYPE    SCRIPT
-                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
-                  COMMAND bash
-                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                          netcdf
-                  "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
-                  -i testinput/
-                  -o testrun/
-                  gdas.t00z.atms.tm00.bufr_d"
-                  20220216T00Z_PT6H_atms.nc4 ${IODA_CONV_COMP_TOL})
-                  
 ecbuild_add_test( TARGET  test_iodaconv_tropics
                   TYPE    SCRIPT
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
@@ -1583,6 +1571,15 @@ if(iodaconv_bufr_query_ENABLED)
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_mtiasi.yaml"
                             gdas.t12z.mtiasi_metop-c.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_atms_ta_remap
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_atms_ta_remap.yaml"
+                            gdas.t00z.atms_n20_ta_remap.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_atms
