@@ -931,7 +931,7 @@ ecbuild_add_test( TARGET  test_iodaconv_amsr2_gcom-w1
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
                   "${CMAKE_BINARY_DIR}/bin/amsr2_2ioda.py
-                  -i testinput/sample.amsr2_gcom-w1_20220216.h5
+                  -i testinput/sample.amsr2.gcom-w1.20220216.h5
                   -o testrun/amsr2_gcom-w1_20220216.nc4
                   -d 2022021600"
                   20220216T00Z_PT1H_amsr2_sample.nc4 ${IODA_CONV_COMP_TOL})
