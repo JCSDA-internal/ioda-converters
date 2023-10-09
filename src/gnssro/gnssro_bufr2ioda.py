@@ -283,7 +283,7 @@ def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None):
         for k in obs_data.keys():
             obs_data[k] = obs_data[k][good]
 
-    if addLSW:  
+    if addLSW:
         lsw = bang_err/bang * 100
 
         obs_data[('localSpectralWidth', "ObsError")] = assign_values(lsw)
