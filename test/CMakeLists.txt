@@ -9,7 +9,7 @@
 
 list( APPEND test_input
   testinput/tropics_2022021600.nc
-  testinput/amsr2_gcom-w1_20220216.h5
+  testinput/sample.amsr2.gcom-w1.20220216.h5
   testinput/gmi_gpm_20220216.h5
   testinput/icethk_coperl4.nc
   testinput/nsidc_l4_icec.nc
@@ -104,6 +104,7 @@ list( APPEND test_output
   testoutput/icethk_coperl4.nc
   testoutput/nsidc_l4_icec.nc
   testoutput/amsr2_icec_l2p.nc
+  testoutput/20220216T00Z_PT1H_amsr2_sample.nc4
   testoutput/gds2_sst_l2p.nc
   testoutput/gds2_sst_l3u.nc
   testoutput/giirs_fy4a_obs_2017030208.nc4
@@ -301,6 +302,10 @@ if( iodaconv_bufr_query_ENABLED )
     testinput/bufr_query_fieldname_validation.py
     testinput/bufr_ncep_rtma_mesonet.yaml
     testinput/bufr_ncep_rtma_adpsfc.yaml
+    testinput/rtma_ru.t0000z.aircft.tm00_nc004006.bufr_d
+    testinput/rtma_ru.t0000z.aircft.tm00_nc004103.bufr_d
+    testinput/bufr_ncep_rtma_aircft.yaml
+    testinput/bufr_ncep_rtma_aircft_NC004103.yaml
   )
 
   list( APPEND test_output
@@ -362,6 +367,8 @@ if( iodaconv_bufr_query_ENABLED )
     testoutput/bufr_query_python_to_ioda_test.nc
     testoutput/rtma_ru.t00z.msonet.tm00.nc
     testoutput/rtma_ru.t0000z.adpsfc_nc000101.tm00.nc
+    testoutput/rtma_ru.t0000z.aircft.tm00_nc004006.nc
+    testoutput/rtma_ru.t0000z.aircft.tm00_nc004103.nc
   )
 endif()
 
@@ -934,10 +941,10 @@ ecbuild_add_test( TARGET  test_iodaconv_amsr2_gcom-w1
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
                   "${CMAKE_BINARY_DIR}/bin/amsr2_2ioda.py
-                  -i testinput/amsr2_gcom-w1_20220216.h5
-                  -o testrun/amsr2_gcom-w1_20220216.nc4
+                  -i testinput/sample.amsr2.gcom-w1.20220216.h5
+                  -o testrun/20220216T00Z_PT1H_amsr2_sample.nc4
                   -d 2022021600"
-                  amsr2_gcom-w1_20220216.nc4 ${IODA_CONV_COMP_TOL})
+                  20220216T00Z_PT1H_amsr2_sample.nc4 ${IODA_CONV_COMP_TOL})
                   
 ecbuild_add_test( TARGET  test_iodaconv_gmi_gpm
                   TYPE    SCRIPT
@@ -1709,6 +1716,24 @@ if(iodaconv_bufr_query_ENABLED)
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_prepbufr_adpsfc_cloud_rrfs.yaml"
                             rrfs.t06z.adpsfc.prepbufr.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_rtma_aircft
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_rtma_aircft.yaml"
+                            rtma_ru.t0000z.aircft.tm00_nc004006.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_rtma_aircft_NC004103
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_rtma_aircft_NC004103.yaml"
+                            rtma_ru.t0000z.aircft.tm00_nc004103.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
 #  FIXME: Greg Thompson
