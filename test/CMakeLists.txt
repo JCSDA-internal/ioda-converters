@@ -453,7 +453,7 @@ endforeach()
 #===============================================================================
 
 # Tolerence (relative percent difference) for comparing floating point numbers.
-set(IODA_CONV_COMP_TOL "1.0e-3")
+set(IODA_CONV_COMP_TOL "5.0e-4")
 
 # The ioda-engines CMake configuration has set the file target _ioda_python to
 # the full path to the library file containing the python bindings created
