@@ -284,7 +284,7 @@ def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None):
             obs_data[k] = obs_data[k][good]
 
     if addLSW:
-        lsw = bang_err/bang * 100
+        lsw = bang_err/bang * 100   # CDACC saves LSW in radians as bang_err. Convert to percentage 
         obs_data[('localSpectralWidth', "MetaData")] = assign_values(lsw)
 
     return obs_data
