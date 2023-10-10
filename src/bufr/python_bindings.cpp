@@ -34,28 +34,28 @@ using Ingester::encode_save;
 
     PYBIND11_MODULE(bufr, m)
     {
-        m.doc() = "Provides the ability to get data from BUFR files via query strings.";
+        m.doc() = "Provides the ability to process data from BUFR files.";
 
-        m.def("parse", &parse1, "A function which adds two numbers");
+        m.def("parse", &parse1, "A function to parse a config file and get the data container");
 
         m.def("encode_save", [](const std::string& yamlPath, std::shared_ptr<DataContainer> shared_data_container) {
         encode_save(yamlPath, shared_data_container);
-        }, "A function which adds two numbers");
+        }, "A function to save data container into a file");
 
         py::class_<BufrParser>(m, "BufrParser")
             .def(py::init<const eckit::LocalConfiguration&>())
             .def("parse", &BufrParser::parse,
                            py::arg("size_t"),
-                           "Get the number of queries in the query set.");
+                           "Get Parser to parse a config file and get the data container.");
 
         py::class_<IodaEncoder>(m, "IodaEncoder")
             .def(py::init<const eckit::Configuration&>())
             .def("encode", &IodaEncoder::encode,
-                           "Get the number of queries in the query set.");
+                           "Get the class to encode the dataset");
 
         py::class_<DataObjectBase, std::shared_ptr<DataObjectBase>>(m, "DataObjectBase");
 
-        py::class_<DataContainer>(m, "DataContainer")
+        py::class_<DataContainer, std::shared_ptr<DataContainer>>(m, "DataContainer")
             .def(py::init<>())
             .def(py::init<const Ingester::CategoryMap&>())
             .def("add", &DataContainer::addNumpyArray,
@@ -63,12 +63,12 @@ using Ingester::encode_save;
                         py::arg("data_object"),
                         py::arg("dim_paths"),
                         py::arg("category_id") = std::vector<std::string>(),
-                        "Get the number of queries in the query set.")
-            .def("get", &DataContainer::getNumpyArray, "Add a query to the query set.")
+                        "Add a new variable object into the data container.")
+            .def("get", &DataContainer::getNumpyArray, "Get the value of the variable object as numpy array. ")
             .def("getPaths", &DataContainer::getPaths, "Get path names for a field.")
-            .def("set", &DataContainer::set, "Add a query to the query set.")
-            .def("getCategoryMap", &DataContainer::getCategoryMap, "Add a query to the query set.")
-            .def("allSubCategories", &DataContainer::allSubCategories, "Add a query to the query set.");
+            .def("set", &DataContainer::set, "Set the variable value back after re-map.")
+            .def("getCategoryMap", &DataContainer::getCategoryMap, "Get the map.")
+            .def("allSubCategories", &DataContainer::allSubCategories, "Get the sub categories for the satellite.");
 
         py::class_<QuerySet>(m, "QuerySet")
             .def(py::init<>())

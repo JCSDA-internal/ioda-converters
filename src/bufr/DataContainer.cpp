@@ -189,7 +189,7 @@ namespace Ingester
 
         auto dataObj = makeObject(fieldName, pyData);
         dataObj->setDimPaths(paths);
-        dataSets_.at(categoryId).at(fieldName) = makeObject(fieldName, pyData);
+        dataSets_.at(categoryId).insert({fieldName, makeObject(fieldName, pyData)});
      }
 
     void DataContainer::set(const std::string& fieldName,
