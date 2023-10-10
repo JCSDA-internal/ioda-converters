@@ -112,8 +112,8 @@ def main(args):
     VarAttrs[('height', 'MetaData')]['_FillValue'] = float_missing_value
 
     if addLSW:
-        VarAttrs[('localSpectralWidth', 'ObsValue')]['units'] = 'Percentage'
-        VarAttrs[('localSpectralWidth', 'ObsValue')]['_FillValue'] = float_missing_value
+        VarAttrs[('localSpectralWidth', 'MetaData')]['units'] = 'Percentage'
+        VarAttrs[('localSpectralWidth', 'MetaData')]['_FillValue'] = float_missing_value
 
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
@@ -285,7 +285,7 @@ def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None):
 
     if addLSW:
         lsw = bang_err/bang * 100
-        obs_data[('localSpectralWidth', "ObsValue")] = assign_values(lsw)
+        obs_data[('localSpectralWidth', "MetaData")] = assign_values(lsw)
 
     return obs_data
 
