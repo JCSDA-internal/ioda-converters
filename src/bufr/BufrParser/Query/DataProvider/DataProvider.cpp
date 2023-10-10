@@ -159,17 +159,17 @@ namespace bufr {
 
     std::string DataProvider::getLongStr(const std::string& longStrId) const
     {
-        char charPtr[120];
-        int longStrLen;
+        static int MaxLongStrLen = 120;
+        char charPtr[MaxLongStrLen];
 
-        readlc_f(FileUnit, longStrId.c_str(), charPtr, &longStrLen);
+        readlc_f(FileUnit, longStrId.c_str(), charPtr, MaxLongStrLen);
 
         if (charPtr[0] == '\xff')
         {
             return "";
         }
 
-        return std::string(charPtr, longStrLen);
+        return std::string(charPtr, strlen(charPtr));
     }
 }  // namespace bufr
 }  // namespace Ingester
