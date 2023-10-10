@@ -55,10 +55,10 @@ namespace bufr {
         for (size_t cursor = 1; cursor <= dataProvider_->getNVal(); ++cursor)
         {
             auto nodeId = static_cast<size_t>(dataProvider_->getInv(cursor));
+
             if (metaLookup[nodeId].collectedCounts)
             {
                 const auto &component = metaLookup[nodeId].component;
-
                 if (component.type == TargetComponent::Type::Subset)
                 {
                     // Subsets always have a count of 1.

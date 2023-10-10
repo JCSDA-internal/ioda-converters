@@ -8,8 +8,8 @@
 ################################################################################
 
 list( APPEND test_input
-  testinput/TROPICS01.L1B.V03-04.ST20220216-012443.ET20220216-025955.nc
-  testinput/amsr2_gcom-w1_20220216.h5
+  testinput/tropics_2022021600.nc
+  testinput/sample.amsr2.gcom-w1.20220216.h5
   testinput/gmi_gpm_20220216.h5
   testinput/icethk_coperl4.nc
   testinput/nsidc_l4_icec.nc
@@ -76,6 +76,7 @@ list( APPEND test_input
   testinput/satwinds_ssec2021080103.txt
   testinput/pace_oc_l2.nc
   testinput/pace_radiance_L1B.nc
+  testinput/modis_aqua_Rrs_OC_L2.nc
   testinput/mls_o3_l2.he5
   testinput/omi_o3_l2.he5
   testinput/ompsnm_o3_l2.he5
@@ -103,6 +104,7 @@ list( APPEND test_output
   testoutput/icethk_coperl4.nc
   testoutput/nsidc_l4_icec.nc
   testoutput/amsr2_icec_l2p.nc
+  testoutput/20220216T00Z_PT1H_amsr2_sample.nc4
   testoutput/gds2_sst_l2p.nc
   testoutput/gds2_sst_l3u.nc
   testoutput/giirs_fy4a_obs_2017030208.nc4
@@ -164,6 +166,7 @@ list( APPEND test_output
   testoutput/satwinds_ssec2021080103.nc
   testoutput/pace_oc_l2.nc
   testoutput/pace_radiance_L1B.nc
+  testoutput/modis_water_leaving_radiance_L2.nc
   testoutput/mls_o3_l2.nc
   testoutput/omi_o3_l2.nc
   testoutput/ompsnm_o3_l2.nc
@@ -192,7 +195,7 @@ if( iodaconv_gnssro_ENABLED )
   )
 endif()
 
-if( iodaconv_bufr_ENABLED )
+if( iodaconv_bufr_query_ENABLED )
   list( APPEND test_input
     testinput/bufr_tables
     testinput/gdas.t12z.1bamua.tm00.bufr_d
@@ -301,6 +304,10 @@ if( iodaconv_bufr_ENABLED )
     testinput/bufr_ncep_long_strs.yaml
     testinput/gdas.t06z.snocvr.tm00.bufr_d
     testinput/bufr_ncep_rtma_adpsfc.yaml
+    testinput/rtma_ru.t0000z.aircft.tm00_nc004006.bufr_d
+    testinput/rtma_ru.t0000z.aircft.tm00_nc004103.bufr_d
+    testinput/bufr_ncep_rtma_aircft.yaml
+    testinput/bufr_ncep_rtma_aircft_NC004103.yaml
   )
 
   list( APPEND test_output
@@ -363,6 +370,8 @@ if( iodaconv_bufr_ENABLED )
     testoutput/rtma_ru.t00z.msonet.tm00.nc
     testoutput/bufr_ncep_long_strs.nc
     testoutput/rtma_ru.t0000z.adpsfc_nc000101.tm00.nc
+    testoutput/rtma_ru.t0000z.aircft.tm00_nc004006.nc
+    testoutput/rtma_ru.t0000z.aircft.tm00_nc004103.nc
   )
 endif()
 
@@ -802,6 +811,18 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pace_radiance_L1B
                           -d 2019032112"
                           pace_radiance_L1B.nc ${IODA_CONV_COMP_TOL_ZERO})
 
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_water_leaving_radiance_L2                                               
+                  TYPE    SCRIPT                                                                               
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"                                              
+                  COMMAND bash                                                                                 
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh                                             
+                          netcdf                                                                               
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/oc_l2_radiance2ioda.py                 
+                          -i testinput/modis_aqua_Rrs_OC_L2.nc                                                    
+                          -o testrun/modis_water_leaving_radiance_L2.nc                                                      
+                          -d 2021080112"
+                          modis_water_leaving_radiance_L2.nc ${IODA_CONV_COMP_TOL_ZERO})
+
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mls_o3_l2
                   TYPE    SCRIPT
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
@@ -907,7 +928,7 @@ ecbuild_add_test( TARGET  test_iodaconv_tropics
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
                   "${CMAKE_BINARY_DIR}/bin/tropics_2ioda.py
-                  -i testinput/TROPICS01.L1B.V03-04.ST20220216-012443.ET20220216-025955.nc
+                  -i testinput/tropics_2022021600.nc
                   -o testrun/20220216T00Z_PT3H_tms_tropics-01.nc4
                   -d 2022021600"
                   20220216T00Z_PT3H_tms_tropics-01.nc4 ${IODA_CONV_COMP_TOL})
@@ -919,10 +940,10 @@ ecbuild_add_test( TARGET  test_iodaconv_amsr2_gcom-w1
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
                   "${CMAKE_BINARY_DIR}/bin/amsr2_2ioda.py
-                  -i testinput/amsr2_gcom-w1_20220216.h5
-                  -o testrun/amsr2_gcom-w1_20220216.nc4
+                  -i testinput/sample.amsr2.gcom-w1.20220216.h5
+                  -o testrun/20220216T00Z_PT1H_amsr2_sample.nc4
                   -d 2022021600"
-                  amsr2_gcom-w1_20220216.nc4 ${IODA_CONV_COMP_TOL})
+                  20220216T00Z_PT1H_amsr2_sample.nc4 ${IODA_CONV_COMP_TOL})
                   
 ecbuild_add_test( TARGET  test_iodaconv_gmi_gpm
                   TYPE    SCRIPT
@@ -1319,7 +1340,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_omps_o3_nm
 # Bufr Ingester tests
 #==============================================================================
 
-if(iodaconv_bufr_ENABLED)
+if(iodaconv_bufr_query_ENABLED)
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_bufrdescription
                     SOURCES bufr/TestBufrDescription.cpp
@@ -1703,6 +1724,24 @@ if(iodaconv_bufr_ENABLED)
                     netcdf
                     "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_long_strs.yaml"
                     bufr_ncep_long_strs.nc ${IODA_CONV_COMP_TOL_ZERO}
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_rtma_aircft
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_rtma_aircft.yaml"
+                            rtma_ru.t0000z.aircft.tm00_nc004006.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_rtma_aircft_NC004103
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_rtma_aircft_NC004103.yaml"
+                            rtma_ru.t0000z.aircft.tm00_nc004103.nc ${IODA_CONV_COMP_TOL_ZERO}
+
                     DEPENDS bufr2ioda.x )
 
 #  FIXME: Greg Thompson
@@ -1899,6 +1938,9 @@ if( iodaconv_eccodes_ENABLED )
                            --date 2021-02-01T12:00:00Z"
                            wmo_raob_double.nc4 ${IODA_CONV_COMP_TOL_ZERO})
 
+endif()
+
+if( iodaconv_bufr_query_ENABLED )
 #===============================================================================
 # Conventional data, aircraft Obs - AMDAR BUFR (WMO) converter
 #===============================================================================

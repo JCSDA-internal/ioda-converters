@@ -51,50 +51,56 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
 
     # Use the ResultSet returned to get numpy arrays of the data
     # MetaData
-    cat = r.get('prepbufrDataLevelCategory', 'prepbufrDataLevelCategory')
-    lat = r.get('latitude', 'prepbufrDataLevelCategory')
-    lon = r.get('longitude', 'prepbufrDataLevelCategory')
+    cat = r.get('prepbufrDataLevelCategory')
+    lat = r.get('latitude')
+    lon = r.get('longitude')
     lon[lon>180] -= 360  # Convert Longitude from [0,360] to [-180,180]
-    sid = r.get('stationIdentification', 'prepbufrDataLevelCategory')
-    elv = r.get('stationElevation', 'prepbufrDataLevelCategory')
-    tpc = r.get('temperatureEventCode', 'prepbufrDataLevelCategory')
-    pob = r.get('pressure', 'prepbufrDataLevelCategory')
+    sid = r.get('stationIdentification')
+    sid = np.tile(sid, (lon.shape[1],1))
+    elv = r.get('stationElevation')
+    elv = np.repeat(elv, lon.shape[1])
+    elv = elv.reshape(lon.shape)
+    tpc = r.get('temperatureEventCode')
+    pob = r.get('pressure')
     pob *= 100
 
     # Time variable
-    hrdr = r.get('timeOffset', 'prepbufrDataLevelCategory')
+    hrdr = r.get('timeOffset')
     print("cycleTimeSinceEpoch")
     cycleTimeSinceEpoch = np.int64(calendar.timegm(time.strptime(date, '%Y%m%d%H%M')))
     hrdr = np.int64(hrdr*3600)
     hrdr += cycleTimeSinceEpoch
 
+    ulan = np.repeat(hrdr[:,0], hrdr.shape[1])
+    ulan = ulan.reshape(hrdr.shape)
+
     # ObsValue
-    pob_ps   = np.full(pob.shape[0], pob.fill_value) # Extract stationPressure from pressure, which belongs to CAT=1
+    pob_ps   = np.full(pob.shape, pob.fill_value) # Extract stationPressure from pressure, which belongs to CAT=1
     pob_ps   = np.where(cat == 0, pob, pob_ps)  
-    tob = r.get('airTemperature', 'prepbufrDataLevelCategory')
+    tob = r.get('airTemperature')
     tob += 273.15
-    tsen = np.full(tob.shape[0], tob.fill_value) # Extract sensible temperature from tob, which belongs to TPC=1
+    tsen = np.full(tob.shape, tob.fill_value) # Extract sensible temperature from tob, which belongs to TPC=1
     tsen = np.where(tpc == 1, tob, tsen)
-    tvo   = np.full(tob.shape[0], tob.fill_value) # Extract virtual temperature from tob, which belongs to TPC <= 8 and TPC>1
+    tvo   = np.full(tob.shape, tob.fill_value) # Extract virtual temperature from tob, which belongs to TPC <= 8 and TPC>1
     tvo   = np.where(((tpc <= 8) & (tpc > 1)), tob, tvo)
-    qob = r.get('specificHumidity', 'prepbufrDataLevelCategory', type='float')
+    qob = r.get('specificHumidity', type='float')
     qob *= 1.0e-6
-    uob = r.get('windEastward', 'prepbufrDataLevelCategory')
-    vob = r.get('windNorthward', 'prepbufrDataLevelCategory')
-    zob = r.get('heightOfObservation', 'prepbufrDataLevelCategory')
+    uob = r.get('windEastward')
+    vob = r.get('windNorthward')
+    zob = r.get('heightOfObservation')
 
     # QualityMark
-    pobqm = r.get('pressureQM', 'prepbufrDataLevelCategory')
-    pob_psqm = np.full(pobqm.shape[0], pobqm.fill_value) # Extract stationPressureQM from pressureQM
+    pobqm = r.get('pressureQM')
+    pob_psqm = np.full(pobqm.shape, pobqm.fill_value) # Extract stationPressureQM from pressureQM
     pob_psqm   = np.where(cat == 0, pobqm, pob_psqm)
-    tobqm = r.get('airTemperatureQM', 'prepbufrDataLevelCategory')
-    tsenqm = np.full(tobqm.shape[0], tobqm.fill_value) # Extract airTemperature from tobqm, which belongs to TPC=1
+    tobqm = r.get('airTemperatureQM')
+    tsenqm = np.full(tobqm.shape, tobqm.fill_value) # Extract airTemperature from tobqm, which belongs to TPC=1
     tsenqm = np.where(tpc == 1, tobqm, tsenqm)
-    tvoqm   = np.full(tobqm.shape[0], tobqm.fill_value) # Extract virtual temperature from tob, which belongs to TPC <= 8 and TPC>1
+    tvoqm   = np.full(tobqm.shape, tobqm.fill_value) # Extract virtual temperature from tob, which belongs to TPC <= 8 and TPC>1
     tvoqm   = np.where(((tpc <= 8) & (tpc > 1)), tobqm, tvoqm)
-    qobqm = r.get('specificHumidityQM', 'prepbufrDataLevelCategory')
-    uobqm = r.get('windEastwardQM', 'prepbufrDataLevelCategory')
-    vobqm = r.get('windNorthwardQM', 'prepbufrDataLevelCategory')
+    qobqm = r.get('specificHumidityQM')
+    uobqm = r.get('windEastwardQM')
+    vobqm = r.get('windNorthwardQM')
 
     # Write the data to an IODA file
     path, fname = os.path.split(OUTPUT_PATH)
@@ -105,7 +111,7 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
 
     # Create the dimensions
     print("Create dimensions")
-    num_locs = lat.shape[0]
+    num_locs = lat.flatten().shape[0]
 
     dim_location = g.vars.create('Location', ioda.Types.int32, [num_locs])
     dim_location.scales.setIsScale('Location')
@@ -128,10 +134,6 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
 
     # Create the variables
     print("Create MetaData group variables")
-    prepbufrdatalevelcategory = g.vars.create('MetaData/prepbufrDataLevelCategory', ioda.Types.int,  scales=[dim_location], params=pint)
-    prepbufrdatalevelcategory.atts.create('units', ioda.Types.str).writeVector.str([''])
-    prepbufrdatalevelcategory.atts.create('long_name', ioda.Types.str).writeVector.str(['Prepbufr Data Level Category'])
-
     latitude = g.vars.create('MetaData/latitude', ioda.Types.float,  scales=[dim_location], params=pfloat)
     latitude.atts.create('valid_range', ioda.Types.float, [2]).writeVector.float([-90, 90])
     latitude.atts.create('units', ioda.Types.str).writeVector.str(['degree_north'])
@@ -152,15 +154,18 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     datetime = g.vars.create('MetaData/dateTime',  ioda.Types.int64,  scales=[dim_location], params=pint64)
     datetime.atts.create('units', ioda.Types.str).writeVector.str(['seconds since 1970-01-01T00:00:00Z'])
 
-    temperatureeventcode = g.vars.create('MetaData/temperatureEventCode', ioda.Types.int, scales=[dim_location], params=pint)
-    temperatureeventcode.atts.create('units', ioda.Types.str).writeVector.str(['1'])
-    temperatureeventcode.atts.create('long_name', ioda.Types.str).writeVector.str(['temperatureEventCode'])
+    releasetime = g.vars.create('MetaData/releaseTime',  ioda.Types.int64,  scales=[dim_location], params=pint64)
+    releasetime.atts.create('units', ioda.Types.str).writeVector.str(['seconds since 1970-01-01T00:00:00Z'])
 
     pressure = g.vars.create('MetaData/pressure', ioda.Types.float, scales=[dim_location], params=pfloat)
     pressure.atts.create('units', ioda.Types.str).writeVector.str(['Pa'])
     pressure.atts.create('long_name', ioda.Types.str).writeVector.str(['Pressure'])
 
     print("Create ObsValue group variables")
+#   prepbufrdatalevelcategory = g.vars.create('ObsValue/verticalSignificance', ioda.Types.int64,  scales=[dim_location], params=pint)
+#   prepbufrdatalevelcategory.atts.create('units', ioda.Types.str).writeVector.str([''])
+#   prepbufrdatalevelcategory.atts.create('long_name', ioda.Types.str).writeVector.str(['Prepbufr Data Level Category'])
+
     stationpressure = g.vars.create('ObsValue/stationPressure', ioda.Types.float, scales=[dim_location], params=pfloat)
     stationpressure.atts.create('units', ioda.Types.str).writeVector.str(['Pa'])
     stationpressure.atts.create('long_name', ioda.Types.str).writeVector.str(['Station Pressure'])
@@ -185,11 +190,15 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     windnorthward.atts.create('units', ioda.Types.str).writeVector.str(['m s-1'])
     windnorthward.atts.create('long_name', ioda.Types.str).writeVector.str(['Northward Wind'])
 
-    heightofobservation = g.vars.create('ObsValue/heightOfObservation', ioda.Types.int, scales=[dim_location], params=pint)
+    heightofobservation = g.vars.create('ObsValue/heightOfObservation', ioda.Types.float, scales=[dim_location], params=pfloat)
     heightofobservation.atts.create('units', ioda.Types.str).writeVector.str(['m'])
     heightofobservation.atts.create('long_name', ioda.Types.str).writeVector.str(['Height of Observation'])
 
     print("Create QualityMarker group variables")
+    temperatureeventcode = g.vars.create('QCFlags/qualityFlags', ioda.Types.int64, scales=[dim_location], params=pint)
+    temperatureeventcode.atts.create('units', ioda.Types.str).writeVector.str(['1'])
+    temperatureeventcode.atts.create('long_name', ioda.Types.str).writeVector.str(['temperatureEventCode'])
+
     pressureqm = g.vars.create('QualityMarker/pressure', ioda.Types.int, scales=[dim_location], params=pint)
     pressureqm.atts.create('units', ioda.Types.str).writeVector.str(['1'])
     pressureqm.atts.create('long_name', ioda.Types.str).writeVector.str(['Pressure Quality Marker'])
@@ -220,22 +229,23 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
 
     # Write data to the variables
     print("Write data to variables")
-    prepbufrdatalevelcategory.writeNPArray.int(cat.flatten())
+#   prepbufrdatalevelcategory.writeNPArray.int(cat.flatten())
     latitude.writeNPArray.float(lat.flatten())
     longitude.writeNPArray.float(lon.flatten())
     stationidentification.writeVector.str(sid.flatten())
     stationelevation.writeNPArray.float(elv.flatten())
     datetime.writeNPArray.int64(hrdr.flatten())
+    releasetime.writeNPArray.int64(ulan.flatten())
     temperatureeventcode.writeNPArray.int(tpc.flatten())
     pressure.writeNPArray.float(pob.flatten())
-
+ 
     stationpressure.writeNPArray.float(pob_ps.flatten())
     airtemperature.writeNPArray.float(tsen.flatten())
     virtualtemperature.writeNPArray.float(tvo.flatten())
     specifichumidity.writeNPArray.float(qob.flatten())
     windeastward.writeNPArray.float(uob.flatten())
     windnorthward.writeNPArray.float(vob.flatten())
-    heightofobservation.writeNPArray.int(zob.flatten())
+    heightofobservation.writeNPArray.float(zob.flatten())
 
     pressureqm.writeNPArray.int(pobqm.flatten())
     stationpressureqm.writeNPArray.int(pob_psqm.flatten())

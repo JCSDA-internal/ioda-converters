@@ -201,7 +201,9 @@ namespace bufr {
         /// \param The index of the data object for which you want a value.
         inline gsl::span<const double> getVals() const { return val_; }
 
+
         std::string getLongStr(const std::string& longStrId) const;
+
 
         /// \brief Get the TypeInfo object for the table node at the given idx.
         /// \param idx BUFR table node index
