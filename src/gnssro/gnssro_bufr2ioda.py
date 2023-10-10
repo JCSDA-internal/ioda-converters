@@ -431,7 +431,7 @@ if __name__ == "__main__":
         default=False, action='store_true', required=False)
 
     optional.add_argument(
-        '-l', '--localspectralwidth',
+        '-lsw', '--localspectralwidth',
         help='Calculate and output error metrics, LSW and STD4060',
         default=False, action='store_true', required=False)
 
