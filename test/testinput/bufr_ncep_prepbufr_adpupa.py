@@ -81,10 +81,10 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     pob_ps   = np.where(cat == 0, pob, pob_ps)  
     tob = r.get('airTemperature')
     tob += 273.15
-    tsen = np.full(tob.shape, tob.fill_value) # Extract sensible temperature from tob, which belongs to TPC=1
-    tsen = np.where(tpc == 1, tob, tsen)
+    tsen = np.full(tob.shape, tob.fill_value)
+    tsen = np.where(tpc == 1, tob, tsen) # Extract sensible temperature from tob, which belongs to TPC=1
     tvo   = np.full(tob.shape, tob.fill_value) # Extract virtual temperature from tob, which belongs to TPC <= 8 and TPC>1
-    tvo   = np.where(((tpc <= 8) & (tpc > 1)), tob, tvo)
+    tvo   = np.where(((tpc <= 8) & (tpc > 1)), tob, tvo) # virtual temperature is output as tob (below) assuming tvo == tsen where moisture is low
     qob = r.get('specificHumidity', type='float')
     qob *= 1.0e-6
     uob = r.get('windEastward')
@@ -172,9 +172,9 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     stationpressure.atts.create('units', ioda.Types.str).writeVector.str(['Pa'])
     stationpressure.atts.create('long_name', ioda.Types.str).writeVector.str(['Station Pressure'])
 
-    airtemperature = g.vars.create('ObsValue/airTemperature', ioda.Types.float, scales=[dim_location], params=pfloat)
-    airtemperature.atts.create('units', ioda.Types.str).writeVector.str(['K'])
-    airtemperature.atts.create('long_name', ioda.Types.str).writeVector.str(['Temperature'])
+#   airtemperature = g.vars.create('ObsValue/airTemperature', ioda.Types.float, scales=[dim_location], params=pfloat)
+#   airtemperature.atts.create('units', ioda.Types.str).writeVector.str(['K'])
+#   airtemperature.atts.create('long_name', ioda.Types.str).writeVector.str(['Temperature'])
 
     virtualtemperature = g.vars.create('ObsValue/virtualTemperature', ioda.Types.float, scales=[dim_location], params=pfloat)
     virtualtemperature.atts.create('units', ioda.Types.str).writeVector.str(['K'])
@@ -209,9 +209,9 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     stationpressureqm.atts.create('units', ioda.Types.str).writeVector.str(['1'])
     stationpressureqm.atts.create('long_name', ioda.Types.str).writeVector.str(['Station Pressure Quality Marker'])
 
-    airtemperatureqm = g.vars.create('QualityMarker/airTemperature', ioda.Types.int, scales=[dim_location], params=pint)
-    airtemperatureqm.atts.create('units', ioda.Types.str).writeVector.str(['1'])
-    airtemperatureqm.atts.create('long_name', ioda.Types.str).writeVector.str(['Air Temperature Quality Marker'])
+#   airtemperatureqm = g.vars.create('QualityMarker/airTemperature', ioda.Types.int, scales=[dim_location], params=pint)
+#   airtemperatureqm.atts.create('units', ioda.Types.str).writeVector.str(['1'])
+#   airtemperatureqm.atts.create('long_name', ioda.Types.str).writeVector.str(['Air Temperature Quality Marker'])
 
     virtualtemperatureqm = g.vars.create('QualityMarker/virtualTemperature', ioda.Types.int, scales=[dim_location], params=pint)
     virtualtemperatureqm.atts.create('units', ioda.Types.str).writeVector.str(['1'])
@@ -242,8 +242,8 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     pressure.writeNPArray.float(pob.flatten())
  
     stationpressure.writeNPArray.float(pob_ps.flatten())
-    airtemperature.writeNPArray.float(tsen.flatten())
-    virtualtemperature.writeNPArray.float(tvo.flatten())
+#   airtemperature.writeNPArray.float(tob.flatten())
+    virtualtemperature.writeNPArray.float(tob.flatten())
     specifichumidity.writeNPArray.float(qob.flatten())
     windeastward.writeNPArray.float(uob.flatten())
     windnorthward.writeNPArray.float(vob.flatten())
@@ -251,7 +251,7 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
 
     pressureqm.writeNPArray.int(pobqm.flatten())
     stationpressureqm.writeNPArray.int(pob_psqm.flatten())
-    airtemperatureqm.writeNPArray.int(tsenqm.flatten())
+#   airtemperatureqm.writeNPArray.int(tsenqm.flatten())
     virtualtemperatureqm.writeNPArray.int(tvoqm.flatten())
     specifichumidityqm.writeNPArray.int(qobqm.flatten())
     windeastwardqm.writeNPArray.int(uobqm.flatten())
