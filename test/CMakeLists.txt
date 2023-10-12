@@ -1645,7 +1645,7 @@ if(iodaconv_bufr_query_ENABLED)
                     COMMAND bash
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
-                            "${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/src/ncepbufr/bufr_ncep_prepbufr_adpupa.py"
+                            "${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/src/ncepbufr/bufr_ncep_prepbufr_adpupa.py
                             -d 202108010000
                             -i testinput/ADPUPA.prepbufr
                             -o testrun/prepbufr_adpupa_api.nc"
