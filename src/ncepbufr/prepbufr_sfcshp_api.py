@@ -229,14 +229,14 @@ if __name__ == '__main__':
         '  convert into IODA formatted output files.'
     )
 
-    optional = parser.add_argument_group(title='optional arguments')
-    optional.add_argument('-i', '--input', type=str, default=None,
+    required = parser.add_argument_group(title='required arguments')
+    required.add_argument('-i', '--input', type=str, default=None,
                           dest='filename', required=True,
                           help='adpsfc file name')
-    optional.add_argument('-o', '--output', type=str, default=None,
+    required.add_argument('-o', '--output', type=str, default=None,
                           dest='output', required=True,
                           help='output filename')
-    optional.add_argument('-d', '--date', type=str, default=None,
+    required.add_argument('-d', '--date', type=str, default=None,
                           dest='date', metavar='YYYYmmddHHMM', required=True,
                           help='analysis cycle date')
 
