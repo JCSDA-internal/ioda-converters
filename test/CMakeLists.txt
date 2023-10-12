@@ -1458,7 +1458,10 @@ if(iodaconv_bufr_query_ENABLED)
                     COMMAND bash
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
-                            "${Python3_EXECUTABLE} testinput/prepbufr_adpsfc_api.py"
+                            "${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/src/ncepbufr/prepbufr_adpsfc_api.py
+                            -d 202108010000
+                            -i testinput/gdas.t12z.adpsfc.prepbufr
+                            -o testrun/prepbufr_adpsfc_api.nc"
                             prepbufr_adpsfc_api.nc ${IODA_CONV_COMP_TOL_ZERO} )
 
   ecbuild_add_test( TARGET  test_iodaconv_prepbufr_ncep_api_sfcshp2ioda
@@ -1467,7 +1470,10 @@ if(iodaconv_bufr_query_ENABLED)
                     COMMAND bash
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
-                            "${Python3_EXECUTABLE} testinput/prepbufr_sfcshp_api.py"
+                            "${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/src/ncepbufr/prepbufr_sfcshp_api.py
+                            -d 202108010000
+                            -i testinput/gdas.t12z.sfcshp.prepbufr
+                            -o testrun/prepbufr_sfcshp_api.nc"
                             prepbufr_sfcshp_api.nc ${IODA_CONV_COMP_TOL_ZERO} )
 
   ecbuild_add_test( TARGET  test_iodaconv_prepbufr_ncep_adpsfc2ioda
@@ -1639,7 +1645,10 @@ if(iodaconv_bufr_query_ENABLED)
                     COMMAND bash
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
-                            "${Python3_EXECUTABLE} testinput/bufr_ncep_prepbufr_adpupa.py"
+                            "${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/src/ncepbufr/bufr_ncep_prepbufr_adpupa.py"
+                            -d 202108010000
+                            -i testinput/ADPUPA.prepbufr
+                            -o testrun/prepbufr_adpupa_api.nc"
                             prepbufr_adpupa_api.nc ${IODA_CONV_COMP_TOL_ZERO} )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_adpupa2ioda
