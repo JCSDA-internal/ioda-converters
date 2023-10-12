@@ -6,10 +6,10 @@
 import numpy as np
 from pyiodaconv import bufr
 from pyioda import ioda
-import calendar
-import time
 import argparse
+import calendar
 import os
+import time
 
 
 def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
