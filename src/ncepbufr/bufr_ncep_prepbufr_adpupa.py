@@ -15,6 +15,7 @@ import math
 import argparse
 import os
 
+
 def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
 
     # Make the QuerySet for all the data we want
@@ -27,13 +28,13 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     q.add('stationIdentification', '*/SID')
     q.add('stationElevation', '*/ELV')
     q.add('timeOffset', '*/PRSLEVEL/DRFTINFO/HRDR')
-    q.add('temperatureEventCode','*/PRSLEVEL/T___INFO/T__EVENT{1}/TPC')
+    q.add('temperatureEventCode', '*/PRSLEVEL/T___INFO/T__EVENT{1}/TPC')
     q.add('pressure', '*/PRSLEVEL/P___INFO/P__EVENT{1}/POB')
 
     # ObsValue
     q.add('stationPressure', '*/PRSLEVEL/P___INFO/P__EVENT{1}/POB')
     q.add('airTemperature', '*/PRSLEVEL/T___INFO/T__EVENT{1}/TOB')
-    #q.add('virtualTemperature', '*/PRSLEVEL/T___INFO/TVO')
+    # q.add('virtualTemperature', '*/PRSLEVEL/T___INFO/TVO')
     q.add('specificHumidity', '*/PRSLEVEL/Q___INFO/Q__EVENT{1}/QOB')
     q.add('windEastward', '*/PRSLEVEL/W___INFO/W__EVENT{1}/UOB')
     q.add('windNorthward', '*/PRSLEVEL/W___INFO/W__EVENT{1}/VOB')
@@ -46,7 +47,7 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     q.add('specificHumidityQM', '*/PRSLEVEL/Q___INFO/Q__EVENT{1}/QQM')
     q.add('windEastwardQM', '*/PRSLEVEL/W___INFO/W__EVENT{1}/WQM')
     q.add('windNorthwardQM', '*/PRSLEVEL/W___INFO/W__EVENT{1}/WQM')
- 
+
     # Open the BUFR file and execute the QuerySet
     with bufr.File(DATA_PATH) as f:
         r = f.execute(q)
@@ -56,9 +57,9 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     cat = r.get('prepbufrDataLevelCategory')
     lat = r.get('latitude')
     lon = r.get('longitude')
-    lon[lon>180] -= 360  # Convert Longitude from [0,360] to [-180,180]
+    lon[lon > 180] -= 360  # Convert Longitude from [0,360] to [-180,180]
     sid = r.get('stationIdentification')
-    sid = np.tile(sid, (lon.shape[1],1))
+    sid = np.tile(sid, (lon.shape[1], 1))
     elv = r.get('stationElevation')
     elv = np.repeat(elv, lon.shape[1])
     elv = elv.reshape(lon.shape)
@@ -73,18 +74,18 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     hrdr = np.int64(hrdr*3600)
     hrdr += cycleTimeSinceEpoch
 
-    ulan = np.repeat(hrdr[:,0], hrdr.shape[1])
+    ulan = np.repeat(hrdr[:, 0], hrdr.shape[1])
     ulan = ulan.reshape(hrdr.shape)
 
     # ObsValue
-    pob_ps   = np.full(pob.shape, pob.fill_value) # Extract stationPressure from pressure, which belongs to CAT=1
-    pob_ps   = np.where(cat == 0, pob, pob_ps)  
+    pob_ps = np.full(pob.shape, pob.fill_value)  # Extract stationPressure from pressure, which belongs to CAT=1
+    pob_ps = np.where(cat == 0, pob, pob_ps)
     tob = r.get('airTemperature')
     tob += 273.15
     tsen = np.full(tob.shape, tob.fill_value)
-    tsen = np.where(tpc == 1, tob, tsen) # Extract sensible temperature from tob, which belongs to TPC=1
-    tvo   = np.full(tob.shape, tob.fill_value) # Extract virtual temperature from tob, which belongs to TPC <= 8 and TPC>1
-    tvo   = np.where(((tpc <= 8) & (tpc > 1)), tob, tvo) # virtual temperature is output as tob (below) assuming tvo == tsen where moisture is low
+    tsen = np.where(tpc == 1, tob, tsen)  # Extract sensible temperature from tob, which belongs to TPC=1
+    tvo = np.full(tob.shape, tob.fill_value)  # Extract virtual temperature from tob, which belongs to TPC <= 8 and TPC>1
+    tvo = np.where(((tpc <= 8) & (tpc > 1)), tob, tvo)  # virtual temperature is output as tob (below) assuming tvo == tsen where moisture is low
     qob = r.get('specificHumidity', type='float')
     qob *= 1.0e-6
     uob = r.get('windEastward')
@@ -93,13 +94,13 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
 
     # QualityMark
     pobqm = r.get('pressureQM')
-    pob_psqm = np.full(pobqm.shape, pobqm.fill_value) # Extract stationPressureQM from pressureQM
-    pob_psqm   = np.where(cat == 0, pobqm, pob_psqm)
+    pob_psqm = np.full(pobqm.shape, pobqm.fill_value)  # Extract stationPressureQM from pressureQM
+    pob_psqm = np.where(cat == 0, pobqm, pob_psqm)
     tobqm = r.get('airTemperatureQM')
-    tsenqm = np.full(tobqm.shape, tobqm.fill_value) # Extract airTemperature from tobqm, which belongs to TPC=1
+    tsenqm = np.full(tobqm.shape, tobqm.fill_value)  # Extract airTemperature from tobqm, which belongs to TPC=1
     tsenqm = np.where(tpc == 1, tobqm, tsenqm)
-    tvoqm   = np.full(tobqm.shape, tobqm.fill_value) # Extract virtual temperature from tob, which belongs to TPC <= 8 and TPC>1
-    tvoqm   = np.where(((tpc <= 8) & (tpc > 1)), tobqm, tvoqm)
+    tvoqm = np.full(tobqm.shape, tobqm.fill_value)  # Extract virtual temperature from tob, which belongs to TPC <= 8 and TPC>1
+    tvoqm = np.where(((tpc <= 8) & (tpc > 1)), tobqm, tvoqm)
     qobqm = r.get('specificHumidityQM')
     uobqm = r.get('windEastwardQM')
     vobqm = r.get('windNorthwardQM')
@@ -107,7 +108,7 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     # Write the data to an IODA file
     path, fname = os.path.split(OUTPUT_PATH)
     if path and not os.path.exists(path):
-         os.makedirs(path)
+        os.makedirs(path)
     g = ioda.Engines.HH.createFile(name=OUTPUT_PATH,
                                    mode=ioda.Engines.BackendCreateModes.Truncate_If_Exists)
 
@@ -136,7 +137,7 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
 
     # Create the variables
     print("Create MetaData group variables")
-    latitude = g.vars.create('MetaData/latitude', ioda.Types.float,  scales=[dim_location], params=pfloat)
+    latitude = g.vars.create('MetaData/latitude', ioda.Types.float, scales=[dim_location], params=pfloat)
     latitude.atts.create('valid_range', ioda.Types.float, [2]).writeVector.float([-90, 90])
     latitude.atts.create('units', ioda.Types.str).writeVector.str(['degree_north'])
     latitude.atts.create('long_name', ioda.Types.str).writeVector.str(['Latitude'])
@@ -153,10 +154,10 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     stationelevation.atts.create('units', ioda.Types.str).writeVector.str(['m'])
     stationelevation.atts.create('long_name', ioda.Types.str).writeVector.str(['Station Elevation'])
 
-    datetime = g.vars.create('MetaData/dateTime',  ioda.Types.int64,  scales=[dim_location], params=pint64)
+    datetime = g.vars.create('MetaData/dateTime', ioda.Types.int64, scales=[dim_location], params=pint64)
     datetime.atts.create('units', ioda.Types.str).writeVector.str(['seconds since 1970-01-01T00:00:00Z'])
 
-    releasetime = g.vars.create('MetaData/releaseTime',  ioda.Types.int64,  scales=[dim_location], params=pint64)
+    releasetime = g.vars.create('MetaData/releaseTime', ioda.Types.int64, scales=[dim_location], params=pint64)
     releasetime.atts.create('units', ioda.Types.str).writeVector.str(['seconds since 1970-01-01T00:00:00Z'])
 
     pressure = g.vars.create('MetaData/pressure', ioda.Types.float, scales=[dim_location], params=pfloat)
@@ -164,7 +165,7 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     pressure.atts.create('long_name', ioda.Types.str).writeVector.str(['Pressure'])
 
     print("Create ObsValue group variables")
-#   prepbufrdatalevelcategory = g.vars.create('ObsValue/verticalSignificance', ioda.Types.int64,  scales=[dim_location], params=pint)
+#   prepbufrdatalevelcategory = g.vars.create('ObsValue/verticalSignificance', ioda.Types.int64, scales=[dim_location], params=pint)
 #   prepbufrdatalevelcategory.atts.create('units', ioda.Types.str).writeVector.str([''])
 #   prepbufrdatalevelcategory.atts.create('long_name', ioda.Types.str).writeVector.str(['Prepbufr Data Level Category'])
 
@@ -240,7 +241,7 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     releasetime.writeNPArray.int64(ulan.flatten())
     temperatureeventcode.writeNPArray.int(tpc.flatten())
     pressure.writeNPArray.float(pob.flatten())
- 
+
     stationpressure.writeNPArray.float(pob_ps.flatten())
 #   airtemperature.writeNPArray.float(tob.flatten())
     virtualtemperature.writeNPArray.float(tob.flatten())
@@ -257,16 +258,17 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     windeastwardqm.writeNPArray.int(uobqm.flatten())
     windnorthwardqm.writeNPArray.int(vobqm.flatten())
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    description=(
-            'Reads NCEP PREPBUFR formated ADP Upper Air input files'
-            ' convert into IODA formatted output files. '
+    description = (
+        'Reads NCEP PREPBUFR formated ADP Upper Air input files'
+        ' convert into IODA formatted output files. '
     )
 
     required = parser.add_argument_group(title='required arguments')
     required.add_argument('-i', '--input', type=str, default=None,
-                          dest='filename',  required=True,
+                          dest='filename', required=True,
                           help='adpsfc file name')
     required.add_argument('-o', '--output', type=str, default=None,
                           dest='output', required=True,
