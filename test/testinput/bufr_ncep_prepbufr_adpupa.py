@@ -6,6 +6,7 @@
 import pyiodaconv.ioda_conv_engines as iconv
 import pyiodaconv.ioda_conv_ncio as iconio
 from pyiodaconv import bufr
+from pyiodaconv.def_jedi_utils import long_missing_value
 from pyioda import ioda
 
 import numpy as np
@@ -67,10 +68,19 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     pob *= 100
 
     # Time variable
+    # The time is entering in as a float32 value representing an offset from the cycle
+    # time in hours (so fractions of hours can exist). This needs to be first converted
+    # to seconds while still a float32, then converted to an int64 for the dateTime variable.
+    # Another consideration is that the get function returns a masked array with an
+    # appropriate fill value assigned. When converting to an int64, the fill value needs
+    # to get updated, and then before writing into the output ioda file, the masked array
+    # function filled() needs to be called which will convert the values marked invalid
+    # to the fill value.
     hrdr = r.get('timeOffset')
+    hrdr = (r.get('timeOffset') * 3600).astype(np.int64)
+    np.ma.set_fill_value(hrdr, long_missing_value)
     print("cycleTimeSinceEpoch")
     cycleTimeSinceEpoch = np.int64(calendar.timegm(time.strptime(date, '%Y%m%d%H%M')))
-    hrdr = np.int64(hrdr*3600)
     hrdr += cycleTimeSinceEpoch
 
     ulan = np.repeat(hrdr[:,0], hrdr.shape[1])
@@ -231,31 +241,31 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
 
     # Write data to the variables
     print("Write data to variables")
-#   prepbufrdatalevelcategory.writeNPArray.int(cat.flatten())
-    latitude.writeNPArray.float(lat.flatten())
-    longitude.writeNPArray.float(lon.flatten())
-    stationidentification.writeVector.str(sid.flatten())
-    stationelevation.writeNPArray.float(elv.flatten())
-    datetime.writeNPArray.int64(hrdr.flatten())
-    releasetime.writeNPArray.int64(ulan.flatten())
-    temperatureeventcode.writeNPArray.int(tpc.flatten())
-    pressure.writeNPArray.float(pob.flatten())
+#   prepbufrdatalevelcategory.writeNPArray.int(cat.filled().flatten())
+    latitude.writeNPArray.float(lat.filled().flatten())
+    longitude.writeNPArray.float(lon.filled().flatten())
+    stationidentification.writeVector.str(sid.filled().flatten())
+    stationelevation.writeNPArray.float(elv.filled().flatten())
+    datetime.writeNPArray.int64(hrdr.filled().flatten())
+    releasetime.writeNPArray.int64(ulan.filled().flatten())
+    temperatureeventcode.writeNPArray.int(tpc.filled().flatten())
+    pressure.writeNPArray.float(pob.filled().flatten())
  
     stationpressure.writeNPArray.float(pob_ps.flatten())
-#   airtemperature.writeNPArray.float(tob.flatten())
+#   airtemperature.writeNPArray.float(tob.filled().flatten())
     virtualtemperature.writeNPArray.float(tob.flatten())
-    specifichumidity.writeNPArray.float(qob.flatten())
-    windeastward.writeNPArray.float(uob.flatten())
-    windnorthward.writeNPArray.float(vob.flatten())
-    heightofobservation.writeNPArray.float(zob.flatten())
+    specifichumidity.writeNPArray.float(qob.filled().flatten())
+    windeastward.writeNPArray.float(uob.filled().flatten())
+    windnorthward.writeNPArray.float(vob.filled().flatten())
+    heightofobservation.writeNPArray.float(zob.filled().flatten())
 
-    pressureqm.writeNPArray.int(pobqm.flatten())
+    pressureqm.writeNPArray.int(pobqm.filled().flatten())
     stationpressureqm.writeNPArray.int(pob_psqm.flatten())
-#   airtemperatureqm.writeNPArray.int(tsenqm.flatten())
+#   airtemperatureqm.writeNPArray.int(tsenqm.filled().flatten())
     virtualtemperatureqm.writeNPArray.int(tvoqm.flatten())
-    specifichumidityqm.writeNPArray.int(qobqm.flatten())
-    windeastwardqm.writeNPArray.int(uobqm.flatten())
-    windnorthwardqm.writeNPArray.int(vobqm.flatten())
+    specifichumidityqm.writeNPArray.int(qobqm.filled().flatten())
+    windeastwardqm.writeNPArray.int(uobqm.filled().flatten())
+    windnorthwardqm.writeNPArray.int(vobqm.filled().flatten())
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
