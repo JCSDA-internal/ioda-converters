@@ -261,6 +261,10 @@ program obs2ioda
          write (*, *) 'Error: -t ccyymmddhhnn not specified for -ahi'
          stop
       end if
+      ! WARNING If do_ahi feature is enabled, you need to allocate the global
+      ! arrays in the ahi_HSD_mod module by calling the allocate_hsd_arrays function.
+      ! You also need to deallocate the global arrays by calling the
+      ! deallocate_hsd_arrays function.
       call read_HSD(cdatetime, inpdir, do_superob, superob_halfwidth)
       filedate = cdatetime(1:10)
       call write_obs(filedate, write_nc_radiance_geo, outdir, 1)
