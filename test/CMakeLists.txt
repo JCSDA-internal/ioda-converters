@@ -1472,7 +1472,7 @@ if(iodaconv_bufr_query_ENABLED)
                             netcdf
                             "${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/src/ncepbufr/prepbufr_sfcshp_api.py
                             -d 202108010000
-                            -i testinput/gdas.t12z.sfcshp.prepbufr
+                            -i testinput/gdas.t00z.sfcshp.prepbufr
                             -o testrun/prepbufr_sfcshp_api.nc"
                             prepbufr_sfcshp_api.nc ${IODA_CONV_COMP_TOL_ZERO} )
 
