@@ -212,21 +212,21 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     description=(
             'Reads NCEP PREPBUFR formated ADPsurface input files'
-            ' convert into IODA formatted output files. '
+            '  created by split_by_subset from a PREPBUFR file'
+            '  convert into IODA formatted output files.'
     )
 
-    DATA_PATH = './testinput/gdas.t12z.adpsfc.prepbufr'
-    OUTPUT_PATH = './testrun/prepbufr_adpsfc_api.nc'
-
     optional = parser.add_argument_group(title='optional arguments')
-    optional.add_argument('-f', '--filename', type=str, default=DATA_PATH,
-                          dest='filename', help='adpsfc file name')
-    optional.add_argument('-o', '--output', type=str, default=OUTPUT_PATH,
-                          dest='output', help='output filename')
-    optional.add_argument('-d', '--date', type=str, default='202108010000',
-                          dest='date', metavar='YYYYmmddHHMM', help='analysis cycle date')
+    optional.add_argument('-i', '--input', type=str, default=None,
+                          dest='filename',required=True,
+                          help='adpsfc file name')
+    optional.add_argument('-o', '--output', type=str, default=None,
+                          dest='output', required=True,
+                          help='output filename')
+    optional.add_argument('-d', '--date', type=str, default=None,
+                          dest='date', metavar='YYYYmmddHHMM', required=True,
+                          help='analysis cycle date')
 
     args = parser.parse_args()
 
     test_bufr_to_ioda(args.filename, args.output, args.date)
-
