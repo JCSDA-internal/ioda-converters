@@ -76,7 +76,6 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     # to get updated, and then before writing into the output ioda file, the masked array
     # function filled() needs to be called which will convert the values marked invalid
     # to the fill value.
-    hrdr = r.get('timeOffset')
     hrdr = (r.get('timeOffset') * 3600).astype(np.int64)
     np.ma.set_fill_value(hrdr, long_missing_value)
     print("cycleTimeSinceEpoch")
