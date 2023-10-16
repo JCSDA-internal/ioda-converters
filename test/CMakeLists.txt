@@ -99,7 +99,7 @@ list( APPEND test_input
 
 list( APPEND test_output
   testoutput/gdas.t00z.atms_n20_ta_remap.tm00.nc
-  eestoutput/20220216T00Z_PT3H_tms_tropics-01.nc4
+  testoutput/20220216T00Z_PT3H_tms_tropics-01.nc4
   testoutput/amsr2_gcom-w1_20220216.nc4
   testoutput/gmi_gpm_20220216.nc4
   testoutput/icethk_coperl4.nc
