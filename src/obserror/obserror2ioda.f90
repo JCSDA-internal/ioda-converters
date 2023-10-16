@@ -33,6 +33,10 @@ program obserror2ioda
    end if
 
 !> read GSI obs error covariances
+   !> the file descriptor, lu, needs to be set to an integer value, but the values
+   !> of 0, 5 and 6 need to be avoided since these are typically reserved for stderr, stdin
+   !> and stdout respectively.
+   lu = 10
    open (lu, file=trim(filename_in), convert='little_endian', form='unformatted')
    read (lu, IOSTAT=ioflag) nch_active, nctot, iprec
    print *, "Number of active channels: ", nch_active
