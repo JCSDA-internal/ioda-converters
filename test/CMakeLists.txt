@@ -1886,9 +1886,9 @@ ecbuild_add_test( TARGET  test_iodaconv_atms_nc4
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
                           "${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/src/hdf5/atms_netcdf_hdf5_2ioda.py
-                          -d 2021120600
-                          -i testinput/SNDR_SNPP_ATMS_SAMPLE.nc4
-                          -o testrun/2021120600_atms_sdr.nc4" 2021120600_atms_sdr.nc4 ${IODA_CONV_COMP_TOL} )
+                          -d 2022021600
+                          -i testinput/sample.SNDR.SNPP.ATMS.2022021600.nc4
+                          -o testrun/2022021600_atms_sdr.nc4" 2022021600_atms_sdr.nc4 ${IODA_CONV_COMP_TOL} )
 
 ecbuild_add_test( TARGET  test_iodaconv_atms_BGRemap_nc4
                   TYPE    SCRIPT
