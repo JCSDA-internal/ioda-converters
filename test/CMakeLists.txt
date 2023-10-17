@@ -66,7 +66,8 @@ list( APPEND test_input
   testinput/bfrPrf_C2E6.2021.214.12.00.G16_0001.0001_bufr
 #  testinput/SNDR_SNPP_ATMS_SAMPLE.nc4
   testinput/sample.SNDR.SNPP.ATMS.2022021600.nc4
-  testinput/SNDR.J1.ATMS.20180415T0000.nc4
+  testinput/sample.SNDR.J1.ATMS.2022021600.nc4
+#  testinput/SNDR.J1.ATMS.20180415T0000.nc4
   testinput/atms_BGremap_coeffs_ch1ch2.nc
   testinput/glider.yaml
   testinput/godae_bgc_argo.nc
@@ -158,7 +159,8 @@ list( APPEND test_output
   testoutput/gnssro_cosmic2_2021080212.nc4
 #  testoutput/2021120600_atms_sdr.nc4
   testoutput/2022021600_atms_sdr.nc4
-  testoutput/2018041500_atms_BGRemap_sdr.nc4
+  testoutput/2022021600_atms_BGRemap_sdr.nc4
+#  testoutput/2018041500_atms_BGRemap_sdr.nc4
   testoutput/godae_bgc_argo.nc
   testoutput/owp_snow_obs_dup_thin_err_fn.nc
   testoutput/wmo_raob_double.nc4
@@ -1900,9 +1902,9 @@ ecbuild_add_test( TARGET  test_iodaconv_atms_BGRemap_nc4
                           netcdf
                           "${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/src/hdf5/atms_netcdf_hdf5_2ioda.py
                           -m BG
-                          -d 2018041500
-                          -i testinput/SNDR.J1.ATMS.20180415T0000.nc4
-                          -o testrun/2018041500_atms_BGRemap_sdr.nc4" 2018041500_atms_BGRemap_sdr.nc4 ${IODA_CONV_COMP_TOL} )
+                          -d 2022021600
+                          -i testinput/sample.SNDR.J1.ATMS.2022021600.nc4
+                          -o testrun/2022021600_atms_BGRemap_sdr.nc4" 2022021600_atms_BGRemap_sdr.nc4 ${IODA_CONV_COMP_TOL} )
 
 if( iodaconv_eccodes_ENABLED )
 
