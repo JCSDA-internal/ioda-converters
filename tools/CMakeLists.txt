@@ -11,4 +11,7 @@ set_targets_deps( "${programs}"
 
 add_subdirectory( fortran )
 add_subdirectory( run_satwnds )
-add_subdirectory( bufr )
+
+if(iodaconv_bufr_query_ENABLED)
+  add_subdirectory( bufr )
+endif()

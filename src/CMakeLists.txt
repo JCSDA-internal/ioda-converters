@@ -19,7 +19,7 @@ if(iodaconv_gnssro_ENABLED)
     add_subdirectory(gnssro)
 endif()
 
-if(iodaconv_bufr_ENABLED)
+if(iodaconv_bufr_query_ENABLED)
   add_subdirectory(bufr)
 endif()
 
