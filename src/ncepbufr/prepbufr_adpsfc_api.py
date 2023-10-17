@@ -4,17 +4,15 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 
 import numpy as np
-import numpy.ma as ma
-from pyiodaconv.def_jedi_utils import long_missing_value
 from pyiodaconv import bufr
+from pyiodaconv.def_jedi_utils import long_missing_value
 from pyioda import ioda
+import argparse
 import calendar
+import os
 import time
 
-DATA_PATH = './testinput/gdas.t00z.sfcshp.prepbufr'
-OUTPUT_PATH = './testrun/prepbufr_sfcshp_api.nc'
-
-def test_bufr_to_ioda():
+def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
    # Make the QuerySet for all the data we want
    q = bufr.QuerySet()
 #MetaData
@@ -31,7 +29,6 @@ def test_bufr_to_ioda():
    q.add('windNorthward', '*/W___INFO/W__EVENT{1}/VOB')
    q.add('windEastward', '*/W___INFO/W__EVENT{1}/UOB')
    q.add('specificHumidity', '*/Q___INFO/Q__EVENT{1}/QOB')
-   q.add('seaSurfaceTemperature', '*/SST_INFO/SSTEVENT{1}/SST1')
 #QualityMark
    q.add('stationPressureQM', '*/P___INFO/P__EVENT{1}/PQM')
    q.add('airTemperatureQM', '*/T___INFO/T__EVENT{1}/TQM') 
@@ -39,8 +36,7 @@ def test_bufr_to_ioda():
    q.add('specificHumidityQM', '*/Q___INFO/Q__EVENT{1}/QQM')
    q.add('windNorthwardQM', '*/W___INFO/W__EVENT{1}/WQM')
    q.add('windEastwardQM', '*/W___INFO/W__EVENT{1}/WQM')
-   q.add('seaSurfaceTemperatureQM', '*/SST_INFO/SSTEVENT{1}/SSTQM')
-
+   
    # Open the BUFR file and execute the QuerySet
    with bufr.File(DATA_PATH) as f:
       print("execute")
@@ -61,10 +57,10 @@ def test_bufr_to_ioda():
    # function filled() needs to be called which will convert the values marked invalid
    # to the fill value.
    print("Get time")
-   dhr = (r.get('obsTimeMinusCycleTime') * 3600).astype(np.int64)
+   dhr = (r.get('obsTimeMinusCycleTime') * 3600).astype(np.int64)  # Needs to be converted to seconds since Epoch time from [-3,3]
    np.ma.set_fill_value(dhr, long_missing_value)
    print("cycleTimeSinceEpoch") #For now, file time is put in manually 
-   cycleTimeSinceEpoch = np.int64(calendar.timegm(time.strptime('2021 08 01 00 00', '%Y %m %d %H %M')))
+   cycleTimeSinceEpoch = np.int64(calendar.timegm(time.strptime(date, '%Y%m%d%H%M')))
    print("cycleTimeSinceEpoch: ", cycleTimeSinceEpoch)
    dhr += cycleTimeSinceEpoch
 
@@ -85,7 +81,6 @@ def test_bufr_to_ioda():
    print("humidity")
    qob = r.get('specificHumidity', type='float')
    qob *= 0.000001
-   sst1 = r.get('seaSurfaceTemperature')
 
 #Quality Marker group
    tobqm = r.get('airTemperatureQM')
@@ -94,9 +89,11 @@ def test_bufr_to_ioda():
    qobqm = r.get('specificHumidityQM')
    uobqm = r.get('windEastwardQM')
    vobqm = r.get('windNorthwardQM')
-   sstqm = r.get('seaSurfaceTemperatureQM')
 
    # Write the data to an IODA file
+   path, fname = os.path.split(OUTPUT_PATH)
+   if path and not os.path.exists(path):
+        os.makedirs(path)
    g = ioda.Engines.HH.createFile(name=OUTPUT_PATH,
                                   mode=ioda.Engines.BackendCreateModes.Truncate_If_Exists)
 
@@ -172,10 +169,6 @@ def test_bufr_to_ioda():
    specifichumidity.atts.create('units', ioda.Types.str).writeVector.str(['kg kg-1'])
    specifichumidity.atts.create('long_name', ioda.Types.str).writeVector.str(['Specific Humidity'])   
 
-   seasurfacetemperature = g.vars.create('ObsValue/seaSurfaceTemperature', ioda.Types.float, scales=[dim_location],params=pfloat)
-   seasurfacetemperature.atts.create('units', ioda.Types.str).writeVector.str(['K'])
-   seasurfacetemperature.atts.create('long_name', ioda.Types.str).writeVector.str(['Sea Surface Temperature'])
-
    print("Create Quality Marker group")
    airtemperatureqm = g.vars.create('QualityMarker/airTemperature', ioda.Types.int, scales=[dim_location], params=pint)
    airtemperatureqm.atts.create('units', ioda.Types.str).writeVector.str(['1'])
@@ -201,10 +194,6 @@ def test_bufr_to_ioda():
    windeastwardqm.atts.create('units', ioda.Types.str).writeVector.str(['1'])
    windeastwardqm.atts.create('long_name', ioda.Types.str).writeVector.str(['Eastward Wind Quality Marker'])
 
-   seasurfacetemperatureqm = g.vars.create('QualityMarker/seaSurfaceTemperature', ioda.Types.int, scales=[dim_location],params=pint)
-   seasurfacetemperatureqm.atts.create('units', ioda.Types.str).writeVector.str(['1'])
-   seasurfacetemperatureqm.atts.create('long_name', ioda.Types.str).writeVector.str(['Sea Surface Temperature Quality Marker'])
-
    # Write the data to the variables
    print("Write data to variables")
    longitude.writeNPArray.float(lon.filled().flatten())
@@ -220,7 +209,6 @@ def test_bufr_to_ioda():
    windnorthward.writeNPArray.float(vob.filled().flatten())
    windeastward.writeNPArray.float(uob.filled().flatten())
    specifichumidity.writeNPArray.float(qob.filled().flatten())
-   seasurfacetemperature.writeNPArray.float(sst1.filled().flatten())
 
    airtemperatureqm.writeNPArray.int(tobqm.filled().flatten())
    virtualtemperatureqm.writeNPArray.int(tvoqm.filled().flatten())
@@ -228,10 +216,29 @@ def test_bufr_to_ioda():
    specifichumidityqm.writeNPArray.int(qobqm.filled().flatten())
    windeastwardqm.writeNPArray.int(uobqm.filled().flatten())
    windnorthwardqm.writeNPArray.int(vobqm.filled().flatten())
-   seasurfacetemperatureqm.writeNPArray.int(sstqm.filled().flatten())
 
    print("end")
 
 if __name__ == '__main__':
-   test_bufr_to_ioda()
+    parser = argparse.ArgumentParser()
+    description=(
+            'Reads NCEP PREPBUFR formated ADPsurface input files'
+            ' created by split_by_subset from a PREPBUFR file'
+            ' convert into IODA formatted output files. '
+    )
+
+    required = parser.add_argument_group(title='required arguments')
+    required.add_argument('-i', '--input', type=str, default=None,
+                          dest='filename', required=True,
+                          help='adpsfc file name')
+    required.add_argument('-o', '--output', type=str, default=None,
+                          dest='output', required=True,
+                          help='output filename')
+    required.add_argument('-d', '--date', type=str, default=None,
+                          dest='date', metavar='YYYYmmddHHMM', required=True,
+                          help='analysis cycle date')
+
+    args = parser.parse_args()
+
+    test_bufr_to_ioda(args.filename, args.output, args.date)
 
