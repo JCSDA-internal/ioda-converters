@@ -37,13 +37,6 @@ module ahi_HSD_mod
    integer(i_kind), parameter :: nband = 10  ! number of infrared bands
    integer(i_kind), parameter :: nsegm = 10  ! number of segment
 
-   real(r_single)  :: longitude(npixel, nline)
-   real(r_single)  :: latitude(npixel, nline)
-   real(r_single)  :: brit(npixel, nline, nband)
-   real(r_kind)    :: bt_sup(npixel, nline, nband)   ! superobbed brightness temperature(superobpixel, superobline, nband)
-   real(r_single)  :: solzen(npixel, nline)
-   real(r_single)  :: satzen(npixel, nline)
-   logical         :: valid(npixel, nline)
    real(r_double)  :: rlat, rlon, lon_diff, tmp1, theta1, theta2
    integer(i_kind) :: ntotal, npix, nlin
 
@@ -223,9 +216,20 @@ module ahi_HSD_mod
 
 contains
 
+
+
    subroutine read_HSD(ccyymmddhhnn, inpdir, do_superob, superob_halfwidth)
 
       implicit none
+
+      ! bt_sup is superobbed brightness temperature(superobpixel, superobline, nband)
+      real(r_single), allocatable  :: longitude(:,:) !(npixel, nline)
+      real(r_single), allocatable  :: latitude(:,:) !(npixel, nline)
+      real(r_single), allocatable  :: brit(:,:,:) !(npixel, nline, nband)
+      real(r_kind), allocatable    :: bt_sup(:,:,:) !(npixel, nline, nband)
+      real(r_single), allocatable  :: solzen(:,:) !(npixel, nline)
+      real(r_single), allocatable  :: satzen(:,:) !(npixel, nline)
+      logical, allocatable         :: valid(:,:) !(npixel, nline)
 
       character(len=12), intent(in) :: ccyymmddhhnn
       character(len=*), intent(in) :: inpdir
@@ -265,6 +269,15 @@ contains
       real(r_kind)    :: temp1 = 0.0
 ! end of declaration
       continue
+
+      ! allocate and initialize work arrays
+      if (.not. allocated(longitude)) allocate(longitude(npixel, nline))
+      if (.not. allocated(latitude)) allocate(latitude(npixel, nline))
+      if (.not. allocated(brit)) allocate(brit(npixel, nline, nband))
+      if (.not. allocated(bt_sup)) allocate(bt_sup(npixel, nline, nband))
+      if (.not. allocated(solzen)) allocate(solzen(npixel, nline))
+      if (.not. allocated(satzen)) allocate(satzen(npixel, nline))
+      if (.not. allocated(valid)) allocate(valid(npixel, nline))
 
       longitude(:, :) = missing_r
       latitude(:, :) = missing_r
@@ -812,6 +825,14 @@ fnames(ij) = trim(inpdir)//'HS_'//satellite//'_'//ccyymmdd//'_'//hhnn//'_'//band
 
       end if ! if do_superob
 
+      ! clean up work arrays
+      if (allocated(longitude)) deallocate(longitude)
+      if (allocated(latitude)) deallocate(latitude)
+      if (allocated(brit)) deallocate(brit)
+      if (allocated(bt_sup)) deallocate(bt_sup)
+      if (allocated(solzen)) deallocate(solzen)
+      if (allocated(satzen)) deallocate(satzen)
+      if (allocated(valid)) deallocate(valid)
    end subroutine read_HSD
 
    subroutine pixlin_to_lonlat(pix, lin, lon, lat, ierr)
