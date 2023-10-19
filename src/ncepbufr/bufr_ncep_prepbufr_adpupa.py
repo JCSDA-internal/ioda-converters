@@ -6,6 +6,7 @@
 import pyiodaconv.ioda_conv_engines as iconv
 import pyiodaconv.ioda_conv_ncio as iconio
 from pyiodaconv import bufr
+from pyiodaconv.def_jedi_utils import long_missing_value
 from pyioda import ioda
 
 import numpy as np
@@ -67,10 +68,18 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     pob *= 100
 
     # Time variable
-    hrdr = r.get('timeOffset')
+    # The time is entering in as a float32 value representing an offset from the cycle
+    # time in hours (so fractions of hours can exist). This needs to be first converted
+    # to seconds while still a float32, then converted to an int64 for the dateTime variable.
+    # Another consideration is that the get function returns a masked array with an
+    # appropriate fill value assigned. When converting to an int64, the fill value needs
+    # to get updated, and then before writing into the output ioda file, the masked array
+    # function filled() needs to be called which will convert the values marked invalid
+    # to the fill value.
+    hrdr = (r.get('timeOffset') * 3600).astype(np.int64)
+    np.ma.set_fill_value(hrdr, long_missing_value)
     print("cycleTimeSinceEpoch")
     cycleTimeSinceEpoch = np.int64(calendar.timegm(time.strptime(date, '%Y%m%d%H%M')))
-    hrdr = np.int64(hrdr*3600)
     hrdr += cycleTimeSinceEpoch
 
     ulan = np.repeat(hrdr[:,0], hrdr.shape[1])
@@ -81,10 +90,10 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     pob_ps   = np.where(cat == 0, pob, pob_ps)  
     tob = r.get('airTemperature')
     tob += 273.15
-    tsen = np.full(tob.shape, tob.fill_value) # Extract sensible temperature from tob, which belongs to TPC=1
-    tsen = np.where(tpc == 1, tob, tsen)
+    tsen = np.full(tob.shape, tob.fill_value)
+    tsen = np.where(tpc == 1, tob, tsen) # Extract sensible temperature from tob, which belongs to TPC=1
     tvo   = np.full(tob.shape, tob.fill_value) # Extract virtual temperature from tob, which belongs to TPC <= 8 and TPC>1
-    tvo   = np.where(((tpc <= 8) & (tpc > 1)), tob, tvo)
+    tvo   = np.where(((tpc <= 8) & (tpc > 1)), tob, tvo) # virtual temperature is output as tob (below) assuming tvo == tsen where moisture is low
     qob = r.get('specificHumidity', type='float')
     qob *= 1.0e-6
     uob = r.get('windEastward')
@@ -172,9 +181,9 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     stationpressure.atts.create('units', ioda.Types.str).writeVector.str(['Pa'])
     stationpressure.atts.create('long_name', ioda.Types.str).writeVector.str(['Station Pressure'])
 
-    airtemperature = g.vars.create('ObsValue/airTemperature', ioda.Types.float, scales=[dim_location], params=pfloat)
-    airtemperature.atts.create('units', ioda.Types.str).writeVector.str(['K'])
-    airtemperature.atts.create('long_name', ioda.Types.str).writeVector.str(['Temperature'])
+#   airtemperature = g.vars.create('ObsValue/airTemperature', ioda.Types.float, scales=[dim_location], params=pfloat)
+#   airtemperature.atts.create('units', ioda.Types.str).writeVector.str(['K'])
+#   airtemperature.atts.create('long_name', ioda.Types.str).writeVector.str(['Temperature'])
 
     virtualtemperature = g.vars.create('ObsValue/virtualTemperature', ioda.Types.float, scales=[dim_location], params=pfloat)
     virtualtemperature.atts.create('units', ioda.Types.str).writeVector.str(['K'])
@@ -209,9 +218,9 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
     stationpressureqm.atts.create('units', ioda.Types.str).writeVector.str(['1'])
     stationpressureqm.atts.create('long_name', ioda.Types.str).writeVector.str(['Station Pressure Quality Marker'])
 
-    airtemperatureqm = g.vars.create('QualityMarker/airTemperature', ioda.Types.int, scales=[dim_location], params=pint)
-    airtemperatureqm.atts.create('units', ioda.Types.str).writeVector.str(['1'])
-    airtemperatureqm.atts.create('long_name', ioda.Types.str).writeVector.str(['Air Temperature Quality Marker'])
+#   airtemperatureqm = g.vars.create('QualityMarker/airTemperature', ioda.Types.int, scales=[dim_location], params=pint)
+#   airtemperatureqm.atts.create('units', ioda.Types.str).writeVector.str(['1'])
+#   airtemperatureqm.atts.create('long_name', ioda.Types.str).writeVector.str(['Air Temperature Quality Marker'])
 
     virtualtemperatureqm = g.vars.create('QualityMarker/virtualTemperature', ioda.Types.int, scales=[dim_location], params=pint)
     virtualtemperatureqm.atts.create('units', ioda.Types.str).writeVector.str(['1'])
@@ -231,31 +240,31 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
 
     # Write data to the variables
     print("Write data to variables")
-#   prepbufrdatalevelcategory.writeNPArray.int(cat.flatten())
-    latitude.writeNPArray.float(lat.flatten())
-    longitude.writeNPArray.float(lon.flatten())
-    stationidentification.writeVector.str(sid.flatten())
-    stationelevation.writeNPArray.float(elv.flatten())
-    datetime.writeNPArray.int64(hrdr.flatten())
-    releasetime.writeNPArray.int64(ulan.flatten())
-    temperatureeventcode.writeNPArray.int(tpc.flatten())
-    pressure.writeNPArray.float(pob.flatten())
+#   prepbufrdatalevelcategory.writeNPArray.int(cat.filled().flatten())
+    latitude.writeNPArray.float(lat.filled().flatten())
+    longitude.writeNPArray.float(lon.filled().flatten())
+    stationidentification.writeVector.str(sid.filled().flatten())
+    stationelevation.writeNPArray.float(elv.filled().flatten())
+    datetime.writeNPArray.int64(hrdr.filled().flatten())
+    releasetime.writeNPArray.int64(ulan.filled().flatten())
+    temperatureeventcode.writeNPArray.int(tpc.filled().flatten())
+    pressure.writeNPArray.float(pob.filled().flatten())
  
     stationpressure.writeNPArray.float(pob_ps.flatten())
-    airtemperature.writeNPArray.float(tsen.flatten())
-    virtualtemperature.writeNPArray.float(tvo.flatten())
-    specifichumidity.writeNPArray.float(qob.flatten())
-    windeastward.writeNPArray.float(uob.flatten())
-    windnorthward.writeNPArray.float(vob.flatten())
-    heightofobservation.writeNPArray.float(zob.flatten())
+#   airtemperature.writeNPArray.float(tob.filled().flatten())
+    virtualtemperature.writeNPArray.float(tob.flatten())
+    specifichumidity.writeNPArray.float(qob.filled().flatten())
+    windeastward.writeNPArray.float(uob.filled().flatten())
+    windnorthward.writeNPArray.float(vob.filled().flatten())
+    heightofobservation.writeNPArray.float(zob.filled().flatten())
 
-    pressureqm.writeNPArray.int(pobqm.flatten())
+    pressureqm.writeNPArray.int(pobqm.filled().flatten())
     stationpressureqm.writeNPArray.int(pob_psqm.flatten())
-    airtemperatureqm.writeNPArray.int(tsenqm.flatten())
+#   airtemperatureqm.writeNPArray.int(tsenqm.filled().flatten())
     virtualtemperatureqm.writeNPArray.int(tvoqm.flatten())
-    specifichumidityqm.writeNPArray.int(qobqm.flatten())
-    windeastwardqm.writeNPArray.int(uobqm.flatten())
-    windnorthwardqm.writeNPArray.int(vobqm.flatten())
+    specifichumidityqm.writeNPArray.int(qobqm.filled().flatten())
+    windeastwardqm.writeNPArray.int(uobqm.filled().flatten())
+    windnorthwardqm.writeNPArray.int(vobqm.filled().flatten())
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -264,16 +273,16 @@ if __name__ == '__main__':
             ' convert into IODA formatted output files. '
     )
 
-    DATA_PATH = './testinput/ADPUPA.prepbufr'
-    OUTPUT_PATH = './testrun/prepbufr_adpupa_api.nc'
-
-    optional = parser.add_argument_group(title='optional arguments')
-    optional.add_argument('-f', '--filename', type=str, default=DATA_PATH,
-                          dest='filename', help='adpsfc file name')
-    optional.add_argument('-o', '--output', type=str, default=OUTPUT_PATH,
-                          dest='output', help='output filename')
-    optional.add_argument('-d', '--date', type=str, default='202108010000',
-                          dest='date', metavar='YYYYmmddHHMM', help='analysis cycle date')
+    required = parser.add_argument_group(title='required arguments')
+    required.add_argument('-i', '--input', type=str, default=None,
+                          dest='filename', required=True,
+                          help='adpsfc file name')
+    required.add_argument('-o', '--output', type=str, default=None,
+                          dest='output', required=True,
+                          help='output filename')
+    required.add_argument('-d', '--date', type=str, default=None,
+                          dest='date', metavar='YYYYmmddHHMM', required=True,
+                          help='analysis cycle date')
 
     args = parser.parse_args()
 

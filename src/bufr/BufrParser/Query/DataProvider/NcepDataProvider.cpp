@@ -65,6 +65,9 @@ namespace bufr {
 
             get_jmpb_f(&intPtr, &size);
             currentTableData_->jmpb = std::vector<int>(intPtr, intPtr + size);
+
+            get_irf_f(&intPtr, &size);
+            currentTableData_->irf = std::vector<int>(intPtr, intPtr + size);
         }
     }
 

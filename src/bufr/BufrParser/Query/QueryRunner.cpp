@@ -17,6 +17,7 @@
 #include "Constants.h"
 #include "SubsetTable.h"
 #include "VectorMath.h"
+#include "NodeLookupTable.h"
 
 
 namespace Ingester {
@@ -40,28 +41,18 @@ namespace bufr
     void QueryRunner::accumulate()
     {
         Targets targets;
-        std::shared_ptr<__details::ProcessingMasks> masks;
 
-        findTargets(targets, masks);
-        collectData(targets, masks, resultSet_);
+        findTargets(targets);
+        collectData(targets, resultSet_);
     }
 
-    void QueryRunner::findTargets(Targets &targets,
-                                  std::shared_ptr<__details::ProcessingMasks> &masks)
+    void QueryRunner::findTargets(Targets &targets)
     {
         // Check if the target list for this subset is cached
         if (targetCache_.find(dataProvider_->getSubsetVariant()) != targetCache_.end())
         {
             targets = targetCache_.at(dataProvider_->getSubsetVariant());
-            masks = maskCache_.at(dataProvider_->getSubsetVariant());
             return;
-        }
-
-        masks = std::make_shared<__details::ProcessingMasks>();
-        {  // Initialize Masks
-            size_t numNodes = dataProvider_->getIsc(dataProvider_->getInode());
-            masks->valueNodeMask.resize(numNodes, false);
-            masks->pathNodeMask.resize(numNodes, false);
         }
 
         auto table = SubsetTable(dataProvider_);
@@ -128,7 +119,9 @@ namespace bufr
 
             int pathIdx = 0;
             path[pathIdx].queryComponent = foundQuery.subset;
-            path[pathIdx].branch = 0;
+            path[pathIdx].nodeId = table.getRoot()->nodeIdx;
+            path[pathIdx].parentNodeId = 0;
+            path[pathIdx].parentDimensionNodeId = 0;
             path[pathIdx].setType(Typ::Subset);
             pathIdx++;
 
@@ -136,8 +129,12 @@ namespace bufr
             for (size_t nodeIdx = 1; nodeIdx < nodes.size(); nodeIdx++)
             {
                 path[pathIdx].queryComponent = foundQuery.path[nodeIdx - 1];
-                path[pathIdx].branch = nodes[nodeIdx]->nodeIdx;
+                path[pathIdx].nodeId = nodes[nodeIdx]->nodeIdx;
+                path[pathIdx].parentNodeId = nodes[nodeIdx]->getParent()->nodeIdx;
+                path[pathIdx].parentDimensionNodeId =
+                    nodes[nodeIdx]->getDimensionParent()->nodeIdx;
                 path[pathIdx].setType(nodes[nodeIdx]->type);
+                path[pathIdx].fixedRepeatCount = nodes[nodeIdx]->fixedRepCount;
                 pathIdx++;
             }
 
@@ -146,146 +143,16 @@ namespace bufr
             target->nodeIdx = tableNode->nodeIdx;
 
             targets.push_back(target);
-
-            // Set the mask
-            masks->valueNodeMask[target->nodeIdx] = true;
-            for (size_t pathIdx = 0; pathIdx < target->seqPath.size(); ++pathIdx)
-            {
-                masks->pathNodeMask[target->seqPath[pathIdx]] = true;
-            }
         }
 
         // Cache the targets and masks we just found
         targetCache_.insert({dataProvider_->getSubsetVariant(), targets});
-        maskCache_.insert({dataProvider_->getSubsetVariant(), masks});
     }
 
-    bool QueryRunner::isQueryNode(int nodeIdx) const
+    void QueryRunner::collectData(Targets& targets, ResultSet &resultSet) const
     {
-        return (dataProvider_->getTyp(nodeIdx) == Typ::DelayedRep ||
-                dataProvider_->getTyp(nodeIdx) == Typ::FixedRep ||
-                dataProvider_->getTyp(nodeIdx) == Typ::DelayedRepStacked ||
-                dataProvider_->getTyp(nodeIdx) == Typ::DelayedBinary);
-    }
-
-    void QueryRunner::collectData(Targets &targets,
-                                  std::shared_ptr<__details::ProcessingMasks> masks,
-                                  ResultSet &resultSet) const
-    {
-        std::vector<int> currentPath;
-        std::vector<int> currentPathReturns;
-
-        currentPath.reserve(10);
-        currentPathReturns.reserve(10);
-
+        auto lookupTable = NodeLookupTable(dataProvider_, targets);
         auto &dataFrame = resultSet.nextDataFrame();
-        int returnNodeIdx = -1;
-        int lastNonZeroReturnIdx = -1;
-
-        // Reorganize the data into a NodeValueTable to make lookups faster (avoid looping over all
-        // the data a bunch of times)
-        auto dataTable = __details::OffsetArray<NodeData>(
-            dataProvider_->getInode(),
-            dataProvider_->getIsc(dataProvider_->getInode()));
-
-        for (size_t dataCursor = 1; dataCursor <= dataProvider_->getNVal(); ++dataCursor)
-        {
-            int nodeIdx = dataProvider_->getInv(dataCursor);
-
-            if (masks->valueNodeMask[nodeIdx])
-            {
-                dataTable[nodeIdx].values.push_back(dataProvider_->getVal(dataCursor));
-            }
-
-            // Unfortuantely the fixed replicated sequences do not store their counts as values for
-            // the Fixed Replication nodes. It's therefore necessary to discover this information by
-            // manually tracing the nested sequences and counting everything manually. Since we have
-            // to do it for fixed reps anyways, its easier just to do it for all the squences.
-            if (dataProvider_->getJmpb(nodeIdx) > 0 &&
-                masks->pathNodeMask[dataProvider_->getJmpb(nodeIdx)])
-            {
-                const auto typ = dataProvider_->getTyp(nodeIdx);
-                const auto jmpbTyp = dataProvider_->getTyp(dataProvider_->getJmpb(nodeIdx));
-                if ((typ == Typ::Sequence && (jmpbTyp == Typ::Sequence ||
-                                              jmpbTyp == Typ::DelayedBinary ||
-                                              jmpbTyp == Typ::FixedRep)) ||
-                    typ == Typ::Repeat ||
-                    typ == Typ::StackedRepeat)
-                {
-                    dataTable[nodeIdx].counts.back()++;
-                }
-            }
-
-            if (currentPath.size() >= 1)
-            {
-                if (nodeIdx == returnNodeIdx ||
-                    dataCursor == dataProvider_->getNVal() ||
-                    (currentPath.size() > 1 && nodeIdx == *(currentPath.end() - 1) + 1))
-                {
-                    // Look for the first path return idx that is not 0 and check if its this node
-                    // idx. Exit the sequence if its appropriate. A return idx of 0 indicates a
-                    // sequence that occurs as the last element of another sequence.
-                    for (int pathIdx = currentPathReturns.size() - 1;
-                         pathIdx >= lastNonZeroReturnIdx;
-                         --pathIdx)
-                    {
-                        currentPathReturns.pop_back();
-                        auto seqNodeIdx = currentPath.back();
-                        currentPath.pop_back();
-
-                        const auto typSeqNode = dataProvider_->getTyp(seqNodeIdx);
-                        if (typSeqNode == Typ::DelayedRep ||
-                            typSeqNode == Typ::DelayedRepStacked)
-                        {
-                            dataTable[seqNodeIdx + 1].counts.back()--;
-                        }
-                    }
-
-                    lastNonZeroReturnIdx = currentPathReturns.size() - 1;
-                    returnNodeIdx = currentPathReturns[lastNonZeroReturnIdx];
-                }
-            }
-
-            if (masks->pathNodeMask[nodeIdx] && isQueryNode(nodeIdx))
-            {
-                if (dataProvider_->getTyp(nodeIdx) == Typ::DelayedBinary &&
-                    dataProvider_->getVal(dataCursor) == 0)
-                {
-                    // Ignore the node if it is a delayed binary and the value is 0
-                }
-                else
-                {
-                    currentPath.push_back(nodeIdx);
-                    const auto tmpReturnNodeIdx = dataProvider_->getLink(nodeIdx);
-                    currentPathReturns.push_back(tmpReturnNodeIdx);
-
-                    if (tmpReturnNodeIdx != 0)
-                    {
-                        lastNonZeroReturnIdx = currentPathReturns.size() - 1;
-                        returnNodeIdx = tmpReturnNodeIdx;
-                    }
-                    else
-                    {
-                        lastNonZeroReturnIdx = 0;
-                        returnNodeIdx = 0;
-
-                        if (dataCursor != dataProvider_->getNVal())
-                        {
-                            for (int pathIdx = currentPath.size() - 1; pathIdx >= 0; --pathIdx)
-                            {
-                                returnNodeIdx = dataProvider_->getLink(
-                                        dataProvider_->getJmpb(currentPath[pathIdx]));
-                                lastNonZeroReturnIdx = (currentPathReturns.size() - 1) - pathIdx;
-
-                                if (returnNodeIdx != 0) break;
-                            }
-                        }
-                    }
-                }
-
-                dataTable[nodeIdx + 1].counts.push_back(0);
-            }
-        }
 
         for (size_t targetIdx = 0; targetIdx < targets.size(); targetIdx++)
         {
@@ -304,19 +171,22 @@ namespace bufr
                 dataField.seqCounts[0] = {1};
                 SeqCounts counts;
 
+                // Compute the output counts for each path component. If the component has a filter
+                // we need to exclude the filtered out values from the counts.
                 bool hasFilter = false;
                 std::vector<std::vector<size_t>> filters;
                 for (size_t pathIdx = 0; pathIdx < targ->seqPath.size(); pathIdx++)
                 {
                     auto& pathComponent = targ->path[pathIdx + 1];
                     auto& filter = pathComponent.queryComponent->filter;
-                    if (filter.empty())
+                    if (filter.empty())  // No filter
                     {
-                        dataField.seqCounts[pathIdx + 1] =
-                            dataTable[targ->seqPath[pathIdx] + 1].counts;
+                        dataField.seqCounts[pathIdx + 1] = lookupTable[pathComponent.nodeId].counts;
                     }
-                    else
+                    else  // Component has a filter
                     {
+                        hasFilter = true;
+
                         // Delay the creation of the counts and filters until we know we need them
                         // in order to avoid unnecessary allocations
                         if (counts.empty())
@@ -326,30 +196,36 @@ namespace bufr
                         if (filters.empty())
                             filters = std::vector<std::vector<size_t>>(targ->seqPath.size() + 1);
 
+                        // Add the filter to the filters vector
                         filters[pathIdx + 1] = filter;
-                        hasFilter = true;
 
+                        // Create a new counts vector with the filtered out values excluded
                         auto filteredCounts =
-                          std::vector<int>(dataTable[targ->seqPath[pathIdx] + 1].counts.size(), 1);
-
+                          std::vector<int>(lookupTable[pathComponent.nodeId].counts.size(), 1);
                         for (size_t countIdx = 0; countIdx < filteredCounts.size(); countIdx++)
                         {
                             filteredCounts[countIdx] =
                                 std::max(static_cast<int>(filter.size()), filteredCounts[countIdx]);
                         }
 
+                        // Store the filtered counts in the data field
                         dataField.seqCounts[pathIdx + 1] = filteredCounts;
-                        counts[pathIdx + 1] = dataTable[targ->seqPath[pathIdx] + 1].counts;
+
+                        // Store the original (unfiltered) counts in the counts vector
+                        counts[pathIdx + 1] = lookupTable[pathComponent.nodeId].counts;
                     }
                 }
 
                 if (!hasFilter)
                 {
-                    dataField.data = dataTable[targ->nodeIdx].values;
+                    // No filters so just copy the data.
+                    dataField.data = lookupTable[targ->path.back().nodeId].data;
                 }
                 else
                 {
-                    dataField.data = makeFilteredData(dataTable[targ->nodeIdx].values,
+                    // There are filters, so we need to create a new data vector with the filtered
+                    // values.
+                    dataField.data = makeFilteredData(lookupTable[targ->path.back().nodeId].data,
                                                       counts,
                                                       filters);
                 }
