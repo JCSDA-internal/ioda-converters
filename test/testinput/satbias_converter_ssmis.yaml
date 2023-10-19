@@ -6,13 +6,13 @@ output:
   - constant
   - zenithAngle
   - cloudLiquidWater
-  - lapseRateOrder2
+  - lapseRate_order_2
   - lapseRate
   - cosineOfLatitudeTimesOrbitNode
   - sineOfLatitude
   - emissivityK
-  - scanAngleOrder4
-  - scanAngleOrder3
-  - scanAngleOrder2
+  - scanAngle_order_4
+  - scanAngle_order_3
+  - scanAngle_order_2
   - scanAngle
   output file: testrun/varbc/satbias_ssmis_f16.nc4
