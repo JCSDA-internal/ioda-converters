@@ -201,6 +201,9 @@ def read_grib(input_file, obsvars):
         obsvar = mrms_products[product_id]
         d = eccodes.codes_get(gid, "dataDate")
         t = eccodes.codes_get(gid, "dataTime")
+        if t > 2359:
+            logging.debug(f"DEBUG: dataTime is more than 4 digits, adjusting")
+            t = t/100
         dt = datetime.strptime(str(d)+str(t), "%Y%m%d%H%M")
         logging.debug(f"DEBUG: date info: {d} {t}Z")
 
