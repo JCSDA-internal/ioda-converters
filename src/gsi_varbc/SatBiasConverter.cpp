@@ -53,9 +53,10 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
   ioda::ObsGroup ogrp = ioda::ObsGroup::generate(empty_base_object, newDims);
 
   // Save the dimension variable values
-  ioda::Variable chansVar = ogrp.vars.createWithScales<int>("Channel", {ogrp.vars["Channel"]});
+  ioda::Variable chansVar = ogrp.vars["Channel"];
   chansVar.write(channels);
-  ioda::Variable recVar = ogrp.vars.createWithScales<std::string>("Record", {ogrp.vars["Record"]});
+  ioda::Variable recVar = ogrp.vars.createWithScales<std::string>(
+                    "RecordId", {ogrp.vars["Record"]});
   std::vector<std::string> sensors;
   sensors.push_back(sensor);
   recVar.write(sensors);
