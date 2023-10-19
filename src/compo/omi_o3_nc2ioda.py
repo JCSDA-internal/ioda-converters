@@ -115,6 +115,8 @@ class omi(object):
                     self.varAttrs[vkey]['units'] = 'degree'
                 elif('prior' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'ppmv'
+                elif('scanposition' in v.lower()):
+                    self.varAttrs[vkey]['units'] = '1'
         self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'DU'
 
     def _read_nc(self, filename):
@@ -204,7 +206,7 @@ class omi(object):
                 if (six_set or eight_set or nine_set):
                     continue
                 # could simply this further with one if statement possibly more clever use of a bit masking.
-                dd['sensorScanPosition'].append(float(iscan+1))
+                dd['sensorScanPosition'].append(iscan+1)
                 for v in flatVars:
                     if(v == 'dateTime'):
                         dd[v].append(d[v][itime])

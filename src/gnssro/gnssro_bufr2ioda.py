@@ -19,16 +19,15 @@ from itertools import repeat
 import netCDF4 as nc
 
 import pyiodaconv.ioda_conv_engines as iconv
+from pyiodaconv.def_jedi_utils import ioda_int_type, ioda_float_type
 from pyiodaconv.orddicts import DefaultOrderedDict
 
 from eccodes import *
 
 # globals
-ioda_float_type = 'float32'
-ioda_int_type = 'int32'
-float_missing_value = nc.default_fillvals['f4']
-int_missing_value = nc.default_fillvals['i4']
-long_missing_value = nc.default_fillvals['i8']
+float_missing_value = iconv.get_default_fill_val(np.float32)
+int_missing_value = iconv.get_default_fill_val(np.int32)
+long_missing_value = iconv.get_default_fill_val(np.int64)
 string_missing_value = '_'
 
 iso8601_string = 'seconds since 1970-01-01T00:00:00Z'
@@ -45,6 +44,7 @@ def main(args):
 
     dtg = datetime.strptime(args.date, '%Y%m%d%H')
     qc = args.qualitycontrol
+    addLSW = args.localspectralwidth
 
     # read / process files in parallel
     pool_input_01 = args.input
@@ -53,7 +53,7 @@ def main(args):
     obs_data = {}
     # create a thread pool
     with ProcessPoolExecutor(max_workers=args.threads) as executor:
-        for file_obs_data in executor.map(read_input, pool_inputs, repeat(qc)):
+        for file_obs_data in executor.map(read_input, pool_inputs, repeat(qc), repeat(addLSW)):
             if not file_obs_data:
                 print(f"INFO: non-nominal file skipping")
                 continue
@@ -111,11 +111,15 @@ def main(args):
     VarAttrs[('longitude', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('height', 'MetaData')]['_FillValue'] = float_missing_value
 
+    if addLSW:
+        VarAttrs[('localSpectralWidth', 'MetaData')]['units'] = 'Percentage'
+        VarAttrs[('localSpectralWidth', 'MetaData')]['_FillValue'] = float_missing_value
+
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
 
-def read_input(input_file_and_record, add_qc):
+def read_input(input_file_and_record, add_qc, addLSW):
     """
     Reads/converts input file(s)
 
@@ -137,7 +141,7 @@ def read_input(input_file_and_record, add_qc):
 
     profile_meta_data = get_meta_data(bufr)
 
-    obs_data = get_obs_data(bufr, profile_meta_data, add_qc, record_number=record_number)
+    obs_data = get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=record_number)
 
     return obs_data
 
@@ -170,7 +174,7 @@ def get_meta_data(bufr):
     return profile_meta_data
 
 
-def get_obs_data(bufr, profile_meta_data, add_qc, record_number=None):
+def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None):
 
     # allocate space for output depending on which variables are to be saved
     obs_data = {}
@@ -279,6 +283,14 @@ def get_obs_data(bufr, profile_meta_data, add_qc, record_number=None):
         for k in obs_data.keys():
             obs_data[k] = obs_data[k][good]
 
+    if addLSW:
+        bangid = bang == 0
+        bang[bangid] = float_missing_value
+        bang_err[bangid] = float_missing_value
+
+        lsw = bang_err/bang * 100   # CDACC saves LSW in radians as bang_err. Convert to percentage
+        lsw[bang == float_missing_value] = float_missing_value
+        obs_data[('localSpectralWidth', "MetaData")] = assign_values(lsw)
     return obs_data
 
 
@@ -416,6 +428,11 @@ if __name__ == "__main__":
     optional.add_argument(
         '-q', '--qualitycontrol',
         help='turn on quality control georeality checks',
+        default=False, action='store_true', required=False)
+
+    optional.add_argument(
+        '-lsw', '--localspectralwidth',
+        help='Calculate and output error metrics, LSW and STD4060',
         default=False, action='store_true', required=False)
 
     args = parser.parse_args()

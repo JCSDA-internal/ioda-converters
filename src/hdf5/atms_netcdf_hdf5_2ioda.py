@@ -17,6 +17,7 @@ import numpy as np
 from apply_BG.apply_BG import apply_BG_class
 import pyiodaconv.ioda_conv_engines as iconv
 from pyiodaconv.def_jedi_utils import set_metadata_attributes, set_obspace_attributes
+from pyiodaconv.def_jedi_utils import epoch
 from pyiodaconv.orddicts import DefaultOrderedDict
 from pyiodaconv.def_jedi_utils import concat_obs_dict
 
@@ -53,9 +54,6 @@ locationKeyList = [
     ("longitude", "float"),
     ("dateTime", "long"),
 ]
-
-iso8601_string = "seconds since 1970-01-01T00:00:00Z"
-epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 
 def main(args):
@@ -166,7 +164,7 @@ def get_data_nasa_disc(f, g, obs_data, add_qc=True):
     obs_data[('latitude', metaDataName)] = np.array(g['lat'][:, :].flatten(), dtype='float32')
     obs_data[('longitude', metaDataName)] = np.array(g['lon'][:, :].flatten(), dtype='float32')
     obs_data[('sensorChannelNumber', metaDataName)] = np.array(g['channel'][:], dtype='int32')
-    obs_data[('sensorScanPosition', metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='float32') + 1, (nscans, 1)).flatten()
+    obs_data[('sensorScanPosition', metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='int32') + 1, (nscans, 1)).flatten()
     obs_data[('solarZenithAngle', metaDataName)] = np.array(g['sol_zen'][:, :].flatten(), dtype='float32')
     obs_data[('solarAzimuthAngle', metaDataName)] = np.array(g['sol_azi'][:, :].flatten(), dtype='float32')
     obs_data[('sensorZenithAngle', metaDataName)] = np.array(g['sat_zen'][:, :].flatten(), dtype='float32')
@@ -221,13 +219,13 @@ def get_data_noaa_class(f, g, obs_data, add_qc=True):
     nscans = np.shape(g['All_Data']['ATMS-SDR-GEO_All']['Latitude'])[0]
     nbeam_pos = np.shape(g['All_Data']['ATMS-SDR-GEO_All']['Latitude'])[1]
     obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(np.shape(f['All_Data']['ATMS-SDR_All']['BrightnessTemperature'])[2])+1, dtype='int32')
-    obs_data[('sensorScanPosition', metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='float32') + 1, (nscans, 1)).flatten()
+    obs_data[('sensorScanPosition', metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='int32') + 1, (nscans, 1)).flatten()
     obs_data[('solarZenithAngle', metaDataName)] = np.array(g['All_Data']['ATMS-SDR-GEO_All']['SolarZenithAngle'][:, :].flatten(), dtype='float32')
     obs_data[('solarAzimuthAngle', metaDataName)] = np.array(g['All_Data']['ATMS-SDR-GEO_All']['SolarAzimuthAngle'][:, :].flatten(), dtype='float32')
     obs_data[('sensorZenithAngle', metaDataName)] = np.array(g['All_Data']['ATMS-SDR-GEO_All']['SatelliteZenithAngle'][:, :].flatten(), dtype='float32')
     obs_data[('sensorAzimuthAngle', metaDataName)] = np.array(g['All_Data']['ATMS-SDR-GEO_All']['SatelliteAzimuthAngle'][:, :].flatten(), dtype='float32')
     # put in approximate
-    obs_data[('sensorViewAngle', metaDataName)] = (obs_data[('sensorScanPosition', metaDataName)] - 1.0) * 1.11 - 52.726
+    obs_data[('sensorViewAngle', metaDataName)] = (obs_data[('sensorScanPosition', metaDataName)] - 1) * 1.11 - 52.726
 
     nlocs = len(obs_data[('latitude', metaDataName)])
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
@@ -415,7 +413,7 @@ def remapBG(input_files, add_qc=True):
     obs_data[('latitude', metaDataName)] = np.array(lat.flatten(), dtype='float32')
     obs_data[('longitude', metaDataName)] = np.array(lon.flatten(), dtype='float32')
     obs_data[('sensorChannelNumber', metaDataName)] = np.array(g['channel'][:], dtype='int32')
-    obs_data[('sensorScanPosition', metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='float32') + 1, (nscans, 1)).flatten()
+    obs_data[('sensorScanPosition', metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='int32') + 1, (nscans, 1)).flatten()
     obs_data[('solarZenithAngle', 'MetaData')] = np.array(solzen.flatten(), dtype='float32')
     obs_data[('solarAzimuthAngle', 'MetaData')] = np.array(solazi.flatten(), dtype='float32')
     obs_data[('sensorZenithAngle', 'MetaData')] = np.array(satzen.flatten(), dtype='float32')

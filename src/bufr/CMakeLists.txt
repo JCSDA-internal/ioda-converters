@@ -3,7 +3,7 @@
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 
-if ( iodaconv_bufr_ENABLED )
+if ( iodaconv_bufr_query_ENABLED )
   list(APPEND _ingester_srcs
     IngesterTypes.h
     DataContainer.h
@@ -80,17 +80,20 @@ if ( iodaconv_bufr_ENABLED )
     )
 
   list (APPEND _atmslib_srcs
-    BufrParser/Exports/Variables/Transforms/atms/kinds.F90
     BufrParser/Exports/Variables/Transforms/atms/atms_spatial_average_mod.f90
     BufrParser/Exports/Variables/Transforms/atms/atms_spatial_average_interface.h
     BufrParser/Exports/Variables/Transforms/atms/atms_spatial_average_interface.f90
     )
+
 
   ecbuild_add_library( TARGET   atms_lib
                        SOURCES  ${_atmslib_srcs}
                        TYPE STATIC
                        INSTALL_HEADERS LISTED
     )
+
+  target_link_libraries( atms_lib PUBLIC iodaconv_utils)   
+
 
   list(APPEND _ingester_deps
               Eigen3::Eigen
