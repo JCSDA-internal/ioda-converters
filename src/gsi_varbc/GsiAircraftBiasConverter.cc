@@ -80,7 +80,7 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
     ioda::VariableCreationParameters float_params;
     float_params.chunk = true;               // allow chunking
     float_params.compressWithGZIP();         // compress using gzip
-    float missing_value = util::missingValue(missing_value);
+    const float missing_value = util::missingValue<float>();
     float_params.setFillValue<float>(missing_value);
 
     // Access predictor coefficient values column and create variable
