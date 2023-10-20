@@ -8,25 +8,25 @@
 # FLAGS COMMON TO ALL BUILD TYPES
 ####################################################################
 
-set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -ffree-line-length-none -mcmodel=medium")
+set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -ffree-line-length-none")
 
 ####################################################################
 # RELEASE FLAGS
 ####################################################################
 
-set( CMAKE_Fortran_FLAGS_RELEASE "-O3 -funroll-all-loops -finline-functions -mcmodel=medium")
+set( CMAKE_Fortran_FLAGS_RELEASE "-O3 -funroll-all-loops -finline-functions ")
 
 ####################################################################
 # DEBUG FLAGS
 ####################################################################
 
-set( CMAKE_Fortran_FLAGS_DEBUG   "-O0 -fcheck=bounds -ffpe-trap=invalid,zero,overflow,underflow -fbacktrace -mcmodel=medium" )
+set( CMAKE_Fortran_FLAGS_DEBUG   "-O0 -fcheck=bounds -ffpe-trap=invalid,zero,overflow,underflow -fbacktrace " )
 
 ####################################################################
 # BIT REPRODUCIBLE FLAGS
 ####################################################################
 
-set( CMAKE_Fortran_FLAGS_BIT     "-O2 -funroll-all-loops -finline-functions -mcmodel=medium" )
+set( CMAKE_Fortran_FLAGS_BIT     "-O2 -funroll-all-loops -finline-functions " )
 
 ####################################################################
 # LINK FLAGS
