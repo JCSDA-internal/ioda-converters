@@ -35,6 +35,7 @@
 
 #include "BufrParser/Query/Constants.h"
 #include "BufrParser/Query/QueryParser.h"
+#include "BufrParser/Query/Data.h"
 
 namespace Ingester
 {
@@ -113,7 +114,7 @@ namespace Ingester
         void setQuery(const std::string& query) { query_ = query; }
         void setDimPaths(const std::vector<bufr::Query>& dimPaths)
             { dimPaths_ = dimPaths; }
-        virtual void setData(const std::vector<double>& data, double dataMissingValue) = 0;
+        virtual void setData(const bufr::Data& data) = 0;
 
         // Getters
         std::string getFieldName() const { return fieldName_; }
@@ -159,6 +160,10 @@ namespace Ingester
         /// \brief Get the data at the Location as an string.
         /// \return String data.
         virtual std::string getAsString(const Location& loc) const = 0;
+
+        /// \brief Get the data at the index as a string.
+        /// \return String data.
+        virtual std::string getAsString(size_t idx) const = 0;
 
         /// \brief Get the size of the data
         /// \return Data size.
@@ -221,7 +226,20 @@ namespace Ingester
     {
      public:
         typedef T value_type;
-        static constexpr T missingValue() { return std::numeric_limits<T>::max(); }
+
+        template<typename U = void>
+        static constexpr T missingValue
+            (typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr)
+        {
+            return std::numeric_limits<T>::max();
+        }
+
+        template<typename U = void>
+        static constexpr T missingValue
+            (typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr)
+        {
+            return "";
+        }
 
         /// \brief Constructor.
         /// \param dimensions The dimensions of the data object.
@@ -240,15 +258,10 @@ namespace Ingester
         virtual ~DataObject() = default;
 
         /// \brief Set the data for this object
-        /// \param data The data vector
-        void setData(const std::vector<T>& data) { data_ = data; }
-
-        /// \brief Set the data for this object
-        /// \param data The data vector
-        /// \param dataMissingValue The missing value used in the raw data
-        void setData(const std::vector<double>& data, double dataMissingValue) final
+        /// \param data The data
+        void setData(const bufr::Data& data) final
         {
-            _setData(data, dataMissingValue);
+            _setData(data);
         }
 
 #ifdef BUILD_PYTHON_BINDING
@@ -465,7 +478,8 @@ namespace Ingester
         /// \return Float data.
         float getAsFloat(const size_t idx) const final { return _getAsFloat(idx); }
 
-
+	std::string getAsString(size_t idx) const final { return _getAsString(idx); }
+ 
         /// \brief idx See if the data at the index into the internal 1d array is missing. This
         ///            function gives you direct access to the internal data and doesn't account for
         ///            dimensional information (its up to the user).
@@ -657,56 +671,90 @@ namespace Ingester
             return 0.0f;
         }
 
-        /// \brief Set the data associated with this data object (numeric DataObject).
-        /// \param data - double vector of raw data
-        /// \param dataMissingValue - The number that represents missing values within the raw data
+        /// \brief Get the data at the index as a int for numeric data.
+        /// \return Int data.
         template<typename U = void>
-        void _setData(const std::vector<double>& data,
-                      double dataMissingValue,
+        std::string _getAsString(size_t idx,
+            typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr) const
+        {
+            return std::to_string(data_[idx]);
+        }
+
+        /// \brief Get the data at the index as a int for non-numeric data.
+        /// \return Int data.
+        template<typename U = void>
+        std::string _getAsString(size_t idx,
+            typename std::enable_if<!std::is_arithmetic<T>::value, U>::type* = nullptr) const
+        {
+            return data_[idx];
+        }
+
+
+
+        /// \brief Set the data associated with this data object (numeric DataObject).
+        /// \param data The raw data
+        /// \param dataMissingValue The number that represents missing values within the raw data
+        template<typename U = void>
+        void _setData(const bufr::Data& data,
                       typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr)
         {
-            data_ = std::vector<T>(data.size());
-            for (size_t dataIdx = 0; dataIdx < data.size(); ++dataIdx)
+            if (data.isLongStr())
             {
-                if (data[dataIdx] == dataMissingValue)
+                std::ostringstream str;
+                str << "Can't make numerical field from string data.";
+                throw std::runtime_error(str.str());
+            }
+            else
+            {
+                data_ = std::vector<T>(data.size());
+                for (size_t idx = 0; idx < data.size(); ++idx)
                 {
-                    data_[dataIdx] = missingValue();
-                }
-                else
-                {
-                    data_[dataIdx] = static_cast<T>(data[dataIdx]);
+                    if (!data.isMissing(idx))
+                    {
+                        data_[idx] = data.value.octets[idx];
+                    }
+                    else
+                    {
+                        data_[idx] = missingValue();
+                    }
                 }
             }
         }
 
         /// \brief Set the data associated with this data object (string DataObject).
-        /// \param data - double vector of raw data
-        /// \param dataMissingValue - The number that represents missing values within the raw data
+        /// \param data The raw data
+        /// \param dataMissingValue The number that represents missing values within the raw data
         template<typename U = void>
         void _setData(
-            const std::vector<double>& data,
-            double dataMissingValue,
+            const bufr::Data& data,
             typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr)
         {
             data_ = std::vector<std::string>();
-            auto charPtr = reinterpret_cast<const char*>(data.data());
-            for (size_t row_idx = 0; row_idx < data.size(); row_idx++)
+            if (data.isLongStr())
             {
-                if (data[row_idx] != dataMissingValue)
+                data_ = data.value.strings;
+            }
+            else
+            {
+                auto charPtr = reinterpret_cast<const char *>(data.value.octets.data());
+                for (size_t row_idx = 0; row_idx < data.size(); row_idx++)
                 {
-                    std::string str = std::string(
-                        charPtr + row_idx * sizeof(double), sizeof(double));
+                    if (!data.isMissing(row_idx))
+                    {
+                        std::string str = std::string(
+                            charPtr + row_idx * sizeof(double), sizeof(double));
 
-                    // trim trailing whitespace from str
-                    str.erase(std::find_if(str.rbegin(), str.rend(),
-                                           [](char c){ return !std::isspace(c); }).base(),
-                              str.end());
+                        // trim trailing whitespace from str
+                        str.erase(std::find_if(str.rbegin(), str.rend(),
+                                               [](char c) { return !std::isspace(c); }).base(),
+                                  str.end());
 
-                    data_.push_back(str);
-                }
-                else
-                {
-                    data_.push_back("");
+                        data_.push_back(str);
+                    }
+                    else
+                    {
+                        data_.push_back("");
+                    }
                 }
             }
         }

@@ -3,7 +3,7 @@
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 
-if ( iodaconv_bufr_query_ENABLED )
+if ( iodaconv_bufr_ENABLED )
   list(APPEND _ingester_srcs
     IngesterTypes.h
     DataContainer.h
@@ -27,6 +27,8 @@ if ( iodaconv_bufr_query_ENABLED )
     BufrParser/Exports/Variables/Variable.h
     BufrParser/Exports/Variables/DatetimeVariable.h
     BufrParser/Exports/Variables/DatetimeVariable.cpp
+    BufrParser/Exports/Variables/WigosidVariable.h
+    BufrParser/Exports/Variables/WigosidVariable.cpp
     BufrParser/Exports/Variables/SpectralRadianceVariable.h
     BufrParser/Exports/Variables/SpectralRadianceVariable.cpp
     BufrParser/Exports/Variables/RemappedBrightnessTemperatureVariable.h
@@ -70,8 +72,9 @@ if ( iodaconv_bufr_query_ENABLED )
     BufrParser/Query/Tokenizer.cpp
     BufrParser/Query/SubsetTable.h
     BufrParser/Query/SubsetTable.cpp
-    BufrParser/Query/NodeLookupTable.h
-    BufrParser/Query/NodeLookupTable.cpp
+    BufrParser/Query/Data.h
+    BufrParser/Query/SubsetLookupTable.h
+    BufrParser/Query/SubsetLookupTable.cpp
     IodaEncoder/IodaEncoder.cpp
     IodaEncoder/IodaEncoder.h
     IodaEncoder/IodaDescription.cpp
@@ -79,20 +82,17 @@ if ( iodaconv_bufr_query_ENABLED )
     )
 
   list (APPEND _atmslib_srcs
+    BufrParser/Exports/Variables/Transforms/atms/kinds.F90
     BufrParser/Exports/Variables/Transforms/atms/atms_spatial_average_mod.f90
     BufrParser/Exports/Variables/Transforms/atms/atms_spatial_average_interface.h
     BufrParser/Exports/Variables/Transforms/atms/atms_spatial_average_interface.f90
     )
-
 
   ecbuild_add_library( TARGET   atms_lib
                        SOURCES  ${_atmslib_srcs}
                        TYPE STATIC
                        INSTALL_HEADERS LISTED
     )
-
-  target_link_libraries( atms_lib PUBLIC iodaconv_utils)   
-
 
   list(APPEND _ingester_deps
               Eigen3::Eigen
@@ -168,8 +168,9 @@ if ( iodaconv_bufr_python_ENABLED )
     BufrParser/Query/Tokenizer.cpp
     BufrParser/Query/SubsetTable.h
     BufrParser/Query/SubsetTable.cpp
-    BufrParser/Query/NodeLookupTable.h
-    BufrParser/Query/NodeLookupTable.cpp
+    BufrParser/Query/Data.h
+    BufrParser/Query/SubsetLookupTable.h
+    BufrParser/Query/SubsetLookupTable.cpp
     BufrParser/Query/python_bindings.cpp
     )
 
