@@ -51,7 +51,7 @@ observations:
           longName: "Datetime"
           units: "seconds since 1970-01-01T00:00:00Z"
 
-        - name: "MetaData/Wigos"
+        - name: "MetaData/stationWIGOSId"
           coordinates: "longitude latitude"
           source: variables/wigosidentifier
           longName: "Station WIGOSId"
