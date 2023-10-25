@@ -74,8 +74,8 @@ program gnssro_bufr2ioda2
    real(real64), dimension(50, maxlevs) :: data2a
    real(real64), dimension(maxlevs)     :: nreps_this_ROSEQ2
    integer(int32)                       :: iret, levs, levsr, nreps_ROSEQ1, nreps_ROSEQ2_int
-   real(real64) :: pcc, qfro(1), usage, dlat, dlat_earth, dlon, dlon_earth, freq_chk, azim
-   real(real64) :: height, rlat, rlon, ref, bend, impact, roc, geoid, bend_pccf, ref_pccf
+   real(real64) :: qfro(1), usage, dlat, dlat_earth, dlon, dlon_earth, freq_chk, azim
+   real(real64) :: height, rlat, rlon, ref, bend, impact, roc, geoid
    real(real64)    :: r_missing
    integer(int32)  :: i_missing
    integer(int64)  :: i64_missing
@@ -85,7 +85,7 @@ program gnssro_bufr2ioda2
    character(10) nemo
    character(80) hdr1a
 
-   data hdr1a/'YEAR MNTH DAYS HOUR MINU PCCF ELRC SAID SIID PTID GEODU SCLF OGCE'/
+   data hdr1a/'YEAR MNTH DAYS HOUR MINU ELRC SAID SIID PTID GEODU SCLF OGCE'/
    data nemo/'QFRO'/
 
    i_missing = huge(i_missing)
@@ -157,7 +157,6 @@ program gnssro_bufr2ioda2
          idate5(4) = bfr1ahdr(4) ! hour
          idate5(5) = bfr1ahdr(5) ! minute
          idate5(6) = 0 ! seconds
-         pcc = bfr1ahdr(6)        ! profile per cent confidence
          roc = bfr1ahdr(7)        ! Earth local radius of curvature
          said = bfr1ahdr(8)        ! Satellite identifier
          siid = bfr1ahdr(9)        ! Satellite instrument
@@ -168,19 +167,15 @@ program gnssro_bufr2ioda2
 
          call epochtimecalculator(idate5, epochtime)  ! calculate epochtime since January 1 1970
 
-         if (pcc == 0.0) then
-            write (6, *) 'READ_GNSSRO: bad profile 0.0% confidence said=', said, 'ptid=', ptid, ' SKIP this report'
-            cycle read_loop
-         end if
-
          bendflag = 0
          refflag = 0
          call upftbv(lnbufr, nemo, qfro, mxib, ibit, nib)
+
          if (nib > 0) then
             do i = 1, nib
                if (ibit(i) == 5 .or. ibit(i) == 1 .or. ibit(i) == 4) then  ! bending angle
                   bendflag = 1
-                  write (6, *) 'READ_GNSSRO: bad profile said=', said, 'ptid=', ptid, ' SKIP this report'
+                  write (6, *) 'READ_GNSSRO: bad profile said=', said, 'ptid=', ptid, ' SKIP this report', ibit
                   cycle read_loop
                end if
                if (ibit(i) == 6 .or. ibit(i) == 1 .or. ibit(i) == 4) then  ! refractivity
@@ -214,7 +209,6 @@ program gnssro_bufr2ioda2
             azim = data1b(3, k)
             height = data2a(1, k)
             ref = data2a(2, k)
-            ref_pccf = data2a(6, k)
 
 !           Loop over number of replications of ROSEQ2 nested inside this particular replication of ROSEQ1
             nreps_ROSEQ2_int = nreps_this_ROSEQ2(k)
@@ -226,21 +220,12 @@ program gnssro_bufr2ioda2
                bend = data1b(m + 2, k)        ! bending angle (rad)
             end do
 
-            bend_pccf = data1b((6*nreps_ROSEQ2_int) + 4, k)  ! percent confidence for this ROSEQ1 replication
             good = .true.
 
             if (height < 0._real64 .or. height > 100000._real64 .or.           &
                & abs(rlat) > 90._real64 .or. abs(rlon) > 360._real64) then
                good = .false.
                write (6, *) 'READ_GNSSRO: obs fails georeality check, said=', said, 'ptid=', ptid, 'height=',height, 'lat=',rlat
-            end if
-            if (bend >= 1.e+9_real64 .or. bend <= 0._real64 .or. impact >= 1.e+9_real64 .or. impact < roc .or. bendflag == 1) then
-               good = .false.
-               write (6, *) 'READ_GNSSRO: obs bend/impact is invalid, said=', said, 'ptid=', ptid
-            end if
-
-            if (ref >= 1.e+9_real64 .or. ref <= 0._real64 .or. refflag == 1) then
-               ref = r_missing
             end if
 
             if (abs(azim) > 360._real64 .or. azim < 0._real64) then
