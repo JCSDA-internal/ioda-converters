@@ -1683,7 +1683,7 @@ if(iodaconv_bufr_query_ENABLED)
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_wigos.yaml"
-                            rtma_ru.t0000z.adpsfc_nc000101.tm00.nc ${IODA_CONV_COMP_TOL}
+                            rtma_ru.t0000z.adpsfc.wigos.nc ${IODA_CONV_COMP_TOL}
                     DEPENDS bufr2ioda.x )
 
  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_sevcsr
