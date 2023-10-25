@@ -168,12 +168,6 @@ program gnssro_bufr2ioda2
 
          call epochtimecalculator(idate5, epochtime)  ! calculate epochtime since January 1 1970
 
-         if (roc > 6450000.0_real64 .or. roc < 6250000.0_real64 .or.       &
-            &   geoid > 200_real64 .or. geoid < -200._real64) then
-            write (6, *) 'READ_GNSSRO: profile fails georeality check, skip this report'
-            cycle read_loop
-         end if
-
          if (pcc == 0.0) then
             write (6, *) 'READ_GNSSRO: bad profile 0.0% confidence said=', said, 'ptid=', ptid, ' SKIP this report'
             cycle read_loop
@@ -238,7 +232,7 @@ program gnssro_bufr2ioda2
             if (height < 0._real64 .or. height > 100000._real64 .or.           &
                & abs(rlat) > 90._real64 .or. abs(rlon) > 360._real64) then
                good = .false.
-               write (6, *) 'READ_GNSSRO: obs fails georeality check, said=', said, 'ptid=', ptid
+               write (6, *) 'READ_GNSSRO: obs fails georeality check, said=', said, 'ptid=', ptid, 'height=',height, 'lat=',rlat
             end if
             if (bend >= 1.e+9_real64 .or. bend <= 0._real64 .or. impact >= 1.e+9_real64 .or. impact < roc .or. bendflag == 1) then
                good = .false.
