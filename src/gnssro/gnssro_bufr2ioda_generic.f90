@@ -74,7 +74,7 @@ program gnssro_bufr2ioda2
    real(real64), dimension(50, maxlevs) :: data2a
    real(real64), dimension(maxlevs)     :: nreps_this_ROSEQ2
    integer(int32)                       :: iret, levs, levsr, nreps_ROSEQ1, nreps_ROSEQ2_int
-   real(real64) :: pcc, qfro(1), usage, dlat, dlat_earth, dlon, dlon_earth, freq_chk, freq, azim
+   real(real64) :: pcc, qfro(1), usage, dlat, dlat_earth, dlon, dlon_earth, freq_chk, azim
    real(real64) :: height, rlat, rlon, ref, bend, impact, roc, geoid, bend_pccf, ref_pccf
    real(real64)    :: r_missing
    integer(int32)  :: i_missing
@@ -222,13 +222,12 @@ program gnssro_bufr2ioda2
             ref = data2a(2, k)
             ref_pccf = data2a(6, k)
 
-!       Loop over number of replications of ROSEQ2 nested inside this particular replication of ROSEQ1
+!           Loop over number of replications of ROSEQ2 nested inside this particular replication of ROSEQ1
             nreps_ROSEQ2_int = nreps_this_ROSEQ2(k)
             do i = 1, nreps_ROSEQ2_int
                m = (6*i) - 2
                freq_chk = data1b(m, k)      ! frequency (hertz)
                if (nint(freq_chk) .ne. 0) cycle ! do not want non-zero freq., go on to next replication of ROSEQ2
-               freq = data1b(m, k)
                impact = data1b(m + 1, k)      ! impact parameter (m)
                bend = data1b(m + 2, k)        ! bending angle (rad)
             end do
