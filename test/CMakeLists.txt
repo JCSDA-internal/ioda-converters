@@ -1140,6 +1140,18 @@ if( iodaconv_gnssro_ENABLED )
                             gnssro_obs_3prof_2022090100.nc4  ${IODA_CONV_COMP_TOL}
                     DEPENDS gnssro_bufr2ioda)
 
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gnssro_bufr_generic_conv
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/gnssro_bufr2ioda_generic
+                            2022090100
+                            testinput/gnssro_3prof_2022090100.bufr
+                            testrun/gnssro_obs_3prof_generic_2022090100.nc4"
+                            gnssro_obs_3prof_generic_2022090100.nc4  ${IODA_CONV_COMP_TOL}
+                    DEPENDS gnssro_bufr2ioda_generic)
+
   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gnssro_AWSopendataNetcdf_conv
                     TYPE    SCRIPT
                     ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
