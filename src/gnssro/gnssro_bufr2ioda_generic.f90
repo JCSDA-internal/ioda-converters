@@ -1,12 +1,16 @@
 !!!--------  README --------------------------------------------------------------------
-!  this is a temporary routine to generate netcdf4 file
-!  for jedi/ufo/gnssro/ operator test
-!  Copyright UCAR 2022
+!  This converter differs from gnssro_bufr2ioda.f90 by
+!  1) removing all pre sanity checks and
+!  2) adding  metadate timeOffset and qualityFlags
+!  NOTE: with these changes, users need to apply their own sanity check via UFO
+!        obs filter; information contained in qualityFlags is referred to ROM
+!        SAF specification of WMO BUFR
+!  Copyright UCAR 2023
 !  Author: Hailing Zhang
-!  Last upate: APR 10 2023
+!  Last upate: October 2023
 
 !!!---------  to run   -----------------------------------------------------------------
-!  ./gnssro_bufr2ioda2 yyyymmddhh $bufrfile_input $netcdffile_output
+!  ./gnssro_bufr2ioda_generic yyyymmddhh $bufrfile_input $netcdffile_output
 !
 ! Return codes:
 !  0 - Success.
