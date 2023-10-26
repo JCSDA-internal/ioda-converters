@@ -1,10 +1,11 @@
 !!!--------  README --------------------------------------------------------------------
 !  This converter differs from gnssro_bufr2ioda.f90 by
-!  1) removing all pre sanity checks and
-!  2) adding  metadate timeOffset and qualityFlags
-!  NOTE: with these changes, users need to apply their own sanity check via UFO
-!        obs filter; information contained in qualityFlags is referred to ROM
-!        SAF specification of WMO BUFR
+!  1) removing all pre sanity checks,
+!  2) removing initial obs error assignment, and
+!  3) adding  metadate timeOffset and qualityFlags.
+!  NOTE: with these changes, users need to apply their own sanity check via
+!        UFO obs filter; information contained in qualityFlags is referred to
+!        ROM SAF's specification of WMO BUFR.
 !  Copyright UCAR 2023
 !  Author: Hailing Zhang
 !  Last upate: October 2023
