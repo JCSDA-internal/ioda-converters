@@ -22,7 +22,7 @@ program gnssro_bufr2ioda2
    integer   :: ncid
    integer   :: nobs_dimid, nlocs_dimid, nvars_dimid, nrecs_dimid
    integer   :: varid_lat, varid_lon, varid_epochtime
-   integer   :: varid_said, varid_siid, varid_ptid, varid_sclf, varid_asce, varid_ogce
+   integer   :: varid_said, varid_siid, varid_ptid, varid_sclf, varid_asce, varid_ogce, varid_qcfg
    integer   :: varid_recn
    integer   :: varid_geoid, varid_rfict
    integer   :: varid_ref, varid_msl
@@ -34,14 +34,13 @@ program gnssro_bufr2ioda2
    character(len=256)       :: infile, outfile
    character, dimension(8)  :: subset
    character(len=10)        :: anatime
-   integer(int32)           :: i, k, m, ireadmg, ireadsb, said, siid, ptid, sclf, asce, ogce
+   integer(int32)           :: i, k, m, ireadmg, ireadsb, said, siid, ptid, sclf, asce, ogce, qcflag
    integer(int32)           :: lnbufr = 10
    integer(int32)           :: nread, ndata, nvars, nrec, ndata0
    integer(int32)           :: idate5(6), idate
    integer(int64)           :: epochtime
 
    logical                   :: good, outside
-   integer                   :: refflag, bendflag
    integer(int32), parameter :: mxib = 31
    integer(int32)            :: ibit(mxib), nib
    integer(int32), parameter :: maxlevs = 500
@@ -55,6 +54,7 @@ program gnssro_bufr2ioda2
       integer(int32), allocatable, dimension(:)    :: recn
       integer(int32), allocatable, dimension(:)    :: asce
       integer(int32), allocatable, dimension(:)    :: ogce
+      integer(int32), allocatable, dimension(:)    :: qcflag
       integer(int64), allocatable, dimension(:)    :: epochtime
       real(real64), allocatable, dimension(:)     :: lat
       real(real64), allocatable, dimension(:)     :: lon
@@ -85,7 +85,7 @@ program gnssro_bufr2ioda2
    character(10) nemo
    character(80) hdr1a
 
-   data hdr1a/'YEAR MNTH DAYS HOUR MINU ELRC SAID SIID PTID GEODU SCLF OGCE'/
+   data hdr1a/'YEAR MNTH DAYS HOUR MINU PCCF ELRC SAID SIID PTID GEODU SCLF OGCE'/
    data nemo/'QFRO'/
 
    i_missing = huge(i_missing)
@@ -127,6 +127,7 @@ program gnssro_bufr2ioda2
    allocate (gnssro_data%recn(maxobs))
    allocate (gnssro_data%asce(maxobs))
    allocate (gnssro_data%ogce(maxobs))
+   allocate (gnssro_data%qcflag(maxobs))
    allocate (gnssro_data%epochtime(maxobs))
    allocate (gnssro_data%lat(maxobs))
    allocate (gnssro_data%lon(maxobs))
@@ -167,32 +168,14 @@ program gnssro_bufr2ioda2
 
          call epochtimecalculator(idate5, epochtime)  ! calculate epochtime since January 1 1970
 
-         bendflag = 0
-         refflag = 0
-         call upftbv(lnbufr, nemo, qfro, mxib, ibit, nib)
-
-         if (nib > 0) then
-            do i = 1, nib
-               if (ibit(i) == 5 .or. ibit(i) == 1 .or. ibit(i) == 4) then  ! bending angle
-                  bendflag = 1
-                  write (6, *) 'READ_GNSSRO: bad profile said=', said, 'ptid=', ptid, ' SKIP this report', ibit
-                  cycle read_loop
-               end if
-               if (ibit(i) == 6 .or. ibit(i) == 1 .or. ibit(i) == 4) then  ! refractivity
-                  refflag = 1
-                  exit
-               end if
-            end do
-         end if
-
+         qcflag = 0
          asce = 0
          call upftbv(lnbufr, nemo, qfro, mxib, ibit, nib)
+
          if (nib > 0) then
             do i = 1, nib
-               if (ibit(i) == 3) then
-                  asce = 1
-                  exit
-               end if
+               qcflag = qcflag + 2**(16-ibit(i))
+               if (ibit(i) == 3) asce = 1
             end do
          end if
 
@@ -244,6 +227,7 @@ program gnssro_bufr2ioda2
                gnssro_data%asce(ndata) = asce
                gnssro_data%ptid(ndata) = ptid
                gnssro_data%ogce(ndata) = ogce
+               gnssro_data%qcflag(ndata) = qcflag
                gnssro_data%ref(ndata) = ref
                gnssro_data%msl_alt(ndata) = height
                gnssro_data%bend_ang(ndata) = bend
@@ -328,6 +312,11 @@ program gnssro_bufr2ioda2
    call check(nf90_put_att(grpid_metadata, varid_siid, "longname", "satellite instrument"))
    call check(nf90_put_att(grpid_metadata, varid_siid, "units", "1"))
    call check(nf90_def_var_fill(grpid_metadata, varid_siid, 0, i_missing))
+
+   call check(nf90_def_var(grpid_metadata, "qualityFlags", NF90_INT, nlocs_dimid, varid_qcfg))
+   call check(nf90_def_var_deflate(grpid_metadata, varid_qcfg,       &
+                                    & shuffle=1, deflate=1, deflate_level=deflate_level))
+   call check(nf90_put_att(grpid_metadata, varid_qcfg, "longname", "RO QC flags based on the 16-digit binary table of WMO"))
 
    call check(nf90_def_var(grpid_metadata, "satelliteAscendingFlag", NF90_INT, nlocs_dimid, varid_asce))
    call check(nf90_def_var_deflate(grpid_metadata, varid_asce,       &
@@ -418,6 +407,7 @@ program gnssro_bufr2ioda2
    call check(nf90_put_var(grpid_metadata, varid_lon, gnssro_data%lon(1:ndata)))
    call check(nf90_put_var(grpid_metadata, varid_epochtime, gnssro_data%epochtime(1:ndata)))
    call check(nf90_put_var(grpid_metadata, varid_recn, gnssro_data%recn(1:ndata)))
+   call check(nf90_put_var(grpid_metadata, varid_qcfg, gnssro_data%qcflag(1:ndata)))
    call check(nf90_put_var(grpid_metadata, varid_said, gnssro_data%said(1:ndata)))
    call check(nf90_put_var(grpid_metadata, varid_siid, gnssro_data%siid(1:ndata)))
    call check(nf90_put_var(grpid_metadata, varid_ptid, gnssro_data%ptid(1:ndata)))
@@ -441,6 +431,7 @@ program gnssro_bufr2ioda2
    deallocate (gnssro_data%recn)
    deallocate (gnssro_data%asce)
    deallocate (gnssro_data%ogce)
+   deallocate (gnssro_data%qcflag)
    deallocate (gnssro_data%epochtime)
    deallocate (gnssro_data%lat)
    deallocate (gnssro_data%lon)
