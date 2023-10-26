@@ -22,7 +22,8 @@ program gnssro_bufr2ioda2
    integer   :: ncid
    integer   :: nobs_dimid, nlocs_dimid, nvars_dimid, nrecs_dimid
    integer   :: varid_lat, varid_lon, varid_epochtime
-   integer   :: varid_said, varid_siid, varid_ptid, varid_sclf, varid_asce, varid_ogce, varid_qcfg
+   integer   :: varid_said, varid_siid, varid_ptid, varid_sclf, varid_asce, varid_ogce
+   integer   :: varid_qcfg, varid_tinc
    integer   :: varid_recn
    integer   :: varid_geoid, varid_rfict
    integer   :: varid_ref, varid_msl
@@ -33,7 +34,7 @@ program gnssro_bufr2ioda2
    character(len=256)       :: infile, outfile
    character, dimension(8)  :: subset
    character(len=10)        :: anatime
-   integer(int32)           :: i, k, m, ireadmg, ireadsb, said, siid, ptid, sclf, asce, ogce, qcflag
+   integer(int32)           :: i, k, m, ireadmg, ireadsb, said, siid, ptid, sclf, asce, ogce, qcflag, tinc
    integer(int32)           :: lnbufr = 10
    integer(int32)           :: nread, ndata, nvars, nrec, ndata0
    integer(int32)           :: idate5(6), idate
@@ -42,7 +43,7 @@ program gnssro_bufr2ioda2
    integer(int32), parameter :: mxib = 31
    integer(int32)            :: ibit(mxib), nib
    integer(int32), parameter :: maxlevs = 500
-   integer(int32), parameter :: n1ahdr = 13
+   integer(int32), parameter :: n1ahdr = 14
    integer(int32)            :: maxobs
    type gnssro_type
       integer(int32), allocatable, dimension(:)    :: said
@@ -53,6 +54,7 @@ program gnssro_bufr2ioda2
       integer(int32), allocatable, dimension(:)    :: asce
       integer(int32), allocatable, dimension(:)    :: ogce
       integer(int32), allocatable, dimension(:)    :: qcflag
+      integer(int32), allocatable, dimension(:)    :: tinc
       integer(int64), allocatable, dimension(:)    :: epochtime
       real(real64), allocatable, dimension(:)     :: lat
       real(real64), allocatable, dimension(:)     :: lon
@@ -83,7 +85,7 @@ program gnssro_bufr2ioda2
    character(10) nemo
    character(80) hdr1a
 
-   data hdr1a/'YEAR MNTH DAYS HOUR MINU PCCF ELRC SAID SIID PTID GEODU SCLF OGCE'/
+   data hdr1a/'YEAR MNTH DAYS HOUR MINU PCCF ELRC SAID SIID PTID GEODU SCLF OGCE TISE'/
    data nemo/'QFRO'/
 
    i_missing = huge(i_missing)
@@ -126,6 +128,7 @@ program gnssro_bufr2ioda2
    allocate (gnssro_data%asce(maxobs))
    allocate (gnssro_data%ogce(maxobs))
    allocate (gnssro_data%qcflag(maxobs))
+   allocate (gnssro_data%tinc(maxobs))
    allocate (gnssro_data%epochtime(maxobs))
    allocate (gnssro_data%lat(maxobs))
    allocate (gnssro_data%lon(maxobs))
@@ -163,7 +166,7 @@ program gnssro_bufr2ioda2
          geoid = bfr1ahdr(11)       ! Geoid undulation
          sclf = bfr1ahdr(12)       ! Satellite classification
          ogce = bfr1ahdr(13)       ! Identification of originating/generating centre
-
+         tinc = bfr1ahdr(14)       ! Time increment relative to the start of occultaion
          call epochtimecalculator(idate5, epochtime)  ! calculate epochtime since January 1 1970
 
          qcflag = 0
@@ -216,6 +219,7 @@ program gnssro_bufr2ioda2
             gnssro_data%asce(ndata) = asce
             gnssro_data%ptid(ndata) = ptid
             gnssro_data%ogce(ndata) = ogce
+            gnssro_data%tinc(ndata) = tinc
             gnssro_data%qcflag(ndata) = qcflag
             gnssro_data%ref(ndata) = ref
             gnssro_data%msl_alt(ndata) = height
@@ -262,6 +266,13 @@ program gnssro_bufr2ioda2
    call check(nf90_def_var_deflate(grpid_metadata, varid_epochtime, &
                                     & shuffle=1, deflate=1, deflate_level=deflate_level))
    call check(nf90_put_att(grpid_metadata, varid_epochtime, "units", "seconds since 1970-01-01T00:00:00Z"))
+
+   call check(nf90_def_var(grpid_metadata, "timeOffset", NF90_INT, nlocs_dimid, varid_tinc))
+   call check(nf90_def_var_fill(grpid_metadata, varid_tinc, 0, i_missing))
+   call check(nf90_def_var_deflate(grpid_metadata, varid_tinc,      &
+                                    & shuffle=1, deflate=1, deflate_level=deflate_level))
+   call check(nf90_put_att(grpid_metadata, varid_tinc, "longname", "time increment from the start time of the occultation"))
+   call check(nf90_put_att(grpid_metadata, varid_tinc, "units", "second"))
 
    call check(nf90_def_var(grpid_metadata, "sequenceNumber", NF90_INT, nlocs_dimid, varid_recn))
    call check(nf90_def_var_fill(grpid_metadata, varid_recn, 0, i_missing))
@@ -394,6 +405,7 @@ program gnssro_bufr2ioda2
    call check(nf90_put_var(grpid_metadata, varid_lat, gnssro_data%lat(1:ndata)))
    call check(nf90_put_var(grpid_metadata, varid_lon, gnssro_data%lon(1:ndata)))
    call check(nf90_put_var(grpid_metadata, varid_epochtime, gnssro_data%epochtime(1:ndata)))
+   call check(nf90_put_var(grpid_metadata, varid_tinc, gnssro_data%tinc(1:ndata)))
    call check(nf90_put_var(grpid_metadata, varid_recn, gnssro_data%recn(1:ndata)))
    call check(nf90_put_var(grpid_metadata, varid_qcfg, gnssro_data%qcflag(1:ndata)))
    call check(nf90_put_var(grpid_metadata, varid_said, gnssro_data%said(1:ndata)))
@@ -421,6 +433,7 @@ program gnssro_bufr2ioda2
    deallocate (gnssro_data%ogce)
    deallocate (gnssro_data%qcflag)
    deallocate (gnssro_data%epochtime)
+   deallocate (gnssro_data%tinc)
    deallocate (gnssro_data%lat)
    deallocate (gnssro_data%lon)
    deallocate (gnssro_data%rfict)
