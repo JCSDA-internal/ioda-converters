@@ -1,12 +1,12 @@
 !!!--------  README --------------------------------------------------------------------
 !  this is a temporary routine to generate netcdf4 file
 !  for jedi/ufo/gnssro/ operator test
-!  Copyright UCAR 2022
+!  Copyright UCAR 2023
 !  Author: Hailing Zhang
-!  Last upate: APR 10 2023
+!  Last upate: Oct 2023
 
 !!!---------  to run   -----------------------------------------------------------------
-!  ./gnssro_bufr2ioda2 yyyymmddhh $bufrfile_input $netcdffile_output
+!  ./gnssro_bufr2ioda yyyymmddhh $bufrfile_input $netcdffile_output
 !
 ! Return codes:
 !  0 - Success.
@@ -29,7 +29,6 @@ program gnssro_bufr2ioda2
    integer   :: varid_bnd, varid_bndoe, varid_impp, varid_imph, varid_azim
    integer   :: varid_adjlsw
    integer   :: nlev_dimid
-   integer   :: varid_geo_temp, varid_geo_pres, varid_geo_shum, varid_geo_geop, varid_geo_geop_sfc
    integer   :: grpid_metadata, grpid_obserror, grpid_obsvalue
    integer   :: deflate_level
    character(len=256)       :: infile, outfile
