@@ -134,96 +134,14 @@ endif()
 # Make the python bindings
 if ( iodaconv_bufr_python_ENABLED )
 
-  list(APPEND _python_interface_libs
-      Eigen3::Eigen
-      eckit
-      gsl::gsl-lite
-      bufr::bufr_4
-      ioda_engines
-      atms_lib
-      ${oops_LIBRARIES}
-    )
-
   list (APPEND _python_interface_srcs
-    IngesterTypes.h
-    DataContainer.h
-    DataContainer.cpp
-    Parser.h
-    ObjectFactory.h
-    DataObject.h
-    DataObject.cpp
-    BufrParser/BufrParser.h
-    BufrParser/BufrParser.cpp
-    BufrParser/BufrDescription.h
-    BufrParser/BufrDescription.cpp
-    BufrParser/Exports/Export.h
-    BufrParser/Exports/Export.cpp
-    BufrParser/Exports/Filters/Filter.h
-    BufrParser/Exports/Filters/BoundingFilter.h
-    BufrParser/Exports/Filters/BoundingFilter.cpp
-    BufrParser/Exports/Splits/Split.h
-    BufrParser/Exports/Splits/CategorySplit.h
-    BufrParser/Exports/Splits/CategorySplit.cpp
-    BufrParser/Exports/Variables/Variable.h
-    BufrParser/Exports/Variables/DatetimeVariable.h
-    BufrParser/Exports/Variables/DatetimeVariable.cpp
-    BufrParser/Exports/Variables/SpectralRadianceVariable.h
-    BufrParser/Exports/Variables/SpectralRadianceVariable.cpp
-    BufrParser/Exports/Variables/RemappedBrightnessTemperatureVariable.h
-    BufrParser/Exports/Variables/RemappedBrightnessTemperatureVariable.cpp
-    BufrParser/Exports/Variables/SensorScanAngleVariable.h
-    BufrParser/Exports/Variables/SensorScanAngleVariable.cpp
-    BufrParser/Exports/Variables/SensorScanPositionVariable.h
-    BufrParser/Exports/Variables/SensorScanPositionVariable.cpp
-    BufrParser/Exports/Variables/AircraftAltitudeVariable.h
-    BufrParser/Exports/Variables/AircraftAltitudeVariable.cpp
-    BufrParser/Exports/Variables/TimeoffsetVariable.h
-    BufrParser/Exports/Variables/TimeoffsetVariable.cpp
-    BufrParser/Exports/Variables/QueryVariable.h
-    BufrParser/Exports/Variables/QueryVariable.cpp
-    BufrParser/Exports/Variables/Transforms/Transform.h
-    BufrParser/Exports/Variables/Transforms/OffsetTransform.h
-    BufrParser/Exports/Variables/Transforms/OffsetTransform.cpp
-    BufrParser/Exports/Variables/Transforms/ScalingTransform.h
-    BufrParser/Exports/Variables/Transforms/ScalingTransform.cpp
-    BufrParser/Exports/Variables/Transforms/TransformBuilder.h
-    BufrParser/Exports/Variables/Transforms/TransformBuilder.cpp
-    BufrParser/Query/DataProvider/DataProvider.h
-    BufrParser/Query/DataProvider/DataProvider.cpp
-    BufrParser/Query/DataProvider/NcepDataProvider.h
-    BufrParser/Query/DataProvider/NcepDataProvider.cpp
-    BufrParser/Query/DataProvider/WmoDataProvider.h
-    BufrParser/Query/DataProvider/WmoDataProvider.cpp
-    BufrParser/Query/File.h
-    BufrParser/Query/File.cpp
-    BufrParser/Query/VectorMath.h
-    BufrParser/Query/QuerySet.h
-    BufrParser/Query/QuerySet.cpp
-    BufrParser/Query/QueryRunner.h
-    BufrParser/Query/QueryRunner.cpp
-    BufrParser/Query/QueryParser.h
-    BufrParser/Query/QueryParser.cpp
-    BufrParser/Query/ResultSet.h
-    BufrParser/Query/ResultSet.cpp
-    BufrParser/Query/Target.h
-    BufrParser/Query/Tokenizer.h
-    BufrParser/Query/Tokenizer.cpp
-    BufrParser/Query/SubsetTable.h
-    BufrParser/Query/SubsetTable.cpp
-    BufrParser/Query/Data.h
-    BufrParser/Query/SubsetLookupTable.h
-    BufrParser/Query/SubsetLookupTable.cpp
-    IodaEncoder/IodaEncoder.cpp
-    IodaEncoder/IodaEncoder.h
-    IodaEncoder/IodaDescription.cpp
-    IodaEncoder/IodaDescription.h
     python_bindings.cpp
     bufr2ioda_func.cpp
     bufr2ioda_func.h
     )
 
-  pybind11_add_module(bufr ${_python_interface_srcs})
-  target_link_libraries(bufr PUBLIC ${_python_interface_libs})
+  pybind11_add_module(bufr ${_ingester_srcs} ${_python_interface_srcs})
+  target_link_libraries(bufr PUBLIC ${_ingester_deps})
   target_compile_definitions(bufr PRIVATE BUILD_PYTHON_BINDING=1)
   target_compile_definitions(bufr PRIVATE BUILD_IODA_BINDING=1)
   target_include_directories(bufr PUBLIC
