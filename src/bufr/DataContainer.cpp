@@ -165,32 +165,23 @@ namespace Ingester
                              const py::array& pyData,
                              const std::vector<std::string>& dimPaths,
                              const SubCategory& categoryId)
-     {
-
-         // Guard statements
-         if (hasKey(fieldName, categoryId))
-         {
-             throw eckit::BadParameter("ERROR: Field does not exist.");
-         }
+    {
+        // Guard statements
+        if (hasKey(fieldName, categoryId))
+        {
+            throw eckit::BadParameter("ERROR: Field does not exist.");
+        }
 
         auto paths = std::vector<bufr::Query>(dimPaths.size());
-        for (size_t i = 0; i < dimPaths.size(); i++)
+        for (size_t pathIdx = 0; pathIdx < dimPaths.size(); pathIdx++)
         {
-            auto queries = bufr::QueryParser::parse(dimPaths[i]);
-
-            if (queries.size() > 1)
-            {
-                throw eckit::BadParameter("ERROR: Dimensioning path " + \
-                                          dimPaths[i] + " can't be multi-query");
-            }
-
-            paths[i] = queries[0];
+            paths[pathIdx] = bufr::QueryParser::parse(dimPaths[pathIdx])[0];
         }
 
         auto dataObj = makeObject(fieldName, pyData);
         dataObj->setDimPaths(paths);
         dataSets_.at(categoryId).insert({fieldName, makeObject(fieldName, pyData)});
-     }
+    }
 
     void DataContainer::set(const std::string& fieldName,
                             const py::array& pyData,
@@ -218,7 +209,7 @@ namespace Ingester
 
         auto dataObj = makeObject(fieldName, pyData);
         dataObj->setDimPaths(dataSets_.at(categoryId).at(fieldName)->getDimPaths());
-        dataSets_.at(categoryId).at(fieldName) = makeObject(fieldName, pyData);
+        dataSets_.at(categoryId).at(fieldName) = dataObj;
     }
 
     py::array DataContainer::getNumpyArray(const std::string& fieldName,

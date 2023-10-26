@@ -17,19 +17,17 @@ def test_bufr2ioda():
        yaml_config = yaml.load(file, Loader=yaml.FullLoader)
 
     yaml_string = json.dumps(yaml_config)
-    data = bufr.parse(yaml_string, 0)
+    container = bufr.parse(yaml_string, 0)
 
-    sub_c = data.allSubCategories()
+    sub_c = container.allSubCategories()
     for id in ['n18', 'metop-b', 'n19', 'metop-c']:
-       x = data.get('variables/antennaTemperature', [id])
-       paths = data.getPaths('variables/antennaTemperature', [id])
-       print (paths)
+       data = container.get('variables/antennaTemperature', [id])
+       paths = container.getPaths('variables/antennaTemperature', [id])
 
-       y = x.copy()
-       data.set('variables/antennaTemperature', x, [id])
-       data.add('variables/antennaTemperature1', y, paths[2:4], [id])
+       container.set('variables/antennaTemperature', data, [id])
+       container.add('variables/antennaTemperature1', data, paths, [id])
 
-    bufr.encode_save(yaml_string, data)
+    bufr.encode_save(yaml_string, container)
 
 def test_basic_query():
     DATA_PATH = './testinput/gdas.t00z.1bhrs4.tm00.bufr_d'
