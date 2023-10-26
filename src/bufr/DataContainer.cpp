@@ -66,9 +66,9 @@ namespace Ingester
     {
         auto dimPaths = get(fieldName, categoryId)->getDimPaths();
         std::vector<std::string> paths(dimPaths.size());
-        for (const auto& path : dimPaths)
+        for (size_t pathIdx = 0; pathIdx < dimPaths.size(); pathIdx++)
         {
-            paths.push_back(path.str());
+            paths[pathIdx] = dimPaths[pathIdx].str();
         }
 
         return paths;

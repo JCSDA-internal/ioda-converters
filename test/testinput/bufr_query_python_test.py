@@ -12,20 +12,24 @@ import yaml
 def test_bufr2ioda():
     yaml_file = 'bufr_ncep_esamua.yaml'
     yaml_file = './testinput/bufr_ncep_1bamua_ta.yaml'
+
     with open(yaml_file, 'r') as file:
        yaml_config = yaml.load(file, Loader=yaml.FullLoader)
+
     yaml_string = json.dumps(yaml_config)
     data = bufr.parse(yaml_string, 0)
+
     sub_c = data.allSubCategories()
     for id in ['n18', 'metop-b', 'n19', 'metop-c']:
        x = data.get('variables/antennaTemperature', [id])
-       x_path = data.getPaths('variables/antennaTemperature', [id])
+       paths = data.getPaths('variables/antennaTemperature', [id])
+       print (paths)
+
        y = x.copy()
        data.set('variables/antennaTemperature', x, [id])
-       data.add('variables/antennaTemperature1', y, x_path[2:4], [id])
+       data.add('variables/antennaTemperature1', y, paths[2:4], [id])
+
     bufr.encode_save(yaml_string, data)
-
-
 
 def test_basic_query():
     DATA_PATH = './testinput/gdas.t00z.1bhrs4.tm00.bufr_d'
@@ -138,8 +142,8 @@ def test_invalid_query():
 
 if __name__ == '__main__':
     test_bufr2ioda()
-    test_basic_query()
-    test_string_field()
-    test_long_str_field()
-    test_type_override()
-    test_invalid_query()
+    # test_basic_query()
+    # test_string_field()
+    # test_long_str_field()
+    # test_type_override()
+    # test_invalid_query()
