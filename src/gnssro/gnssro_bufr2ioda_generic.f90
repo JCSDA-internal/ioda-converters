@@ -205,12 +205,6 @@ program gnssro_bufr2ioda2
 
             good = .true.
 
-            if (height < 0._real64 .or. height > 100000._real64 .or.           &
-               & abs(rlat) > 90._real64 .or. abs(rlon) > 360._real64) then
-               good = .false.
-               write (6, *) 'READ_GNSSRO: obs fails georeality check, said=', said, 'ptid=', ptid, 'height=',height, 'lat=',rlat
-            end if
-
             if (abs(azim) > 360._real64 .or. azim < 0._real64) then
                azim = r_missing
             end if
