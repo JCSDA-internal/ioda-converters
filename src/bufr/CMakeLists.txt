@@ -27,6 +27,8 @@ if ( iodaconv_bufr_query_ENABLED )
     BufrParser/Exports/Variables/Variable.h
     BufrParser/Exports/Variables/DatetimeVariable.h
     BufrParser/Exports/Variables/DatetimeVariable.cpp
+    BufrParser/Exports/Variables/WigosidVariable.h
+    BufrParser/Exports/Variables/WigosidVariable.cpp
     BufrParser/Exports/Variables/SpectralRadianceVariable.h
     BufrParser/Exports/Variables/SpectralRadianceVariable.cpp
     BufrParser/Exports/Variables/RemappedBrightnessTemperatureVariable.h
