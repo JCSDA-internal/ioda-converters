@@ -28,7 +28,6 @@ program gnssro_bufr2ioda2
    integer   :: varid_ref, varid_msl
    integer   :: varid_bnd, varid_impp, varid_imph, varid_azim
    integer   :: nlev_dimid
-   integer   :: varid_geo_temp, varid_geo_pres, varid_geo_shum, varid_geo_geop, varid_geo_geop_sfc
    integer   :: grpid_metadata, grpid_obsvalue
    integer   :: deflate_level
    character(len=256)       :: infile, outfile
@@ -40,7 +39,6 @@ program gnssro_bufr2ioda2
    integer(int32)           :: idate5(6), idate
    integer(int64)           :: epochtime
 
-   logical                   :: good, outside
    integer(int32), parameter :: mxib = 31
    integer(int32)            :: ibit(mxib), nib
    integer(int32), parameter :: maxlevs = 500
@@ -175,7 +173,7 @@ program gnssro_bufr2ioda2
          if (nib > 0) then
             do i = 1, nib
                qcflag = qcflag + 2**(16-ibit(i))
-               if (ibit(i) == 3) asce = 1
+               if (ibit(i) == 3) asce = 1  !this varaible should be removed later once UFO change is made 
             end do
          end if
 
@@ -203,33 +201,29 @@ program gnssro_bufr2ioda2
                bend = data1b(m + 2, k)        ! bending angle (rad)
             end do
 
-            good = .true.
-
             if (abs(azim) > 360._real64 .or. azim < 0._real64) then
                azim = r_missing
             end if
 
-            if (good) then
-               ndata = ndata + 1
-               gnssro_data%recn(ndata) = nrec
-               gnssro_data%lat(ndata) = rlat
-               gnssro_data%lon(ndata) = rlon
-               gnssro_data%epochtime(ndata) = epochtime
-               gnssro_data%said(ndata) = said
-               gnssro_data%siid(ndata) = siid
-               gnssro_data%sclf(ndata) = sclf
-               gnssro_data%asce(ndata) = asce
-               gnssro_data%ptid(ndata) = ptid
-               gnssro_data%ogce(ndata) = ogce
-               gnssro_data%qcflag(ndata) = qcflag
-               gnssro_data%ref(ndata) = ref
-               gnssro_data%msl_alt(ndata) = height
-               gnssro_data%bend_ang(ndata) = bend
-               gnssro_data%impact_para(ndata) = impact
-               gnssro_data%rfict(ndata) = roc
-               gnssro_data%geoid(ndata) = geoid
-               gnssro_data%azim(ndata) = azim
-            end if
+            ndata = ndata + 1
+            gnssro_data%recn(ndata) = nrec
+            gnssro_data%lat(ndata) = rlat
+            gnssro_data%lon(ndata) = rlon
+            gnssro_data%epochtime(ndata) = epochtime
+            gnssro_data%said(ndata) = said
+            gnssro_data%siid(ndata) = siid
+            gnssro_data%sclf(ndata) = sclf
+            gnssro_data%asce(ndata) = asce
+            gnssro_data%ptid(ndata) = ptid
+            gnssro_data%ogce(ndata) = ogce
+            gnssro_data%qcflag(ndata) = qcflag
+            gnssro_data%ref(ndata) = ref
+            gnssro_data%msl_alt(ndata) = height
+            gnssro_data%bend_ang(ndata) = bend
+            gnssro_data%impact_para(ndata) = impact
+            gnssro_data%rfict(ndata) = roc
+            gnssro_data%geoid(ndata) = geoid
+            gnssro_data%azim(ndata) = azim
 
          end do ! end of k loop
 
