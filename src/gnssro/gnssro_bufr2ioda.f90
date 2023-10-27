@@ -392,7 +392,7 @@ program gnssro_bufr2ioda2
       & "Low Earth Orbit satellite identifier, e.g., COSMIC2=750-755"))
    call check(nf90_put_att(grpid_metadata, varid_said, "units", "1"))
 
-   call check(nf90_def_var(grpid_metadata, "occulting_sat_is", NF90_INT, nlocs_dimid, varid_siid))
+   call check(nf90_def_var(grpid_metadata, "instrumentIdentifier", NF90_INT, nlocs_dimid, varid_siid))
    call check(nf90_def_var_deflate(grpid_metadata, varid_siid,       &
                                     & shuffle=1, deflate=1, deflate_level=deflate_level))
    call check(nf90_put_att(grpid_metadata, varid_siid, "longname", "satellite instrument"))
@@ -409,11 +409,11 @@ program gnssro_bufr2ioda2
    call check(nf90_put_att(grpid_metadata, varid_asce, "units", "1"))
    call check(nf90_def_var_fill(grpid_metadata, varid_asce, 0, i_missing))
 
-   call check(nf90_def_var(grpid_metadata, "process_center", NF90_INT, nlocs_dimid, varid_ogce))
+   call check(nf90_def_var(grpid_metadata, "dataProviderOrigin", NF90_INT, nlocs_dimid, varid_ogce))
    call check(nf90_def_var_deflate(grpid_metadata, varid_ogce,       &
                                     & shuffle=1, deflate=1, deflate_level=deflate_level))
    call check(nf90_put_att(grpid_metadata, varid_ogce, "longname", "originally data processing_center, &
-                                                        &e.g., 60 for UCAR, 94 for DMI, 78 for GFZ"))
+                                                        &e.g., 60 for UCAR, 94 for DMI, 254 for Eumesat, 78 for GFZ"))
    call check(nf90_put_att(grpid_metadata, varid_ogce, "units", "1"))
    call check(nf90_def_var_fill(grpid_metadata, varid_ogce, 0, i_missing))
 
