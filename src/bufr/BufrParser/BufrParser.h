@@ -30,6 +30,7 @@ namespace Ingester {
      public:
         explicit BufrParser(const BufrDescription& description);
         explicit BufrParser(const eckit::LocalConfiguration& conf);
+        explicit BufrParser(const std::string& yamlPath);
 
         ~BufrParser();
 

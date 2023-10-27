@@ -136,8 +136,6 @@ if ( iodaconv_bufr_python_ENABLED )
 
   list (APPEND _python_interface_srcs
     python_bindings.cpp
-    bufr2ioda_func.cpp
-    bufr2ioda_func.h
     )
 
   pybind11_add_module(bufr ${_ingester_srcs} ${_python_interface_srcs})

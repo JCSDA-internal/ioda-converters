@@ -31,6 +31,7 @@ namespace Ingester
 
         /// \brief Constructor
         /// \param conf Config data/
+        Export() = default;
         explicit Export(const eckit::Configuration &conf);
 
         // Getters

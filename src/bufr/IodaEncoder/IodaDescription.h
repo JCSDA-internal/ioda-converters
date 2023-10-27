@@ -98,13 +98,26 @@ namespace Ingester
     {
      public:
         IodaDescription() = default;
+        explicit IodaDescription(const std::string& yamlFile);
         explicit IodaDescription(const eckit::Configuration& conf);
 
         /// \brief Add Dimension defenition
         void addDimension(const DimensionDescription& dim);
 
+        void addDimension(const std::string& name,
+                          const std::vector<std::string>& paths,
+                          const std::string& source);
+
+//        void addDimension(const std::string& name,
+//                          const std::string& path,
+//                          const std::string& source) { addDimension(name, {path}, source); }
+
         /// \brief Add Variable defenition
         void addVariable(const VariableDescription& variable);
+
+        void py_addVariable(const std::string& name,
+                         const std::string& source,
+                         const std::string& unit);
 
         /// \brief Add Globals defenition
         void addGlobal(const std::shared_ptr<GlobalDescriptionBase>& global);
@@ -135,6 +148,9 @@ namespace Ingester
 
         /// \brief Collection of defined globals
         GlobalDescriptions globals_;
+
+        /// \brief Initialize the class
+        void init(const eckit::Configuration& conf);
 
         /// \brief Collection of defined variables
         void setBackend(const std::string& backend);

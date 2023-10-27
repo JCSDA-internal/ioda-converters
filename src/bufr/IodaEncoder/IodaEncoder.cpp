@@ -24,6 +24,16 @@ namespace Ingester
     static const char* LocationName = "Location";
     static const char* DefualtDimName = "dim";
 
+    IodaEncoder::IodaEncoder(const std::string& yamlPath) :
+        description_(IodaDescription(yamlPath))
+    {
+    }
+
+    IodaEncoder::IodaEncoder(const IodaDescription& description) :
+        description_(description)
+    {
+    }
+
     IodaEncoder::IodaEncoder(const eckit::Configuration& conf):
         description_(IodaDescription(conf))
     {

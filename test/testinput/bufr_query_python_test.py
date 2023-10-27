@@ -5,29 +5,27 @@
 
 from pyiodaconv import bufr
 import numpy as np
-import json
-import yaml
 
 
 def test_bufr2ioda():
-    yaml_file = 'bufr_ncep_esamua.yaml'
-    yaml_file = './testinput/bufr_ncep_1bamua_ta.yaml'
+    YAML_PATH = './testinput/bufr_ncep_1bamua_ta.yaml'
 
-    with open(yaml_file, 'r') as file:
-       yaml_config = yaml.load(file, Loader=yaml.FullLoader)
+    container = bufr.Parser(YAML_PATH).parse()
 
-    yaml_string = json.dumps(yaml_config)
-    container = bufr.parse(yaml_string, 0)
-
-    sub_c = container.allSubCategories()
-    for id in ['n18', 'metop-b', 'n19', 'metop-c']:
+    categories = container.allSubCategories()
+    for id in ['n18', 'metop-b', 'n19', 'metop-c', 'metop-a']:
        data = container.get('variables/antennaTemperature', [id])
        paths = container.getPaths('variables/antennaTemperature', [id])
 
        container.set('variables/antennaTemperature', data, [id])
        container.add('variables/antennaTemperature1', data, paths, [id])
 
-    bufr.encode_save(yaml_string, container)
+    iodaDescription = bufr.IodaDescription(YAML_PATH)
+    iodaDescription.add_variable(name='obsData/antennaTemperature1',
+                                 source='variables/antennaTemperature1',
+                                 units='K')
+
+    bufr.IodaEncoder(iodaDescription).encode(container)
 
 def test_basic_query():
     DATA_PATH = './testinput/gdas.t00z.1bhrs4.tm00.bufr_d'

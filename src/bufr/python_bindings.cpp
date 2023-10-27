@@ -10,14 +10,15 @@
 #include <vector>
 #include <string>
 
+
 #include "BufrParser/Query/QuerySet.h"
 #include "BufrParser/Query/File.h"
 #include "BufrParser/Query/ResultSet.h"
 #include "BufrParser/BufrParser.h"
 #include "IodaEncoder/IodaEncoder.h"
+#include "IodaEncoder/IodaDescription.h"
 #include "DataObject.h"
 #include "DataContainer.h"
-#include "bufr2ioda_func.h"
 
 namespace py = pybind11;
 
@@ -26,34 +27,35 @@ using Ingester::bufr::QuerySet;
 using Ingester::bufr::File;
 using Ingester::BufrParser;
 using Ingester::IodaEncoder;
+using Ingester::IodaDescription;
 using Ingester::DataObjectBase;
 using Ingester::DataContainer;
 using Ingester::CategoryMap;
-using Ingester::parse1;
-using Ingester::encode_save;
 
     PYBIND11_MODULE(bufr, m)
     {
         m.doc() = "Provides the ability to process data from BUFR files.";
 
-        m.def("parse", &parse1, "A function to parse a config file and get the data container");
-
-        m.def("encode_save", [](const std::string& yamlPath, std::shared_ptr<DataContainer> shared_data_container) {
-        encode_save(yamlPath, shared_data_container);
-        }, "A function to save data container into a file");
-
-        py::class_<BufrParser>(m, "BufrParser")
-            .def(py::init<const eckit::LocalConfiguration&>())
+        py::class_<BufrParser>(m, "Parser")
+            .def(py::init<const std::string&>())
             .def("parse", &BufrParser::parse,
-                           py::arg("size_t"),
+                           py::arg("numMsgs") = 0,
                            "Get Parser to parse a config file and get the data container.");
 
         py::class_<IodaEncoder>(m, "IodaEncoder")
-            .def(py::init<const eckit::Configuration&>())
-            .def("encode", &IodaEncoder::encode,
+            .def(py::init<const std::string&>())
+            .def(py::init<const IodaDescription&>())
+            .def("encode", &IodaEncoder::py_encode,
+                             py::arg("container"),
+                             py::arg("append") = false,
                            "Get the class to encode the dataset");
 
-        py::class_<DataObjectBase, std::shared_ptr<DataObjectBase>>(m, "DataObjectBase");
+        py::class_<IodaDescription>(m, "IodaDescription")
+            .def(py::init<const std::string&>())
+            .def("add_variable", &IodaDescription::py_addVariable,
+                                 py::arg("name"),
+                                 py::arg("source"),
+                                 py::arg("units"), "");
 
         py::class_<DataContainer, std::shared_ptr<DataContainer>>(m, "DataContainer")
             .def(py::init<>())

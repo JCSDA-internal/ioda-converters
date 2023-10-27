@@ -25,6 +25,7 @@ namespace Ingester
     class BufrDescription
     {
      public:
+        explicit BufrDescription(const std::string& yamlPath);
         explicit BufrDescription(const eckit::Configuration &conf);
 
         /// \brief Add a BufrMnemonicSet to the description.
@@ -50,5 +51,7 @@ namespace Ingester
 
         /// \brief Map of export strings to Variable classes.
         Export export_;
+
+        void init(const eckit::Configuration &conf);
     };
 }  // namespace Ingester

@@ -10,6 +10,8 @@
 #include <boost/algorithm/string.hpp>
 
 #include "eckit/exception/Exceptions.h"
+#include "eckit/config/YAMLConfiguration.h"
+#include "eckit/filesystem/PathName.h"
 
 namespace
 {
@@ -57,7 +59,20 @@ namespace
 
 namespace Ingester
 {
+    IodaDescription::IodaDescription(const std::string& yamlFile)
+    {
+        auto conf = eckit::YAMLConfiguration(eckit::PathName(yamlFile));
+        init(conf.getSubConfiguration("observations")
+                 .getSubConfiguration("obs space")
+                 .getSubConfiguration("ioda") );
+    }
+
     IodaDescription::IodaDescription(const eckit::Configuration& conf)
+    {
+        init(conf);
+    }
+
+    void IodaDescription::init(const eckit::Configuration& conf)
     {
         if (conf.has(ConfKeys::Backend))
         {
@@ -250,9 +265,39 @@ namespace Ingester
         dimensions_.push_back(dim);
     }
 
+    void IodaDescription::addDimension(const std::string& name,
+                                      const std::vector<std::string>& paths,
+                                      const std::string& source)
+    {
+        DimensionDescription dim;
+        dim.name = name;
+
+        for (const auto& path : paths)
+        {
+            dim.paths.push_back(bufr::QueryParser::parse(path)[0]);
+        }
+
+        dim.source = {source};
+        addDimension(dim);
+    }
+
     void IodaDescription::addVariable(const VariableDescription& variable)
     {
         variables_.push_back(variable);
+    }
+
+    void IodaDescription::py_addVariable(const std::string& name,
+                                      const std::string& source,
+                                      const std::string& unit)
+    {
+        VariableDescription variable;
+        variable.name = name;
+        variable.source = source;
+        variable.units = unit;
+        variable.longName = name;
+        variable.compressionLevel = 6;
+        variable.chunks = {};
+        addVariable(variable);
     }
 
     void IodaDescription::addGlobal(const std::shared_ptr<GlobalDescriptionBase>& global)
