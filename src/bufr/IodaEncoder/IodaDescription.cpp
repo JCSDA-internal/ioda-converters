@@ -287,14 +287,15 @@ namespace Ingester
     }
 
     void IodaDescription::py_addVariable(const std::string& name,
-                                      const std::string& source,
-                                      const std::string& unit)
+                                         const std::string& source,
+                                         const std::string& unit,
+                                         const std::string& longName)
     {
         VariableDescription variable;
         variable.name = name;
         variable.source = source;
         variable.units = unit;
-        variable.longName = name;
+        variable.longName = longName;
         variable.compressionLevel = 6;
         variable.chunks = {};
         addVariable(variable);

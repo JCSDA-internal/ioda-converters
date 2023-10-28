@@ -117,7 +117,8 @@ namespace Ingester
 
         void py_addVariable(const std::string& name,
                          const std::string& source,
-                         const std::string& unit);
+                         const std::string& unit,
+                         const std::string& longName = "");
 
         /// \brief Add Globals defenition
         void addGlobal(const std::shared_ptr<GlobalDescriptionBase>& global);

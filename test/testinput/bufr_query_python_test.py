@@ -7,25 +7,44 @@ from pyiodaconv import bufr
 import numpy as np
 
 
+# def test_bufr2ioda():
+#     YAML_PATH = './testinput/bufr_ncep_1bamua_ta.yaml'
+#
+#     container = bufr.Parser(YAML_PATH).parse()
+#
+#     categories = container.allSubCategories()
+#     for id in ['n18', 'metop-b', 'n19', 'metop-c', 'metop-a']:
+#        data = container.get('variables/antennaTemperature', [id])
+#        paths = container.getPaths('variables/antennaTemperature', [id])
+#
+#        container.set('variables/antennaTemperature', data, [id])
+#        container.add('variables/antennaTemperature1', data, paths, [id])
+#
+#     iodaDescription = bufr.IodaDescription(YAML_PATH)
+#     iodaDescription.add_variable(name='obsData/antennaTemperature1',
+#                                  source='variables/antennaTemperature1',
+#                                  units='K')
+#
+#     bufr.IodaEncoder(iodaDescription).encode(container)
+
 def test_bufr2ioda():
-    YAML_PATH = './testinput/bufr_ncep_1bamua_ta.yaml'
+    YAML_PATH = './testinput/bufr_hrs.yaml'
 
     container = bufr.Parser(YAML_PATH).parse()
 
-    categories = container.allSubCategories()
-    for id in ['n18', 'metop-b', 'n19', 'metop-c', 'metop-a']:
-       data = container.get('variables/antennaTemperature', [id])
-       paths = container.getPaths('variables/antennaTemperature', [id])
+    data = container.get('variables/brightnessTemp')
+    paths = container.getPaths('variables/brightnessTemp')
 
-       container.set('variables/antennaTemperature', data, [id])
-       container.add('variables/antennaTemperature1', data, paths, [id])
+    container.set('variables/brightnessTemp', data - 2)
+    container.add('variables/brightnessTemp_new', data*.01, paths)
 
     iodaDescription = bufr.IodaDescription(YAML_PATH)
-    iodaDescription.add_variable(name='obsData/antennaTemperature1',
-                                 source='variables/antennaTemperature1',
+    iodaDescription.add_variable(name='ObsValue/brightnessTemp_new',
+                                 source='variables/brightnessTemp_new',
                                  units='K')
 
     bufr.IodaEncoder(iodaDescription).encode(container)
+
 
 def test_basic_query():
     DATA_PATH = './testinput/gdas.t00z.1bhrs4.tm00.bufr_d'

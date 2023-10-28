@@ -55,20 +55,31 @@ using Ingester::CategoryMap;
             .def("add_variable", &IodaDescription::py_addVariable,
                                  py::arg("name"),
                                  py::arg("source"),
-                                 py::arg("units"), "");
+                                 py::arg("units"),
+                                 py::arg("longName") = "", "");
 
         py::class_<DataContainer, std::shared_ptr<DataContainer>>(m, "DataContainer")
             .def(py::init<>())
             .def(py::init<const Ingester::CategoryMap&>())
             .def("add", &DataContainer::addNumpyArray,
-                        py::arg("field_name"),
-                        py::arg("data_object"),
+                        py::arg("name"),
+                        py::arg("data"),
                         py::arg("dim_paths"),
-                        py::arg("category_id") = std::vector<std::string>(),
+                        py::arg("category") = std::vector<std::string>(),
                         "Add a new variable object into the data container.")
-            .def("get", &DataContainer::getNumpyArray, "Get the value of the variable object as numpy array. ")
-            .def("getPaths", &DataContainer::getPaths, "Get path names for a field.")
-            .def("set", &DataContainer::set, "Set the variable value back after re-map.")
+            .def("get", &DataContainer::getNumpyArray,
+                             py::arg("name"),
+                             py::arg("category") = std::vector<std::string>(),
+                            "Get the value of the variable object as numpy array. ")
+            .def("getPaths", &DataContainer::getPaths,
+                             py::arg("name"),
+                             py::arg("category") = std::vector<std::string>(),
+                             "Get path names for a field.")
+            .def("set", &DataContainer::set,
+                             py::arg("name"),
+                             py::arg("data"),
+                             py::arg("category") = std::vector<std::string>(),
+                             "Set the variable value back after re-map.")
             .def("getCategoryMap", &DataContainer::getCategoryMap, "Get the map.")
             .def("allSubCategories", &DataContainer::allSubCategories, "Get the sub categories for the satellite.");
 
