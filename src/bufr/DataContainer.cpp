@@ -167,9 +167,14 @@ namespace Ingester
                              const SubCategory& categoryId)
     {
         // Guard statements
+        if (!hasCategory(categoryId))
+        {
+            throw eckit::BadParameter("ERROR: Invalid category for added field " + fieldName);
+        }
+
         if (hasKey(fieldName, categoryId))
         {
-            throw eckit::BadParameter("ERROR: Field " + fieldName + " already exists.");
+            throw eckit::BadParameter("ERROR: Added field " + fieldName + " already exists.");
         }
 
         auto paths = std::vector<bufr::Query>(dimPaths.size());
@@ -257,13 +262,24 @@ namespace Ingester
                                const SubCategory& categoryId) const
     {
         bool hasKey = false;
-        if (dataSets_.find(categoryId) != dataSets_.end() &&
+        if (hasCategory(categoryId) &&
             dataSets_.at(categoryId).find(fieldName) != dataSets_.at(categoryId).end())
         {
             hasKey = true;
         }
 
         return hasKey;
+    }
+
+    bool DataContainer::hasCategory(const SubCategory& categoryId) const
+    {
+        bool hasCat = false;
+        if (dataSets_.find(categoryId) != dataSets_.end())
+        {
+            hasCat = true;
+        }
+
+        return hasCat;
     }
 
     size_t DataContainer::size(const SubCategory &categoryId) const
