@@ -141,7 +141,7 @@ def test_container_add():
 
     bufr.IodaEncoder(iodaDescription).encode(container)
 
-def test_container_add_w_category():
+def test_container_w_category():
     YAML_PATH = './testinput/bufr_ncep_1bamua_ta.yaml'
 
     container = bufr.Parser(YAML_PATH).parse()
@@ -171,4 +171,4 @@ if __name__ == '__main__':
 
     test_container_replace()
     test_container_add()
-    test_container_add_w_category()
+    test_container_w_category()
