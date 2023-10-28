@@ -163,12 +163,12 @@ def test_container_add_w_category():
 
 
 if __name__ == '__main__':
-    # test_basic_query()
-    # test_string_field()
-    # test_long_str_field()
-    # test_type_override()
-    # test_invalid_query()
-    #
-    # test_container_replace()
-    # test_container_add()
+    test_basic_query()
+    test_string_field()
+    test_long_str_field()
+    test_type_override()
+    test_invalid_query()
+
+    test_container_replace()
+    test_container_add()
     test_container_add_w_category()
