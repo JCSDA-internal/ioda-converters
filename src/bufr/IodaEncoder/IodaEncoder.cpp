@@ -135,7 +135,7 @@ namespace Ingester
                     std::stringstream warnStr;
                     warnStr << "WARNING: ioda::dimensions: Source field " << dimDesc.source;
                     warnStr << " doesn't exist in category " <<  categories;
-                    std::cout << warnStr.str() << std::endl;
+                    oops::Log::warning() << warnStr.str() << std::endl;
 
                     continue;
                 }
@@ -168,9 +168,9 @@ namespace Ingester
                 if (!dataContainer->hasKey(varDesc.source, categories))
                 {
                     std::stringstream warnStr;
-                    warnStr << "WARNING: ioda::variable: Field " << varDesc.source;
+                    warnStr << "ioda::variable: Field " << varDesc.source;
                     warnStr << " doesn't exist in category " <<  categories;
-                    std::cout << warnStr.str() << std::endl;
+                    oops::Log::warning() << warnStr.str() << std::endl;
 
                     continue;
                 }
