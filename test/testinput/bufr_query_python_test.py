@@ -17,7 +17,7 @@ import numpy as np
 #        data = container.get('variables/antennaTemperature', [id])
 #        paths = container.getPaths('variables/antennaTemperature', [id])
 #
-#        container.set('variables/antennaTemperature', data, [id])
+#        container.replace('variables/antennaTemperature', data, [id])
 #        container.add('variables/antennaTemperature1', data, paths, [id])
 #
 #     iodaDescription = bufr.IodaDescription(YAML_PATH)
@@ -35,7 +35,7 @@ def test_bufr2ioda():
     data = container.get('variables/brightnessTemp')
     paths = container.getPaths('variables/brightnessTemp')
 
-    container.set('variables/brightnessTemp', data - 2)
+    container.replace('variables/brightnessTemp', data - 2)
     container.add('variables/brightnessTemp_new', data*.01, paths)
 
     iodaDescription = bufr.IodaDescription(YAML_PATH)

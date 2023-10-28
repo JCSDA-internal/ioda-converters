@@ -105,9 +105,9 @@ namespace Ingester
                  const std::vector<std::string>& dimPaths,
                  const SubCategory& categoryId = {});
 
-        void set(const std::string& fieldName,
-                 const py::array& pyData,
-                 const SubCategory& categoryId = {});
+        void replace(const std::string& fieldName,
+                     const py::array& pyData,
+                     const SubCategory& categoryId = {});
 
         /// \brief Gets a numpy array for the resulting data for a specific field with a given
         /// name grouped by the optional groupByFieldName.

@@ -183,9 +183,9 @@ namespace Ingester
         dataSets_.at(categoryId).insert({fieldName, dataObj});
     }
 
-    void DataContainer::set(const std::string& fieldName,
-                            const py::array& pyData,
-                            const SubCategory& categoryId)
+    void DataContainer::replace(const std::string& fieldName,
+                                const py::array& pyData,
+                                const SubCategory& categoryId)
     {
 
         // Guard statements

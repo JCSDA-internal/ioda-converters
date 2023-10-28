@@ -75,11 +75,11 @@ using Ingester::CategoryMap;
                              py::arg("name"),
                              py::arg("category") = std::vector<std::string>(),
                              "Get path names for a field.")
-            .def("set", &DataContainer::set,
+            .def("replace", &DataContainer::replace,
                              py::arg("name"),
                              py::arg("data"),
                              py::arg("category") = std::vector<std::string>(),
-                             "Set the variable value back after re-map.")
+                             "Replace the variable with the given name.")
             .def("getCategoryMap", &DataContainer::getCategoryMap, "Get the map.")
             .def("allSubCategories", &DataContainer::allSubCategories, "Get the sub categories for the satellite.");
 
