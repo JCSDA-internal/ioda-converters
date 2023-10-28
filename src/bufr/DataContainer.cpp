@@ -169,7 +169,7 @@ namespace Ingester
         // Guard statements
         if (hasKey(fieldName, categoryId))
         {
-            throw eckit::BadParameter("ERROR: Field does not exist.");
+            throw eckit::BadParameter("ERROR: Field " + fieldName + " already exists.");
         }
 
         auto paths = std::vector<bufr::Query>(dimPaths.size());
@@ -180,7 +180,7 @@ namespace Ingester
 
         auto dataObj = makeObject(fieldName, pyData);
         dataObj->setDimPaths(paths);
-        dataSets_.at(categoryId).insert({fieldName, makeObject(fieldName, pyData)});
+        dataSets_.at(categoryId).insert({fieldName, dataObj});
     }
 
     void DataContainer::set(const std::string& fieldName,
@@ -191,7 +191,7 @@ namespace Ingester
         // Guard statements
         if (!hasKey(fieldName, categoryId))
         {
-            throw eckit::BadParameter("ERROR: Field does not exist.");
+            throw eckit::BadParameter("ERROR: Field " + fieldName +  " does not exist.");
         }
 
         if (pyData.ndim() != dataSets_.at(categoryId).at(fieldName)->getDims().size())

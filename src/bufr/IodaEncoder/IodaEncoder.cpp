@@ -382,7 +382,7 @@ namespace Ingester
 
     bool IodaEncoder::existsInNamedPath(const bufr::Query& path, const NamedPathDims& pathMap) const
     {
-        for (auto& paths : pathMap)
+        for (const auto& paths : pathMap)
         {
             if (std::find(paths.first.begin(), paths.first.end(), path) != paths.first.end())
             {
