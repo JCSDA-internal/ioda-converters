@@ -198,7 +198,6 @@ namespace Ingester
                                 const py::array& pyData,
                                 const SubCategory& categoryId)
     {
-
         // Guard statements
         if (!hasKey(fieldName, categoryId))
         {

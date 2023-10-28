@@ -157,7 +157,6 @@ namespace Ingester
                 dimMap[dimDesc.name] = dataObject->createDimensionFromData(
                     dimDesc.name,
                     dataObject->getDimPaths().size() - 1);
-
             }
 
             // Discover and create the dimension data for dimensions with no source field. If
@@ -282,7 +281,6 @@ namespace Ingester
                     auto dimVar = obsGroup.vars[dimName];
                     dimMap[dimName]->write(dimVar);
                 }
-
             }
 
             // Write all the other Variables

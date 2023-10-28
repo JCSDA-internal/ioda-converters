@@ -81,7 +81,8 @@ using Ingester::CategoryMap;
                              py::arg("category") = std::vector<std::string>(),
                              "Replace the variable with the given name.")
             .def("getCategoryMap", &DataContainer::getCategoryMap, "Get the map.")
-            .def("allSubCategories", &DataContainer::allSubCategories, "Get the sub categories for the satellite.");
+            .def("allSubCategories", &DataContainer::allSubCategories,
+                                    "Get the sub categories for the satellite.");
 
         py::class_<QuerySet>(m, "QuerySet")
             .def(py::init<>())
