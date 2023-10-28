@@ -169,12 +169,18 @@ namespace Ingester
         // Guard statements
         if (!hasCategory(categoryId))
         {
-            throw eckit::BadParameter("ERROR: Invalid category for added field " + fieldName);
+            std::ostringstream errorStr;
+            errorStr << "ERROR: Invalid category " << makeSubCategoryStr(categoryId);
+            errorStr << " for field " << fieldName << "." << std::endl;
+            throw eckit::BadParameter(errorStr.str());
         }
 
         if (hasKey(fieldName, categoryId))
         {
-            throw eckit::BadParameter("ERROR: Added field " + fieldName + " already exists.");
+            std::ostringstream errorStr;
+            errorStr << "ERROR: Field called " << fieldName << " already exists ";
+            errorStr << "for subcategory " << makeSubCategoryStr(categoryId) << std::endl;
+            throw eckit::BadParameter(errorStr.str());
         }
 
         auto paths = std::vector<bufr::Query>(dimPaths.size());

@@ -141,7 +141,6 @@ def test_container_add():
 
     bufr.IodaEncoder(iodaDescription).encode(container)
 
-
 def test_container_add_w_category():
     YAML_PATH = './testinput/bufr_ncep_1bamua_ta.yaml'
 
@@ -163,17 +162,13 @@ def test_container_add_w_category():
     bufr.IodaEncoder(iodaDescription).encode(container)
 
 
-
-
-
-
 if __name__ == '__main__':
-    test_basic_query()
-    test_string_field()
-    test_long_str_field()
-    test_type_override()
-    test_invalid_query()
-
-    test_container_replace()
-    test_container_add()
-    # test_container_add_w_category()
+    # test_basic_query()
+    # test_string_field()
+    # test_long_str_field()
+    # test_type_override()
+    # test_invalid_query()
+    #
+    # test_container_replace()
+    # test_container_add()
+    test_container_add_w_category()

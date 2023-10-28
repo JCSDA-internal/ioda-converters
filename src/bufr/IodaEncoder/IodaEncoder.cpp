@@ -125,26 +125,39 @@ namespace Ingester
             // Create the dimension data for dimensions which include source data
             for (const auto& dimDesc : description_.getDims())
             {
-                if (!dimDesc.source.empty())
+                if (dimDesc.source.empty())
                 {
-                    auto dataObject = dataContainer->get(dimDesc.source, categories);
-
-                    // Validate the path for the source field makes sense for the dimension
-                    if (std::find(dimDesc.paths.begin(),
-                                  dimDesc.paths.end(),
-                                  dataObject->getDimPaths().back()) == dimDesc.paths.end())
-                    {
-                        std::stringstream errStr;
-                        errStr << "ioda::dimensions: Source field " << dimDesc.source << " in ";
-                        errStr << dimDesc.name << " is not in the correct path.";
-                        throw eckit::BadParameter(errStr.str());
-                    }
-
-                    // Create the dimension data
-                    dimMap[dimDesc.name] = dataObject->createDimensionFromData(
-                        dimDesc.name,
-                        dataObject->getDimPaths().size() - 1);
+                    continue;
                 }
+
+                if (!dataContainer->hasKey(dimDesc.source, categories))
+                {
+                    std::stringstream warnStr;
+                    warnStr << "WARNING: ioda::dimensions: Source field " << dimDesc.source;
+                    warnStr << " doesn't exist in category " <<  categories;
+                    std::cout << warnStr.str() << std::endl;
+
+                    continue;
+                }
+
+                auto dataObject = dataContainer->get(dimDesc.source, categories);
+
+                // Validate the path for the source field makes sense for the dimension
+                if (std::find(dimDesc.paths.begin(),
+                              dimDesc.paths.end(),
+                              dataObject->getDimPaths().back()) == dimDesc.paths.end())
+                {
+                    std::stringstream errStr;
+                    errStr << "ioda::dimensions: Source field " << dimDesc.source << " in ";
+                    errStr << dimDesc.name << " is not in the correct path.";
+                    throw eckit::BadParameter(errStr.str());
+                }
+
+                // Create the dimension data
+                dimMap[dimDesc.name] = dataObject->createDimensionFromData(
+                    dimDesc.name,
+                    dataObject->getDimPaths().size() - 1);
+
             }
 
             // Discover and create the dimension data for dimensions with no source field. If
@@ -152,6 +165,16 @@ namespace Ingester
             int autoGenDimNumber = 2;
             for (const auto& varDesc : description_.getVariables())
             {
+                if (!dataContainer->hasKey(varDesc.source, categories))
+                {
+                    std::stringstream warnStr;
+                    warnStr << "WARNING: ioda::variable: Field " << varDesc.source;
+                    warnStr << " doesn't exist in category " <<  categories;
+                    std::cout << warnStr.str() << std::endl;
+
+                    continue;
+                }
+
                 auto dataObject = dataContainer->get(varDesc.source, categories);
 
                 for (std::size_t dimIdx  = 1; dimIdx < dataObject->getDimPaths().size(); dimIdx++)
@@ -230,33 +253,46 @@ namespace Ingester
             // Write the Dimension Variables
             for (const auto& dimDesc : description_.getDims())
             {
-                if (!dimDesc.source.empty())
+                if (dimDesc.source.empty())
                 {
-                    auto dataObject = dataContainer->get(dimDesc.source, categories);
-                    for (size_t dimIdx = 0; dimIdx < dataObject->getDims().size(); dimIdx++)
-                    {
-                        auto dimPath = dataObject->getDimPaths()[dimIdx];
-
-                        NamedPathDims namedPathDims;
-                        if (dimIdx == 0)
-                        {
-                            namedPathDims = namedLocDims;
-                        }
-                        else
-                        {
-                            namedPathDims = namedExtraDims;
-                        }
-
-                        auto dimName = dimForDimPath(dimPath, namedPathDims).name;
-                        auto dimVar = obsGroup.vars[dimName];
-                        dimMap[dimName]->write(dimVar);
-                    }
+                    continue;
                 }
+
+                if (!dataContainer->hasKey(dimDesc.source, categories))
+                {
+                    continue;
+                }
+
+                auto dataObject = dataContainer->get(dimDesc.source, categories);
+                for (size_t dimIdx = 0; dimIdx < dataObject->getDims().size(); dimIdx++)
+                {
+                    auto dimPath = dataObject->getDimPaths()[dimIdx];
+
+                    NamedPathDims namedPathDims;
+                    if (dimIdx == 0)
+                    {
+                        namedPathDims = namedLocDims;
+                    }
+                    else
+                    {
+                        namedPathDims = namedExtraDims;
+                    }
+
+                    auto dimName = dimForDimPath(dimPath, namedPathDims).name;
+                    auto dimVar = obsGroup.vars[dimName];
+                    dimMap[dimName]->write(dimVar);
+                }
+
             }
 
             // Write all the other Variables
             for (const auto& varDesc : description_.getVariables())
             {
+                if (!dataContainer->hasKey(varDesc.source, categories))
+                {
+                    continue;
+                }
+
                 std::vector<ioda::Dimensions_t> chunks;
                 auto dimensions = std::vector<ioda::Variable>();
                 auto dataObject = dataContainer->get(varDesc.source, categories);
