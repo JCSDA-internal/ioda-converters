@@ -192,7 +192,7 @@ program gnssro_bufr2ioda2
          nrec = nrec + 1
          ndata0 = ndata
 
-         do k = 1, levs
+         kloop: do k = 1, levs
             rlat = data1b(1, k)  ! earth relative latitude (degrees)
             rlon = data1b(2, k)  ! earth relative longitude (degrees)
             azim = data1b(3, k)
@@ -211,6 +211,9 @@ program gnssro_bufr2ioda2
 
             if (abs(azim) > 360._real64 .or. azim < 0._real64) then
                azim = r_missing
+            end if
+            if (abs(rlat) > 90._real64 .or. abs(rlon) > 360._real64) then
+               cycle kloop
             end if
 
             ndata = ndata + 1
@@ -234,7 +237,7 @@ program gnssro_bufr2ioda2
             gnssro_data%geoid(ndata) = geoid
             gnssro_data%azim(ndata) = azim
 
-         end do ! end of k loop
+         end do kloop
 
          if (ndata == ndata0) nrec = nrec - 1
 
