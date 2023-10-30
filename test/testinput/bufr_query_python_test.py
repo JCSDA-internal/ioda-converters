@@ -147,7 +147,7 @@ def test_container_w_category():
     container = bufr.Parser(YAML_PATH).parse()
 
     categories = container.allSubCategories()
-    for category in [categories[0]]:  # metop-a
+    for category in [categories[0]]:  # [metop-a]
        data = container.get('variables/antennaTemperature', category)
        paths = container.getPaths('variables/antennaTemperature', category)
 
