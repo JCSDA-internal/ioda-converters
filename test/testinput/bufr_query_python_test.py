@@ -147,12 +147,12 @@ def test_container_w_category():
     container = bufr.Parser(YAML_PATH).parse()
 
     categories = container.allSubCategories()
-    for id in ['metop-a']:
-       data = container.get('variables/antennaTemperature', [id])
-       paths = container.getPaths('variables/antennaTemperature', [id])
+    for category in [categories[0]]:  # metop-a
+       data = container.get('variables/antennaTemperature', category)
+       paths = container.getPaths('variables/antennaTemperature', category)
 
-       container.replace('variables/antennaTemperature', data, [id])
-       container.add('variables/antennaTemperature1', data, paths, [id])
+       container.replace('variables/antennaTemperature', data, category)
+       container.add('variables/antennaTemperature1', data, paths, category)
 
     iodaDescription = bufr.IodaDescription(YAML_PATH)
     iodaDescription.add_variable(name='obsData/antennaTemperature1',
