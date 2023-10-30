@@ -48,7 +48,7 @@ program gnssro_bufr2ioda2
    integer(int32), parameter :: mxib = 31
    integer(int32)            :: ibit(mxib), nib
    integer(int32), parameter :: maxlevs = 500
-   integer(int32), parameter :: n1ahdr = 14
+   integer(int32), parameter :: n1ahdr = 15
    integer(int32)            :: maxobs
    type gnssro_type
       integer(int32), allocatable, dimension(:)    :: said
@@ -90,7 +90,7 @@ program gnssro_bufr2ioda2
    character(10) nemo
    character(80) hdr1a
 
-   data hdr1a/'YEAR MNTH DAYS HOUR MINU PCCF ELRC SAID SIID PTID GEODU SCLF OGCE TISE'/
+   data hdr1a/'YEAR MNTH DAYS HOUR MINU SECO PCCF ELRC SAID SIID PTID GEODU SCLF OGCE TISE'/
    data nemo/'QFRO'/
 
    i_missing = huge(i_missing)
@@ -163,15 +163,15 @@ program gnssro_bufr2ioda2
          idate5(3) = bfr1ahdr(3) ! day
          idate5(4) = bfr1ahdr(4) ! hour
          idate5(5) = bfr1ahdr(5) ! minute
-         idate5(6) = 0 ! seconds
-         roc = bfr1ahdr(7)        ! Earth local radius of curvature
-         said = bfr1ahdr(8)        ! Satellite identifier
-         siid = bfr1ahdr(9)        ! Satellite instrument
-         ptid = bfr1ahdr(10)       ! Platform transmitter ID number
-         geoid = bfr1ahdr(11)       ! Geoid undulation
-         sclf = bfr1ahdr(12)       ! Satellite classification
-         ogce = bfr1ahdr(13)       ! Identification of originating/generating centre
-         tinc = bfr1ahdr(14)       ! Time increment relative to the start of occultaion
+         idate5(6) = bfr1ahdr(6) ! seconds
+         roc = bfr1ahdr(8)        ! Earth local radius of curvature
+         said = bfr1ahdr(9)        ! Satellite identifier
+         siid = bfr1ahdr(10)        ! Satellite instrument
+         ptid = bfr1ahdr(11)       ! Platform transmitter ID number
+         geoid = bfr1ahdr(12)       ! Geoid undulation
+         sclf = bfr1ahdr(13)       ! Satellite classification
+         ogce = bfr1ahdr(14)       ! Identification of originating/generating centre
+         tinc = bfr1ahdr(15)       ! Time increment relative to the start of occultaion
          call epochtimecalculator(idate5, epochtime)  ! calculate epochtime since January 1 1970
 
          qcflag = 0
