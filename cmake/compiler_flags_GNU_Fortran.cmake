@@ -14,7 +14,7 @@ set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -ffree-line-length-none")
 # RELEASE FLAGS
 ####################################################################
 
-set( CMAKE_Fortran_FLAGS_RELEASE "-O3 -funroll-all-loops -finline-functions ")
+set( CMAKE_Fortran_FLAGS_RELEASE "-O3 -funroll-all-loops -finline-functions")
 
 ####################################################################
 # DEBUG FLAGS
