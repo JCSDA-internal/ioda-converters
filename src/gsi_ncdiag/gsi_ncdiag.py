@@ -1349,13 +1349,13 @@ class Radiances(BaseGSI):
                 pass
         ncout.close()
 
-    def toIODAobs(self, OutDir, ObsBias, QCVars, TestRefs, clobber=True):
+    def toIODAobs(self, OutDir, ObsBias, TotalBias, QCVars, TestRefs, clobber=True):
         """ toIODAobs(OutDir,clobber=True)
         output observations from the specified GSI diag file
         to the JEDI/IODA observation format
         """
 
-        print("Input Parameters: ObsBias=%s QCVars=%s TestRefs=%s" % (ObsBias, QCVars, TestRefs))
+        print("Input Parameters: ObsBias=%s TotalBias=%s QCVars=%s TestRefs=%s" % (ObsBias, TotalBias, QCVars, TestRefs))
         # set up a NcWriter class
         outname = OutDir + '/' + self.sensor + '_' + self.satellite + \
             '_obs_' + self.validtime.strftime("%Y%m%d%H") + '.nc4'
@@ -1593,14 +1593,15 @@ class Radiances(BaseGSI):
                 outdata[gvname] = np.reshape(tmp, (nlocs, nchans))
                 VarDims[gvname] = ['Location', 'Channel']
 
-        # brute force for now add option hook and default to missing
-        key1 = 'Obs_Minus_Forecast_adjusted'
-        key2 = 'Obs_Minus_Forecast_unadjusted'
-        tmp = self.var(key1) - self.var(key2)
-        iodavar = 'GsiBc'
-        gvname = "brightnessTemperature", iodavar
-        outdata[gvname] = np.reshape(tmp, (nlocs, nchans))
-        VarDims[gvname] = ['Location', 'Channel']
+        if (TotalBias):
+            # compute final bias correction
+            key1 = 'Obs_Minus_Forecast_adjusted'
+            key2 = 'Obs_Minus_Forecast_unadjusted'
+            tmp = self.var(key1) - self.var(key2)
+            iodavar = 'GsiBc'
+            gvname = "brightnessTemperature", iodavar
+            outdata[gvname] = np.reshape(tmp, (nlocs, nchans))
+            VarDims[gvname] = ['Location', 'Channel']
 
         # brightness temperature variables
         value = 'brightnessTemperature'

@@ -20,12 +20,12 @@ def run_conv_obs(convfile, outdir, platforms):
     return 0
 
 
-def run_radiances_obs(radfile, outdir, obsbias, qcvars, testrefs):
+def run_radiances_obs(radfile, outdir, obsbias, totalbias, qcvars, testrefs):
     print("Processing run_radiances_obs:%s" % radfile)
     startt = time.time()
     Diag = gsid.Radiances(radfile)
     Diag.read()
-    Diag.toIODAobs(outdir, obsbias, qcvars, testrefs)
+    Diag.toIODAobs(outdir, obsbias, totalbias, qcvars, testrefs)
     Diag.close()
     print("Time (OBS) %s: %.3g sec" % (radfile, time.time() - startt))
     return 0
@@ -92,11 +92,13 @@ ap.add_argument("-g", "--geovals_dir",
                 help="Path to directory to output observations")
 ap.add_argument("-d", "--obsdiag_dir",
                 help="Path to directory to output observations")
-ap.add_argument("-b", "--add_obsbias", default=False,
+ap.add_argument("-b", "--add_obsbias", default=False, action='store_true',
                 help="Add ObsBias group to output observations")
-ap.add_argument("-q", "--add_qcvars", default=False,
+ap.add_argument("--add_total_bias", default=False, action='store_true',
+                help="Add bias generated from adjusted minus unadjusted to output observations")
+ap.add_argument("-q", "--add_qcvars", default=False, action='store_true',
                 help="Add QC variables to output observations")
-ap.add_argument("-r", "--add_testrefs", default=False,
+ap.add_argument("-r", "--add_testrefs", default=False, action='store_true',
                 help="Add TestReference group to output observations")
 
 MyArgs = ap.parse_args()
@@ -109,6 +111,7 @@ if MyArgs.obs_dir:
     if not Path(ObsDir).is_dir():
         raise Exception("Obs dir: '%s' does not exist." % ObsDir)
     ObsBias = MyArgs.add_obsbias
+    TotalBias = MyArgs.add_total_bias
     QCVars = MyArgs.add_qcvars
     TestRefs = MyArgs.add_testrefs
     # conventional obs first
@@ -132,7 +135,7 @@ if MyArgs.obs_dir:
             if p in radfile:
                 process = True
         if process:
-            run_radiances_obs(radfile, ObsDir, ObsBias, QCVars, TestRefs)
+            run_radiances_obs(radfile, ObsDir, ObsBias, TotalBias, QCVars, TestRefs)
     # atmospheric composition observations
     # ozone
     for radfile in radfiles:
