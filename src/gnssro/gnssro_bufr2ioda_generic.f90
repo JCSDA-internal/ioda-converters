@@ -215,6 +215,12 @@ program gnssro_bufr2ioda2
             if (abs(rlat) > 90._real64 .or. abs(rlon) > 360._real64) then
                cycle kloop
             end if
+            if (bend >= 1.e+9_real64) then
+                bend = r_missing
+            end if
+            if (ref >= 1.e+9_real64) then
+                ref = r_missing
+            end if
 
             ndata = ndata + 1
             gnssro_data%recn(ndata) = nrec
