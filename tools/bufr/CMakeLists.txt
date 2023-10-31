@@ -2,9 +2,9 @@
 
 list(APPEND _bufr_deps
             eckit
-            bufr::bufr_4
-            gsl::gsl-lite)
-            
+            gsl::gsl-lite
+            bufr::bufr_4)
+
 list(APPEND _srcs
             print_queries.cpp
             QueryPrinter/QueryPrinter.h

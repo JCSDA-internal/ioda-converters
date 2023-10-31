@@ -1,5 +1,5 @@
 
-if( iodaconv_bufr_ENABLED )
+if( iodaconv_bufr_query_ENABLED )
     list( APPEND satwnd_files
         run_satwnds.py
         satwnds_new_subset_template.yaml

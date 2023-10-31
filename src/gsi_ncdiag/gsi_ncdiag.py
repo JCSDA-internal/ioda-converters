@@ -41,6 +41,7 @@ conv_platforms = {
         'sfc',
         'aircraft',
         'sondes',
+        'pibal',
         'vadwind',
         'windprof',
         'sfcship',
@@ -59,7 +60,8 @@ conv_platforms = {
 # bufr codes
 uv_bufrtypes = {
     "aircraft": [230, 231, 233, 235],  # 234 is TAMDAR; always rstprod
-    "sondes": range(220, 223),
+    "sondes": [220, 222],
+    "pibal": [221],
     "satwind": range(240, 261),
     "vadwind": [224],
     "windprof": range(227, 230),
@@ -135,7 +137,7 @@ all_LocKeyList = {
     'process_center': ('dataProviderOrigin', 'integer'),
     'Elevation': ('heightOfSurface', 'float'),
     'Obs_Time': ('dateTime', 'string'),
-    'Scan_Position': ('sensorScanPosition', 'float'),
+    'Scan_Position': ('sensorScanPosition', 'integer'),
     'Sat_Zenith_Angle': ('sensorZenithAngle', 'float'),
     'Sat_Azimuth_Angle': ('sensorAzimuthAngle', 'float'),
     'Sol_Zenith_Angle': ('solarZenithAngle', 'float'),
@@ -395,8 +397,8 @@ geovals_vars = {
     'virtual_temperature': 'virtual_temperature',
     'atmosphere_ln_pressure_coordinate': 'atmosphere_ln_pressure_coordinate',
     'specific_humidity': 'specific_humidity',
-    'Forecast_Saturation_Spec_Hum': 'saturated_specific_humidity',
-    'saturated_specific_humidity_profile': 'saturated_specific_humidity_profile',
+    'Forecast_Saturation_Spec_Hum': 'surface_saturation_specific_humidity',
+    'saturated_specific_humidity_profile': 'saturation_specific_humidity',
     'northward_wind': 'northward_wind',
     'eastward_wind': 'eastward_wind',
     'geopotential_height_levels': 'geopotential_height_levels',
@@ -550,8 +552,11 @@ units_values = {
     'seaIceFraction': '1',
     'surface_snow_area_fraction': '1',
     'vegetation_area_fraction': '1',
-    'ozoneLayer': 'DU',
     'ozoneTotal': 'DU',
+    'ozoneLayer': 'DU',
+    'ozoneColumn': 'mol m-2',
+    'ozoneProfile': 'mol mol-1',
+    'ozoneSurface': 'kg kg-1',
     'carbondioxideLayer': '1',
     'atmosphere_mass_content_of_cloud_liquid_water': 'kg m-2',
     'effective_radius_of_cloud_liquid_water_particle': 'm',
@@ -748,7 +753,7 @@ class Conv(BaseGSI):
                 if (v == 'sst'):
                     outname = OutDir + '/' + v + '_geoval_' + \
                         self.validtime.strftime("%Y%m%d%H") + '.nc4'
-                if (p == 'windprof' or p == 'satwind' or p == 'scatwind' or p == 'vadwind'):
+                if (p == 'windprof' or p == 'satwind' or p == 'scatwind' or p == 'vadwind' or p == 'pibal'):
                     outname = OutDir + '/' + p + '_geoval_' + \
                         self.validtime.strftime("%Y%m%d%H") + '.nc4'
                 if not clobber:
@@ -871,7 +876,7 @@ class Conv(BaseGSI):
                 if (v == 'sst'):
                     outname = OutDir + '/' + v + '_obs_' + \
                         self.validtime.strftime("%Y%m%d%H") + '.nc4'
-                if (p == 'windprof' or p == 'satwind' or p == 'scatwind' or p == 'vadwind'):
+                if (p == 'windprof' or p == 'satwind' or p == 'scatwind' or p == 'vadwind' or p == 'pibal'):
                     outname = OutDir + '/' + p + '_obs_' + \
                         self.validtime.strftime("%Y%m%d%H") + '.nc4'
                 if not clobber:
@@ -1076,7 +1081,7 @@ class Conv(BaseGSI):
                             #     tmp = hgt
                             outdata[(loc_mdata_name, 'MetaData')] = tmp
                             varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'm'
-                        elif p == 'sondes' or p == 'aircraft' or p == 'satwind':
+                        elif p == 'sondes' or p == 'aircraft' or p == 'satwind' or p == 'pibal':
                             tmp = self.var(lvar)[idx]
                             tmp[tmp > 4e8] = self.FLOAT_FILL  # 1e11 is fill value for sondes, etc.
                             outdata[(loc_mdata_name, 'MetaData')] = tmp
@@ -1439,7 +1444,7 @@ class Radiances(BaseGSI):
         except IndexError:
             # obserr = 1./self.var('Inverse_Observation_Error')
             obserr = np.repeat(self.var('error_variance').astype(np.float32), nlocs, axis=0)
-        obserr[:] = self.FLOAT_FILL  # commented this line so the obserr stores initial obs error
+        # obserr[:] = self.FLOAT_FILL  # commented this line so the obserr stores initial obs error
         obsqc = self.var('QC_Flag').astype(np.int32)
         if (ObsBias):
             nametbc = [
@@ -1483,6 +1488,7 @@ class Radiances(BaseGSI):
                 ii += 1
         for lvar in LocVars:
             loc_mdata_name = all_LocKeyList[lvar][0]
+            dtype = all_LocKeyList[lvar][1]
             if lvar == 'Obs_Time':
                 tmp = self.var(lvar)[::nchans]
                 obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
@@ -1508,9 +1514,16 @@ class Radiances(BaseGSI):
                 # if loc_mdata_name in units_values.keys():
                 #     varAttrs[(loc_mdata_name, 'MetaData')]['units'] = units_values[loc_mdata_name]
             else:
-                tmp = self.var(lvar)[::nchans]
-                tmp[tmp > 4e8] = self.FLOAT_FILL
-                outdata[(loc_mdata_name, 'MetaData')] = tmp
+                if dtype == 'integer':
+                    tmp = self.var(lvar)[::nchans].astype(np.int32)
+                    tmp[tmp > 4e8] = self.INT_FILL
+                    outdata[(loc_mdata_name, 'MetaData')] = tmp
+                    varAttrs[(loc_mdata_name, 'MetaData')]['_FillValue'] = self.INT_FILL
+                else:
+                    tmp = self.var(lvar)[::nchans]
+                    tmp[tmp > 4e8] = self.FLOAT_FILL
+                    outdata[(loc_mdata_name, 'MetaData')] = tmp
+
                 if loc_mdata_name in units_values.keys():
                     varAttrs[(loc_mdata_name, 'MetaData')]['units'] = units_values[loc_mdata_name]
 
@@ -1566,9 +1579,9 @@ class Radiances(BaseGSI):
                         continue
                     key1 = 'Observation'
                     tmp = self.var(key1) - self.var(gsivar)
-                    # Save GsiHofXBc from "Forecast_adjusted" if some of "Obs_Minus_Forecast_adjusted" are
-                    # missing values, which results in the above tmp = zero.
-                    if min(tmp) < 1.0 and 'Forecast_adjusted' in self.df.variables:
+                    # If Obs_Minus_Forecast_adjusted is not avaible, save "Forecast_adjusted"
+                    # directly from GSI NC_diag.
+                    if "Obs_Minus_Forecast_adjusted" not in self.df.variables and 'Forecast_adjusted' in self.df.variables:
                         tmp = self.var('Forecast_adjusted')
                 else:
                     tmp = self.var(gsivar)
@@ -1787,19 +1800,15 @@ class Ozone(BaseGSI):
                 LocVars.append(ncv)
 
         nlocs = self.nobs
-        vname = "ozoneTotal"
+        vname = "ozoneProfile"
         if (self.sensor in oz_lay_sensors):
-            vname = "ozoneLayer"
+            vname = "ozoneTotal"
         varDict[vname]['valKey'] = vname, iconv.OvalName()
         varDict[vname]['errKey'] = vname, iconv.OerrName()
         varDict[vname]['qcKey'] = vname, iconv.OqcName()
         VarDims[vname] = ['Location']
-        if (self.sensor in oz_lev_sensors):
-            varAttrs[varDict[vname]['valKey']]['units'] = 'mol mol-1'
-            varAttrs[varDict[vname]['errKey']]['units'] = 'mol mol-1'
-        else:
-            varAttrs[varDict[vname]['valKey']]['units'] = 'DU'
-            varAttrs[varDict[vname]['errKey']]['units'] = 'DU'
+        varAttrs[varDict[vname]['valKey']]['units'] = units_values[vname]
+        varAttrs[varDict[vname]['errKey']]['units'] = units_values[vname]
         # varAttrs[varDict[vname]['qcKey']]['units'] = 'unitless'
         varAttrs[varDict[vname]['valKey']]['_FillValue'] = self.FLOAT_FILL
         varAttrs[varDict[vname]['errKey']]['_FillValue'] = self.FLOAT_FILL
@@ -1814,7 +1823,7 @@ class Ozone(BaseGSI):
         tmp[tmp < self.EPSILON] = 0
         obserr = tmp
         obserr[np.isinf(obserr)] = self.FLOAT_FILL
-        obserr[:] = self.FLOAT_FILL  # commented out this line so obserr stores the initial obs error
+        # obserr[:] = self.FLOAT_FILL  # commented out this line so obserr stores the initial obs error
         obsqc = self.var('Analysis_Use_Flag').astype(np.int32)
         for lvar in LocVars:
             loc_mdata_name = all_LocKeyList[lvar][0]
@@ -2018,7 +2027,7 @@ class Radar(BaseGSI):
             qcvarname = radar_qc[key]
             obserr = self.var(errvarname)
             obserr[np.isinf(obserr)] = self.FLOAT_FILL
-            obserr[:] = self.FLOAT_FILL
+            # obserr[:] = self.FLOAT_FILL
             obsqc = self.var(qcvarname).astype(np.int32)
             # observation data
             outdata[varDict[value]['valKey']] = obsdata

@@ -35,7 +35,10 @@ set(CMAKE_FORTRAN_EXTENSIONS OFF)
 # Location of .pycodestyle for norm checking within IODA-converters
 set( IODACONV_PYLINT_CFG_DIR ${CMAKE_CURRENT_SOURCE_DIR} )
 
-find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+# Python-finding settings
+set(Python3_FIND_REGISTRY "LAST")
+set(Python3_FIND_FRAMEWORK "LAST")
+find_package( Python3 REQUIRED COMPONENTS Interpreter Development)
 
 set(pyver python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR})
 set(PYDIR ${pyver}/pyiodaconv)
@@ -87,7 +90,7 @@ find_package( MPI )
 
 find_package( ioda QUIET )
 
-find_package( bufr QUIET )
+find_package( bufr 12.0.1 QUIET )
 find_package( NetCDF QUIET COMPONENTS Fortran )
 
 if( bufr_FOUND AND NetCDF_Fortran_FOUND )
@@ -106,15 +109,23 @@ else()
     message(STATUS "Disabled Component: gnssro")
 endif()
 
+if (bufr_FOUND)
+    set(iodaconv_nceplib_bufr_ENABLED True)
+    message(STATUS "Found: nceplib bufr")
+else()
+    set(iodaconv_nceplib_bufr_ENABLED False)
+    message(STATUS "NOT-Found: nceplib-bufr")
+endif()
+
 if( eckit_FOUND AND oops_FOUND AND ioda_FOUND AND bufr_FOUND )
-    set(iodaconv_bufr_ENABLED True)
+    set(iodaconv_bufr_query_ENABLED True)
     message(STATUS "Found: eckit")
     message(STATUS "Found: oops")
     message(STATUS "Found: ioda")
     message(STATUS "Found: bufr")
     message(STATUS "Enabled Component: bufr")
 else()
-    set(iodaconv_bufr_ENABLED False)
+    set(iodaconv_bufr_query_ENABLED False)
     if(NOT eckit_FOUND)
         message(STATUS "NOT-Found: eckit - BUFR converter disabled")
     endif()
