@@ -1593,6 +1593,15 @@ class Radiances(BaseGSI):
                 outdata[gvname] = np.reshape(tmp, (nlocs, nchans))
                 VarDims[gvname] = ['Location', 'Channel']
 
+        # brute force for now add option hook and default to missing
+        key1 = 'Obs_Minus_Forecast_adjusted'
+        key2 = 'Obs_Minus_Forecast_unadjusted'
+        tmp = self.var(key1) - self.var(key2)
+        iodavar = 'GsiBc'
+        gvname = "brightnessTemperature", iodavar
+        outdata[gvname] = np.reshape(tmp, (nlocs, nchans))
+        VarDims[gvname] = ['Location', 'Channel']
+
         # brightness temperature variables
         value = 'brightnessTemperature'
         obsdata[obsdata > 9e5] = self.FLOAT_FILL
