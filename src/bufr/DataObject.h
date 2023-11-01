@@ -671,7 +671,8 @@ namespace Ingester
         /// \return Int data.
         template<typename U = void>
         std::string _getAsString(size_t idx,
-                                 typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr) const
+                                 typename std::enable_if<std::is_arithmetic<T>::value,
+                                 U>::type* = nullptr) const
         {
             return std::to_string(data_[idx]);
         }
@@ -680,7 +681,8 @@ namespace Ingester
         /// \return Int data.
         template<typename U = void>
         std::string _getAsString(size_t idx,
-                                 typename std::enable_if<!std::is_arithmetic<T>::value, U>::type* = nullptr) const
+                                 typename std::enable_if<!std::is_arithmetic<T>::value,
+                                 U>::type* = nullptr) const
         {
             return data_[idx];
         }

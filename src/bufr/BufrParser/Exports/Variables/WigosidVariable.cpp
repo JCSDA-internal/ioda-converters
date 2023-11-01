@@ -77,8 +77,8 @@ namespace Ingester
             auto wgosisid = map.at(getExportKey(ConfKeys::Wgosisid))->getAsInt(idx);
             auto wgosisnm = map.at(getExportKey(ConfKeys::Wgosisnm))->getAsInt(idx);
             auto wgoslid = map.at(getExportKey(ConfKeys::Wgoslid))->getAsString(idx);
-            
-	    std::stringstream wgosAll;
+
+            std::stringstream wgosAll;
             if (wgosids != missingInt &&
                 wgosisid != missingInt &&
                 wgosisnm != missingInt &&
@@ -88,10 +88,8 @@ namespace Ingester
                 wgosAll << wgosisid <<  "-";
                 wgosAll << wgosisnm <<  "-";
                 wgosAll << wgoslid;
-
-		//std::cout << "WGOSID: "  <<  wgosAll.str() << std::endl;
- 
-           }
+                // std::cout << "WGOSID: "  <<  wgosAll.str() << std::endl;
+            }
             wigosID.push_back(wgosAll.str());
         }
 
