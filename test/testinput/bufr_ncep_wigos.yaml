@@ -7,7 +7,6 @@
 observations:
   - obs space:
       name: bufr
-
       obsdatain: "./testinput/rtma_ru.t0000z.adpsfc_nc000101.tm00.bufr_d"
 
       exports:
@@ -37,13 +36,11 @@ observations:
           pressure:
             query: "*/PRES"
 
-
     ioda:
       backend: netcdf
       obsdataout: "./testrun/rtma_ru.t0000z.adpsfc.wigos.nc"
 
       variables:
-
         # MetaData
         - name: "MetaData/dateTime"
           coordinates: "longitude latitude"

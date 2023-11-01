@@ -370,6 +370,7 @@ if( iodaconv_bufr_query_ENABLED )
     testoutput/rtma_ru.t0000z.adpsfc_nc000101.tm00.nc
     testoutput/rtma_ru.t0000z.aircft.tm00_nc004006.nc
     testoutput/rtma_ru.t0000z.aircft.tm00_nc004103.nc
+    testoutput/rtma_ru.t0000z.adpsfc.wigos.nc
   )
 endif()
 
