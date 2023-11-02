@@ -36,7 +36,7 @@ program gnssro_bufr2ioda2
    integer   :: nlev_dimid
    integer   :: grpid_metadata, grpid_obsvalue
    integer   :: deflate_level
-   character(len=256)       :: infile, outfile
+   character(len=256)       :: infile, outfile, runCheck
    character, dimension(8)  :: subset
    character(len=10)        :: anatime
    integer(int32)           :: i, k, m, ireadmg, ireadsb, said, siid, ptid, sclf, asce, ogce, qcflag, tinc
@@ -103,9 +103,19 @@ program gnssro_bufr2ioda2
    maxobs = 0
    deflate_level = 6
 
-   call getarg(1, anatime)
-   call getarg(2, infile)
-   call getarg(3, outfile)
+   if (iargc() >= 3) then
+     call getarg(1, anatime)
+     call getarg(2, infile)
+     call getarg(3, outfile)
+     if (iargc() >= 4) then
+        call getarg(4,runCheck)
+        print*, "running converter with extra Checks!"
+     end if
+   else
+     print*, "To run: gnssro_bufr2ioda_generic $yyyymmddhh $inputBufrFilename  $outputNetcdfFilename (optional: true or false)"
+     print*, "        please check"
+   end if
+
 
    open (lnbufr, file=trim(infile), form='unformatted')
    call openbf(lnbufr, 'IN', lnbufr)
@@ -174,6 +184,14 @@ program gnssro_bufr2ioda2
          tinc = bfr1ahdr(15)       ! Time increment relative to the start of occultaion
          call epochtimecalculator(idate5, epochtime)  ! calculate epochtime since January 1 1970
 
+         if (runCheck(1:1).eq."T" .or. runCheck(1:1).eq."t") then
+            if (roc > 6450000.0_real64 .or. roc < 6250000.0_real64 .or.       &
+              & abs(geoid) > 200_real64 .or.height < 0._real64) then
+               cycle read_loop
+            end if
+         end if
+
+
          qcflag = 0
          asce = 0
          call upftbv(lnbufr, nemo, qfro, mxib, ibit, nib)
@@ -181,7 +199,7 @@ program gnssro_bufr2ioda2
          if (nib > 0) then
             do i = 1, nib
                qcflag = qcflag + 2**(16-ibit(i))
-               if (ibit(i) == 3) asce = 1  !this varaible should be removed later once UFO change is made 
+               if (ibit(i) == 3) asce = 1  !this varaible should be removed later once UFO change is made
             end do
          end if
 
@@ -215,12 +233,18 @@ program gnssro_bufr2ioda2
             if (abs(rlat) > 90._real64 .or. abs(rlon) > 360._real64) then
                cycle kloop
             end if
-            if (bend >= 1.e+9_real64) then
-                bend = r_missing
+
+            if (runCheck(1:1).eq."T" .or. runCheck(1:1).eq."t") then
+               if (bend >= 1.e+9_real64 .or. bend <= 0._real64 .or. &
+                 & impact >= 1.e+9_real64 .or. impact < roc .or. &
+                 & height <=0._real64) then
+                 cycle kloop
+               end if
+            else
+               if (bend >= 1.e+9_real64)  bend = r_missing
             end if
-            if (ref >= 1.e+9_real64) then
-                ref = r_missing
-            end if
+
+            if (ref >= 1.e+9_real64) ref = r_missing
 
             ndata = ndata + 1
             gnssro_data%recn(ndata) = nrec
