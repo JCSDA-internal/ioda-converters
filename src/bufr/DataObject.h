@@ -161,6 +161,10 @@ namespace Ingester
         /// \return String data.
         virtual std::string getAsString(const Location& loc) const = 0;
 
+        /// \brief Get the data at the index as a string.
+        /// \return String data.
+        virtual std::string getAsString(size_t idx) const = 0;
+
         /// \brief Get the size of the data
         /// \return Data size.
         virtual size_t size() const = 0;
@@ -474,6 +478,12 @@ namespace Ingester
         /// \return Float data.
         float getAsFloat(const size_t idx) const final { return _getAsFloat(idx); }
 
+        /// \brief Get the data at the index into the internal 1d array as a string. This function
+        ///        gives you direct access to the internal data and doesn't account for dimensional
+        ///        information (its up to the user).
+        /// \param idx The idx into the internal 1d array.
+        /// \return Int data.
+        std::string getAsString(size_t idx) const final { return _getAsString(idx); }
 
         /// \brief idx See if the data at the index into the internal 1d array is missing. This
         ///            function gives you direct access to the internal data and doesn't account for
@@ -664,6 +674,26 @@ namespace Ingester
         {
             throw std::runtime_error("The stored value was is not a number");
             return 0.0f;
+        }
+
+        /// \brief Get the data at the index as a int for numeric data.
+        /// \return Int data.
+        template<typename U = void>
+        std::string _getAsString(size_t idx,
+                                 typename std::enable_if<std::is_arithmetic<T>::value,
+                                 U>::type* = nullptr) const
+        {
+            return std::to_string(data_[idx]);
+        }
+
+        /// \brief Get the data at the index as a int for non-numeric data.
+        /// \return Int data.
+        template<typename U = void>
+        std::string _getAsString(size_t idx,
+                                 typename std::enable_if<!std::is_arithmetic<T>::value,
+                                 U>::type* = nullptr) const
+        {
+            return data_[idx];
         }
 
         /// \brief Set the data associated with this data object (numeric DataObject).
