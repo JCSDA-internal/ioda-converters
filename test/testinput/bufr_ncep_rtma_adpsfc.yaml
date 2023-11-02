@@ -26,6 +26,12 @@ observations:
               day: "[*/RCDY, NC000007/RCPTIM/RCDY]"
               hour: "[*/RCHR, NC000007/RCPTIM/RCHR]"
               minute: "[*/RCMI, NC000007/RCPTIM/RCMI]"
+          wigosidentifier:
+            wigos:
+              wgosids: "*/WGOSIDS"
+              wgosisid: "*/WGOSISID"
+              wgosisnm: "*/WGOSISNM"
+              wgoslid: "*/WGOSLID"
           latitude:
             query: "[*/CLAT, */CLATH]"
           longitude:
@@ -125,6 +131,11 @@ observations:
           source: variables/receipttime
           longName: "Data Receipt Time"
           units: "seconds since 1970-01-01T00:00:00Z"
+
+        - name: "MetaData/stationWIGOSId"
+          coordinates: "longitude latitude"
+          source: variables/wigosidentifier
+          longName: "Station WIGOSId"
 
         - name: "MetaData/latitude"
           coordinates: "longitude latitude"
