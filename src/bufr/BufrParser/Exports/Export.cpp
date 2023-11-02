@@ -16,6 +16,7 @@
 #include "Splits/CategorySplit.h"
 #include "Variables/QueryVariable.h"
 #include "Variables/DatetimeVariable.h"
+#include "Variables/WigosidVariable.h"
 #include "Variables/SpectralRadianceVariable.h"
 #include "Variables/RemappedBrightnessTemperatureVariable.h"
 #include "Variables/AircraftAltitudeVariable.h"
@@ -38,6 +39,7 @@ namespace
         namespace Variable
         {
             const char* Datetime = "datetime";
+            const char* Wigos = "wigos";
             const char* SpectralRadiance = "spectralRadiance";
             const char* RemappedBrightnessTemperature = "remappedBrightnessTemperature";
             const char* Timeoffset = "timeoffset";
@@ -126,6 +128,7 @@ namespace Ingester
         variableFactory.registerObject<QueryVariable>(ConfKeys::Variable::Query);
         variableFactory.registerObject<DatetimeVariable>(ConfKeys::Variable::Datetime);
         variableFactory.registerObject<TimeoffsetVariable>(ConfKeys::Variable::Timeoffset);
+        variableFactory.registerObject<WigosidVariable>(ConfKeys::Variable::Wigos);
         variableFactory.registerObject<AircraftAltitudeVariable>
             (ConfKeys::Variable::AircraftAltitude);
         variableFactory.registerObject<SpectralRadianceVariable>
