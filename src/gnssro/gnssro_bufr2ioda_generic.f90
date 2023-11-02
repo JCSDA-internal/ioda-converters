@@ -1,18 +1,17 @@
 !!!--------  README --------------------------------------------------------------------
-!  This converter differs from gnssro_bufr2ioda.f90 by
-!  1) removing all pre sanity checks,
-!  2) removing initial obs error assignment, and
-!  3) adding  metadate timeOffset and qualityFlags.
-!  NOTE: with these changes, users need to apply their own sanity check via
-!        UFO obs filter; information contained in qualityFlags is referred to
-!        ROM SAF's specification of WMO BUFR.
+!!   -----  to run ---
+!  ./gnssro_bufr2ioda_generic yyyymmddhh $bufrfile_input $netcdffile_output (optional: t/T)
+!!   -----  to run ---
+
+! NOTE:
+!  1) the 4th argument should be set to true if one wants to apply extra sanity checks (EMC style)
+!     default is false; all those checks can be alternatively set in UFO obs filters,
+!  2) information contained in qualityFlags is referred to ROM SAF's specification of WMO BUFR.
+
 !  Copyright UCAR 2023
 !  Author: Hailing Zhang
 !  Last upate: October 2023
 
-!!!---------  to run   -----------------------------------------------------------------
-!  ./gnssro_bufr2ioda_generic yyyymmddhh $bufrfile_input $netcdffile_output
-!
 ! Return codes:
 !  0 - Success.
 !  1 - Unrecoverable system or logical error.
@@ -103,6 +102,8 @@ program gnssro_bufr2ioda2
    maxobs = 0
    deflate_level = 6
 
+   runCheck="False"
+
    if (iargc() >= 3) then
      call getarg(1, anatime)
      call getarg(2, infile)
@@ -114,8 +115,8 @@ program gnssro_bufr2ioda2
    else
      print*, "To run: gnssro_bufr2ioda_generic $yyyymmddhh $inputBufrFilename  $outputNetcdfFilename (optional: true or false)"
      print*, "        please check"
+     stop
    end if
-
 
    open (lnbufr, file=trim(infile), form='unformatted')
    call openbf(lnbufr, 'IN', lnbufr)
