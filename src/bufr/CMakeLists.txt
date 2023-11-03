@@ -3,7 +3,7 @@
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 
-if ( iodaconv_bufr_ENABLED )
+if ( iodaconv_bufr_query_ENABLED )
   list(APPEND _ingester_srcs
     IngesterTypes.h
     DataContainer.h
@@ -27,6 +27,8 @@ if ( iodaconv_bufr_ENABLED )
     BufrParser/Exports/Variables/Variable.h
     BufrParser/Exports/Variables/DatetimeVariable.h
     BufrParser/Exports/Variables/DatetimeVariable.cpp
+    BufrParser/Exports/Variables/WigosidVariable.h
+    BufrParser/Exports/Variables/WigosidVariable.cpp
     BufrParser/Exports/Variables/SpectralRadianceVariable.h
     BufrParser/Exports/Variables/SpectralRadianceVariable.cpp
     BufrParser/Exports/Variables/RemappedBrightnessTemperatureVariable.h
@@ -70,6 +72,8 @@ if ( iodaconv_bufr_ENABLED )
     BufrParser/Query/Tokenizer.cpp
     BufrParser/Query/SubsetTable.h
     BufrParser/Query/SubsetTable.cpp
+    BufrParser/Query/NodeLookupTable.h
+    BufrParser/Query/NodeLookupTable.cpp
     IodaEncoder/IodaEncoder.cpp
     IodaEncoder/IodaEncoder.h
     IodaEncoder/IodaDescription.cpp
@@ -97,8 +101,8 @@ if ( iodaconv_bufr_ENABLED )
               eckit
               ${oops_LIBRARIES}
               ioda_engines
-              gsl::gsl-lite
               bufr::bufr_4
+              gsl::gsl-lite
               atms_lib
     )
 
@@ -137,8 +141,8 @@ if ( iodaconv_bufr_python_ENABLED )
   list(APPEND _query_libs
               Eigen3::Eigen
               eckit
-              gsl::gsl-lite
               bufr::bufr_4
+              gsl::gsl-lite
     )
 
   list (APPEND _query_srcs
@@ -166,6 +170,8 @@ if ( iodaconv_bufr_python_ENABLED )
     BufrParser/Query/Tokenizer.cpp
     BufrParser/Query/SubsetTable.h
     BufrParser/Query/SubsetTable.cpp
+    BufrParser/Query/NodeLookupTable.h
+    BufrParser/Query/NodeLookupTable.cpp
     BufrParser/Query/python_bindings.cpp
     )
 

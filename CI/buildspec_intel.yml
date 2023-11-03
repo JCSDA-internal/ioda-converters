@@ -94,8 +94,7 @@ phases:
       # These are not permitted
       #- ulimit -S -s unlimited
       #- ulimit -S -v unlimited
-      - source /etc/profile.d/z10_spack_environment.sh
-      - cat /etc/profile.d/z10_spack_environment.sh
+      - source /opt/spack-environment/activate.sh
       - source /opt/intel/oneapi/compiler/latest/env/vars.sh
       - source /opt/intel/oneapi/mpi/latest/env/vars.sh
 
@@ -109,7 +108,7 @@ phases:
       #- export | grep CC
 
       - cd /build_container
-      - ecbuild -Wno-dev -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCDASH_OVERRIDE_SITE=CodeBuild -DCDASH_OVERRIDE_SYSTEM_NAME=IntelContainer -DCDASH_OVERRIDE_GIT_BRANCH=$CODEBUILD_GIT_BRANCH -DCTEST_UPDATE_VERSION_ONLY=FALSE -DUSE_ECCODES=ON /jcsda/ioda-bundle/
+      - ecbuild -Wno-dev -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCDASH_OVERRIDE_SITE=CodeBuild -DCDASH_OVERRIDE_SYSTEM_NAME=IntelContainer -DCDASH_OVERRIDE_GIT_BRANCH=$CODEBUILD_GIT_BRANCH -DCTEST_UPDATE_VERSION_ONLY=FALSE /jcsda/ioda-bundle/
 
       - cd /build_container/ioda
       - cp ../DartConfiguration.tcl .
