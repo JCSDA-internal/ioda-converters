@@ -21,15 +21,14 @@ parser.add_argument('-t', '--type',
 parser.add_argument('-p', '--platform',
                     help="platform to run, only works on conv",
                     type=str)
-parser.add_argument('-b', '--add_obsbias',
-                    help="add obsbias groups, only works on rad",
-                    type=str)
-parser.add_argument('-q', '--add_qcvars',
-                    help="add qc variables, only works on rad",
-                    type=str)
-parser.add_argument('-r', '--add_testrefs',
-                    help="add test variables, only works on rad",
-                    type=str)
+parser.add_argument("--add_total_bias", default=False, action='store_true',
+                    help="Add bias generated from adjusted minus unadjusted to output observations")
+parser.add_argument('-b', '--add_obsbias', default=False, action='store_true',
+                    help="add obsbias groups, only works on rad")
+parser.add_argument('-q', '--add_qcvars', default=False, action='store_true',
+                    help="add qc variables, only works on rad")
+parser.add_argument('-r', '--add_testrefs', default=False, action='store_true',
+                    help="add test variables, only works on rad")
 args = parser.parse_args()
 
 infile = args.input
@@ -37,6 +36,8 @@ outdir = args.output
 obsbias = args.add_obsbias
 qcvars = args.add_qcvars
 testrefs = args.add_testrefs
+TotalBias = args.add_total_bias
+print(f' ... add_total_bias: {TotalBias}')
 if (args.type == 'conv'):
     diag = gsid.Conv(infile)
 elif (args.type == 'rad'):
@@ -51,9 +52,9 @@ else:
     raise ValueError
 diag.read()
 if (args.platform and args.type == 'conv'):
-    diag.toIODAobs(outdir, platforms=[args.platform])
+    diag.toIODAobs(outdir, platforms=[args.platform], TotalBias=TotalBias)
 elif (args.type == 'rad'):
-    diag.toIODAobs(outdir, obsbias, qcvars, testrefs)
+    diag.toIODAobs(outdir, obsbias, qcvars, testrefs, TotalBias=TotalBias)
 else:
     diag.toIODAobs(outdir)
 if args.geovals:

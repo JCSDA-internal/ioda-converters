@@ -9,34 +9,34 @@ from pathlib import Path
 import gsi_ncdiag as gsid
 
 
-def run_conv_obs(convfile, outdir, platforms):
+def run_conv_obs(convfile, outdir, platforms, TotalBias=False):
     print("Processing:"+str(convfile))
     startt = time.time()
     Diag = gsid.Conv(convfile)
     Diag.read()
-    Diag.toIODAobs(outdir, platforms=platforms)
+    Diag.toIODAobs(outdir, platforms=platforms, TotalBias=TotalBias)
     Diag.close()
     print("Time (OBS) %s[%s]: %.3g sec" % (convfile, ",".join(platforms), time.time() - startt))
     return 0
 
 
-def run_radiances_obs(radfile, outdir, obsbias, totalbias, qcvars, testrefs):
+def run_radiances_obs(radfile, outdir, obsbias, TotalBias, qcvars, testrefs):
     print("Processing run_radiances_obs:%s" % radfile)
     startt = time.time()
     Diag = gsid.Radiances(radfile)
     Diag.read()
-    Diag.toIODAobs(outdir, obsbias, totalbias, qcvars, testrefs)
+    Diag.toIODAobs(outdir, obsbias, qcvars, testrefs, TotalBias=TotalBias)
     Diag.close()
     print("Time (OBS) %s: %.3g sec" % (radfile, time.time() - startt))
     return 0
 
 
-def run_oz_obs(ozfile, outdir):
+def run_oz_obs(ozfile, outdir, TotalBias=False):
     print("Processing:"+str(ozfile))
     startt = time.time()
     Diag = gsid.Ozone(ozfile)
     Diag.read()
-    Diag.toIODAobs(outdir)
+    Diag.toIODAobs(outdir, TotalBias=TotalBias)
     print("Time (OBS) %s: %.3g sec" % (ozfile, time.time() - startt))
     return 0
 
@@ -124,7 +124,7 @@ if MyArgs.obs_dir:
             c = "_".join(splitfname[i:i + 2])
         try:
             for p in gsid.conv_platforms[c]:
-                run_conv_obs(convfile, ObsDir, [p])
+                run_conv_obs(convfile, ObsDir, [p], TotalBias=TotalBias)
         except (KeyError, IndexError):
             pass
     # radiances next
@@ -145,7 +145,7 @@ if MyArgs.obs_dir:
             if p in radfile:
                 process = True
         if process:
-            run_oz_obs(radfile, ObsDir)
+            run_oz_obs(radfile, ObsDir, TotalBias=TotalBias)
 
 # process geovals files
 if MyArgs.geovals_dir:
