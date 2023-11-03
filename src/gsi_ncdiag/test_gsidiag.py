@@ -37,7 +37,6 @@ obsbias = args.add_obsbias
 qcvars = args.add_qcvars
 testrefs = args.add_testrefs
 TotalBias = args.add_total_bias
-print(f' ... add_total_bias: {TotalBias}')
 if (args.type == 'conv'):
     diag = gsid.Conv(infile)
 elif (args.type == 'rad'):
