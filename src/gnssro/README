@@ -1,4 +1,4 @@
-----------There are 5 GNSSRO converters in this directory------
+----------There are 4 GNSSRO converters in this directory------
 
 1. ------------------------------------------------------------
 The converter implemented by gnssro_gsidiag2ioda.f90
@@ -16,31 +16,21 @@ b) write obs only
 
 2.-------------------------------------------------------------
 The converter implemented by gnssro_bufr2ioda.f90
-It reads in the GNSSRO bufr files in NCEP operational bufr format.
-It converts the Bufr file to IODA file.
-It also does some sanity check and adds initial observation error which should
-be identical to the NBAM error model in UFO.
+It reads in the GNSSRO Bufr files in NCEP operational Bufr format,
+and converts the Bufr file to IODA file.
+
 Usage:
-  $builddir/bin/gnssro_bufr2ioda yyyymmddhh $bufrfile_input $netcdffile_output
+  $builddir/bingnssro_bufr2ioda_generic yyyymmddhh $bufrfile_input $netcdffile_output (optional: t/T)
+
+NOTE: the 4th argument should be set to true if one wants to apply extra sanity checks (EMC style)
+      default is false; all those checks can be alternatively set in UFO obs filters,
 
 3.-------------------------------------------------------------
-The converter implemented by gnssro_bufr2ioda_generic.f90
-It differs from gnssro_bufr2ioda.f90 by
-  1) removing all pre sanity checks,
-  2) removing initial obs error assignment, and
-  3) adding  metadata timeOffset and qualityFlags.
-  NOTE: with these changes, users need to apply their own sanity check via UFO
-        obs filter; information contained in qualityFlags is referred to ROM
-        SAF's specification of WMO BUFR.
-Usage:
-  $builddir/bin/gnssro_bufr2ioda_generic yyyymmddhh $bufrfile_input $netcdffile_output
-
-4.-------------------------------------------------------------
 gnssro_bufr2ioda.py
 It reads individual RO profiles of WMO Bufr format and writes the IODA file.
 please check the codes for details
 
-5.-------------------------------------------------------------
+4.-------------------------------------------------------------
 gnssro_AWSopendataNetcdf2ioda.py
 It reads individual RO profiles of NETCDF format and writes the IODA file.
 please check the codes for details
