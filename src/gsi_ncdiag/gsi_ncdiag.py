@@ -855,7 +855,7 @@ class Conv(BaseGSI):
 
                 ncout.close()
 
-    def toIODAobs(self, OutDir, clobber=True, platforms=None):
+    def toIODAobs(self, OutDir, TotalBias=False, clobber=True, platforms=None):
         """ toIODAobs(OutDir,clobber=True)
         output observations from the specified GSI diag file
         to the JEDI/IODA observation format
@@ -1041,6 +1041,18 @@ class Conv(BaseGSI):
                     outdata[varDict[outvars[o]]['valKey']] = obsdata
                     outdata[varDict[outvars[o]]['errKey']] = obserr
                     outdata[varDict[outvars[o]]['qcKey']] = obsqc.astype(np.int32)
+                    if (TotalBias):
+                        # compute final bias correction
+                        key1 = 'Obs_Minus_Forecast_adjusted'
+                        key2 = 'Obs_Minus_Forecast_unadjusted'
+                        if key1 in self.df.variables.keys() and key2 in self.df.variables.keys():
+                            tmp = self.var(key1) - self.var(key2)
+                            iodavar = 'GsiBc'
+                            gvname = outvars[o], iodavar
+                            outdata[gvname] = np.reshape(tmp, np.shape(self.df.variables['Observation']))
+                            VarDims[gvname] = ['Location']
+                        else:
+                            print(f' ... can not add total bias missing {key1} or {key2} from input file')
 
                 for lvar in LocVars:
                     loc_mdata_name = all_LocKeyList[lvar][0]
@@ -1349,13 +1361,13 @@ class Radiances(BaseGSI):
                 pass
         ncout.close()
 
-    def toIODAobs(self, OutDir, ObsBias, QCVars, TestRefs, clobber=True):
+    def toIODAobs(self, OutDir, ObsBias, QCVars, TestRefs, TotalBias=False, clobber=True):
         """ toIODAobs(OutDir,clobber=True)
         output observations from the specified GSI diag file
         to the JEDI/IODA observation format
         """
 
-        print("Input Parameters: ObsBias=%s QCVars=%s TestRefs=%s" % (ObsBias, QCVars, TestRefs))
+        print("Input Parameters: ObsBias=%s TotalBias=%s QCVars=%s TestRefs=%s" % (ObsBias, TotalBias, QCVars, TestRefs))
         # set up a NcWriter class
         outname = OutDir + '/' + self.sensor + '_' + self.satellite + \
             '_obs_' + self.validtime.strftime("%Y%m%d%H") + '.nc4'
@@ -1593,6 +1605,19 @@ class Radiances(BaseGSI):
                 outdata[gvname] = np.reshape(tmp, (nlocs, nchans))
                 VarDims[gvname] = ['Location', 'Channel']
 
+        if (TotalBias):
+            # compute final bias correction
+            key1 = 'Obs_Minus_Forecast_adjusted'
+            key2 = 'Obs_Minus_Forecast_unadjusted'
+            if key1 in self.df.variables.keys() and key2 in self.df.variables.keys():
+                tmp = self.var(key1) - self.var(key2)
+                iodavar = 'GsiBc'
+                gvname = "brightnessTemperature", iodavar
+                outdata[gvname] = np.reshape(tmp, (nlocs, nchans))
+                VarDims[gvname] = ['Location', 'Channel']
+            else:
+                print(f' ... can not add total bias missing {key1} or {key2} from input file')
+
         # brightness temperature variables
         value = 'brightnessTemperature'
         obsdata[obsdata > 9e5] = self.FLOAT_FILL
@@ -1753,8 +1778,10 @@ class Ozone(BaseGSI):
 
         # other dims
         ncout.createDimension("nlevs", self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
+        dim = (nlocs, self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
         if (self.sensor in oz_lay_sensors):
             ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
+            dim = (nlocs, self.df.dimensions["air_pressure_levels_arr_dim"].size)
         for var in self.df.variables.values():
             vname = var.name
             if vname in geovals_metadata_dict.keys():
@@ -1765,18 +1792,34 @@ class Ozone(BaseGSI):
             elif vname in geovals_vars.keys():
                 if (len(var.dimensions) == 1):
                     dims = ("nlocs",)
+                    dim_names = ["Location"]
                 elif "_levels" in vname:
                     dims = ("nlocs", "nlevsp1")
+                    dim_names = ["Location", "Layer"]
                 else:
                     dims = ("nlocs", "nlevs")
+                    dim_names = ["Location", "Level"]
                 var_out = ncout.createVariable(geovals_vars[vname], var.dtype, dims)
                 vdata = var[...]
                 var_out[...] = vdata
+                if (TotalBias):
+                    # compute final bias correction
+                    key1 = 'Obs_Minus_Forecast_adjusted'
+                    key2 = 'Obs_Minus_Forecast_unadjusted'
+                    if key1 in self.df.variables.keys() and key2 in self.df.variables.keys():
+                        tmp = self.var(key1) - self.var(key2)
+                        iodavar = 'GsiBc'
+                        gvname = vname, iodavar
+                        outdata[gvname] = np.reshape(tmp, dim)
+                        VarDims[gvname] = dim_names
+                    else:
+                        print(f' ... can not add total bias missing {key1} or {key2} from input file')
             else:
                 pass
+
         ncout.close()
 
-    def toIODAobs(self, OutDir, clobber=True):
+    def toIODAobs(self, OutDir, TotalBias=False, clobber=True):
         """ toIODAobs(OutDir,clobber=True)
         output observations from the specified GSI diag file
         to the JEDI/IODA observation format
@@ -1865,6 +1908,18 @@ class Ozone(BaseGSI):
                 outdata[gvname] = tmp
                 if vname in units_values.keys():
                     varAttrs[gvname]['units'] = units_values[vname]
+            if (TotalBias):
+                # compute final bias correction
+                key1 = 'Obs_Minus_Forecast_adjusted'
+                key2 = 'Obs_Minus_Forecast_unadjusted'
+                if key1 in self.df.variables.keys() and key2 in self.df.variables.keys():
+                    tmp = self.var(key1) - self.var(key2)
+                    iodavar = 'GsiBc'
+                    gvname = vname, iodavar
+                    outdata[gvname] = np.reshape(tmp, (nlocs))
+                    VarDims[gvname] = ['Location']
+                else:
+                    print(f' ... can not add total bias missing {key1} or {key2} from input file')
 
         # observation data
         outdata[varDict[vname]['valKey']] = obsdata
