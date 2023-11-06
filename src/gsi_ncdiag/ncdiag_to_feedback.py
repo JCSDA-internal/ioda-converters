@@ -9,16 +9,16 @@ import h5py
 
 
 def main(oman, ombg, output_file, output_dir='./'):
-    """Convert IODA-converterd NOAA's operational GSI data files into feedback 
+    """Convert IODA-converterd NOAA's operational GSI data files into feedback
     files for comparison/use in SIMOBS skylab_monitor.
 
     Args:
         oman (.nc4 file) IODA-converted O-A (observation minus analysis) file from NOAA (_anl suffix)
-        ombg (.nc4 file) IODA-converted O-B (observation minus background) file from NOAA (_ges suffix)  
+        ombg (.nc4 file) IODA-converted O-B (observation minus background) file from NOAA (_ges suffix)
         output_file (.nc4 file) representative feedback file of NOAA's operational model to use in skylab_monitor
         output_dir (directory) directory in which to store output_file
     """
-    
+
     # start timer
     tic = record_time()
 
