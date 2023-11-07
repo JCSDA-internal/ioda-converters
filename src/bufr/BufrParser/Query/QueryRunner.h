@@ -17,7 +17,6 @@
 #include "DataProvider/DataProvider.h"
 #include "DataProvider/SubsetVariant.h"
 #include "Target.h"
-#include "NodeLookupTable.h"
 
 namespace Ingester {
 namespace bufr {
@@ -42,46 +41,13 @@ namespace bufr {
         const QuerySet querySet_;
         ResultSet& resultSet_;
         const DataProviderType& dataProvider_;
-        std::unordered_map<SubsetVariant, Targets> targetCache_;
+
+        std::unordered_map<SubsetVariant, std::shared_ptr<Targets>> targetsCache_;
 
         /// \brief Look for the list of targets for the currently active BUFR message subset that
         /// apply to the QuerySet and cache them.
         /// \param[in, out] targets The list of targets to populate.
-        void findTargets(Targets& targets);
-
-        /// \brief Accumulate the data for the currently open BUFR message subset.
-        /// \param[in] targets The list of targets to collect for this subset.
-        /// \param[in, out] resultSet The object used to store the accumulated collected data.
-        void collectData(Targets& targets, ResultSet& resultSet) const;
-
-        /// \brief Given data counts and a filter specification this function creates the resulting
-        ///        data vector.
-        /// \param[in] srcData The source data vector.
-        /// \param[in] origCounts The original (unfiltered) data counts.
-        /// \param[in] filter The filter specification.
-        /// \return The resulting data vector after the filter is applied.
-        NodeLookupTable::NodeData makeFilteredData(
-                                             const NodeLookupTable::NodeData& srcData,
-                                             const SeqCounts &origCounts,
-                                             const std::vector<std::vector<size_t>> &filter) const;
-
-        /// \brief Recursive function that does the actual work of creating the filtered data
-        ///        vector.
-        /// \param[in] srcData The source data vector.
-        /// \param[in] origCounts The original data counts.
-        /// \param[in] filters The filter specification.
-        /// \param[in, out] data The resulting data vector.
-        /// \param[in, out] offset The current offset into the resulting data vector.
-        /// \param[in] depth The current depth of the recursion.
-        /// \param[in] skipResult If true, the result of the current recursion is not stored in the
-        ///                       resulting data vector. This data is being filtered out.
-        void _makeFilteredData(const NodeLookupTable::NodeData& srcData,
-                               const SeqCounts& origCounts,
-                               const std::vector<std::vector<size_t>>& filters,
-                               NodeLookupTable::NodeData& data,
-                               size_t& offset,
-                               size_t depth,
-                               bool skipResult = false) const;
+        std::shared_ptr<Targets> getTargets();
     };
 }  // namespace bufr
 }  // namespace Ingester

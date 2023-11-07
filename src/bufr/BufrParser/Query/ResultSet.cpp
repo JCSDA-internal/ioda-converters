@@ -28,61 +28,39 @@
 
 namespace Ingester {
 namespace bufr {
-    ResultSet::ResultSet(const std::vector<std::string>& names) :
-      names_(names)
-    {
-        fieldWidths.resize(names.size());
-    }
-
-    ResultSet::~ResultSet()
-    {
-    }
 
     std::shared_ptr<Ingester::DataObjectBase>
         ResultSet::get(const std::string& fieldName,
                        const std::string& groupByFieldName,
                        const std::string& overrideType) const
     {
-        if (dataFrames_.empty())
+        // Make sure we have accumulated frames otherwise something is wrong.
+        if (frames_.size() == 0)
         {
-            throw eckit::BadValue("This ResultSet is empty (doesn't contain any data).");
+            throw eckit::BadValue("ResultSet has no data.");
         }
 
-        if (!dataFrames_[0].hasFieldNamed(fieldName))
+        // Get the metadata for the target
+        const auto targetMetaData = analyzeTarget(fieldName);
+
+        // Assemble Result Data
+        auto data = assembleData(targetMetaData);
+
+        if (!groupByFieldName.empty())
         {
-            throw eckit::BadValue("This ResultSet does not contain a field named " +
-                                  fieldName);
+            applyGroupBy(data, targetMetaData, groupByFieldName);
         }
 
-        if (!groupByFieldName.empty() && !dataFrames_[0].hasFieldNamed(groupByFieldName))
-        {
-            throw eckit::BadValue("This ResultSet does not contain a field named " +
-                                  groupByFieldName);
-        }
-
-        std::vector<int> dims;
-        std::vector<Query> dimPaths;
-        TypeInfo info;
-
-        Data data;
-        getRawValues(fieldName,
-                     groupByFieldName,
-                     data,
-                     dims,
-                     dimPaths,
-                     info);
-
-        std::shared_ptr<Ingester::DataObjectBase> object = makeDataObject(fieldName,
-                                                                          groupByFieldName,
-                                                                          info,
-                                                                          overrideType,
-                                                                          data,
-                                                                          dims,
-                                                                          dimPaths);
+        auto object = makeDataObject(fieldName,
+                                     groupByFieldName,
+                                     targetMetaData->typeInfo,
+                                     overrideType,
+                                     data.buffer,
+                                     data.dims,
+                                     data.dimPaths);
 
         return object;
     }
-
 
 #ifdef BUILD_PYTHON_BINDING
         py::array ResultSet::getNumpyArray(const std::string& fieldName,
@@ -168,384 +146,487 @@ namespace bufr {
         }
 #endif
 
-
-    DataFrame& ResultSet::nextDataFrame()
+    details::TargetMetaDataPtr ResultSet::analyzeTarget(const std::string& name) const
     {
-        dataFrames_.push_back(DataFrame(names_.size()));
-        return dataFrames_.back();
-    }
+        auto metaData = std::make_shared<details::TargetMetaData>();
+        metaData->targetIdx = frames_.front().getTargetIdx(name);
+        metaData->missingFrames.resize(frames_.size(), false);
 
-    void ResultSet::getRawValues(const std::string& fieldName,
-                                 const std::string& groupByField,
-                                 Data& data,
-                                 std::vector<int>& dims,
-                                 std::vector<Query>& dimPaths,
-                                 TypeInfo& info) const
-    {
-        // Find the dims based on the largest sequence counts in the fields
-        // Compute Dims
-        std::vector<int> dimsList;
-        std::vector<int> exportDims;
-        int groupbyIdx = 0;
-        int totalGroupbyElements = 0;
-
-        int groupByFieldIdx = 0;
-        int targetFieldIdx = dataFrames_[0].fieldIndexForNodeNamed(fieldName);
-
-        if (groupByField != "")
+        // Loop through the frames to determine the overall parameters for the result data. We will
+        // want to find the dimension information and determine if the array could be jagged which
+        // means we will need to do extra work later (otherwise we can quickly copy the data).
+        size_t frameIdx = 0;
+        for (const auto& frame : frames_)
         {
-            groupByFieldIdx = dataFrames_[0].fieldIndexForNodeNamed(groupByField);
+            const auto &target = frame.targetAtIdx(metaData->targetIdx);
 
-            // Validate that the groupByField and the targetField share a common path
-            auto &groupByFieldElement = dataFrames_[0].fieldAtIdx(groupByFieldIdx);
-            auto &groupByPath = groupByFieldElement.target->dimPaths.back();
-            auto &targetPath =
-                dataFrames_[0].fieldAtIdx(targetFieldIdx).target->dimPaths.back();
-            auto groupByPathComps = splitPath(groupByPath.str());
-            auto targetPathComps = splitPath(targetPath.str());
-
-            for (size_t i = 1;
-                 i < std::min(groupByPathComps.size(), targetPathComps.size());
-                 i++)
+            if (target->path.size() == 0)
             {
-                if (targetPathComps[i] != groupByPathComps[i])
+                metaData->missingFrames[frameIdx] = true;
+                ++frameIdx;
+                continue;
+            }
+
+            if (target->path.size() - 1 > metaData->rawDims.size())
+            {
+                metaData->rawDims.resize(target->path.size() -  1, 0);
+            }
+
+            // Resize the dims if necessary
+            // Jagged if the dims need a resize (skip first one)
+            if (target->exportDimIdxs.size() > metaData->dims.size())
+            {
+                metaData->dims.resize(target->exportDimIdxs.size(), 1);
+                metaData->filteredDims.resize(target->exportDimIdxs.size(), 0);
+            }
+
+            // Capture the dimensional information
+            auto pathIdx = 0;
+            auto exportIdxIdx = 0;
+            for (auto p = target->path.begin(); p != target->path.end() - 1; ++p)
+            {
+                const auto& counts = frame[p->nodeId].counts;
+                if (counts.empty())
                 {
-                    std::ostringstream errStr;
-                    errStr << "The GroupBy and Target Fields do not share a common path.\n";
-                    errStr << "GroupByField path: " << groupByPath.str() << std::endl;
-                    errStr << "TargetField path: " << targetPath.str() << std::endl;
-                    throw eckit::BadParameter(errStr.str());
+                    metaData->missingFrames[frameIdx] = true;
+                    break;
                 }
+
+                const auto& maxCount = std::max(max(counts), 1);
+                if (maxCount > metaData->rawDims[pathIdx])
+                {
+                    metaData->rawDims[pathIdx] = maxCount;
+                }
+
+                if (target->exportDimIdxs[exportIdxIdx] != pathIdx)
+                {
+                    ++pathIdx;
+                    continue;
+                }
+
+                const auto newDimVal = std::max(metaData->dims[exportIdxIdx],
+                                                std::max(max(counts), 1));
+
+                metaData->dims[exportIdxIdx] = newDimVal;
+
+                // Capture the filtered dimension information
+                if (!p->queryComponent->filter.empty())
+                {
+                    metaData->filteredDims[exportIdxIdx] =
+                        std::max(metaData->filteredDims[exportIdxIdx],
+                        static_cast<int> (p->queryComponent->filter.size()));
+                }
+
+                pathIdx++;
+                exportIdxIdx++;
+            }
+
+            // Fill in the type information
+            metaData->typeInfo.reference =
+                std::min(metaData->typeInfo.reference, target->typeInfo.reference);
+            metaData->typeInfo.bits = std::max(metaData->typeInfo.bits, target->typeInfo.bits);
+
+            if (std::abs(target->typeInfo.scale) > metaData->typeInfo.scale)
+            {
+                metaData->typeInfo.scale = target->typeInfo.scale;
+            }
+
+            if (metaData->typeInfo.unit.empty()) metaData->typeInfo.unit = target->typeInfo.unit;
+
+            // Fill in the dimPaths data
+            if (!target->dimPaths.empty() &&
+                metaData->dimPaths.size() < target->dimPaths.size())
+            {
+                metaData->dimPaths = target->dimPaths;
+            }
+
+            ++frameIdx;
+        }
+
+        if (metaData->dimPaths.empty())
+        {
+            metaData->dimPaths = {Query()};
+        }
+
+        // Fill the filtered dims array with the raw dims for elements that are not filtered
+        for (size_t dimIdx = 0; dimIdx < metaData->filteredDims.size(); ++dimIdx)
+        {
+            if (metaData->filteredDims[dimIdx] == 0)
+            {
+                metaData->filteredDims[dimIdx] = metaData->dims[dimIdx];
             }
         }
 
-        auto& targetField = dataFrames_[0].fieldAtIdx(targetFieldIdx);
-        dimPaths = targetField.target->dimPaths;
-        exportDims = targetField.target->exportDimIdxs;
+        return metaData;
+    }
 
-        for (auto& dataFrame : dataFrames_)
+    details::ResultData ResultSet::assembleData(const details::TargetMetaDataPtr& metaData) const
+    {
+        int rowLength = 1;
+        for (size_t dimIdx = 1; dimIdx < metaData->rawDims.size(); ++dimIdx)
         {
-            auto& targetField = dataFrame.fieldAtIdx(targetFieldIdx);
-            if (!targetField.target->dimPaths.empty() &&
-                dimPaths.size() < targetField.target->dimPaths.size())
+            rowLength *= metaData->rawDims[dimIdx];
+        }
+
+        // need to preserve one spot for the MissingValue even if there is no data
+        rowLength = std::max(rowLength, 1);
+
+        // Allocate the output data
+        auto totalRows = frames_.size();
+        auto data = details::ResultData();
+        data.buffer.isLongStr(metaData->typeInfo.isLongString());
+        data.buffer.resize(totalRows * rowLength);
+        data.dims = metaData->dims;
+        data.rawDims = metaData->rawDims;
+        data.dimPaths = metaData->dimPaths;
+
+        // Update the dims to reflect the actual size of the data
+        data.dims[0] = totalRows;
+        data.rawDims[0] = totalRows;
+
+        bool needsFiltering = false;
+
+        // Copy the data fragments into the raw data array.
+        for (size_t frameIdx=0; frameIdx < frames_.size(); ++frameIdx)
+        {
+            if (metaData->missingFrames[frameIdx])
             {
-                dimPaths = targetField.target->dimPaths;
-                exportDims = targetField.target->exportDimIdxs;
+                continue;
             }
 
-            size_t dimsLen = targetField.seqCounts.size();
-            if (dimsList.size() < dimsLen)
+            const auto& frame = frames_[frameIdx];
+            const auto& target = frame.targetAtIdx(metaData->targetIdx);
+            copyData(data, frame, target, frameIdx * rowLength);
+
+            if (target->usesFilters) needsFiltering = true;
+        }
+
+        if (needsFiltering)
+        {
+            int filteredRowLength = 1;
+            for (size_t dimIdx = 1; dimIdx < metaData->filteredDims.size(); ++dimIdx)
             {
-                dimsList.resize(dimsLen, 0);
+                filteredRowLength *= metaData->filteredDims[dimIdx];
             }
 
-            for (size_t cntIdx = 0; cntIdx < targetField.seqCounts.size(); ++cntIdx)
+            auto filteredData = details::ResultData();
+            filteredData.buffer.isLongStr(metaData->typeInfo.isLongString());
+            filteredData.buffer.resize(totalRows * filteredRowLength);
+
+            for (size_t frameIdx = 0; frameIdx < frames_.size(); ++frameIdx)
             {
-                if (!targetField.seqCounts[cntIdx].empty())
+                const auto &frame = frames_[frameIdx];
+                const auto &target = frame.targetAtIdx(metaData->targetIdx);
+
+                size_t inputOffset = frameIdx * rowLength;
+                size_t outputOffset = frameIdx * filteredRowLength;
+                size_t maxDepth = target->path.size() - 1;
+
+                copyFilteredData(filteredData,
+                                 data,
+                                 target,
+                                 inputOffset,
+                                 outputOffset,
+                                 1,
+                                 maxDepth,
+                                 target->filterDataList,
+                                 false);
+            }
+
+            filteredData.dimPaths = metaData->dimPaths;
+            filteredData.dims = metaData->filteredDims;
+            filteredData.dims[0] = data.dims[0];
+
+            data = std::move(filteredData);
+        }
+
+        return data;
+    }
+
+    void ResultSet::copyData(details::ResultData& data,
+                             const Frame& frame,
+                             const TargetPtr& target,
+                             size_t outputOffset) const
+    {
+        size_t inputOffset = 0;
+        size_t dimIdx = 0;
+        size_t countNumber = 1;
+        size_t countOffset = 0;
+
+        _copyData(data,
+                  frame,
+                  target,
+                  outputOffset,
+                  inputOffset,
+                  dimIdx,
+                  countNumber,
+                  countOffset);
+    }
+
+    void ResultSet::_copyData(details::ResultData& data,
+                              const Frame& frame,
+                              const TargetPtr& target,
+                              size_t& outputOffset,
+                              size_t& inputOffset,
+                              const size_t dimIdx,
+                              const size_t countNumber,
+                              const size_t countOffset) const
+    {
+        size_t totalDimSize = 1;
+        for (size_t i = dimIdx; i < data.rawDims.size(); ++i)
+        {
+            totalDimSize *= data.rawDims[i];
+        }
+
+        if (!totalDimSize ||
+            dimIdx > data.rawDims.size() - 1 ||
+            frame[target->nodeIdx].data.empty()) return;
+
+        const auto& counts = frame[target->path[dimIdx].nodeId].counts;
+        if (counts.empty())
+        {
+            outputOffset += totalDimSize;
+            return;
+        }
+
+        size_t newOffset = 0;
+        for (size_t countIdx = 0; countIdx < countNumber; ++countIdx)
+        {
+            const auto& count = counts[countIdx + countOffset];
+            if (count == 0)
+            {
+                outputOffset += totalDimSize;
+                continue;
+            }
+
+            // When we reach the last layer of counts then copy the data
+            // Ignore the subset path element (reason for -2)
+            if (dimIdx == target->path.size() - 2)
+            {
+                const auto& fragment = frame[target->nodeIdx].data;
+
+                if (fragment.isLongStr())
                 {
-                    dimsList[cntIdx] = std::max(dimsList[cntIdx],
-                                                max(targetField.seqCounts[cntIdx]));
-                }
-            }
-
-            info.reference = std::min(info.reference, targetField.target->typeInfo.reference);
-            info.bits = std::max(info.bits, targetField.target->typeInfo.bits);
-
-            if (std::abs(targetField.target->typeInfo.scale) > info.scale)
-            {
-                info.scale = targetField.target->typeInfo.scale;
-            }
-
-            if (info.unit.empty()) info.unit = targetField.target->typeInfo.unit;
-
-            if (groupByField != "")
-            {
-                auto& groupByField = dataFrame.fieldAtIdx(groupByFieldIdx);
-                groupbyIdx = std::max(groupbyIdx, static_cast<int>(groupByField.seqCounts.size()));
-
-                if (groupbyIdx > static_cast<int>(dimsList.size()))
-                {
-                    dimPaths = {groupByField.target->dimPaths.back()};
-
-                    int groupbyElementsForFrame = 1;
-                    for (auto &seqCount : groupByField.seqCounts)
-                    {
-                        if (!seqCount.empty())
-                        {
-                            groupbyElementsForFrame *= max(seqCount);
-                        }
-                    }
-
-                    totalGroupbyElements = std::max(totalGroupbyElements, groupbyElementsForFrame);
+                    std::copy(fragment.value.strings.begin() + inputOffset,
+                              fragment.value.strings.begin() + inputOffset + count,
+                              data.buffer.value.strings.begin() + outputOffset);
                 }
                 else
                 {
-                    dimPaths = {};
-                    for (size_t targetIdx = groupByField.target->exportDimIdxs.size() - 1;
-                         targetIdx < targetField.target->dimPaths.size();
-                         ++targetIdx)
-                    {
-                        dimPaths.push_back(targetField.target->dimPaths[targetIdx]);
-                    }
+                    std::copy(fragment.value.octets.begin() + inputOffset,
+                              fragment.value.octets.begin() + inputOffset + count,
+                              data.buffer.value.octets.begin() + outputOffset);
                 }
-            }
-        }
 
-        auto allDims = dimsList;
-
-        // If there is absolutely no data for a field you will have the problem were the
-        // size of some dimensions are zero. We need to have at least 1 element in each
-        // dimension to make room for the missing value. This if statement makes sure there
-        // is at least 1 element in each dimension.
-        for (size_t dimIdx = 0; dimIdx < allDims.size(); ++dimIdx)
-        {
-            if (allDims[dimIdx] == 0)
-            {
-                allDims[dimIdx] = 1;
+                inputOffset += count;
+                outputOffset += totalDimSize;
             }
-        }
-
-        if (groupbyIdx > 0)
-        {
-            // The groupby field occurs at the same or greater repetition level as the target field.
-            if (groupbyIdx > static_cast<int>(dimsList.size()))
-            {
-                dims.resize(1, totalGroupbyElements);
-                exportDims = {0};
-                allDims = dims;
-            }
-            // The groupby field occurs at a lower repetition level than the target field.
             else
             {
-                dims.resize(dimsList.size() - groupbyIdx + 1, 1);
-                for (auto dimIdx = 0; dimIdx < groupbyIdx; ++dimIdx)
-                {
-                    dims[0] *= allDims[dimIdx];
-                }
-
-                for (size_t dimIdx = groupbyIdx; dimIdx < allDims.size(); ++dimIdx)
-                {
-                    dims[dimIdx - groupbyIdx + 1] = allDims[dimIdx];
-                }
-
-                exportDims = exportDims - (groupbyIdx - 1);
-
-                // Filter out exportDims that are 0
-                std::vector<int> filteredExportDims;
-                for (size_t dimIdx = 0; dimIdx < exportDims.size(); ++dimIdx)
-                {
-                    if (exportDims[dimIdx] >= 0)
-                    {
-                        filteredExportDims.push_back(exportDims[dimIdx]);
-                    }
-                }
-
-                if (filteredExportDims.empty() || filteredExportDims[0] != 0)
-                {
-                    filteredExportDims.insert(filteredExportDims.begin(), 0);
-                }
-
-                exportDims = filteredExportDims;
+                _copyData(data,
+                          frame,
+                          target,
+                          outputOffset,
+                          inputOffset,
+                          dimIdx + 1,
+                          count,
+                          newOffset);
             }
+
+            newOffset++;
         }
-        else
-        {
-            dims = allDims;
-        }
-
-        size_t totalRows = dims[0] * dataFrames_.size();
-
-        // Make data set
-        int rowLength = 1;
-        for (size_t dimIdx = 1; dimIdx < dims.size(); ++dimIdx)
-        {
-            rowLength *= dims[dimIdx];
-        }
-
-        data.isLongStr(targetField.data.isLongStr());
-        data.resize(totalRows * rowLength);
-        for (size_t frameIdx = 0; frameIdx < dataFrames_.size(); ++frameIdx)
-        {
-            auto& dataFrame = dataFrames_[frameIdx];
-            std::vector<Data> frameData;
-            auto& targetField = dataFrame.fieldAtIdx(targetFieldIdx);
-
-            if (!targetField.data.empty()) {
-                getRowsForField(targetField,
-                                frameData,
-                                allDims,
-                                groupbyIdx);
-
-                auto dataRowIdx = dims[0] * frameIdx;
-                for (size_t rowIdx = 0; rowIdx < frameData.size(); ++rowIdx)
-                {
-                    auto &row = frameData[rowIdx];
-                    for (size_t colIdx = 0; colIdx < row.size(); ++colIdx)
-                    {
-                        if (targetField.data.isLongStr())
-                        {
-                            data.value.strings[dataRowIdx * rowLength + rowIdx * row.size() +
-                                 colIdx] = row.value.strings[colIdx];
-                        }
-                        else
-                        {
-                            data.value.octets[dataRowIdx * rowLength + rowIdx * row.size() +
-                                 colIdx] = row.value.octets[colIdx];
-                        }
-                    }
-                }
-            }
-        }
-
-        // Convert dims per data frame to dims for all the collected data.
-        dims[0] = totalRows;
-        dims = slice(dims, exportDims);
     }
 
-    void ResultSet::getRowsForField(const DataField& targetField,
-                                    std::vector<Data>& dataRows,
-                                    const std::vector<int>& dims,
-                                    int groupbyIdx) const
+    void ResultSet::validateGroupByField(const details::TargetMetaDataPtr& targetMetaData,
+                                         const details::TargetMetaDataPtr& groupByMetaData) const
     {
-        size_t maxCounts = 0;
-        std::vector<size_t> idxs(targetField.data.size());
-        for (size_t i = 0; i < idxs.size(); ++i)
-        {
-            idxs[i] = i;
-        }
+        // Validate the groupby field is in the same path as the field
+        auto& groupByPath = groupByMetaData->dimPaths.back();
+        auto& targetPath = targetMetaData->dimPaths.back();
 
-        // Compute max counts
-        for (size_t i = 0; i < targetField.seqCounts.size(); ++i)
+        auto groupByPathComps = splitPath(groupByPath.str());
+        auto targetPathComps = splitPath(targetPath.str());
+
+        for (size_t i = 1;
+             i < std::min(groupByPathComps.size(), targetPathComps.size());
+             i++)
         {
-            if (maxCounts < targetField.seqCounts[i].size())
+            if (targetPathComps[i] != groupByPathComps[i])
             {
-                maxCounts = targetField.seqCounts[i].size();
+                std::ostringstream errStr;
+                errStr << "The GroupBy and Target Fields do not share a common path.\n";
+                errStr << "GroupByField path: " << groupByPath.str()<< std::endl;
+                errStr << "TargetField path: " << targetPath.str() << std::endl;
+                throw eckit::BadParameter(errStr.str());
             }
         }
+    }
 
-        // Compute insert array
-        std::vector<std::vector<int>> inserts(dims.size());
-        for (size_t repIdx = 0;
-             repIdx < std::min(dims.size(), targetField.seqCounts.size());
-             ++repIdx)
+    void ResultSet:: copyFilteredData(details::ResultData& resData,
+                                      const details::ResultData& srcData,
+                                      const TargetPtr& target,
+                                      size_t& inputOffset,
+                                      size_t& outputOffset,
+                                      size_t depth,
+                                      size_t maxDepth,
+                                      const FilterDataList& filterDataList,
+                                      bool skipResult) const
+    {
+        if (depth == maxDepth)
         {
-            inserts[repIdx] = product<int>(dims.begin() + repIdx, dims.end()) -
-                              targetField.seqCounts[repIdx] *
-                              product<int>(dims.begin() + repIdx + 1, dims.end());
+            if (!skipResult)
+            {
+                if (resData.buffer.isLongStr())
+                {
+                    resData.buffer.value.strings[outputOffset] =
+                        srcData.buffer.value.strings[inputOffset];
+                }
+                else
+                {
+                    resData.buffer.value.octets[outputOffset] =
+                        srcData.buffer.value.octets[inputOffset];
+                }
+
+                outputOffset++;
+            }
+
+            inputOffset++;
+
+            return;
         }
 
-        // Inflate the data, compute the idxs for each data element in the result array
-        for (int dim_idx = dims.size() - 1; dim_idx >= 0; --dim_idx)
+        const auto& filterData = filterDataList[depth];
+
+        if (filterData.isEmpty)
         {
-            for (size_t insert_idx = 0; insert_idx < inserts[dim_idx].size(); ++insert_idx)
+            for (size_t count = 1; count <= static_cast<size_t>(srcData.rawDims[depth]); count++)
             {
-                const size_t num_inserts = inserts[dim_idx][insert_idx];
-                if (num_inserts == 0) continue;
-
-                int data_idx = product<int>(dims.begin() + dim_idx, dims.end()) *
-                        insert_idx + product<int>(dims.begin() + dim_idx, dims.end())
-                                - num_inserts - 1;
-
-                for (size_t i = 0; i < idxs.size(); ++i)
-                {
-                    if (static_cast<int>(idxs[i]) > data_idx)
-                    {
-                        idxs[i] += num_inserts;
-                    }
-                }
-            }
-        }
-
-        auto output = Data();
-        output.isLongStr(targetField.data.isLongStr());
-        output.resize(product(dims));
-
-        for (size_t i = 0; i < idxs.size(); ++i)
-        {
-            if (targetField.data.isLongStr())
-            {
-                output.value.strings[idxs[i]] = targetField.data.value.strings[i];
-            }
-            else
-            {
-                output.value.octets[idxs[i]] = targetField.data.value.octets[i];
-            }
-        }
-
-        // Apply groupBy and make output
-        if (groupbyIdx > 0)
-        {
-            if (groupbyIdx > static_cast<int>(targetField.seqCounts.size()))
-            {
-                size_t numRows = product(dims);
-                dataRows.resize(numRows * maxCounts);
-
-                for (size_t idx = 0; idx < numRows; ++idx)
-                {
-                    dataRows[idx].resize(1);
-                }
-
-                for (size_t i = 0; i < numRows; ++i)
-                {
-                    if (output.size())
-                    {
-                        if (targetField.data.isLongStr())
-                        {
-                            dataRows[i].value.strings[0] = output.value.strings[0];
-                        }
-                        else
-                        {
-                            dataRows[i].value.octets[0] = output.value.octets[0];
-                        }
-                    }
-                }
-            }
-            else
-            {
-                size_t numRows = product<int>(dims.begin(), dims.begin() + groupbyIdx);
-                std::vector<int> rowDims;
-                rowDims.assign(dims.begin() + groupbyIdx, dims.end());
-
-                size_t numsPerRow = static_cast<size_t>(product(rowDims));
-                dataRows.resize(numRows);
-
-                for (size_t idx = 0; idx < numRows; ++idx)
-                {
-                    dataRows[idx].resize(numsPerRow);
-                }
-
-                for (size_t i = 0; i < numRows; ++i)
-                {
-                    for (size_t j = 0; j < numsPerRow; ++j)
-                    {
-                        if (targetField.data.isLongStr())
-                        {
-                            dataRows[i].value.strings[j] = output.value.strings[i * numsPerRow + j];
-                        }
-                        else
-                        {
-                            dataRows[i].value.octets[j] = output.value.octets[i * numsPerRow + j];
-                        }
-                    }
-                }
+                copyFilteredData(resData,
+                                 srcData,
+                                 target,
+                                 inputOffset,
+                                 outputOffset,
+                                 depth + 1,
+                                 maxDepth,
+                                 filterDataList,
+                                 skipResult);
             }
         }
         else
         {
-            dataRows.push_back(std::move(output));
+            size_t filterIdx = 0;
+            auto nextFilterCount = filterData.filter[filterIdx];
+            for (size_t count = 1; count <= static_cast<size_t>(srcData.rawDims[depth]); count++)
+            {
+                bool skip = skipResult;
+                if (!skip)
+                {
+                    if (nextFilterCount == count)
+                    {
+                        filterIdx++;
+                        if (filterIdx < filterData.filter.size())
+                            nextFilterCount = filterData.filter.at(filterIdx);
+                    }
+                    else
+                    {
+                        skip = true;
+                    }
+                }
+
+                copyFilteredData(resData,
+                                 srcData,
+                                 target,
+                                 inputOffset,
+                                 outputOffset,
+                                 depth + 1,
+                                 maxDepth,
+                                 filterDataList,
+                                 skip);
+            }
+        }
+    }
+
+    void ResultSet::applyGroupBy(details::ResultData& resData,
+                                 const details::TargetMetaDataPtr& targetMetaData,
+                                 const std::string& groupByFieldName) const
+    {
+        const auto groupByMetaData = analyzeTarget(groupByFieldName);
+        validateGroupByField(targetMetaData, groupByMetaData);
+
+        // If the groupby field has more dims than the target then we must duplicate the
+        // target values to match the groupby field
+        if (groupByMetaData->dims.size() > targetMetaData->dims.size())
+        {
+            auto newData = details::ResultData();
+            newData.buffer.isLongStr(resData.buffer.isLongStr());
+            newData.dims = {resData.dims[0] * product(groupByMetaData->dims)};
+            newData.buffer.resize(resData.dims[0] * product(groupByMetaData->dims));
+
+            const auto numTargetVals = static_cast<size_t>(product(targetMetaData->dims));
+
+            // There is no data
+            if (numTargetVals == 0)
+            {
+                newData.dimPaths = {targetMetaData->dimPaths.back()};
+                resData = std::move(newData);
+                return;
+            }
+
+            const auto numReps =
+                static_cast<size_t>(product(groupByMetaData->dims) / numTargetVals);
+
+            for (size_t targIdx = 0; targIdx < numTargetVals * resData.dims[0]; targIdx++)
+            {
+                for (size_t rep = 0; rep < numReps; rep++)
+                {
+                    if (resData.buffer.isLongStr())
+                    {
+                        newData.buffer.value.strings[targIdx * numReps + rep] =
+                            resData.buffer.value.strings[targIdx];
+                    }
+                    else
+                    {
+                        newData.buffer.value.octets[targIdx * numReps + rep] =
+                            resData.buffer.value.octets[targIdx];
+                    }
+                }
+            }
+
+            newData.dimPaths = {targetMetaData->dimPaths.back()};
+            resData = std::move(newData);
+        }
+        // If the group_by field has less dims than the target data we only need to change the
+        // dimensions around.
+        else
+        {
+            const auto sizeDiff = targetMetaData->dims.size() - groupByMetaData->dims.size();
+            auto newDims = std::vector<int>(sizeDiff + 1);
+            auto newDimPaths = std::vector<Query>(sizeDiff + 1);
+
+            newDims[0] = resData.dims[0] * product(groupByMetaData->dims);
+            newDimPaths[0] = targetMetaData->dimPaths.front();
+            for (size_t i = 1; i < sizeDiff + 1; i++)
+            {
+                newDims[i] = targetMetaData->dims[groupByMetaData->dims.size() + i - 1];
+                newDimPaths[i] = targetMetaData->dimPaths[groupByMetaData->dims.size() + i - 1];
+            }
+
+            resData.dims = std::move(newDims);
+            resData.dimPaths = std::move(newDimPaths);
         }
     }
 
     std::string ResultSet::unit(const std::string& fieldName) const
     {
-        auto fieldIdx = dataFrames_.front().fieldIndexForNodeNamed(fieldName);
-        return dataFrames_.front().fieldAtIdx(fieldIdx).target->unit;
+        const auto targetIdx = frames_.front().getTargetIdx(fieldName);
+        const auto& target = frames_.front().targetAtIdx(targetIdx);
+        return target->typeInfo.unit;
     }
 
     std::shared_ptr<DataObjectBase> ResultSet::makeDataObject(
                                 const std::string& fieldName,
                                 const std::string& groupByFieldName,
-                                TypeInfo& info,
+                                const TypeInfo& info,
                                 const std::string& overrideType,
                                 const Data& data,
                                 const std::vector<int>& dims,
@@ -579,7 +660,7 @@ namespace bufr {
         return object;
     }
 
-    std::shared_ptr<DataObjectBase> ResultSet::objectByTypeInfo(TypeInfo &info) const
+    std::shared_ptr<DataObjectBase> ResultSet::objectByTypeInfo(const TypeInfo &info) const
     {
         std::shared_ptr<DataObjectBase> object;
 

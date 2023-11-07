@@ -26,90 +26,58 @@
 #include "DataProvider/DataProvider.h"
 #include "DataObject.h"
 #include "Target.h"
+#include "SubsetLookupTable.h"
 #include "Data.h"
 
 
 namespace Ingester {
 namespace bufr {
 
-    typedef std::vector<std::vector<int>> SeqCounts;
-
-    /// \brief Represents a single BUFR data element (a element from one message subset). It
-    /// contains both the data value(s) and the associated metadata that is used to construct the
-    /// results data.
-    struct DataField
+namespace details
+{
+    struct TargetMetaData
     {
-        std::shared_ptr<Target> target;
-        Data data;
-        SeqCounts seqCounts;
+        size_t targetIdx;
+        TypeInfo typeInfo;
+        std::vector<int> dims = {0};
+        std::vector<int> rawDims = {0};
+        std::vector<int> filteredDims = {0};
+        std::vector<int> groupedDims = {};
+        std::vector<char> missingFrames;
+        std::vector<Query> dimPaths;
     };
 
-    /// \brief Container for a "row" of data (all the collected data for a message subset)., with a
-    /// DataField for each data element
-    class DataFrame
+    struct ResultData
     {
-     public:
-        explicit DataFrame(int fieldCnt)
-        {
-            fields_.resize(fieldCnt);
-        }
-
-        /// \brief Get a reference for the const DataField at the given index.
-        /// \param idx The index of the data field to get.
-        inline const DataField& fieldAtIdx(size_t idx) const { return fields_[idx]; }
-
-        /// \brief Get a reference for the DataField at the given index.
-        /// \param idx The index of the data field to get.
-        inline DataField& fieldAtIdx(size_t idx) { return fields_[idx]; }
-
-        /// \brief Get the index for the field with the given name. This field idx is valid for all
-        /// data frames in the result set.
-        /// \param name The name of the field to get the index for.
-        int fieldIndexForNodeNamed(const std::string& name) const
-        {
-            auto result = -1;
-            for (size_t fieldIdx = 0; fieldIdx < fields_.size(); fieldIdx++)
-            {
-                if (fields_[fieldIdx].target->name == name)
-                {
-                    result = fieldIdx;
-                    break;
-                }
-            }
-
-            return result;
-        }
-
-        /// \brief Check the availability of the field with the given name.
-        /// \param name The name of the field to check.
-        bool hasFieldNamed(const std::string& name) const
-        {
-            return fieldIndexForNodeNamed(name) != -1;
-        }
-
-     private:
-        std::vector<DataField> fields_;
+        Data buffer;
+        std::vector<int> dims;
+        std::vector<int> rawDims;
+        std::vector<Query> dimPaths;
     };
+
+    typedef std::shared_ptr<TargetMetaData> TargetMetaDataPtr;
+
+}  // namespace details
+
+    typedef SubsetLookupTable Frame;
+    typedef std::vector<Frame> Frames;
 
     /// \brief This class acts as the container for all the data that is collected during the
-    /// the BUFR querying process. Internally it arranges the data as DataFrames for each message
-    /// subset observation. Each DataFrame contains a list of DataFields, one for each named element
-    /// that was collected. Because of the way the collection process works, each DataFrame is
-    /// organized the same way (indexes of DataFields line up).
+    /// the BUFR querying process in the form of SubsetLookupTable instances.
     ///
     /// \par The getter functions for the data construct the final output based on the data and
-    /// metadata in these DataFields. There are many complications. For one the data may be jagged
-    /// (DataFields instances don't necessarily all have the same number of elements [repeated data
-    /// could have a different number of repeats per instance]). Another is the application group_by
-    /// fields which affect the dimensionality of the data. In order to make the data into
-    /// rectangular arrays it may be necessary to strategically fill in missing values so that the
-    /// data is organized correctly in each dimension.
+    /// metadata in these lookup tables. There are many complications. For one the data may be
+    /// jagged (lookup table instances don't necessarily all have the same number of elements
+    /// [repeated data could have a different number of repeats per instance]). Another is the
+    /// application group_by fields which affect the dimensionality of the data. In order to make
+    /// the data into rectangular arrays it may be necessary to strategically fill in missing values
+    /// so that the data is organized correctly in each dimension.
     ///
     class ResultSet
     {
      public:
-        explicit ResultSet(const std::vector<std::string>& names);
-        ~ResultSet();
+        ResultSet() = default;
+        ~ResultSet() = default;
 
         /// \brief Gets the resulting data for a specific field with a given name grouped by the
         /// optional groupByFieldName.
@@ -122,6 +90,13 @@ namespace bufr {
         get(const std::string& fieldName,
             const std::string& groupByFieldName = "",
             const std::string& overrideType = "") const;
+
+        /// \brief Move a new frame into the ResultSet.
+        /// \param frame The NodeLookupTable to std::move.
+        void addFrame(Frame&& frame)
+        {
+            frames_.push_back(std::move(frame));
+        }
 
 #ifdef BUILD_PYTHON_BINDING
         /// \brief Gets a numpy array for the resulting data for a specific field with a given
@@ -152,45 +127,83 @@ namespace bufr {
                                         const std::string& groupBy = "") const;
 #endif
 
-        /// \brief Adds a new DataFrame to the ResultSet and returns a reference to it.
-        /// \return A reference to the new DataFrame.
-        DataFrame& nextDataFrame();
-
-        void setTargets(Targets targets) { targets_ = targets; }
-
      private:
-        Targets targets_;
-        std::vector<DataFrame> dataFrames_;
-        std::vector<std::string> names_;
-        std::vector<int> fieldWidths;
+        Frames frames_;
 
-        /// \brief Computes the data for a specific field with a given name grouped by the
-        /// groupByField. It determines the required dimensions for the field and then uses
-        /// getRowsForField to get the relevant data from each DataFrame.
-        /// \param fieldName The name of the field to get the data for.
+        /// \brief Computes and returns metadata associated with a target.
+        /// \param name The name of the target to get the metadata for.
+        /// \return A TargetMetaData object containing the metadata.
+        details::TargetMetaDataPtr analyzeTarget(const std::string& name) const;
+
+        /// \brief Assembles the data fragments for a target into a single ResultData object.
+        /// \param targetMetaData The metadata for the target to assemble the data for.
+        /// \return A ResultData object containing the data.
+        details::ResultData assembleData(const details::TargetMetaDataPtr& targetMetaData) const;
+
+        /// \brief Copies the data from a frame into a ResultData object.
+        /// \param data The ResultData object to copy the data into.
+        /// \param frame The frame to copy the data from.
+        /// \param target The target to copy the data for.
+        /// \param outputOffset The offset into the ResultData object to copy the data to.
+        void copyData(details::ResultData& data,
+                      const Frame& frame,
+                      const TargetPtr& target,
+                      size_t outputOffset) const;
+
+        /// \brief Copies the data from a frame into a ResultData object.
+        /// \param data The ResultData object to copy the data into.
+        /// \param frame The frame to copy the data from.
+        /// \param target The target to copy the data for.
+        /// \param outputOffset The offset into the ResultData object to copy the data to.
+        /// \param inputOffset The offset into the frame to copy the data from.
+        /// \param dimIdx The index of the dimension to copy the data for.
+        /// \param countNumber The current count
+        /// \param countOffset The offset into the count array.
+        void _copyData(details::ResultData& data,
+                       const Frame& frame,
+                       const TargetPtr& target,
+                       size_t& outputOffset,
+                       size_t& inputOffset,
+                       const size_t dimIdx,
+                       const size_t countNumber,
+                       const size_t countOffset) const;
+
+        /// \brief Validates that the group_by field is valid for the target. Throws an exception if
+        ///        it is not.
+        /// \param targetMetaData The metadata for the target.
+        /// \param groupByMetaData The metadata for the group_by field.
+        void validateGroupByField(const details::TargetMetaDataPtr& targetMetaData,
+                                  const details::TargetMetaDataPtr& groupByMetaData) const;
+
+
+        /// \brief Copies filtered data from a source ResultData object into a destination
+        ///        ResultData object.
+        /// \param resData The ResultData object to copy the data into.
+        /// \param srcData The ResultData object to copy the data from.
+        /// \param target The target to copy the data for.
+        /// \param inputOffset The offset into the source ResultData object to copy the data from.
+        /// \param outputOffset The offset into the destination ResultData object to copy the data
+        ///        to.
+        /// \param depth The depth of the dimension to copy the data for.
+        /// \param filterDataList The list of filter data to apply.
+        /// \param skipResult Whether to skip copying the result data.
+        void copyFilteredData(details::ResultData& resData,
+                              const details::ResultData& srcData,
+                              const TargetPtr& target,
+                              size_t& inputOffset,
+                              size_t& outputOffset,
+                              size_t depth,
+                              size_t maxDepth,
+                              const FilterDataList& filterDataList,
+                              bool skipResult) const;
+
+        /// \brief Modify the ResultData object to apply the group_by field.
+        /// \param resData The ResultData object to modify.
+        /// \param targetMetaData The metadata for the target.
         /// \param groupByFieldName The name of the field to group the data by.
-        /// \param[out] data The output data.
-        /// \param[out] dims The size of the dimensions of the result data.
-        /// \param[out] dimPaths The dimensioning sub-query path strings.
-        /// \param[out] info The meta data for the element.
-        void getRawValues(const std::string& fieldName,
-                          const std::string& groupByField,
-                          Data& data,
-                          std::vector<int>& dims,
-                          std::vector<Query>& dimPaths,
-                          TypeInfo& info) const;
-
-        /// \brief Retrieves the data for the specified target field, one row per message subset.
-        /// The dims are used to determine the filling pattern so that that the resulting data can
-        /// be reshaped to the dimensions specified.
-        /// \param[in] targetField The target field to retrieve.
-        /// \param[out] dataRows The output data.
-        /// \param[in] dims Vector of dimension sizes.
-        /// \param[in] groupbyIdx Idx of the group by field (which query component).
-        void getRowsForField(const DataField& targetField,
-                             std::vector<Data>& dataRows,
-                             const std::vector<int>& dims,
-                             int groupbyIdx) const;
+        void applyGroupBy(details::ResultData& resData,
+                          const details::TargetMetaDataPtr& targetMetaData,
+                          const std::string& groupByFieldName) const;
 
         /// \brief Is the field a string field?
         /// \param fieldName The name of the field.
@@ -209,7 +222,7 @@ namespace bufr {
         std::shared_ptr<DataObjectBase> makeDataObject(
                                 const std::string& fieldName,
                                 const std::string& groupByFieldName,
-                                TypeInfo& info,
+                                const TypeInfo& info,
                                 const std::string& overrideType,
                                 const Data& data,
                                 const std::vector<int>& dims,
@@ -218,7 +231,7 @@ namespace bufr {
         /// \brief Make an appropriate DataObject for data with the TypeInfo
         /// \param info The meta data for the element.
         /// \return A Result DataObject containing the data.
-        std::shared_ptr<DataObjectBase> objectByTypeInfo(TypeInfo& info) const;
+        std::shared_ptr<DataObjectBase> objectByTypeInfo(const TypeInfo& info) const;
 
         /// \brief Make an appropriate DataObject for data with the override type
         /// \param overrideType The meta data for the element.
