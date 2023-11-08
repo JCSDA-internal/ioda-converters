@@ -23,39 +23,49 @@ def satbias_upgrader(infile, outfile):
     newnc._ioda_layout_version = np.int32(0)
 
     # create dimensions
-    nrecs = newnc.createDimension("nrecs", 1)
+    nrecs = newnc.createDimension("Record", 1)
 
+    channels = False
+    variables = False
     # create top level variables
     if 'channels' in oldnc.variables.keys():
-        nvars = newnc.createDimension("nvars", len(oldnc.dimensions['nchannels']))
+        nvars = newnc.createDimension("Channel", len(oldnc.dimensions['nchannels']))
         channels_in = oldnc.variables['channels'][:]
-        channels_out = newnc.createVariable("channels", "i4", ("nvars",))
+        channels_out = newnc.createVariable("Channel", "i4", ("Channel",))
         channels_out[:] = channels_in
+        dimname = 'Channel'
     if 'variables' in oldnc.variables.keys():
-        nvars = newnc.createDimension("nvars", len(oldnc.dimensions['nvariables']))
+        nvars = newnc.createDimension("Variable", len(oldnc.dimensions['nvariables']))
         vars_in = oldnc.variables['variables'][:]
-        vars_out = newnc.createVariable("variables", str, ("nvars",))
+        vars_out = newnc.createVariable("Variable", str, ("Variable",))
         vars_out[:] = vars_in
-    nrecs_out = newnc.createVariable("nrecs", "i4", ("nrecs"))
-    nvars_out = newnc.createVariable("nvars", "i4", ("nvars"))
-    nrecs_out[:] = 0
-    nvars_out[:] = 0
+        dimname = 'Variable'
+    nrecs_out = newnc.createVariable("Record", str, ("Record"))
+    nrecs_out[0] = ' '
     if 'number_obs_assimilated' in oldnc.variables.keys():
         nobs_assim_in = oldnc.variables['number_obs_assimilated'][:]
-        nobs_assim_out = newnc.createVariable("numObsUsed", "i4", ("nrecs", "nvars"))
+        nobs_assim_out = newnc.createVariable("numberObservationsUsed", "i4", ("Record", dimname))
         nobs_assim_out[0, :] = nobs_assim_in
 
     # loop through predictors and create predictor variables
     if 'bias_coefficients' in oldnc.variables.keys():
         bias_coeff = oldnc.variables['bias_coefficients'][:]
         for i, pred in enumerate(predictors):
-            var1_out = newnc.createVariable(f"biasCoefficients/{pred}", "f4", ("nrecs", "nvars"),
+            temp = pred.split('_')
+            predOut = temp[0] + ''.join(ele.title() for ele in temp[1:])
+            if predOut == 'emissivity':
+                predOut = 'emissivityK'
+            var1_out = newnc.createVariable(f"BiasCoefficients/{predOut}", "f4", ("Record", dimname),
                                             fill_value=-3.36879526e+38)
             var1_out[0, :] = bias_coeff[i, :]
     if 'bias_coeff_errors' in oldnc.variables.keys():
         bias_coeff_err = oldnc.variables['bias_coeff_errors'][:]
         for i, pred in enumerate(predictors):
-            var2_out = newnc.createVariable(f"biasCoeffErrors/{pred}", "f4", ("nrecs", "nvars"),
+            temp = pred.split('_')
+            predOut = temp[0] + ''.join(ele.title() for ele in temp[1:])
+            if predOut == 'emissivity':
+                predOut = 'emissivityK'
+            var2_out = newnc.createVariable(f"BiasCoefficientErrors/{predOut}", "f4", ("Record", dimname),
                                             fill_value=-3.36879526e+38)
             var2_out[0, :] = bias_coeff_err[i, :]
 

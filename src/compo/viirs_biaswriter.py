@@ -21,15 +21,13 @@ parser.add_argument(
 args = parser.parse_args()
 channels_out = [4]
 ncfile = netCDF4.Dataset(args.output, mode='w', format='NETCDF4')
-nrecs = ncfile.createDimension('nrecs', 1)
-nchannels = ncfile.createDimension('nvars', 1)
-coef = ncfile.createVariable('biasCoefficients/constant', np.float, ('nrecs', 'nvars'))
-coef_error = ncfile.createVariable('biasCoeffErrors/constant', np.float, ('nrecs', 'nvars'))
-channels = ncfile.createVariable('channels', np.int32, ('nvars', ))
-recs = ncfile.createVariable('nrecs', np.int32, ('nrecs', ))
-varvars = ncfile.createVariable('nvars', np.int32, ('nvars', ))
+nrecs = ncfile.createDimension('Record', 1)
+nchannels = ncfile.createDimension('Channel', 1)
+coef = ncfile.createVariable('biasCoefficients/constant', np.float32, ('Record', 'Channel'))
+coef_error = ncfile.createVariable('BiasCoefficientErrors/constant', np.float32, ('Record', 'Channel'))
+channels = ncfile.createVariable('Channel', np.int32, ('Channel', ))
+recs = ncfile.createVariable('Record', np.int32, ('Record', ))
 recs[:] = 0
-varvars[:] = 0
 coef[:] = -0.0163
 coef_error[:] = .0863
 channels[:] = channels_out

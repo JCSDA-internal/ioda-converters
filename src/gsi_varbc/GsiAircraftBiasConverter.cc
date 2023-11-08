@@ -36,23 +36,23 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
 
   /// Creating dimensions: n
   ioda::NewDimensionScales_t newDims {
-      ioda::NewDimensionScale<int>("nvars", 1),
-      ioda::NewDimensionScale<int>("nrecs", numIds)
+      ioda::NewDimensionScale<int>("Variable", 1),
+      ioda::NewDimensionScale<int>("Record", numIds)
   };
 
   /// Construct an ObsGroup object, with 2 dimensions nrecs, nvars
   ioda::ObsGroup ogrp = ioda::ObsGroup::generate(empty_base_object, newDims);
 
   /// Create tail IDs and cycles variable
-  ioda::Variable tailIdsVar = ogrp.vars.createWithScales<std::string>("records",
-                                    {ogrp.vars["nrecs"]});
+  ioda::Variable tailIdsVar = ogrp.vars.createWithScales<std::string>("stationIdentification",
+                                    {ogrp.vars["Record"]});
   tailIdsVar.write(tailIds);
 
   /// Create list of variables
   std::vector<std::string> varlist;
   varlist.push_back("airTemperature");
-  ioda::Variable variableVar = ogrp.vars.createWithScales<std::string>("variables",
-                                     {ogrp.vars["nvars"]});
+  ioda::Variable variableVar = ogrp.vars.createWithScales<std::string>("Variables",
+                                     {ogrp.vars["Variable"]});
   variableVar.write(varlist);
 
   // need to convert the time YYYYMM to seconds sinc 1970
@@ -65,7 +65,7 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
     lastCycleUpdated.push_back((lastTime - refTime).toSeconds());
   }
   ioda::Variable lastCycleUpdatedVar = ogrp.vars.createWithScales<int64_t>("lastUpdateTime",
-                                            {ogrp.vars["nrecs"]});
+                                            {ogrp.vars["Record"]});
   lastCycleUpdatedVar.atts.add<std::string>("units",
                                             std::string("seconds since 1970-01-01T00:00:00Z"));
   lastCycleUpdatedVar.write(lastCycleUpdated);
@@ -86,16 +86,16 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
     // Access predictor coefficient values column and create variable
     Eigen::ArrayXXf subVar = biascoeffs.col(i);
 
-    ioda::Variable biasVar = ogrp.vars.createWithScales<float>("biasCoefficients/"+predictors[i],
-                       {ogrp.vars["nvars"], ogrp.vars["nrecs"]}, float_params);
+    ioda::Variable biasVar = ogrp.vars.createWithScales<float>("BiasCoefficients/"+predictors[i],
+                       {ogrp.vars["Variable"], ogrp.vars["Record"]}, float_params);
     biasVar.writeWithEigenRegular(subVar);
 
     // Access predictor background error values column and create variable
     Eigen::ArrayXXf subVarBkgError = biascoeffs.col(i+6);
 
     ioda::Variable biasVarBkgError = ogrp.vars.createWithScales<float>(
-                                                "biasCoeffErrors/"+predictors[i],
-                                                {ogrp.vars["nvars"], ogrp.vars["nrecs"]},
+                                                "BiasCoefficientErrors/"+predictors[i],
+                                                {ogrp.vars["Variable"], ogrp.vars["Record"]},
                                                 float_params);
     biasVarBkgError.writeWithEigenRegular(subVarBkgError);
   }
@@ -103,8 +103,8 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
   // write out number of obs assimilated
   Eigen::ArrayXXf numObs = biascoeffs.col(3);
   ioda::Variable numObsAssim = ogrp.vars.createWithScales<int>(
-                                           "numObsUsed",
-                                           {ogrp.vars["nvars"], ogrp.vars["nrecs"]});
+                                           "numberObservationsUsed",
+                                           {ogrp.vars["Variable"], ogrp.vars["Record"]});
   numObsAssim.writeWithEigenRegular(numObs);
 
   return ogrp;
