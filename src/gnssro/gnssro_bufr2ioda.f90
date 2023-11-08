@@ -121,7 +121,7 @@ program gnssro_bufr2ioda2
    if (runCheck(1:1).eq."T" .or. runCheck(1:1).eq."t") then
         print*, "running converter with extra Checks!"
         addChecks=.true.
-    fi
+   end if
 
    open (lnbufr, file=trim(infile), form='unformatted')
    call openbf(lnbufr, 'IN', lnbufr)
