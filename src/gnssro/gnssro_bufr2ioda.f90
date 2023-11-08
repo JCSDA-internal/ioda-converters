@@ -209,6 +209,14 @@ program gnssro_bufr2ioda2
             end do
          end if
 
+         if (addChecks) then
+           if (nib > 0) then
+             do i = 1, nib
+              if (ibit(i) == 5)  cycle read_loop
+             end do
+           end if
+         end if
+
          call ufbint(lnbufr, nreps_this_ROSEQ2, 1, maxlevs, nreps_ROSEQ1, '{ROSEQ2}')
          call ufbseq(lnbufr, data1b, 50, maxlevs, levs, 'ROSEQ1')
          call ufbseq(lnbufr, data2a, 50, maxlevs, levsr, 'ROSEQ3') ! refractivity
