@@ -248,7 +248,7 @@ program gnssro_bufr2ioda2
                cycle kloop
             end if
 
-            if (runCheck(1:1).eq."T" .or. runCheck(1:1).eq."t") then
+            if (addChecks) then
                if (bend >= 1.e+9_real64 .or. bend <= 0._real64 .or. &
                  & impact >= 1.e+9_real64 .or. impact < roc .or. &
                  & height <=0._real64) then
