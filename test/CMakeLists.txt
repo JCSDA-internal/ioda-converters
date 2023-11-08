@@ -192,6 +192,7 @@ if( iodaconv_gnssro_ENABLED )
 
   list( APPEND test_output
     testoutput/gnssro_obs_3prof_2022090100.nc4
+    testoutput/gnssro_obs_3prof_generic_2022090100.nc4
     testoutput/gnssro_obs_awsopendata_2021080200.nc4
     testoutput/gnssaro_obs_2021012000.nc
   )
