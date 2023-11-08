@@ -36,6 +36,7 @@ program gnssro_bufr2ioda2
    integer   :: grpid_metadata, grpid_obsvalue
    integer   :: deflate_level
    character(len=256)       :: infile, outfile, runCheck
+   logical                  :: addChecks
    character, dimension(8)  :: subset
    character(len=10)        :: anatime
    integer(int32)           :: i, k, m, ireadmg, ireadsb, said, siid, ptid, sclf, asce, ogce, qcflag, tinc
@@ -103,6 +104,7 @@ program gnssro_bufr2ioda2
    deflate_level = 6
 
    runCheck="False"
+   addChecks=.false.
 
    if (iargc() >= 3) then
      call getarg(1, anatime)
@@ -110,13 +112,16 @@ program gnssro_bufr2ioda2
      call getarg(3, outfile)
      if (iargc() >= 4) then
         call getarg(4,runCheck)
-        print*, "running converter with extra Checks!"
      end if
    else
-     print*, "To run: gnssro_bufr2ioda_generic $yyyymmddhh $inputBufrFilename  $outputNetcdfFilename (optional: true or false)"
-     print*, "        please check"
+     print*, "To run: gnssro_bufr2ioda_generic yyyymmddhh inputBufrFilename  outputNetcdfFilename [optional quality checks: True or False]"
      stop
    end if
+
+   if (runCheck(1:1).eq."T" .or. runCheck(1:1).eq."t") then
+        print*, "running converter with extra Checks!"
+        addChecks=.true.
+    fi
 
    open (lnbufr, file=trim(infile), form='unformatted')
    call openbf(lnbufr, 'IN', lnbufr)
@@ -175,17 +180,17 @@ program gnssro_bufr2ioda2
          idate5(4) = bfr1ahdr(4) ! hour
          idate5(5) = bfr1ahdr(5) ! minute
          idate5(6) = bfr1ahdr(6) ! seconds
-         roc = bfr1ahdr(8)        ! Earth local radius of curvature
-         said = bfr1ahdr(9)        ! Satellite identifier
-         siid = bfr1ahdr(10)        ! Satellite instrument
-         ptid = bfr1ahdr(11)       ! Platform transmitter ID number
-         geoid = bfr1ahdr(12)       ! Geoid undulation
-         sclf = bfr1ahdr(13)       ! Satellite classification
-         ogce = bfr1ahdr(14)       ! Identification of originating/generating centre
-         tinc = bfr1ahdr(15)       ! Time increment relative to the start of occultaion
+         roc = bfr1ahdr(8)       ! Earth local radius of curvature
+         said = bfr1ahdr(9)      ! Satellite identifier
+         siid = bfr1ahdr(10)     ! Satellite instrument
+         ptid = bfr1ahdr(11)     ! Platform transmitter ID number
+         geoid = bfr1ahdr(12)    ! Geoid undulation
+         sclf = bfr1ahdr(13)     ! Satellite classification
+         ogce = bfr1ahdr(14)     ! Identification of originating/generating centre
+         tinc = bfr1ahdr(15)     ! Time increment relative to the start of occultaion
          call epochtimecalculator(idate5, epochtime)  ! calculate epochtime since January 1 1970
 
-         if (runCheck(1:1).eq."T" .or. runCheck(1:1).eq."t") then
+         if (addChecks) then
             if (roc > 6450000.0_real64 .or. roc < 6250000.0_real64 .or.       &
               & abs(geoid) > 200_real64 .or.height < 0._real64) then
                cycle read_loop
