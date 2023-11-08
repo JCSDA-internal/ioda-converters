@@ -2,7 +2,7 @@
 #
 # Build 1) gnssro ncepbufr to ioda2 NetCDF4 converter
 #       2) gnssro gsi ncdiag to ioda NetCDF4 converter
-         
+
 ecbuild_add_executable( TARGET  gnssro_bufr2ioda
                         SOURCES gnssro_bufr2ioda.f90
                         LIBS    bufr::bufr_4
