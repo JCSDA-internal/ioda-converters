@@ -1745,7 +1745,7 @@ class Ozone(BaseGSI):
         self.nobs = len(df.dimensions['nobs'])
         self.df = df
 
-    def toGeovals(self, OutDir, clobber=True):
+    def toGeovals(self, OutDir, TotalBias=False, clobber=True):
         """ toGeovals(OutDir,clobber=True)
         if model state fields are in the GSI diag file, create
         GeoVaLs in an output file for use by JEDI/UFO
