@@ -9,6 +9,7 @@
 #include "bufr_interface.h"
 
 #include <algorithm>
+#include <cstring>
 #include <iostream>
 #include <unordered_map>
 
@@ -157,6 +158,21 @@ namespace bufr {
         }
 
         return info;
+    }
+
+    std::string DataProvider::getLongStr(const std::string& longStrId) const
+    {
+        static int MaxLongStrLen = 120;
+        char charPtr[MaxLongStrLen];
+
+        readlc_f(FileUnit, longStrId.c_str(), charPtr, MaxLongStrLen);
+
+        if (charPtr[0] == '\xff')
+        {
+            return "";
+        }
+
+        return std::string(charPtr, strlen(charPtr));
     }
 }  // namespace bufr
 }  // namespace Ingester

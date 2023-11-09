@@ -90,7 +90,7 @@ find_package( MPI )
 
 find_package( ioda QUIET )
 
-find_package( bufr 12.0.0 QUIET )
+find_package( bufr 12.0.1 QUIET )
 find_package( NetCDF QUIET COMPONENTS Fortran )
 
 if( bufr_FOUND AND NetCDF_Fortran_FOUND )
