@@ -30,13 +30,7 @@ namespace bufr {
     T product(typename std::vector<T>::const_iterator begin,
               typename std::vector<T>::const_iterator end)
     {
-        T result = 1;
-        for (auto i = begin; i < end; ++i)
-        {
-            result *= *i;
-        }
-
-        return result;
+        return std::accumulate(begin, end, 1, std::multiplies<T>());
     }
 
     /// \breif Sum all the values in a vector.
@@ -73,6 +67,22 @@ namespace bufr {
         for (auto i = begin; i < end; ++i)
         {
             result[i] = *i;
+        }
+
+        return result;
+    }
+
+    /// \brief Slice a vector into a range of values.
+    /// \param begin The beginning of the range.
+    /// \param end The end of the range.
+    /// \return Sliced vector.
+    template<typename T>
+    std::vector<T> slice(const std::vector<T>& vec, size_t startIdx, size_t endIdx)
+    {
+        std::vector<T> result(endIdx - startIdx);
+        for (size_t i = startIdx; i < endIdx; ++i)
+        {
+            result[i] = vec[i];
         }
 
         return result;
@@ -146,18 +156,32 @@ namespace bufr {
     /// \param vec The vector to find the max value in.
     /// \return Max value.
     template<typename T>
-    T max(const std::vector<T>& vec)
+    const T& max(const std::vector<T>& vec)
     {
-        T result = vec[0];
+        size_t maxIdx = 0;
         for (size_t i = 1; i < vec.size(); i++)
         {
-            if (vec[i] > result)
+            if (vec[i] > vec[maxIdx]) maxIdx = i;
+        }
+
+        return vec[maxIdx];
+    }
+
+    /// \brief Are all values in the vector equal?
+    /// \param vec The vector to check.
+    /// \return True if all values are equal, false otherwise.
+    template<typename T>
+    bool allEqual(const std::vector<T>& vec)
+    {
+        for (size_t i = 1; i < vec.size(); i++)
+        {
+            if (vec[i] != vec[0])
             {
-                result = vec[i];
+                return false;
             }
         }
 
-        return result;
+        return true;
     }
 }  // namespace bufr
 }  // namespace Ingester

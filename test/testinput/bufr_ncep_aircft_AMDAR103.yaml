@@ -13,7 +13,7 @@ observations:
         subsets:
           - NC004103
 
-        group_by_variable: latitudeSeq 
+        group_by_variable: latitudeSeq
         #MetaData
         variables:
           timestamp:

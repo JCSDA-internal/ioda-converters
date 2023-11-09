@@ -60,6 +60,25 @@ def test_string_field():
     assert (np.all(borg[0][0:3] == ['KWBC', 'KWBC', 'KAWN']))
 
 
+def test_long_str_field():
+    DATA_PATH ='./testinput/gdas.t06z.snocvr.tm00.bufr_d'
+
+    # Make the QuerySet for all the data we want
+    q = bufr.QuerySet()
+    q.add('lid', '*/WGOSLID')
+
+    # Open the BUFR file and execute the QuerySet
+    with bufr.File(DATA_PATH) as f:
+        r = f.execute(q)
+
+    # Use the ResultSet returned to get numpy arrays of the data
+    lid = r.get('lid')
+
+    # Validate the values that were returned
+    assert (lid[0] == '570282')
+    assert (lid[6] == '613180')
+    assert (np.all(lid[0:7].mask == [False, True, True, True, True, True, False]))
+
 def test_type_override():
     DATA_PATH = './testinput/gdas.t00z.1bhrs4.tm00.bufr_d'
 
@@ -100,5 +119,6 @@ def test_invalid_query():
 if __name__ == '__main__':
     test_basic_query()
     test_string_field()
+    test_long_str_field()
     test_type_override()
     test_invalid_query()

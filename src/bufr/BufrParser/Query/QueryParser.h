@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <unordered_set>
 
 #include "Tokenizer.h"
 
@@ -183,6 +184,17 @@ namespace bufr {
         std::string str() const
         {
             return queryStr_;
+        }
+
+        /// \brief Does this query contain any filters?
+        /// \return True if the query contains filters, false otherwise.
+        bool hasFilters() const
+        {
+            for (const auto& pathComponent : path)
+            {
+                if (!pathComponent->filter.empty()) return true;
+            }
+            return false;
         }
 
      private:

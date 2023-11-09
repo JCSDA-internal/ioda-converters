@@ -75,6 +75,16 @@ namespace bufr {
 
     typedef std::vector<TargetComponent> TargetComponents;
 
+    /// \brief For performance reasons we want to maintain a list of the indices of filtered
+    ///        data.
+    struct FilterData
+    {
+        const std::vector<size_t>& filter;
+        bool isEmpty;
+    };
+
+    typedef std::vector<FilterData> FilterDataList;
+
     /// \brief The information or Meta data for a BUFR field whose data we wish to capture when
     /// we execute a query.
     struct Target
@@ -84,12 +94,17 @@ namespace bufr {
         std::string unit;
         TypeInfo typeInfo;
         size_t nodeIdx;
+        std::string longStrId;
         TargetComponents path;
         size_t numDimensions = 0;
 
         std::vector<Query> dimPaths;
         std::vector<int> exportDimIdxs;
         std::vector<int> seqPath;
+        FilterDataList filterDataList;
+
+        bool hasDelayedRepeats = false;
+        bool usesFilters = false;
 
         Target() = default;
 
@@ -102,6 +117,7 @@ namespace bufr {
             exportDimIdxs = {};
             seqPath.reserve(components.size());
             exportDimIdxs.reserve(components.size());
+            filterDataList.reserve(components.size());
 
             std::string currentPath;
             std::vector<std::shared_ptr<QueryComponent>> queryComponents;
@@ -109,6 +125,12 @@ namespace bufr {
             for (const auto& component : components)
             {
                 queryComponents.push_back(component.queryComponent);
+
+                if (component.type == TargetComponent::Type::Repeat &&
+                    !component.queryComponent->filter.empty())
+                {
+                    usesFilters = true;
+                }
 
                 if (component.addsDimension())
                 {
@@ -122,6 +144,11 @@ namespace bufr {
                         dimPaths.emplace_back(queryComponents);
                     }
 
+                    if (component.fixedRepeatCount == 1)
+                    {
+                        hasDelayedRepeats = true;
+                    }
+
                     exportDimIdxs.emplace_back(componentIdx);
                 }
 
@@ -131,6 +158,9 @@ namespace bufr {
                     seqPath.push_back(component.nodeId);
                 }
 
+                filterDataList.push_back({component.queryComponent->filter,
+                                          component.queryComponent->filter.empty()});
+
                 componentIdx++;
             }
 
@@ -138,6 +168,7 @@ namespace bufr {
         }
     };
 
-    typedef std::vector<std::shared_ptr<Target>> Targets;
+    typedef std::shared_ptr<Target> TargetPtr;
+    typedef std::vector<TargetPtr> Targets;
 }  // namespace bufr
 }  // namespace Ingester

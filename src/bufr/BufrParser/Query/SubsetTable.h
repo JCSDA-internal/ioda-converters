@@ -30,6 +30,7 @@ namespace bufr {
         std::vector<std::shared_ptr<BufrNode>> children;
         size_t nodeIdx;
         size_t copyIdx;
+        size_t mnemonicIdx;
         bool hasDuplicates;
         TypeInfo typeInfo;
         size_t fixedRepCount;
@@ -333,6 +334,7 @@ namespace bufr {
         std::shared_ptr<BufrNode> root_;
         BufrNodeVector leaves_;
         std::unordered_map<size_t, std::shared_ptr<BufrNode>> nodeIdxMap_;
+        std::unordered_map<std::string, size_t> mnemonicCnts_;
 
         /// \brief Initializes the subset table.
         void initialize();
