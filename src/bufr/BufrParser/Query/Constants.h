@@ -9,6 +9,7 @@
 namespace Ingester {
 namespace bufr {
     /// \brief The missing data value for all BUFR data.
-    const double MissingValue = 10.0e10;
+    const double MissingOctetValue = 10.0e10;
+    const std::string MissingStringValue = "";
 }  // Ingester
 }  // bufr

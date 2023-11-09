@@ -12,7 +12,7 @@ observations:
 
       exports:
         variables:
-#          # MetaData
+          # MetaData
           timestamp:
             datetime:
               year: "*/YEAR[1]"
@@ -116,7 +116,7 @@ observations:
           path: "*/MTRPRW"
 
       variables:
-
+#
         # MetaData
         - name: "MetaData/dateTime"
           coordinates: "longitude latitude"

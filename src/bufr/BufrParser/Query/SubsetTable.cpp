@@ -60,6 +60,19 @@ namespace bufr {
             newNode->type = dataProvider_->getTyp(nodeIdx);
             newNode->parent = parent;
 
+            // For hacky reasons we track the number of times we've seen a mnemonic
+            // this is because NCEPLIB_bufr doeen't have a consept of unique nodes but relies
+            // on mnemonics (which aren't unique) in an extremely bad way.
+            if (mnemonicCnts_.find(newNode->mnemonic) == mnemonicCnts_.end())
+            {
+                mnemonicCnts_[newNode->mnemonic] = 1;
+            }
+            else
+            {
+                mnemonicCnts_[newNode->mnemonic]++;
+            }
+            newNode->mnemonicIdx = mnemonicCnts_[newNode->mnemonic];
+
             if (newNode->type == Typ::FixedRep)
             {
                 newNode->fixedRepCount = dataProvider_->getIrf(nodeIdx);

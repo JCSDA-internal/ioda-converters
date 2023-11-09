@@ -3,8 +3,6 @@
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 
-import pyiodaconv.ioda_conv_engines as iconv
-import pyiodaconv.ioda_conv_ncio as iconio
 from pyiodaconv import bufr
 from pyiodaconv.def_jedi_utils import long_missing_value
 from pyioda import ioda
