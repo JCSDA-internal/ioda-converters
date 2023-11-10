@@ -1802,18 +1802,6 @@ class Ozone(BaseGSI):
                 var_out = ncout.createVariable(geovals_vars[vname], var.dtype, dims)
                 vdata = var[...]
                 var_out[...] = vdata
-                if (TotalBias):
-                    # compute final bias correction
-                    key1 = 'Obs_Minus_Forecast_adjusted'
-                    key2 = 'Obs_Minus_Forecast_unadjusted'
-                    if key1 in self.df.variables.keys() and key2 in self.df.variables.keys():
-                        tmp = self.var(key1) - self.var(key2)
-                        iodavar = 'GsiBc'
-                        gvname = vname, iodavar
-                        outdata[gvname] = np.reshape(tmp, dim)
-                        VarDims[gvname] = dim_names
-                    else:
-                        print(f' ... can not add total bias missing {key1} or {key2} from input file')
             else:
                 pass
 
