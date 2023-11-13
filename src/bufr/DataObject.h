@@ -666,7 +666,73 @@ namespace Ingester
             return 0.0f;
         }
 
-x
+        /// \brief Set the data associated with this data object (numeric DataObject).
+        /// \param data The raw data
+        /// \param dataMissingValue The number that represents missing values within the raw data
+        template<typename U = void>
+        void _setData(const bufr::Data& data,
+                      typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr)
+        {
+            if (data.isLongStr())
+            {
+                std::ostringstream str;
+                str << "Can't make numerical field from string data.";
+                throw std::runtime_error(str.str());
+            }
+            else
+            {
+                data_ = std::vector<T>(data.size());
+                for (size_t idx = 0; idx < data.size(); ++idx)
+                {
+                    if (!data.isMissing(idx))
+                    {
+                        data_[idx] = data.value.octets[idx];
+                    }
+                    else
+                    {
+                        data_[idx] = missingValue();
+                    }
+                }
+            }
+        }
+
+        /// \brief Set the data associated with this data object (string DataObject).
+        /// \param data The raw data
+        /// \param dataMissingValue The number that represents missing values within the raw data
+        template<typename U = void>
+        void _setData(
+            const bufr::Data& data,
+            typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr)
+        {
+            data_ = std::vector<std::string>();
+            if (data.isLongStr())
+            {
+                data_ = data.value.strings;
+            }
+            else
+            {
+                auto charPtr = reinterpret_cast<const char *>(data.value.octets.data());
+                for (size_t row_idx = 0; row_idx < data.size(); row_idx++)
+                {
+                    if (!data.isMissing(row_idx))
+                    {
+                        std::string str = std::string(
+                            charPtr + row_idx * sizeof(double), sizeof(double));
+
+                        // trim trailing whitespace from str
+                        str.erase(std::find_if(str.rbegin(), str.rend(),
+                                               [](char c) { return !std::isspace(c); }).base(),
+                                  str.end());
+
+                        data_.push_back(str);
+                    }
+                    else
+                    {
+                        data_.push_back("");
+                    }
+                }
+            }
+        }
 
         /// \brief Multiply the stored values in this data object by a scalar.
         /// \param val Scalar to multiply to the data..
