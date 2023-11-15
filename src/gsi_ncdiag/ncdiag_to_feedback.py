@@ -7,7 +7,6 @@ import os
 import shutil
 import h5py
 
-
 def main(oman, ombg, output_file, output_dir='./'):
     """Convert IODA-converterd NOAA's operational GSI data files into feedback
     files for comparison/use in SIMOBS skylab_monitor.
@@ -44,16 +43,10 @@ def main(oman, ombg, output_file, output_dir='./'):
     # this is specific now to radiances
     g.copy(g['GsiHofXBc'], k, 'oman')
     f.copy(f['GsiHofXBc'], k, 'ombg')
-    # there has got to be a better way
     for var in list(k['ObsValue'].keys()):
-        if k['ObsValue'][var].ndim == 2:
-            k['oman'][var][:, :] = k['ObsValue'][var][:, :] - k['hofx1'][var][:, :]
-            k['ombg'][var][:, :] = k['ObsValue'][var][:, :] - k['hofx0'][var][:, :]
-        elif k['ObsValue'][var].ndim == 1:
-            k['oman'][var][:] = k['ObsValue'][var][:] - k['hofx1'][var][:]
-            k['ombg'][var][:] = k['ObsValue'][var][:] - k['hofx0'][var][:]
-        else:
-            print(' ... need to handle n-dimension case where n is:', {k['ObsValue'][var].ndim})
+        # index depending on number of dimensions
+        ind_str = k['ObsValue'][var].ndim*':,'
+        exec("k['oman'][var]["+ind_str+"] = k['ObsValue'][var]["+ind_str+"] - k['hofx1'][var]["+ind_str+"]")
 
     # ObsBias from analysis this should be variable specific
     if 'GsiBc' in list(g.keys()):
