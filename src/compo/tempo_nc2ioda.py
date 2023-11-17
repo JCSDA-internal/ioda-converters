@@ -74,8 +74,8 @@ class tempo(object):
 
             print('FILENAME: ',f)
 
-            # conversion factor fron constants
-            conv = cm2m2 * molarmass[self.varname] / Na
+            # conversion factor from constants
+            conv = cm2m2 / Na
 
             # get dimensions
             mirror = ncd.dimensions['mirror_step'].size
