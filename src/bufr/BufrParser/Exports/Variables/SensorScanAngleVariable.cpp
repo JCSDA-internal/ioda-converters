@@ -61,9 +61,9 @@ namespace Ingester
                                       "Check your configuration.");
         }
 
-        float start;
-        float step;
-        float stepAdj;
+        float start = 0;
+        float step = 0;
+        float stepAdj = 0;
         if (conf_.has(ConfKeys::ScanStart) && conf_.has(ConfKeys::ScanStep))
         {
              start = conf_.getFloat(ConfKeys::ScanStart);
@@ -75,7 +75,7 @@ namespace Ingester
                                       "Check your configuration.");
         }
 
-        if (conf_.has(ConfKeys::ScanStepAdjust) & sensor == "iasi" )
+        if (conf_.has(ConfKeys::ScanStepAdjust) && sensor == "iasi" )
         {
              sensor = conf_.getString(ConfKeys::Sensor);
              stepAdj = conf_.getFloat(ConfKeys::ScanStepAdjust);
