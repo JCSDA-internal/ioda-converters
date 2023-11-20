@@ -22,7 +22,6 @@
     namespace py = pybind11;
 #endif
 
-#include "Constants.h"
 #include "VectorMath.h"
 
 
