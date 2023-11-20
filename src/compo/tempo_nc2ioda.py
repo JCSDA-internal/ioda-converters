@@ -108,7 +108,7 @@ class tempo(object):
 
             # adding ability to pre filter the data using the qa value
             # and also perform thinning using random uniform draw
-            qaf = qa_value <= self.qa_flg
+            qaf = (qa_value <= self.qa_flg) and (qa_value > 0) 
             thi = np.random.uniform(size=len(qa_value)) > self.thin
             flg = np.logical_and(qaf, thi)
 
@@ -326,7 +326,7 @@ def main():
         '-q', '--qa_value',
         help="qa value used to preflag data that goes into file before QC"
         "0 normal, 1 suspicious, 2 bad",
-        type=float, default=0.0)
+        type=int, default=0)
     optional.add_argument(
         '-n', '--thin',
         help="percentage of random thinning from 0.0 to 1.0. Zero indicates"
