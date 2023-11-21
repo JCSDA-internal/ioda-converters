@@ -228,24 +228,14 @@ namespace Ingester
         typedef T value_type;
 
         template<typename U = void>
-        static T missingValue
+        static constexpr T missingValue
             (typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr)
         {
-            static std::set<T> foundVals;
-
-            auto m = std::numeric_limits<T>::max();
-
-            if (foundVals.find(m) == foundVals.end())
-            {
-                foundVals.insert(m);
-                std::cout << typeid(T).name() << " " << std::to_string(m) << std::endl;
-            }
-
-            return m;
+            return std::numeric_limits<T>::max();
         }
 
         template<typename U = void>
-        static T missingValue
+        static constexpr T missingValue
             (typename std::enable_if<std::is_same<T, std::string>::value, U>::type* = nullptr)
         {
             return "";
