@@ -416,7 +416,7 @@ if( iodaconv_pbfortran_ENABLED )
 
   list( APPEND test_output
     testoutput/gnssro_obs_2018041500.nc4
-    testoutput/sondes_obs_2020093018.nc4
+    testoutput/radiosonde_obs_2020093018.nc4
     testoutput/mhs_metop-b_obs_2020101215.nc4
     testoutput/mhs_metop-b_obs_2020110112.nc4
     testoutput/mhs_n19_obs_2020110112.nc4
@@ -2033,7 +2033,7 @@ if( iodaconv_pbfortran_ENABLED )
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
                             -i testinput -o testrun prepbufr.bufr"
-                            sondes_obs_2020093018.nc4 ${IODA_CONV_COMP_TOL}
+                            radiosonde_obs_2020093018.nc4 ${IODA_CONV_COMP_TOL}
                     DEPENDS bufr2nc_fortran.x)
 
   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mhs_conv
