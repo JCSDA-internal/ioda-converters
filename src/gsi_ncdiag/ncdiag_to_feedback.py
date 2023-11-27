@@ -43,14 +43,17 @@ def main(oman, ombg, output_file, output_dir='./'):
 
     # this is specific now to radiances
     g.copy(g['GsiHofXBc'], k, 'oman')
-    k['oman']['brightnessTemperature'][:, :] = k['ObsValue']['brightnessTemperature'][:, :] - k['hofx1']['brightnessTemperature'][:, :]
-
     f.copy(f['GsiHofXBc'], k, 'ombg')
-    k['ombg']['brightnessTemperature'][:, :] = k['ObsValue']['brightnessTemperature'][:, :] - k['hofx0']['brightnessTemperature'][:, :]
+    for var in list(k['ObsValue'].keys()):
+        # index depending on number of dimensions
+        ind_str = k['ObsValue'][var].ndim*':,'
+        exec("k['oman'][var]["+ind_str+"] = k['ObsValue'][var]["+ind_str+"] - k['hofx1'][var]["+ind_str+"]")
+        exec("k['ombg'][var]["+ind_str+"] = k['ObsValue'][var]["+ind_str+"] - k['hofx0'][var]["+ind_str+"]")
 
-    # ObsBias from analysis
-    g.copy(g['GsiBc'], k, 'ObsBias1')
-    k.copy(k['ObsBias1'], k, 'ObsBias0')
+    # ObsBias from analysis this should be variable specific
+    if 'GsiBc' in list(g.keys()):
+        g.copy(g['GsiBc'], k, 'ObsBias1')
+        k.copy(k['ObsBias1'], k, 'ObsBias0')
 
     f.close()
     g.close()
