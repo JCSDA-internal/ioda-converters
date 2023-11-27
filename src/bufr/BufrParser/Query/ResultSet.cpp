@@ -418,7 +418,7 @@ namespace bufr {
                               data.buffer.value.octets.begin() + outputOffset);
 
                     // print data.buffer.value.octets to std::cout
-                    std::cout << target->name << ": ";
+                    std::cout << target->name << " " << target->nodeIdx << ": ";
                     for (size_t i = 0; i < 50; i++)
                     {
                         std::cout << data.buffer.value.octets[i] << " ";
