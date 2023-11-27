@@ -417,6 +417,7 @@ namespace bufr {
                               fragment.value.octets.begin() + inputOffset + count,
                               data.buffer.value.octets.begin() + outputOffset);
 
+
                     // print data.buffer.value.octets to std::cout
                     std::cout << target->name << " " << target->nodeIdx << ": ";
                     for (size_t i = 0; i < 50; i++)
