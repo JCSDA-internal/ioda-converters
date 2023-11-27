@@ -99,6 +99,14 @@ namespace bufr {
         get_val_f(bufrLoc, &dataPtr, &size);
         val_ = gsl::span<const double>(dataPtr, size);
 
+        // print out first 25 values
+        std::cout << "val: ";
+        for (int i = 0; i < 25; i++)
+        {
+            std::cout << val_[i] << " ";
+        }
+        std::cout << std::endl;
+
         get_inv_f(bufrLoc, &intPtr, &size);
         inv_ = gsl::span<const int>(intPtr, size);
     }
