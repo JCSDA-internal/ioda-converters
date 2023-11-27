@@ -130,11 +130,11 @@ namespace bufr {
             bool* maskPtr = static_cast<bool*>(mask.mutable_data());
             for (size_t idx = 0; idx < yearObj->size(); idx++)
             {
-                maskPtr[idx] = yearObj->isMissing(idx) |
-                               monthObj->isMissing(idx) |
-                               dayObj->isMissing(idx) |
-                               hourObj->isMissing(idx) |
-                               (minuteObj ? minuteObj->isMissing(idx) : false) |
+                maskPtr[idx] = yearObj->isMissing(idx) ||
+                               monthObj->isMissing(idx) ||
+                               dayObj->isMissing(idx) ||
+                               hourObj->isMissing(idx) ||
+                               (minuteObj ? minuteObj->isMissing(idx) : false) ||
                                (secondObj ? secondObj->isMissing(idx) : false);
             }
 
