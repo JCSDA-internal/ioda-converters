@@ -278,11 +278,20 @@ namespace Ingester
                     }
                 }
 
+                std::cout << "vals: ";
+                for (size_t i = 0; i < dataObject->size(); i++)
+                {
+                    std::cout << dataObject->getAsFloat(i) << " ";
+                }
+                std::cout << std::endl;
+
+
                 auto var = dataObject->createVariable(obsGroup,
                                                       varDesc.name,
                                                       dimensions,
                                                       chunks,
                                                       varDesc.compressionLevel);
+
 
                 var.atts.add<std::string>("long_name", { varDesc.longName }, {1});
 

@@ -416,15 +416,6 @@ namespace bufr {
                     std::copy(fragment.value.octets.begin() + inputOffset,
                               fragment.value.octets.begin() + inputOffset + count,
                               data.buffer.value.octets.begin() + outputOffset);
-
-
-                    // print data.buffer.value.octets to std::cout
-                    std::cout << target->name << " " << target->nodeIdx << ": ";
-                    for (size_t i = 0; i < 50; i++)
-                    {
-                        std::cout << data.buffer.value.octets[i] << " ";
-                    }
-                    std::cout << std::endl;
                 }
 
                 inputOffset += count;
