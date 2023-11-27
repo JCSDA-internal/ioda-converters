@@ -278,13 +278,20 @@ namespace Ingester
                     }
                 }
 
-                std::cout << "vals: ";
-                for (size_t i = 0; i < dataObject->size(); i++)
+                if (varDesc.source == "variables/pressure")
                 {
-                    std::cout << dataObject->getAsFloat(i) << " ";
-                }
-                std::cout << std::endl;
+                    std::cout << "vals: ";
+                    for (size_t i = 0; i < dataObject->size(); i++)
+                    {
+                        std::cout << dataObject->getAsFloat(i) << " ";
 
+                        if ((i + 1)%25 == 0)
+                        {
+                            std::cout << std::endl;
+                        }
+                    }
+                    std::cout << std::endl;
+                }
 
                 auto var = dataObject->createVariable(obsGroup,
                                                       varDesc.name,
