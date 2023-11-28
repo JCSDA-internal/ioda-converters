@@ -32,7 +32,7 @@ module define_mod
 ! variables for defining observation types and met variables each type has
    character(len=nstring), dimension(nobtype) :: obtype_list = &
                                                  (/ &
-                                                 'sondes      ', &
+                                                 'radiosonde  ', &
                                                  'aircraft    ', &
                                                  'sfc         ', &
                                                  'satwind     ', &  !AMV winds from prepbufr file
@@ -54,7 +54,7 @@ module define_mod
 ! variable flags for var_u, var_v, var_ts, var_tv, var_q, var_ps
    integer(i_kind), dimension(nvar_met, nobtype) :: vflag = reshape( &
                                                     (/ &
-                                                    itrue, itrue, itrue, itrue, itrue, ifalse, & ! sonde
+                                                    itrue, itrue, itrue, itrue, itrue, ifalse, & ! radiosonde
                                                     itrue, itrue, itrue, itrue, itrue, ifalse, & ! aircraft
                                                     itrue, itrue, itrue, itrue, itrue, itrue, & ! sfc
                                                     itrue, itrue, ifalse, ifalse, ifalse, ifalse, & ! satwind
@@ -134,7 +134,7 @@ module define_mod
 ! air_pressure, height, station_elevation, latitude, longitude, dateTime, LaunchTime, station_id, variable_names
    integer(i_kind), dimension(nvar_info, nobtype) :: iflag_conv = reshape( &
                                                      (/ &
-                                                     itrue, itrue, itrue, itrue, itrue, itrue, itrue, itrue, itrue, & ! sonde
+                                                     itrue, itrue, itrue, itrue, itrue, itrue, itrue, itrue, itrue, & ! radiosonde
                                                      itrue, itrue, itrue, itrue, itrue, itrue, ifalse, itrue, itrue, & ! aircraft
                                                      itrue, itrue, itrue, itrue, itrue, itrue, ifalse, itrue, itrue, & ! sfc
                                                      itrue, itrue, ifalse, itrue, itrue, itrue, ifalse, itrue, itrue, & ! satwind
@@ -252,10 +252,10 @@ contains
 
       select case (t29)
       case (11, 12, 13, 22, 23, 31)
-         obtype = 'sondes'
+         obtype = 'radiosonde'
          !select case (kx)
          !case (120, 122, 132, 220, 222, 232)
-         !   obtype = 'sondes'
+         !   obtype = 'radiosonde'
          !case (221)
          !   obtype = 'pilot'
          !end select
