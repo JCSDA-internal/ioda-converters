@@ -280,7 +280,7 @@ namespace Ingester
 
                 if (varDesc.source == "variables/pressure")
                 {
-                    std::cout << "vals: ";
+                    std::cout << "pressure: ";
                     for (size_t i = 0; i < dataObject->size(); i++)
                     {
                         std::cout << dataObject->getAsFloat(i) << " ";
