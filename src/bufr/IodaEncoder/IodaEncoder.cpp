@@ -284,7 +284,6 @@ namespace Ingester
                                                       chunks,
                                                       varDesc.compressionLevel);
 
-
                 var.atts.add<std::string>("long_name", { varDesc.longName }, {1});
 
                 if (!varDesc.units.empty())
