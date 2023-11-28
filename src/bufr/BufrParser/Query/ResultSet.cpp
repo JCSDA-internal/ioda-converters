@@ -198,6 +198,12 @@ namespace bufr {
                     metaData->rawDims[pathIdx] = maxCount;
                 }
 
+                if (target->exportDimIdxs.size() - 1 < exportIdxIdx)
+                {
+                    ++pathIdx;
+                    continue;
+                }
+
                 if (target->exportDimIdxs[exportIdxIdx] != pathIdx)
                 {
                     ++pathIdx;
