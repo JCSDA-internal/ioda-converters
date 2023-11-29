@@ -1,3 +1,17 @@
+#!/usr/bin/env python3
+
+#
+# (C) Copyright 2020-2023 UCAR
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+#
+
+
+"""
+Python code to ingest JSON WindBorne Data  
+"""
+
 import pdb
 import re
 import logging
@@ -7,14 +21,11 @@ import sys
 import time
 import json
 from datetime import datetime, timedelta
-import dateutil.parser
 from pathlib import Path
 import pandas as pd
 
 import numpy as np
 import netCDF4 as nc
-from cartopy import geodesic
-from copy import deepcopy as dcop
 
 # These modules need the path to lib-python modules
 import pyiodaconv.ioda_conv_engines as iconv
@@ -27,13 +38,13 @@ logger = logging.getLogger("decodeSounding")
 
 # The outgoing IODA MetaData variables, their data type, and units.
 MetaDataKeyList = [
-    ("stationIdentification", "string", ""), # same as mission_name
+    ("stationIdentification", "string", ""),
     ("latitude", "float", "degrees_north"),
     ("longitude", "float", "degrees_east"),
-    ("stationElevation", "float", "m"), # could put in fake value (10 m). take out later 
-    ("height", "float", "m"), # same as altitude. need to rename height to geometricHeight or similar
-    ("pressure", "float", "Pa"), # need to convert to hecta pascal ???
-    ("releaseTime", "long", "seconds since 1970-01-01T00:00:00Z"), # use first time in file 
+    ("stationElevation", "float", "m"), # put in fake value (10 m). take out later 
+    ("height", "float", "m"), # geometricHeight
+    ("pressure", "float", "Pa"),
+    ("releaseTime", "long", "seconds since 1970-01-01T00:00:00Z"),
     ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z")
 ]
 meta_keys = [m_item[0] for m_item in MetaDataKeyList]
@@ -103,7 +114,6 @@ if __name__ == "__main__":
         description=(
             'Read windorne json files and convert into IODA output file')
     )
-
     required = parser.add_argument_group(title='required arguments')
     required.add_argument('-i', '--input-files', nargs='+', dest='file_names',
                           action='store', default=None, required=True,
@@ -111,7 +121,6 @@ if __name__ == "__main__":
     required.add_argument('-o', '--output-file', dest='output_file',
                           action='store', default=None, required=True,
                           help='output file')
-
     parser.set_defaults(debug=False)
     parser.set_defaults(verbose=False)
     parser.set_defaults(netCDF=False)
@@ -140,12 +149,11 @@ if __name__ == "__main__":
     else:
         logging.basicConfig(level=logging.ERROR)
 
-# """
-#     #---------------------------------------------------------------------------------------------
-#     Options set. Ingest each file and concatenate.
-#     #---------------------------------------------------------------------------------------------
-# """
-
+    """
+        #---------------------------------------------------------------------------------------------
+        Options set. Ingest each file and concatenate.
+        #---------------------------------------------------------------------------------------------
+    """
     # Loop through input files and concatenate into dataframe 
     metaData_files = []
     file_cnt=0
@@ -159,8 +167,8 @@ if __name__ == "__main__":
         
         if file_cnt==0:
             # Create data frame to store each file's Meta Dataa
-            dt_metaData_files = pd.DataFrame(columns= file.keys())
-            dt_metaData_files.drop(['observations'], axis=1,inplace=True)
+            df_metaData_files = pd.DataFrame(columns= file.keys())
+            df_metaData_files.drop(['observations'], axis=1,inplace=True)
     
             # Create data frame to store all observation data
             obs_data = pd.DataFrame(columns= file['observations'][0].keys())
@@ -172,14 +180,14 @@ if __name__ == "__main__":
 
             # Rename variables to IODA variables
             obs_data.rename(columns={'speed_x':'windEastward',
-                               'speed_y':'windNorthward',
-                               'altitude':'height',
-                               'mission_name':'stationIdentification',
-                               'humidity':'relativeHumidity',
-                               'temperature':'airTemperature',
-                               'timestamp':'dateTime'},inplace=True)
+                                     'speed_y':'windNorthward',
+                                     'altitude':'height',
+                                     'mission_name':'stationIdentification',
+                                     'humidity':'relativeHumidity',
+                                     'temperature':'airTemperature',
+                                     'timestamp':'dateTime'},inplace=True)
         # Fill out each file's meta data
-        dt_metaData_files.loc[file_cnt] = [file[key] for key in dt_metaData_files.keys()]
+        df_metaData_files.loc[file_cnt] = [file[key] for key in df_metaData_files.keys()]
     
         # Pull each data type (variable) and create a list 
         height                 = [file['observations'][ii]['altitude'] for ii in range(len(file['observations']))]  # geometric height 
@@ -196,7 +204,11 @@ if __name__ == "__main__":
         # Make a list of release time (earliest time in file. this needs to be updated to be earliest time for each instrument, since the file can have multiple)
         releaseTime = [min(dateTime)]*len(height)
         # Make a dummy column to have a constant elevation for the "station"
-        stationElevation = [10]*len(height)
+        stationElevation = [10]*len(height) 
+        # convert pressure to Pascals from Hectopascals
+        pressure = pressure*100
+        # convert temperature from celcius to kelvin 
+        airTemperature = airTemperature+np.array(273.15)
 
         # Make a list of lists to feed into dataframe 
         data_lists = list(zip(height, relativeHumidity, latitude, longitude, stationIdentification, pressure,
@@ -204,10 +216,6 @@ if __name__ == "__main__":
     
         # All observation data for this file to append to the master dataframe 
         obs_data_append = pd.DataFrame(data_lists,columns= obs_data.keys()) 
-
-
-
-
 
         # Append to data frame containing all timestamp data 
         obs_data = pd.concat([obs_data,obs_data_append], ignore_index=True)
@@ -222,6 +230,7 @@ if __name__ == "__main__":
     # count number of locations
     ntotal = obs_data.shape[0]
 
+    # Export into IODA formatted netCDF file
     ioda_data = {}
     DimDict = {'Location': ntotal}
     AttrData['sourceFiles'] = AttrData['sourceFiles'][2:]
@@ -241,6 +250,7 @@ if __name__ == "__main__":
         varAttrs[iodavar, obsErrName]['units'] = obsvars_units[n]
 
     # Set units of the MetaData variables and all _FillValues.
+#    pdb.set_trace()
     for key in meta_keys:
         dtypestr = MetaDataKeyList[meta_keys.index(key)][1]
         if MetaDataKeyList[meta_keys.index(key)][2]:
@@ -258,4 +268,3 @@ if __name__ == "__main__":
     writer = iconv.IodaWriter(args.output_file, MetaDataKeyList, DimDict)
     # write everything out
     writer.BuildIoda(ioda_data, VarDims, varAttrs, AttrData)
-    
