@@ -46,7 +46,7 @@ observations:
       obsdataout: "./testrun/bufr_sfcshp.nc"
 
       globals:
-        - name: "MetaData/dataType"
+        - name: "platformLongDescription"
           type: string
           value: "Moored Buoy"
 
