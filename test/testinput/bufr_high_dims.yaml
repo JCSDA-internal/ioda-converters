@@ -39,24 +39,24 @@ observations:
           path: "*/ROSEQ1/ROSEQ2"
 
       variables:
-        - name: "datetime@MetaData"
+        - name: "MetaData/datetime"
           source: variables/timestamp
           longName: "Datetime"
           units: "datetime"
 
-        - name: "longitude@MetaData"
+        - name: "MetaData/longitude"
           source: variables/longitude
           longName: "Longitude"
           units: "degrees_east"
           range: [-180, 180]
 
-        - name: "latitude@MetaData"
+        - name: "MetaData/latitude"
           source: variables/latitude
           longName: "Latitude"
           units: "degrees_north"
           range: [-90, 90]
 
-        - name: "impactParameter@ObsVal"
+        - name: "ObsVal/impactParameter"
           source: variables/impactParameter
           coordinates: "longitude latitude"
           longName: "Impact Parameter"
