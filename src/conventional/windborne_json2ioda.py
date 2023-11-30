@@ -103,44 +103,8 @@ dtypes = {'string': object,
           'float': np.float32,
           'double': np.float64}
 
-if __name__ == "__main__":
 
-    import argparse
-
-    start_time = time.time()
-    today = datetime.today()
-
-    parser = argparse.ArgumentParser(
-        description=(
-            'Read windorne json files and convert into IODA output file')
-    )
-    required = parser.add_argument_group(title='required arguments')
-    required.add_argument('-i', '--input-files', nargs='+', dest='file_names',
-                          action='store', default=None, required=True,
-                          help='input files')
-    required.add_argument('-o', '--output-file', dest='output_file',
-                          action='store', default=None, required=True,
-                          help='output file')
-    parser.set_defaults(debug=False)
-    parser.set_defaults(verbose=False)
-    parser.set_defaults(netCDF=False)
-    optional = parser.add_argument_group(title='optional arguments')
-    optional.add_argument('--debug', action='store_true',
-                          help='enable debug messages')
-    optional.add_argument('--verbose', action='store_true',
-                          help='enable verbose debug messages')
-    optional.add_argument('--sort', action='store_true',
-                          default=False, help='Sort data by instruments then time')
-
-    # read in arguments to function call
-    args = parser.parse_args()
-
-#    # verify time format
-#    try:
-#        target_time = datetime.fromisoformat(args.date_string[:-1])
-#    except Exception:
-#        parser.error('Date format invalid: ', args.date_string, ' must be like: 2022-05-18T12:00:00Z')
-#        sys.exit()
+def main(args):
 
     if args.debug:
         logging.basicConfig(level=logging.INFO)
@@ -160,7 +124,9 @@ if __name__ == "__main__":
     for file_name in args.file_names:
         # check if file exists
         if not os.path.isfile(file_name):
-            parser.error(f'Input (-i option) file: {file_name} does not exist')
+            logging.debug(f'Input (-i option) file: {file_name} does not exist')
+            print(f'Input (-i option) file: {file_name} does not exist')
+            sys.exit()
         logging.debug(f"Reading input file: {file_name}")
 
         file = json.load(open(file_name))
@@ -268,3 +234,45 @@ if __name__ == "__main__":
     writer = iconv.IodaWriter(args.output_file, MetaDataKeyList, DimDict)
     # write everything out
     writer.BuildIoda(ioda_data, VarDims, varAttrs, AttrData)
+
+
+if __name__ == "__main__":
+
+    import argparse
+
+    start_time = time.time()
+    today = datetime.today()
+
+    parser = argparse.ArgumentParser(
+        description=(
+            'Read windorne json files and convert into IODA output file')
+    )
+    required = parser.add_argument_group(title='required arguments')
+    required.add_argument('-i', '--input-files', nargs='+', dest='file_names',
+                          action='store', default=None, required=True,
+                          help='input files')
+    required.add_argument('-o', '--output-file', dest='output_file',
+                          action='store', default=None, required=True,
+                          help='output file')
+    parser.set_defaults(debug=False)
+    parser.set_defaults(verbose=False)
+    parser.set_defaults(netCDF=False)
+    optional = parser.add_argument_group(title='optional arguments')
+    optional.add_argument('--debug', action='store_true',
+                          help='enable debug messages')
+    optional.add_argument('--verbose', action='store_true',
+                          help='enable verbose debug messages')
+    optional.add_argument('--sort', action='store_true',
+                          default=False, help='Sort data by instruments then time')
+
+    # read in arguments to function call
+    args = parser.parse_args()
+
+#    # verify time format
+#    try:
+#        target_time = datetime.fromisoformat(args.date_string[:-1])
+#    except Exception:
+#        parser.error('Date format invalid: ', args.date_string, ' must be like: 2022-05-18T12:00:00Z')
+#        sys.exit()
+
+    main(args)
