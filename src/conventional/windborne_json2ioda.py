@@ -30,7 +30,7 @@ import netCDF4 as nc
 # These modules need the path to lib-python modules
 import pyiodaconv.ioda_conv_engines as iconv
 import pyiodaconv.meteo_utils as meteo_utils
-import pyiodaconv.meteo_sounding_utils as meteo_sounding_utils
+import pyiodaconv.meteo_sounding_utils as meteo_souding_utils
 from pyiodaconv.orddicts import DefaultOrderedDict
 from collections import defaultdict
 
@@ -172,9 +172,22 @@ def main(args):
         # Make a dummy column to have a constant elevation for the "station"
         stationElevation = [10]*len(height)
         # convert pressure to Pascals from Hectopascals
-        pressure = pressure*100
+        try:
+            pressure = pressure*100
+        except:
+            try:
+                pressure = [press_i*100 if press_i is not None else press_i for press_i in pressure] # if some values are None
+            except:
+                pass # if pressure is all None 
+        
         # convert temperature from celcius to kelvin
-        airTemperature = airTemperature+np.array(273.15)
+        try:
+            airTemperature = airTemperature+np.array(273.15)
+        except:
+            try:
+                airTemperature = [temp_i*273.15 if temp_i is not None else temp_i for temp_i in airTemperature] # if some values are None
+            except:
+                pass # If airTemperature is all None
 
         # Make a list of lists to feed into dataframe
         data_lists = list(zip(height, relativeHumidity, latitude, longitude, stationIdentification, pressure,
