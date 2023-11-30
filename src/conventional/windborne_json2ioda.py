@@ -9,7 +9,7 @@
 
 
 """
-Python code to ingest JSON WindBorne Data  
+Python code to ingest JSON WindBorne Data
 """
 
 import pdb
@@ -41,8 +41,8 @@ MetaDataKeyList = [
     ("stationIdentification", "string", ""),
     ("latitude", "float", "degrees_north"),
     ("longitude", "float", "degrees_east"),
-    ("stationElevation", "float", "m"), # put in fake value (10 m). take out later 
-    ("height", "float", "m"), # geometricHeight
+    ("stationElevation", "float", "m"),  # put in fake value (10 m). take out later
+    ("height", "float", "m"),  # geometricHeight
     ("pressure", "float", "Pa"),
     ("releaseTime", "long", "seconds since 1970-01-01T00:00:00Z"),
     ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z")
@@ -55,7 +55,7 @@ obsvars = ['airTemperature',
            'windEastward',
            'windNorthward']
 obsvars_units = ['K', 'kg kg-1', 'K', 'm s-1', 'm s-1']
-obserrlist = [1.2, 0.75E-3, 1.5, 1.7, 1.7] 
+obserrlist = [1.2, 0.75E-3, 1.5, 1.7, 1.7]
 
 # I'm not sure what this is used for yet ???
 VarDims = {
@@ -65,7 +65,7 @@ VarDims = {
     'windNorthward': ['Location']
 }
 
-# creating data types 
+# creating data types
 metaDataName = iconv.MetaDataName()
 obsValName = iconv.OvalName()
 obsErrName = iconv.OerrName()
@@ -134,7 +134,7 @@ if __name__ == "__main__":
 
     # read in arguments to function call
     args = parser.parse_args()
-       
+
 #    # verify time format
 #    try:
 #        target_time = datetime.fromisoformat(args.date_string[:-1])
@@ -154,79 +154,79 @@ if __name__ == "__main__":
         Options set. Ingest each file and concatenate.
         #---------------------------------------------------------------------------------------------
     """
-    # Loop through input files and concatenate into dataframe 
+    # Loop through input files and concatenate into dataframe
     metaData_files = []
-    file_cnt=0
+    file_cnt = 0
     for file_name in args.file_names:
         # check if file exists
         if not os.path.isfile(file_name):
             parser.error(f'Input (-i option) file: {file_name} does not exist')
         logging.debug(f"Reading input file: {file_name}")
-    
+
         file = json.load(open(file_name))
-        
-        if file_cnt==0:
+
+        if file_cnt == 0:
             # Create data frame to store each file's Meta Dataa
-            df_metaData_files = pd.DataFrame(columns= file.keys())
-            df_metaData_files.drop(['observations'], axis=1,inplace=True)
-    
+            df_metaData_files = pd.DataFrame(columns=file.keys())
+            df_metaData_files.drop(['observations'], axis=1, inplace=True)
+
             # Create data frame to store all observation data
-            obs_data = pd.DataFrame(columns= file['observations'][0].keys())
-            obs_data['releaseTime']=None
-            obs_data['stationElevation']=None
+            obs_data = pd.DataFrame(columns=file['observations'][0].keys())
+            obs_data['releaseTime'] = None
+            obs_data['stationElevation'] = None
 
             # Remove data not needed for IODA
-            obs_data.drop(['id','mission_id'], axis=1,inplace=True)
+            obs_data.drop(['id', 'mission_id'], axis=1, inplace=True)
 
             # Rename variables to IODA variables
-            obs_data.rename(columns={'speed_x':'windEastward',
-                                     'speed_y':'windNorthward',
-                                     'altitude':'height',
-                                     'mission_name':'stationIdentification',
-                                     'humidity':'relativeHumidity',
-                                     'temperature':'airTemperature',
-                                     'timestamp':'dateTime'},inplace=True)
+            obs_data.rename(columns={'speed_x': 'windEastward',
+                                     'speed_y': 'windNorthward',
+                                     'altitude': 'height',
+                                     'mission_name': 'stationIdentification',
+                                     'humidity': 'relativeHumidity',
+                                     'temperature': 'airTemperature',
+                                     'timestamp': 'dateTime'}, inplace=True)
         # Fill out each file's meta data
         df_metaData_files.loc[file_cnt] = [file[key] for key in df_metaData_files.keys()]
-    
-        # Pull each data type (variable) and create a list 
-        height                 = [file['observations'][ii]['altitude'] for ii in range(len(file['observations']))]  # geometric height 
-        relativeHumidity       = [file['observations'][ii]['humidity'] for ii in range(len(file['observations']))]
-        latitude               = [file['observations'][ii]['latitude'] for ii in range(len(file['observations']))]
-        longitude              = [file['observations'][ii]['longitude'] for ii in range(len(file['observations']))]
-        stationIdentification  = [file['observations'][ii]['mission_name'] for ii in range(len(file['observations']))]
-        pressure               = [file['observations'][ii]['pressure'] for ii in range(len(file['observations']))]
-        windEastward           = [file['observations'][ii]['speed_x'] for ii in range(len(file['observations']))]
-        windNorthward          = [file['observations'][ii]['speed_y'] for ii in range(len(file['observations']))]
-        airTemperature         = [file['observations'][ii]['temperature'] for ii in range(len(file['observations']))]
-        dateTime               = [file['observations'][ii]['timestamp'] for ii in range(len(file['observations']))] # datetime
- 
-        # Make a list of release time (earliest time in file. this needs to be updated to be earliest time for each instrument, since the file can have multiple)
+
+        # Pull each data type (variable) and create a list
+        height = [file['observations'][ii]['altitude'] for ii in range(len(file['observations']))]  # geometric height
+        relativeHumidity = [file['observations'][ii]['humidity'] for ii in range(len(file['observations']))]
+        latitude = [file['observations'][ii]['latitude'] for ii in range(len(file['observations']))]
+        longitude = [file['observations'][ii]['longitude'] for ii in range(len(file['observations']))]
+        stationIdentification = [file['observations'][ii]['mission_name'] for ii in range(len(file['observations']))]
+        pressure = [file['observations'][ii]['pressure'] for ii in range(len(file['observations']))]
+        windEastward = [file['observations'][ii]['speed_x'] for ii in range(len(file['observations']))]
+        windNorthward = [file['observations'][ii]['speed_y'] for ii in range(len(file['observations']))]
+        airTemperature = [file['observations'][ii]['temperature'] for ii in range(len(file['observations']))]
+        dateTime = [file['observations'][ii]['timestamp'] for ii in range(len(file['observations']))]  # datetime
+
+        # List of release time (earliest time in file. this needs to be updated to be earliest time for each instrument, since the file can have multiple)
         releaseTime = [min(dateTime)]*len(height)
         # Make a dummy column to have a constant elevation for the "station"
-        stationElevation = [10]*len(height) 
+        stationElevation = [10]*len(height)
         # convert pressure to Pascals from Hectopascals
         pressure = pressure*100
-        # convert temperature from celcius to kelvin 
+        # convert temperature from celcius to kelvin
         airTemperature = airTemperature+np.array(273.15)
 
-        # Make a list of lists to feed into dataframe 
+        # Make a list of lists to feed into dataframe
         data_lists = list(zip(height, relativeHumidity, latitude, longitude, stationIdentification, pressure,
-                              windEastward, windNorthward, airTemperature, dateTime, releaseTime, stationElevation)) 
-    
-        # All observation data for this file to append to the master dataframe 
-        obs_data_append = pd.DataFrame(data_lists,columns= obs_data.keys()) 
+                              windEastward, windNorthward, airTemperature, dateTime, releaseTime, stationElevation))
 
-        # Append to data frame containing all timestamp data 
-        obs_data = pd.concat([obs_data,obs_data_append], ignore_index=True)
-        
+        # All observation data for this file to append to the master dataframe
+        obs_data_append = pd.DataFrame(data_lists, columns=obs_data.keys())
+
+        # Append to data frame containing all timestamp data
+        obs_data = pd.concat([obs_data, obs_data_append], ignore_index=True)
+
         # count files
-        file_cnt += 1 
+        file_cnt += 1
 
     # sort by instrument and then time
     if args.sort:
-        obs_data.sort_values(['stationIdentification', 'dateTime'], ascending=[True,True],inplace=True)
-            
+        obs_data.sort_values(['stationIdentification', 'dateTime'], ascending=[True, True], inplace=True)
+
     # count number of locations
     ntotal = obs_data.shape[0]
 
