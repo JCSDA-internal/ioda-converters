@@ -222,7 +222,7 @@ def main(args):
     ntotal = obs_data.shape[0]
 
     # set global reference date to release time
-    GlobalAttrs= {'datetimeReference': obs_data_append['dateTime'].min().strftime("%Y-%m-%dT%H:%M:%SZ")} 
+    AttrData['datetimeReference'] = obs_data_append['dateTime'].min().strftime("%Y-%m-%dT%H:%M:%SZ") 
 
     # Export into IODA formatted netCDF file
     ioda_data = {}
@@ -260,7 +260,7 @@ def main(args):
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output_file, MetaDataKeyList, DimDict)
     # write everything out
-    writer.BuildIoda(ioda_data, VarDims, varAttrs, AttrData, GlobalAttrs)
+    writer.BuildIoda(ioda_data, VarDims, varAttrs, AttrData)
 
 
 if __name__ == "__main__":
