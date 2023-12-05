@@ -199,6 +199,9 @@ def main(args):
         # All observation data for this file to append to the master dataframe
         obs_data_append = pd.DataFrame(data_lists, columns=obs_data.keys())
 
+        # Convert float to datetime data type
+        obs_data_append['dateTime'] = pd.to_datetime(obs_data_append['dateTime'], unit='s')
+
         # Append to data frame containing all timestamp data
         obs_data = pd.concat([obs_data, obs_data_append], ignore_index=True)
 
@@ -217,6 +220,9 @@ def main(args):
 
     # count number of locations
     ntotal = obs_data.shape[0]
+
+    # set global reference date to release time
+    GlobalAttrs= {'datetimeReference': obs_data_append['dateTime'].min().strftime("%Y-%m-%dT%H:%M:%SZ")} 
 
     # Export into IODA formatted netCDF file
     ioda_data = {}
@@ -254,7 +260,7 @@ def main(args):
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output_file, MetaDataKeyList, DimDict)
     # write everything out
-    writer.BuildIoda(ioda_data, VarDims, varAttrs, AttrData)
+    writer.BuildIoda(ioda_data, VarDims, varAttrs, AttrData, GlobalAttrs)
 
 
 if __name__ == "__main__":
