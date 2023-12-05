@@ -108,7 +108,7 @@ class tempo(object):
 
             # adding ability to pre filter the data using the qa value
             # and also perform thinning using random uniform draw
-            qaf = (qa_value <= self.qa_flg) and (qa_value > 0) 
+            qaf = ((qa_value <= self.qa_flg) & (qa_value > 0))
             thi = np.random.uniform(size=len(qa_value)) > self.thin
             flg = np.logical_and(qaf, thi)
 
