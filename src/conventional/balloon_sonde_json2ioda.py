@@ -200,7 +200,7 @@ def main(args):
         obs_data_append = pd.DataFrame(data_lists, columns=obs_data.keys())
 
         # Convert float to datetime data type
-        obs_data_append['dateTime'] = pd.to_datetime(obs_data_append['dateTime'], unit='s')
+#        obs_data_append['dateTime'] = pd.to_datetime(obs_data_append['dateTime'], unit='s')
 
         # Append to data frame containing all timestamp data
         obs_data = pd.concat([obs_data, obs_data_append], ignore_index=True)
@@ -222,7 +222,7 @@ def main(args):
     ntotal = obs_data.shape[0]
 
     # set global reference date to release time
-    AttrData['datetimeReference'] = obs_data_append['dateTime'].min().strftime("%Y-%m-%dT%H:%M:%SZ") 
+    AttrData['datetimeReference'] = datetime.fromtimestamp(obs_data_append['dateTime'].min()).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     # Export into IODA formatted netCDF file
     ioda_data = {}
