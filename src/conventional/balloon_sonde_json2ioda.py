@@ -56,6 +56,10 @@ obsvars = ['airTemperature',
            'windNorthward']
 obsvars_units = ['K', 'kg kg-1', 'K', 'm s-1', 'm s-1']
 obserrlist = [1.2, 0.75E-3, 1.5, 1.7, 1.7]
+obsvars_dtype = ['float',
+                 'float',
+                 'float',
+                 'float']
 
 # I'm not sure what this is used for yet ???
 VarDims = {
@@ -83,12 +87,11 @@ AttrData = {
 DimDict = {
 }
 
-float_missing_value = nc.default_fillvals['f4']
-int_missing_value = nc.default_fillvals['i4']
-double_missing_value = nc.default_fillvals['f8']
-long_missing_value = nc.default_fillvals['i8']
+float_missing_value = iconv.get_default_fill_val(np.float32)
+int_missing_value = iconv.get_default_fill_val(np.int32)
+double_missing_value = iconv.get_default_fill_val(np.float64)
+long_missing_value = iconv.get_default_fill_val(np.int64)
 string_missing_value = '_'
-
 iso8601_string = MetaDataKeyList[meta_keys.index('dateTime')][2]
 epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
@@ -202,6 +205,12 @@ def main(args):
         # count files
         file_cnt += 1
 
+    # replace missing values
+    for MetaDataKey in MetaDataKeyList:
+        obs_data[MetaDataKey[0]].fillna(missing_vals[MetaDataKey[1]], inplace=True)
+    for n, obsvar in enumerate(obsvars):
+        obs_data[obsvar].fillna(missing_vals[obsvars_dtype[n]], inplace=True) 
+
     # sort by instrument and then time
     if args.sort:
         obs_data.sort_values(['stationIdentification', 'dateTime'], ascending=[True, True], inplace=True)
@@ -229,7 +238,6 @@ def main(args):
         varAttrs[iodavar, obsErrName]['units'] = obsvars_units[n]
 
     # Set units of the MetaData variables and all _FillValues.
-#    pdb.set_trace()
     for key in meta_keys:
         dtypestr = MetaDataKeyList[meta_keys.index(key)][1]
         if MetaDataKeyList[meta_keys.index(key)][2]:
