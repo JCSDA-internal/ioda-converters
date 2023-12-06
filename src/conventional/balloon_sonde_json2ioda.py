@@ -199,14 +199,22 @@ def main(args):
         # All observation data for this file to append to the master dataframe
         obs_data_append = pd.DataFrame(data_lists, columns=obs_data.keys())
 
-        # Convert float to datetime data type
-#        obs_data_append['dateTime'] = pd.to_datetime(obs_data_append['dateTime'], unit='s')
-
         # Append to data frame containing all timestamp data
         obs_data = pd.concat([obs_data, obs_data_append], ignore_index=True)
 
         # count files
         file_cnt += 1
+
+    # Apply initial QC for physically possible values (temp, wind, lat, lon)
+    temp_range = [50, 400]
+    obs_data.loc[((obs_data['airTemperature']<temp_range[0]) | (obs_data['airTemperature']>temp_range[1])), 'airTemperature'] = None
+    wind_range = [-100, 100]
+    obs_data.loc[((obs_data['windEastward']<wind_range[0]) | (obs_data['windEastward']>wind_range[1])), 'windEastward'] = None 
+    obs_data.loc[((obs_data['windNorthward']<wind_range[0]) | (obs_data['windNorthward']>wind_range[1])), 'windNorthward'] = None 
+    lat_range = [-90, 90]
+    obs_data.loc[((obs_data['latitude']<lat_range[0]) | (obs_data['latitude']>lat_range[1])), 'latitude'] = None 
+    lon_range = [-180, 180]
+    obs_data.loc[((obs_data['longitude']<lon_range[0]) | (obs_data['longitude']>lon_range[1])), 'longitude'] = None 
 
     # replace missing values
     for MetaDataKey in MetaDataKeyList:
