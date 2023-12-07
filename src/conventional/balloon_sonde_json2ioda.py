@@ -177,20 +177,20 @@ def main(args):
         # convert pressure to Pascals from Hectopascals
         try:
             pressure = pressure*100
-        except:
+        except Exception:
             try:
-                pressure = [press_i*100 if press_i is not None else press_i for press_i in pressure] # if some values are None
-            except:
-                pass # if pressure is all None 
-        
+                pressure = [press_i*100 if press_i is not None else press_i for press_i in pressure]  # if some values are None
+            except Exception:
+                pass  # if pressure is all None
+
         # convert temperature from celcius to kelvin
         try:
             airTemperature = airTemperature+np.array(273.15)
-        except:
+        except Exception:
             try:
-                airTemperature = [temp_i*273.15 if temp_i is not None else temp_i for temp_i in airTemperature] # if some values are None
-            except:
-                pass # If airTemperature is all None
+                airTemperature = [temp_i*273.15 if temp_i is not None else temp_i for temp_i in airTemperature]  # if some values are None
+            except Exception:
+                pass  # If airTemperature is all None
 
         # Make a list of lists to feed into dataframe
         data_lists = list(zip(height, relativeHumidity, latitude, longitude, stationIdentification, pressure,
@@ -207,20 +207,20 @@ def main(args):
 
     # Apply initial QC for physically possible values (temp, wind, lat, lon)
     temp_range = [50, 400]
-    obs_data.loc[((obs_data['airTemperature']<temp_range[0]) | (obs_data['airTemperature']>temp_range[1])), 'airTemperature'] = None
+    obs_data.loc[((obs_data['airTemperature'] < temp_range[0]) | (obs_data['airTemperature'] > temp_range[1])), 'airTemperature'] = None
     wind_range = [-100, 100]
-    obs_data.loc[((obs_data['windEastward']<wind_range[0]) | (obs_data['windEastward']>wind_range[1])), 'windEastward'] = None 
-    obs_data.loc[((obs_data['windNorthward']<wind_range[0]) | (obs_data['windNorthward']>wind_range[1])), 'windNorthward'] = None 
+    obs_data.loc[((obs_data['windEastward'] < wind_range[0]) | (obs_data['windEastward'] > wind_range[1])), 'windEastward'] = None
+    obs_data.loc[((obs_data['windNorthward'] < wind_range[0]) | (obs_data['windNorthward'] > wind_range[1])), 'windNorthward'] = None
     lat_range = [-90, 90]
-    obs_data.loc[((obs_data['latitude']<lat_range[0]) | (obs_data['latitude']>lat_range[1])), 'latitude'] = None 
+    obs_data.loc[((obs_data['latitude'] < lat_range[0]) | (obs_data['latitude'] > lat_range[1])), 'latitude'] = None
     lon_range = [-180, 180]
-    obs_data.loc[((obs_data['longitude']<lon_range[0]) | (obs_data['longitude']>lon_range[1])), 'longitude'] = None 
+    obs_data.loc[((obs_data['longitude'] < lon_range[0]) | (obs_data['longitude'] > lon_range[1])), 'longitude'] = None
 
     # replace missing values
     for MetaDataKey in MetaDataKeyList:
         obs_data[MetaDataKey[0]].fillna(missing_vals[MetaDataKey[1]], inplace=True)
     for n, obsvar in enumerate(obsvars):
-        obs_data[obsvar].fillna(missing_vals[obsvars_dtype[n]], inplace=True) 
+        obs_data[obsvar].fillna(missing_vals[obsvars_dtype[n]], inplace=True)
 
     # sort by instrument and then time
     if args.sort:
