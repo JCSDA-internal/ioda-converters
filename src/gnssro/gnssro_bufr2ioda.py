@@ -14,6 +14,8 @@ from datetime import datetime, timedelta
 import dateutil.parser
 from concurrent.futures import ProcessPoolExecutor
 import numpy as np
+from numpy.polynomial.polynomial import Polynomial
+import scipy
 import os
 from itertools import repeat
 import netCDF4 as nc
@@ -114,6 +116,12 @@ def main(args):
     if addLSW:
         VarAttrs[('localSpectralWidth', 'MetaData')]['units'] = 'Percentage'
         VarAttrs[('localSpectralWidth', 'MetaData')]['_FillValue'] = float_missing_value
+
+        VarAttrs[('standardDeviation4060km', 'MetaData')]['units'] = 'Percentage'
+        VarAttrs[('standardDeviation4060km', 'MetaData')]['_FillValue'] = float_missing_value
+
+        VarAttrs[('hybridError', 'ObsError')]['units'] = 'Percentage'
+        VarAttrs[('hybridError', 'ObsError')]['_FillValue'] = float_missing_value
 
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
@@ -275,28 +283,47 @@ def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None):
         obs_data[('geoidUndulation', 'MetaData')] - \
         obs_data[('earthRadiusCurvature', 'MetaData')]
 
+    if addLSW:
+        good = quality_control(profile_meta_data, obs_data)
+        bad = [not elm for elm in good]
+        bangid = (bang <= 0) | (bang == float_missing_value) | bad
+        bang[bangid] = np.nan
+        bang_err[bangid] = np.nan
+        obs_data[('impactHeightRO', "MetaData")][bangid] = np.nan
+        lsw = bang_err / bang * 100   # CDACC saves LSW in radians as bang_err. Convert to percentage
+        lsw[lsw > 40.] = 40.  # set LSW cap 
+        #lsw[bangid] = np.nan
+
+        id4060 = (obs_data[('impactHeightRO', 'MetaData')] >= 40000) & (obs_data[('impactHeightRO', 'MetaData')] <= 60000)
+        exp_fit = np.exp(Polynomial.fit(obs_data[('impactHeightRO', 'MetaData')][id4060], np.log(bang[id4060]), deg=1) (obs_data[('impactHeightRO', 'MetaData')][id4060]))
+        std4060 = np.nanstd(exp_fit - bang[id4060])/bang*100
+        std4060[std4060 > 40.] = 40.  # set std4060 cap
+        #std4060[bang == float_missing_value] = np.nan
+
+        hyb_err = calc_hybrid_error(lsw, std4060, obs_data[('impactHeightRO', 'MetaData')])
+        hyb_err[bangid] = float_missing_value
+        obs_data[('hybridError', 'ObsError')] = assign_values(hyb_err)
+        obs_data[('bendingAngle', 'ObsError')] = assign_values(hyb_err / 100 * obs_data[('bendingAngle', "ObsValue")])
+
+        lsw[bangid] = float_missing_value
+        obs_data[('localSpectralWidth', "MetaData")] = assign_values(lsw)
+        std4060[bangid] = float_missing_value
+        obs_data[('standardDeviation4060km', "MetaData")] = assign_values(std4060)        
+
     if add_qc:
-        good = quality_control(profile_meta_data, height, lats, lons)
-        if len(lats[good]) == 0:
+        good = quality_control(profile_meta_data, obs_data)
+        if len(obs_data[('latitude', 'MetaData')][good]) == 0:
             # exit if entire profile is missing
             return{}
         for k in obs_data.keys():
             obs_data[k] = obs_data[k][good]
 
-    if addLSW:
-        bangid = bang == 0
-        bang[bangid] = float_missing_value
-        bang_err[bangid] = float_missing_value
-
-        lsw = bang_err/bang * 100   # CDACC saves LSW in radians as bang_err. Convert to percentage
-        lsw[bang == float_missing_value] = float_missing_value
-        obs_data[('localSpectralWidth', "MetaData")] = assign_values(lsw)
     return obs_data
 
 
-def quality_control(profile_meta_data, heights, lats, lons):
+def quality_control(profile_meta_data, obs_data):
     try:
-        good = (heights > 0.) & (heights < 100000.) & (abs(lats) <= 90.) & (abs(lons) <= 360.)
+        good = (obs_data[('height', 'MetaData')] > 0.) & (obs_data[('height', 'MetaData')] < 100000.) & (abs(obs_data[('latitude', 'MetaData')]) <= 90.) & (abs(obs_data[('longitude', 'MetaData')]) <= 360.)
     except ValueError:
         print(f" quality control on impact_height and lat/lon did not pass")
         print(f" maybe length of vectors not consistent: {len(heights)}, {len(lats)}, {len(lons)}")
@@ -387,6 +414,28 @@ def concat_obs_dict(obs_data, append_obs_data):
                 # string type, extend with string missing value
                 fill_data = np.repeat(string_missing_value, append_length, dtype=object)
             obs_data[gv_key] = np.append(obs_data[gv_key], fill_data)
+
+def calc_hybrid_error(lsw, std4060, height):
+    hybrid_err = np.zeros(len(lsw))
+    for hid, hgt, in enumerate(height):
+        lh = lsw[hid]
+        sh = std4060[hid]
+        if hgt <= 10000:  # apply lsw error model
+            hgt = 10000 - hgt
+            hybrid_err[hid] = 1.25 + (8.8e-4)*hgt + (5.01e-4)*hgt*lh - (7.06e-6)*hgt*lh**2 + (2.42e-8)*hgt*lh**3 - \
+                                  (1.33e-7)*hgt**2 - (1e-7)*hgt**2*lh + (8.15e-10)*hgt**2*lh**2 + (1.37e-12)*hgt**2*lh**3 + \
+                                  (6.84e-12)*hgt**3 + (7e-12)*hgt**3*lh - (3.32e-14)*hgt**3*lh**2 - (2.52e-16)*hgt**3*lh**3
+
+        elif hgt >= 30000 and hgt <= 600000:  # apply std4060 error model
+            hgt = hgt - 30000
+            hybrid_err[hid] = 1.25 + (1.99e-6)*hgt + (6.76e-6)*hgt*sh + (8.26e-7)*hgt*sh**2 - (2.75e-8)*hgt*sh**3 + (1.82e-10)*hgt*sh**4 - \
+                                    (6.56e-9)*hgt**2 + (3.15e-9)*hgt**2*sh - (3.78e-10)*hgt**2*sh**2 + (1.07e-11)*hgt**2*sh**3 - (8.66e-14)*hgt**2*sh**4 + \
+                                    (2.67e-13)*hgt**3 - (7.29e-14)*hgt**3*sh + (1.68e-14)*hgt**3*sh**2 - (5.49e-16)*hgt**3*sh**3 + (5.43e-18)*hgt**3*sh**4
+
+        else:  # apply constant error
+            hybrid_err[hid] = 1.25
+
+    return hybrid_err
 
 
 if __name__ == "__main__":
