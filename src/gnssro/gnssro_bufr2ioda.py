@@ -157,7 +157,10 @@ def get_meta_data(bufr):
     # these are the MetaData we are interested in
     profile_meta_data = {}
     for k, v in meta_data_keys.items():
-        profile_meta_data[k] = codes_get(bufr, v)
+        try:
+            profile_meta_data[k] = codes_get(bufr, v)
+        except:
+            print(f'  WARNING: could not retrieve key: {k} -- Skipping')
 
     # do the hokey time structure to time structure
     year = codes_get(bufr, 'year')
@@ -354,6 +357,7 @@ def def_meta_types():
         "geoidUndulation": 'float',
         "earthRadiusCurvature": 'float',
         "satelliteIdentifier": 'integer',
+        "satelliteSubIdentifier": 'integer',
         "satelliteInstrument": 'integer',
         "dataProviderOrigin": 'string',
         "satelliteTransmitterId": 'integer',
