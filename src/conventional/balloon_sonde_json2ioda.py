@@ -230,7 +230,7 @@ def main(args):
     ntotal = obs_data.shape[0]
 
     # set global reference date to release time
-    AttrData['datetimeReference'] = datetime.fromtimestamp(obs_data_append['dateTime'].min()).strftime("%Y-%m-%dT%H:%M:%SZ")
+    AttrData['datetimeReference'] = datetime.fromtimestamp(obs_data['dateTime'].min()).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     # Export into IODA formatted netCDF file
     ioda_data = {}
