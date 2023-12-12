@@ -42,7 +42,6 @@ observations:
           instantaneousAltitudeRate:
             query: "*/PRSLEVLA/IALR"
 
-
           #ObsValue
           pressure:
             query: "*/PRSLEVLA/P___INFO/P__EVENT/POB"
