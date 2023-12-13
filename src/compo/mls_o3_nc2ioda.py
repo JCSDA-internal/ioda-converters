@@ -77,14 +77,14 @@ class mls(object):
         self.endTAI = eTAI
         self.nrt = nrt
         for v in list(ioda2nc.keys()):
-            if(v == 'status' or v == 'precision' or v == 'convergence' or v == 'quality'):
+            if (v == 'status' or v == 'precision' or v == 'convergence' or v == 'quality'):
                 pass
-            elif(v != 'valKey' and v != 'errKey'):
+            elif (v != 'valKey' and v != 'errKey'):
                 self.outdata[(v, 'MetaData')] = []
         self.outdata[('referenceLevel', 'MetaData')] = []
         self._setVarDict(varname_ozone)
         self.outdata[self.varDict[varname_ozone]['valKey']] = []
-        if(self.qcOn):
+        if (self.qcOn):
             self.outdata[self.varDict[varname_ozone]['errKey']] = []
 
         self._read()
@@ -92,7 +92,7 @@ class mls(object):
     # set ioda variable keys
     def _setVarDict(self, iodavar):
         self.varDict[iodavar]['valKey'] = iodavar, obsValName
-        if(self.qcOn):
+        if (self.qcOn):
             self.varDict[iodavar]['errKey'] = iodavar, obsErrName
         self.varDict[iodavar]['qcKey'] = iodavar, qcName
 
@@ -106,19 +106,19 @@ class mls(object):
 
         varsToAddUnits = list(ioda2nc.keys())
         for v in varsToAddUnits:
-            if(v != 'valKey' and v != 'errKey'):
+            if (v != 'valKey' and v != 'errKey'):
                 vkey = (v, 'MetaData')
-                if('pressure' in v.lower()):
+                if ('pressure' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'Pa'
-                elif(v == 'dateTime'):
+                elif (v == 'dateTime'):
                     self.varAttrs[vkey]['units'] = 'seconds since 1993-01-01T00:00:00Z'
-                elif('latitude' in v.lower()):
+                elif ('latitude' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'degree_north'
-                elif('longitude' in v.lower()):
+                elif ('longitude' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'degree_east'
-                elif('angle' in v.lower()):
+                elif ('angle' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'degree'
-                elif('prior' in v.lower()):
+                elif ('prior' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'ppmv'
 
     # Read data needed from raw MLS file.
@@ -130,12 +130,12 @@ class mls(object):
         start = 0
         end = end_of_file
         # if it is nrt, and the last file use all but first two and last 3 profiles
-        if(ifile == maxfile and self.nrt):
+        if (ifile == maxfile and self.nrt):
             print("last file:{}".format(filename))
             start = 2
             end = end_of_file - 3
         # otherwise if nrt skip first 2 and last 8 profiles to avoid duplicates.
-        elif(self.nrt):
+        elif (self.nrt):
             start = 2
             end = end_of_file - 8
 
@@ -148,7 +148,7 @@ class mls(object):
                 d[k] = ncd[ioda2nc[k]][start:end, ...]
                 d[k].mask = False
 
-            if(k == 'valKey' or k == 'precision'):
+            if (k == 'valKey' or k == 'precision'):
                 d[k] = d[k]*1e6  # convert mol/mol to PPMV
         return d
 
@@ -202,13 +202,13 @@ class mls(object):
         nrec = d['latitude'].shape[0]
         cnt = 0
         for irec in range(nrec):
-            if(d['status'][irec] % 2 != 0 or d['convergence'][irec] >= 1.03 or d['quality'][irec] <= 1.0):
+            if (d['status'][irec] % 2 != 0 or d['convergence'][irec] >= 1.03 or d['quality'][irec] <= 1.0):
                 continue
             for ilev in range(self.lmin, self.lmax+1):
-                if(d['precision'][irec, ilev] < 0.0):
+                if (d['precision'][irec, ilev] < 0.0):
                     continue
                 # if outside the window, don't inculde data
-                if(d['dateTime'][irec] < self.startTAI or d['dateTime'][irec] > self.endTAI):
+                if (d['dateTime'][irec] < self.startTAI or d['dateTime'][irec] > self.endTAI):
                     continue
                 for k in list(d.keys()):
                     if (len(d[k].shape) == 1 and k != 'pressure'):
@@ -227,29 +227,29 @@ class mls(object):
         # loop through input filenames
         for i, f in enumerate(self.filenames):
             nc_data = self._read_nc(f, i, len(self.filenames)-1)
-            if(self.qcOn):
+            if (self.qcOn):
                 print("Performing QC.")
                 d = self._do_qc(nc_data)
             else:
                 print("Not Performing QC.")
                 d = self._just_flatten(nc_data)
-            if(self.errorOn):
+            if (self.errorOn):
                 print("Calculating Error.")
                 d['errKey'] = []
                 for ival, val in enumerate(d['valKey']):
                     d['errKey'].append(self._calc_error(
                         val, d['precision'][ival], d['level'][ival]-1))
             for v in list(d.keys()):
-                if(v == 'status' or v == 'precision' or v == 'convergence' or v == 'quality'):
+                if (v == 'status' or v == 'precision' or v == 'convergence' or v == 'quality'):
                     pass
-                elif(v == 'level'):
+                elif (v == 'level'):
                     self.outdata[('referenceLevel', 'MetaData')].extend(d[v])
-                elif(v != 'valKey' and v != 'errKey'):
+                elif (v != 'valKey' and v != 'errKey'):
                     self.outdata[(v, 'MetaData')].extend(d[v])
             for ncvar, iodavar in obsvars.items():
                 self.outdata[self.varDict[iodavar]
                              ['valKey']].extend(d['valKey'])
-                if(self.errorOn):
+                if (self.errorOn):
                     self.outdata[self.varDict[iodavar]['errKey']].extend(d['errKey'])
 
         nlocs = len(self.outdata[('dateTime', 'MetaData')])
@@ -257,9 +257,9 @@ class mls(object):
 
         for k in self.outdata.keys():
             self.outdata[k] = np.asarray(self.outdata[k])
-            if(self.outdata[k].dtype == 'float64'):
+            if (self.outdata[k].dtype == 'float64'):
                 self.outdata[k] = self.outdata[k].astype('float32')
-            elif(self.outdata[k].dtype == 'int64' and k != ('dateTime', 'MetaData')):
+            elif (self.outdata[k].dtype == 'int64' and k != ('dateTime', 'MetaData')):
                 self.outdata[k] = self.outdata[k].astype('int32')
         self.outdata[('dateTime', 'MetaData')] = self.outdata[('dateTime', 'MetaData')].astype(np.int64)
         self.outdata[('longitude', 'MetaData')] = self.outdata[('longitude', 'MetaData')] % 360
@@ -327,27 +327,27 @@ def main():
     args = parser.parse_args()
 
     # check for option to modify levels output
-    if(args.lmin < 8):
+    if (args.lmin < 8):
         print("Sorry, level 8 is low as I go! Setting lmin=8.")
         lmin = 8
     else:
         lmin = args.lmin
-    if(args.lmax > 49):
+    if (args.lmax > 49):
         print("Sorry, level 49 is high as I go! Setting lmax=49.")
         lmax = 49
     else:
         lmax = args.lmax
-    if('NRT' in args.prefix):
+    if ('NRT' in args.prefix):
         nrt = True
     else:
         nrt = False
     # get current cycle time and start/end of the window
     cycle_time = datetime(args.year, args.month, args.day, args.hour)
-    if(os.path.isfile(args.input)):
+    if (os.path.isfile(args.input)):
         print('Reading Single File:{}'.format(args.input))
         rawFiles = []
         rawFiles.append(args.input)
-    elif(os.path.isdir(args.input)):
+    elif (os.path.isdir(args.input)):
         startDateWindow = cycle_time - timedelta(hours=args.window/2)
         endDateWindow = cycle_time + timedelta(hours=args.window/2)
         # effectively round off so we get the number of days between
@@ -362,17 +362,17 @@ def main():
             doy = now.strftime('%j')
             rawFiles.extend(glob.glob(os.path.join(args.input, args.prefix+"*{}d".format(year)+doy+"*.he5")))
         rawFiles.sort()
-        if(nrt):
+        if (nrt):
             # limit files only between start and end of window.
             rawFilesOut = []
             startDateWindow = cycle_time - timedelta(hours=3)
             endDateWindow = cycle_time + timedelta(hours=3)
             for f in rawFiles:
                 ftime = datetime.strptime(f[-17::], "%Yd%jt%H%M.he5")
-                if(startDateWindow <= ftime <= endDateWindow):
+                if (startDateWindow <= ftime <= endDateWindow):
                     rawFilesOut.append(f)
             rawFiles = rawFilesOut
-        if(len(rawFiles) == 0):
+        if (len(rawFiles) == 0):
             print("No Raw Files Found in:{}".format(args.input))
             sys.exit(os.EX_OSFILE)
     else:
