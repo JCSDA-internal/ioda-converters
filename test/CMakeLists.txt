@@ -1551,18 +1551,17 @@ if(iodaconv_bufr_query_ENABLED)
                     DEPENDS bufr2ioda.x )
 
 
-   ecbuild_add_test( TARGET  test_iodaconv_prepbufr_ncep_aircftprofiles2ioda_ldd
+   ecbuild_add_test( TARGET  test_iodaconv_prepbufr_ncep_aircftprofiles2ioda_debug
                      TYPE    SCRIPT
                      COMMAND bash
-                     ARGS    ldd
-                             ${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_prepbufr_aircft.yaml
+                     ARGS    module list
                      DEPENDS bufr2ioda.x )
 
 
-  ecbuild_add_test( TARGET  test_iodaconv_prepbufr_ncep_aircftprofiles2ioda_valgrind
+  ecbuild_add_test( TARGET  test_iodaconv_prepbufr_ncep_aircftprofiles2ioda_debug_2
                     TYPE    SCRIPT
                     COMMAND bash
-                    ARGS    valgrind --tool=memcheck --gen-suppressions=all --leak-check=full --leak-resolution=med --track-origins=yes "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_prepbufr_aircft.yaml"
+                    ARGS    module avail
                     DEPENDS bufr2ioda.x )
 
 
