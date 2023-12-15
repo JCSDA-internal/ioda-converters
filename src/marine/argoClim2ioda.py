@@ -57,7 +57,7 @@ class argoClim(object):
         else:
             raise NameError("No useable variable was found in the file %s" % self.filename)
 
-        assert self.varname in ['TEMPERATURE', 'SALINITY'],\
+        assert self.varname in ['TEMPERATURE', 'SALINITY'], \
             "%s is not a valid variable name" % self.varname
 
         self.varname2 = 'waterTemperature'
