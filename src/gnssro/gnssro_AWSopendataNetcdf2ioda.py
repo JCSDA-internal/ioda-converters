@@ -363,7 +363,7 @@ def get_opendata(f, add_qc, record_number=1):
     if add_qc:
         good = quality_control(profile_meta_data, np.array(impact_height, float), np.array(lats, float), np.array(lons, float))
         if len(good) == 0:
-            return{}
+            return {}
             # exit if entire profile is missing
         for k in obs_data.keys():
             obs_data[k] = obs_data[k][good]
@@ -432,7 +432,7 @@ def def_meta_types():
 
 
 def get_normalized_bit(value, bit_index):
-    return(value >> bit_index) & 1
+    return (value >> bit_index) & 1
 
 
 def assign_values(data):

@@ -82,9 +82,9 @@ class omi(object):
         vars2output = list(ioda2nc.keys())
         vars2output.append('sensorScanPosition')
         for v in vars2output:
-            if(v == 'quality_flag' or v == 'algorithm_flag' or v == 'prior_o3'):
+            if (v == 'quality_flag' or v == 'algorithm_flag' or v == 'prior_o3'):
                 pass
-            elif(v != 'valKey'):
+            elif (v != 'valKey'):
                 self.outdata[(v, 'MetaData')] = []
         self.outdata[self.varDict[varname_ozone]['valKey']] = []
         self._read()
@@ -100,22 +100,22 @@ class omi(object):
         varsToAddUnits = list(ioda2nc.keys())
         varsToAddUnits.append('sensorScanPosition')
         for v in varsToAddUnits:
-            if(v != 'valKey'):
+            if (v != 'valKey'):
                 vkey = (v, 'MetaData')
-                if('pressure' in v.lower()):
+                if ('pressure' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'Pa'
-                elif(v == 'dateTime'):
+                elif (v == 'dateTime'):
                     self.varAttrs[vkey]['units'] = 'seconds since 1993-01-01T00:00:00Z'
                     self.varAttrs[vkey]['_FillValue'] = long_missing_value
-                elif('latitude' in v.lower()):
+                elif ('latitude' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'degree_north'
-                elif('longitude' in v.lower()):
+                elif ('longitude' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'degree_east'
-                elif('angle' in v.lower()):
+                elif ('angle' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'degree'
-                elif('prior' in v.lower()):
+                elif ('prior' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'ppmv'
-                elif('scanposition' in v.lower()):
+                elif ('scanposition' in v.lower()):
                     self.varAttrs[vkey]['units'] = '1'
         self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'DU'
 
@@ -136,7 +136,7 @@ class omi(object):
         # make a temporary data dictionary to transfer things into.
         dd = {}
         for k in list(d.keys()):
-            if(k == 'dateTime'):
+            if (k == 'dateTime'):
                 # for flat array need to make it 2d to match other arrays before flattening again.
                 scn = np.arange(1, d['latitude'].shape[1]+1)
                 scn_tmp, tmp = np.meshgrid(scn, d[k])
@@ -144,7 +144,7 @@ class omi(object):
                 tmp = tmp.astype(np.int64)
                 dd[k] = tmp.flatten().tolist()
                 dd['sensorScanPosition'] = scn_tmp.flatten().tolist()
-            elif(k.lower() == 'prior_o3'):
+            elif (k.lower() == 'prior_o3'):
                 dd[k] = d[k][:, :, 0].flatten().tolist()
             else:
                 dd[k] = d[k].flatten().tolist()
@@ -165,7 +165,7 @@ class omi(object):
 
         for itime in range(d['latitude'].shape[0]):
             for iscan in range(d['latitude'].shape[1]):
-                if(d['dateTime'][itime] < self.startTAI or d['dateTime'][itime] > self.endTAI):
+                if (d['dateTime'][itime] < self.startTAI or d['dateTime'][itime] > self.endTAI):
                     continue
                 if (d['prior_o3'][itime, iscan, 0] <= 0.0 or d['valKey'][itime, iscan] <= 0.0):
                     continue
@@ -208,11 +208,11 @@ class omi(object):
                 # could simply this further with one if statement possibly more clever use of a bit masking.
                 dd['sensorScanPosition'].append(iscan+1)
                 for v in flatVars:
-                    if(v == 'dateTime'):
+                    if (v == 'dateTime'):
                         dd[v].append(d[v][itime])
-                    elif(v == 'prior_o3'):
+                    elif (v == 'prior_o3'):
                         dd[v].append(d[v][itime, iscan, 0])
-                    elif(v != 'sensorScanPosition'):
+                    elif (v != 'sensorScanPosition'):
                         dd[v].append(d[v][itime, iscan])
 
         return dd
@@ -225,7 +225,7 @@ class omi(object):
         # loop through input filenames
         for f in self.filenames:
             nc_data = self._read_nc(f)
-            if(self.qcOn):
+            if (self.qcOn):
                 print('Doing QC.')
                 d = self._do_qc(nc_data)
             else:
@@ -233,9 +233,9 @@ class omi(object):
                 d = self._just_flatten(nc_data)
             # add MetaData variables.
             for v in list(d.keys()):
-                if(v == 'quality_flag' or v == 'algorithm_flag' or v == 'prior_o3'):
+                if (v == 'quality_flag' or v == 'algorithm_flag' or v == 'prior_o3'):
                     pass
-                elif(v != 'valKey'):
+                elif (v != 'valKey'):
                     self.outdata[(v, 'MetaData')].extend(d[v])
 
             for ncvar, iodavar in obsvars.items():
@@ -251,11 +251,11 @@ class omi(object):
 
         for k in self.outdata.keys():
             self.outdata[k] = np.asarray(self.outdata[k])
-            if(self.outdata[k].dtype == 'float64'):
+            if (self.outdata[k].dtype == 'float64'):
                 self.outdata[k] = self.outdata[k].astype('float32')
-            elif(self.outdata[k].dtype == 'int64' and k != ('dateTime', 'MetaData')):
+            elif (self.outdata[k].dtype == 'int64' and k != ('dateTime', 'MetaData')):
                 self.outdata[k] = self.outdata[k].astype('int32')
-            elif(self.outdata[k].dtype == 'uint16' or self.outdata[k].dtype == 'uint8'):
+            elif (self.outdata[k].dtype == 'uint16' or self.outdata[k].dtype == 'uint8'):
                 self.outdata[k] = self.outdata[k].astype('int32')
         self.outdata[('dateTime', 'MetaData')] = self.outdata[('dateTime', 'MetaData')].astype('int64')
         # ensure lon is 0-360
@@ -314,11 +314,11 @@ def main():
 
     args = parser.parse_args()
     cycle_time = datetime(args.year, args.month, args.day, args.hour)
-    if(os.path.isfile(args.input)):
+    if (os.path.isfile(args.input)):
         print('Reading Single File:{}'.format(args.input))
         rawFiles = []
         rawFiles.append(args.input)
-    elif(os.path.isdir(args.input)):
+    elif (os.path.isdir(args.input)):
         # Get current cycle and associated file(s)
         startDateWindow = cycle_time - timedelta(hours=args.window/2)
         endDateWindow = cycle_time + timedelta(hours=args.window/2)
@@ -343,14 +343,14 @@ def main():
             startDateFile = datetime.strptime(vv[-2][0:-7], "%Ym%m%dt%H%M")
             endDateFile = startDateFile
             # Check the the start time for the next file to get the end time of current file.
-            if(fi != len(rawFiles)-1):
+            if (fi != len(rawFiles)-1):
                 vv = rawFiles[fi+1].split('_')
                 endDateFile = datetime.strptime(vv[-2][0:-7], "%Ym%m%dt%H%M")
-            if(startDateWindow <= startDateFile <= endDateWindow or startDateWindow <= endDateFile <= endDateWindow):
+            if (startDateWindow <= startDateFile <= endDateWindow or startDateWindow <= endDateFile <= endDateWindow):
                 rawFilesOut.append(f)
         rawFiles = rawFilesOut
 
-        if(len(rawFiles) == 0):
+        if (len(rawFiles) == 0):
             print("No Raw Files Found in:{}".format(args.input))
             sys.exit(os.EX_OSFILE)
     else:
