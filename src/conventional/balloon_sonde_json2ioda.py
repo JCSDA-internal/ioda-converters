@@ -12,7 +12,6 @@
 Python code to ingest JSON WindBorne Data
 """
 
-import pdb
 import re
 import logging
 import math
