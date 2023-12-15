@@ -129,7 +129,7 @@ class OwpSnowObs(object):
 
         if self.thin_swe == 1.0 and self.thin_depth == 1.0:
             print('No output requested, but variables thined by 100%')
-            return(None)
+            return (None)
         self.attr_data['thin_swe'] = self.thin_swe
         self.attr_data['thin_depth'] = self.thin_depth
         thin_dict = {
@@ -176,7 +176,7 @@ class OwpSnowObs(object):
             # define ioda meta/ancillary
             for name in [iconv.OvalName(), iconv.OerrName(), iconv.OqcName()]:
                 self.var_metadata[ioda_var, name]['coordinates'] = 'longitude latitude'
-                if(iconv.OqcName() != name):
+                if (iconv.OqcName() != name):
                     self.var_metadata[ioda_var, name]['units'] = output_var_unit_dict[ioda_var]
 
             conv_fact = output_conversion_factor[ioda_var]

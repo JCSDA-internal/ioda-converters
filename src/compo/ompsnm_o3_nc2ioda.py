@@ -73,9 +73,9 @@ class ompsnm(object):
         vars2output = list(ioda2nc.keys())
         vars2output.append('sensorScanPosition')
         for v in vars2output:
-            if('quality' in v or 'flags' in v):
+            if ('quality' in v or 'flags' in v):
                 pass
-            elif(v != 'valKey'):
+            elif (v != 'valKey'):
                 self.outdata[(v, 'MetaData')] = []
         self.outdata[self.varDict[varname_ozone]['valKey']] = []
 
@@ -95,17 +95,17 @@ class ompsnm(object):
         varsToAddUnits = list(ioda2nc.keys())
         varsToAddUnits.append('sensorScanPosition')
         for v in varsToAddUnits:
-            if(v != 'valKey'):
+            if (v != 'valKey'):
                 vkey = (v, 'MetaData')
-                if('pressure' in v.lower()):
+                if ('pressure' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'Pa'
-                elif(v == 'dateTime'):
+                elif (v == 'dateTime'):
                     self.varAttrs[vkey]['units'] = 'seconds since 1993-01-01T00:00:00Z'
-                elif('angle' in v.lower()):
+                elif ('angle' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'degrees'
-                elif('prior' in v.lower()):
+                elif ('prior' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'ppmv'
-                elif('scanposition' in v.lower()):
+                elif ('scanposition' in v.lower()):
                     self.varAttrs[vkey]['units'] = '1'
         self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'DU'
 
@@ -145,9 +145,9 @@ class ompsnm(object):
             fileData, idx = self._read_nc(f)
             # add metadata variables
             for v in list(fileData.keys()):
-                if('quality' in v or 'flags' in v):
+                if ('quality' in v or 'flags' in v):
                     pass
-                elif(v != 'valKey' and v != 'ozone_Apriori' and v != 'layer_efficiency'):
+                elif (v != 'valKey' and v != 'ozone_Apriori' and v != 'layer_efficiency'):
                     #  add metadata variables
                     self.outdata[(v, 'MetaData')].extend(fileData[v][idx].flatten().tolist())
             for ncvar, iodavar in obsvars.items():
@@ -159,9 +159,9 @@ class ompsnm(object):
 
         for k in self.outdata.keys():
             self.outdata[k] = np.asarray(self.outdata[k])
-            if(self.outdata[k].dtype == 'float64'):
+            if (self.outdata[k].dtype == 'float64'):
                 self.outdata[k] = self.outdata[k].astype('float32')
-            elif(self.outdata[k].dtype == 'int64' and k != ('dateTime', 'MetaData')):
+            elif (self.outdata[k].dtype == 'int64' and k != ('dateTime', 'MetaData')):
                 self.outdata[k] = self.outdata[k].astype('int32')
         DimDict['Location'] = nlocs
         self.outdata[('dateTime', 'MetaData')] = self.outdata[('dateTime', 'MetaData')].astype(np.int64)
@@ -219,11 +219,11 @@ def main():
 
     # Get Day of year for current cycle and associated file(s)
     cycle_time = datetime(args.year, args.month, args.day, args.hour)
-    if(os.path.isfile(args.input)):
+    if (os.path.isfile(args.input)):
         print('Reading Single File:{}'.format(args.input))
         rawFiles = []
         rawFiles.append(args.input)
-    elif(os.path.isdir(args.input)):
+    elif (os.path.isdir(args.input)):
         startDateWindow = cycle_time - timedelta(hours=args.window/2)
         endDateWindow = cycle_time + timedelta(hours=args.window/2)
         # effectively round off so we get the number of days between
@@ -248,13 +248,13 @@ def main():
             startDateFile = datetime.strptime(vv[-3][0:-2], "%Ym%m%dt%H%M")
             endDateFile = startDateFile
             # Check the the start time for the next file to get the end time of current file.
-            if(fi != len(rawFiles)-1):
+            if (fi != len(rawFiles)-1):
                 vv = rawFiles[fi+1].split('_')
                 endDateFile = datetime.strptime(vv[-2][0:-7], "%Ym%m%dt%H%M")
-            if(startDateWindow <= startDateFile <= endDateWindow or startDateWindow <= endDateFile <= endDateWindow):
+            if (startDateWindow <= startDateFile <= endDateWindow or startDateWindow <= endDateFile <= endDateWindow):
                 rawFilesOut.append(f)
         rawFiles = rawFilesOut
-        if(len(rawFiles) == 0):
+        if (len(rawFiles) == 0):
             print("No Raw Files Found in:{}".format(args.input))
             sys.exit(os.EX_OSFILE)
     else:
