@@ -256,6 +256,9 @@ namespace bufr {
             {
                 if (child->mnemonic == mnemonic)
                 {
+                    // Check for query with invalid nodes (nodes that shouldn't be in the path).
+                    if (!child->isQueryPathNode() && !child->isLeaf()) return nullptr;
+
                     currentIdx++;
                     if (currentIdx == index || index == 0) return child;
                 }
