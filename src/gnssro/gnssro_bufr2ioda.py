@@ -159,7 +159,7 @@ def get_meta_data(bufr):
     for k, v in meta_data_keys.items():
         try:
             profile_meta_data[k] = codes_get(bufr, v)
-        except:
+        except Exception as e:
             print(f'  WARNING: could not retrieve key: {k} -- Skipping')
 
     # do the hokey time structure to time structure
@@ -206,6 +206,8 @@ def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None, on
     impact = codes_get_array(bufr, 'impactParameter')[offset::drepfac[0]]
     bang = codes_get_array(bufr, 'bendingAngle')[offset*2::drepfac[0]*2]
     bang_err = codes_get_array(bufr, 'bendingAngle')[offset*2+1::drepfac[0]*2]
+    if only_bang:
+        bang_err[:] = 0.003
     bang_conf = codes_get_array(bufr, 'percentConfidence')[1:krepfac[0]+1]
     # len (bang) Out[19]: 1482  (krepfac * 6) -or- (krepfac * drepfac * 2 )`
 
@@ -234,14 +236,19 @@ def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None, on
 
     # (geometric) height is read as integer but expected as float in output
     if only_bang:
-        refrac = bang
-        refrac_err = bang_err
-        refrac_conf = codes_get_array(bufr, 'percentConfidence')[sum(krepfac[:1])+1:sum(krepfac[:2])+1]
+        refrac = np.empty_like(bang)
+        refrac[:] = float_missing_value
+        refrac_err = np.empty_like(bang_err)
+        refrac_err[:] = float_missing_value
     else:
-        height = codes_get_array(bufr, 'height', ktype=float)
         # get the refractivity
         refrac = codes_get_array(bufr, 'atmosphericRefractivity')[0::2]
         refrac_err = codes_get_array(bufr, 'atmosphericRefractivity')[1::2]
+
+    try:
+        height = codes_get_array(bufr, 'geopotentialHeight', ktype=float)
+    except Exception as e:
+        height = codes_get_array(bufr, 'height', ktype=float)
 
     # value, ob_error, qc
     obs_data[('atmosphericRefractivity', "ObsValue")] = assign_values(refrac)
@@ -253,10 +260,7 @@ def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None, on
     obs_data[('latitude', 'MetaData')] = assign_values(lats)
     obs_data[('longitude', 'MetaData')] = assign_values(lons)
     obs_data[('impactParameterRO', 'MetaData')] = assign_values(impact)
-    if only_bang:
-        obs_data[('height', 'MetaData')] = assign_values(impact)
-    else:
-        obs_data[('height', 'MetaData')] = assign_values(height)
+    obs_data[('height', 'MetaData')] = assign_values(height)
     for k, v in profile_meta_data.items():
         if type(v) is np.int64:
             obs_data[(k, 'MetaData')] = np.array(np.repeat(v, krepfac[0]), dtype=np.int64)
@@ -275,7 +279,7 @@ def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None, on
     obs_data[('sequenceNumber', 'MetaData')] = np.array(np.repeat(nrec, krepfac[0]), dtype=ioda_int_type)
 
     if not only_bang:
-        # get derived profiles
+        # get derived profiles -- these are not written out
         geop = codes_get_array(bufr, 'geopotentialHeight')[:-1]
         pres = codes_get_array(bufr, 'nonCoordinatePressure')[0:-2:2]
         temp = codes_get_array(bufr, 'airTemperature')[0::2]
