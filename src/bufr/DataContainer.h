@@ -79,8 +79,9 @@ namespace Ingester
         /// \brief Check if DataObject with name is available
         /// \param fieldName The name of the object
         /// \param categoryId The vector<string> for the subcategory
-        bool hasKey(const std::string& fieldName,
-                    const SubCategory& categoryId = {}) const;
+        bool hasKey(const std::string& fieldName, const SubCategory& categoryId) const;
+
+        bool hasCategory(const SubCategory& categoryId) const;
 
         /// \brief Get the number of rows of the specified sub category
         /// \param categoryId The vector<string> for the subcategory
@@ -105,9 +106,9 @@ namespace Ingester
                  const std::vector<std::string>& dimPaths,
                  const SubCategory& categoryId = {});
 
-        void set(const std::string& fieldName,
-                 const py::array& pyData,
-                 const SubCategory& categoryId = {});
+        void replace(const std::string& fieldName,
+                     const py::array& pyData,
+                     const SubCategory& categoryId = {});
 
         /// \brief Gets a numpy array for the resulting data for a specific field with a given
         /// name grouped by the optional groupByFieldName.

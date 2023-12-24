@@ -7,6 +7,7 @@
 
 #include "Tokenizer.h"
 
+#include <algorithm>
 #include <memory>
 #include <vector>
 #include <string>
@@ -16,7 +17,8 @@ namespace bufr {
     std::vector<std::shared_ptr<Token>> Tokenizer::tokenize(const std::string &query)
     {
         // remove whitespace from query
-        const auto cleanedStr = std::regex_replace(query, std::regex("\\s"), "");
+        auto cleanedStr = std::regex_replace(query, std::regex("\\s"), "");
+        std::transform(cleanedStr.begin(), cleanedStr.end(), cleanedStr.begin(), ::toupper);
 
         std::vector<std::shared_ptr<Token>> tokens;
 

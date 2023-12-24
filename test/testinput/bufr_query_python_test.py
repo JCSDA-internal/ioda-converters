@@ -5,26 +5,6 @@
 
 from pyiodaconv import bufr
 import numpy as np
-import json
-import yaml
-
-
-def test_bufr2ioda():
-    yaml_file = 'bufr_ncep_esamua.yaml'
-    yaml_file = './testinput/bufr_ncep_1bamua_ta.yaml'
-    with open(yaml_file, 'r') as file:
-       yaml_config = yaml.load(file, Loader=yaml.FullLoader)
-    yaml_string = json.dumps(yaml_config)
-    data = bufr.parse(yaml_string, 0)
-    sub_c = data.allSubCategories()
-    for id in ['n18', 'metop-b', 'n19', 'metop-c']:
-       x = data.get('variables/antennaTemperature', [id])
-       x_path = data.getPaths('variables/antennaTemperature', [id])
-       y = x.copy()
-       data.set('variables/antennaTemperature', x, [id])
-       data.add('variables/antennaTemperature1', y, x_path[2:4], [id])
-    bufr.encode_save(yaml_string, data)
-
 
 
 def test_basic_query():
@@ -134,12 +114,61 @@ def test_invalid_query():
 
     assert False, "Didn't throw exception for invalid query."
 
+def test_container_replace():
+    YAML_PATH = './testinput/bufr_hrs.yaml'
+
+    container = bufr.Parser(YAML_PATH).parse()
+
+    data = container.get('variables/brightnessTemp')
+    container.replace('variables/brightnessTemp', data * 0.1)
+
+    bufr.IodaEncoder(YAML_PATH).encode(container)
+
+def test_container_add():
+    YAML_PATH = './testinput/bufr_hrs.yaml'
+
+    container = bufr.Parser(YAML_PATH).parse()
+
+    data = container.get('variables/brightnessTemp')
+    paths = container.getPaths('variables/brightnessTemp')
+    container.add('variables/brightnessTemp_new', data*.01, paths)
+
+    iodaDescription = bufr.IodaDescription(YAML_PATH)
+    iodaDescription.add_variable(name='ObsValue/new_brightnessTemperature',
+                                 source='variables/brightnessTemp_new',
+                                 units='K',
+                                 longName='New Brightness Temperature')
+
+    bufr.IodaEncoder(iodaDescription).encode(container)
+
+def test_container_w_category():
+    YAML_PATH = './testinput/bufr_ncep_1bamua_ta.yaml'
+
+    container = bufr.Parser(YAML_PATH).parse()
+
+    categories = container.allSubCategories()
+    for category in [categories[0]]:  # [metop-a]
+       data = container.get('variables/antennaTemperature', category)
+       paths = container.getPaths('variables/antennaTemperature', category)
+
+       container.replace('variables/antennaTemperature', data, category)
+       container.add('variables/antennaTemperature1', data, paths, category)
+
+    iodaDescription = bufr.IodaDescription(YAML_PATH)
+    iodaDescription.add_variable(name='obsData/antennaTemperature1',
+                                 source='variables/antennaTemperature1',
+                                 units='K')
+
+    bufr.IodaEncoder(iodaDescription).encode(container)
 
 
 if __name__ == '__main__':
-    test_bufr2ioda()
     test_basic_query()
     test_string_field()
     test_long_str_field()
     test_type_override()
     test_invalid_query()
+
+    test_container_replace()
+    test_container_add()
+    test_container_w_category()

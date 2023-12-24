@@ -24,6 +24,8 @@ namespace Ingester
     class IodaEncoder
     {
      public:
+        explicit IodaEncoder(const std::string& yamlPath);
+        explicit IodaEncoder(const IodaDescription& description);
         explicit IodaEncoder(const eckit::Configuration& conf);
 
         /// \brief Encode the data into an ioda::ObsGroup object
@@ -31,6 +33,11 @@ namespace Ingester
         /// \param append Add data to existing file?
         std::map<SubCategory, ioda::ObsGroup> encode(const std::shared_ptr<DataContainer>& data,
                                                     bool append = false);
+
+        void py_encode(const std::shared_ptr<DataContainer>& data, bool append = false)
+        {
+            encode(data, append);
+        }
 
      private:
         typedef std::map<std::vector<bufr::Query>, DimensionDescription> NamedPathDims;

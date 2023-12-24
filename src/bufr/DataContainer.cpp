@@ -66,9 +66,9 @@ namespace Ingester
     {
         auto dimPaths = get(fieldName, categoryId)->getDimPaths();
         std::vector<std::string> paths(dimPaths.size());
-        for (const auto& path : dimPaths)
+        for (size_t pathIdx = 0; pathIdx < dimPaths.size(); pathIdx++)
         {
-            paths.push_back(path.str());
+            paths[pathIdx] = dimPaths[pathIdx].str();
         }
 
         return paths;
@@ -165,42 +165,43 @@ namespace Ingester
                              const py::array& pyData,
                              const std::vector<std::string>& dimPaths,
                              const SubCategory& categoryId)
-     {
+    {
+        // Guard statements
+        if (!hasCategory(categoryId))
+        {
+            std::ostringstream errorStr;
+            errorStr << "ERROR: Invalid category " << makeSubCategoryStr(categoryId);
+            errorStr << " for field " << fieldName << "." << std::endl;
+            throw eckit::BadParameter(errorStr.str());
+        }
 
-         // Guard statements
-         if (hasKey(fieldName, categoryId))
-         {
-             throw eckit::BadParameter("ERROR: Field does not exist.");
-         }
+        if (hasKey(fieldName, categoryId))
+        {
+            std::ostringstream errorStr;
+            errorStr << "ERROR: Field called " << fieldName << " already exists ";
+            errorStr << "for subcategory " << makeSubCategoryStr(categoryId) << std::endl;
+            throw eckit::BadParameter(errorStr.str());
+        }
 
         auto paths = std::vector<bufr::Query>(dimPaths.size());
-        for (size_t i = 0; i < dimPaths.size(); i++)
+        for (size_t pathIdx = 0; pathIdx < dimPaths.size(); pathIdx++)
         {
-            auto queries = bufr::QueryParser::parse(dimPaths[i]);
-
-            if (queries.size() > 1)
-            {
-                throw eckit::BadParameter("ERROR: Dimensioning path " + \
-                                          dimPaths[i] + " can't be multi-query");
-            }
-
-            paths[i] = queries[0];
+            paths[pathIdx] = bufr::QueryParser::parse(dimPaths[pathIdx])[0];
         }
 
         auto dataObj = makeObject(fieldName, pyData);
         dataObj->setDimPaths(paths);
-        dataSets_.at(categoryId).insert({fieldName, makeObject(fieldName, pyData)});
-     }
+        dataSets_.at(categoryId).insert({fieldName, dataObj});
+    }
 
-    void DataContainer::set(const std::string& fieldName,
-                            const py::array& pyData,
-                            const SubCategory& categoryId)
+    void DataContainer::replace(const std::string& fieldName,
+                                const py::array& pyData,
+                                const SubCategory& categoryId)
     {
-
         // Guard statements
         if (!hasKey(fieldName, categoryId))
         {
-            throw eckit::BadParameter("ERROR: Field does not exist.");
+            throw eckit::BadParameter("ERROR: Field " + fieldName +  " does not exist.");
         }
 
         if (pyData.ndim() != dataSets_.at(categoryId).at(fieldName)->getDims().size())
@@ -218,7 +219,7 @@ namespace Ingester
 
         auto dataObj = makeObject(fieldName, pyData);
         dataObj->setDimPaths(dataSets_.at(categoryId).at(fieldName)->getDimPaths());
-        dataSets_.at(categoryId).at(fieldName) = makeObject(fieldName, pyData);
+        dataSets_.at(categoryId).at(fieldName) = dataObj;
     }
 
     py::array DataContainer::getNumpyArray(const std::string& fieldName,
@@ -266,13 +267,24 @@ namespace Ingester
                                const SubCategory& categoryId) const
     {
         bool hasKey = false;
-        if (dataSets_.find(categoryId) != dataSets_.end() &&
+        if (hasCategory(categoryId) &&
             dataSets_.at(categoryId).find(fieldName) != dataSets_.at(categoryId).end())
         {
             hasKey = true;
         }
 
         return hasKey;
+    }
+
+    bool DataContainer::hasCategory(const SubCategory& categoryId) const
+    {
+        bool hasCat = false;
+        if (dataSets_.find(categoryId) != dataSets_.end())
+        {
+            hasCat = true;
+        }
+
+        return hasCat;
     }
 
     size_t DataContainer::size(const SubCategory &categoryId) const

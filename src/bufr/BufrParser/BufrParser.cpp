@@ -15,8 +15,6 @@
 #include "oops/util/Logger.h"
 
 #include "DataContainer.h"
-#include "DataObject.h"
-#include "Exports/Export.h"
 #include "Exports/Splits/Split.h"
 
 #include "Query/QuerySet.h"
@@ -25,8 +23,7 @@
 namespace Ingester {
     BufrParser::BufrParser(const BufrDescription &description) :
             description_(description),
-            file_(bufr::File(description_.filepath(),
-                             description_.tablepath()))
+            file_(bufr::File(description_.filepath(), description_.tablepath()))
     {
         // print message
         oops::Log::info() << "BufrParser: Parsing file " << description_.filepath() << std::endl;
@@ -34,10 +31,16 @@ namespace Ingester {
 
     BufrParser::BufrParser(const eckit::LocalConfiguration &conf) :
             description_(BufrDescription(conf)),
-            file_(bufr::File(description_.filepath(),
-                             description_.tablepath()))
+            file_(bufr::File(description_.filepath(), description_.tablepath()))
     {
         // print message
+        oops::Log::info() << "BufrParser: Parsing file " << description_.filepath() << std::endl;
+    }
+
+    BufrParser::BufrParser(const std::string& yamlPath) :
+        description_(BufrDescription(yamlPath)),
+        file_(bufr::File(description_.filepath(), description_.tablepath()))
+    {
         oops::Log::info() << "BufrParser: Parsing file " << description_.filepath() << std::endl;
     }
 
