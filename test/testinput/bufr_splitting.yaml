@@ -63,7 +63,7 @@ observations:
           units: "degrees_east"
           range: [-180, 180]
 
-        - name: "radiance@ObsValue"
+        - name: "ObsValue/radiance"
           coordinates: "longitude latitude Channel"
           source: variables/radiance
           longName: "Radiance"

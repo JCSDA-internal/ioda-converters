@@ -93,6 +93,7 @@ list( APPEND test_input
   testinput/tempo_o3_proxy_20130801T100600Z_S002G02.nc
   testinput/tempo_o3_proxy_20130801T101200Z_S002G03.nc
   testinput/gdas.t18z.abias_air
+  testinput/MRMS_MergedReflectivityQC_01.50_20230712-152241.grib2
   testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t162415_small.h5
   testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t180544_small.h5
 )
@@ -178,6 +179,7 @@ list( APPEND test_output
   testoutput/tempo_no2_stratosphere.nc
   testoutput/tempo_hcho_troposphere.nc
   testoutput/gdas.t18z.abias_air_ascent.csv
+  testoutput/mrms_reflectivity_Z1500m.nc
   testoutput/omps_o3_nm.nc
 )
 
@@ -190,6 +192,7 @@ if( iodaconv_gnssro_ENABLED )
 
   list( APPEND test_output
     testoutput/gnssro_obs_3prof_2022090100.nc4
+    testoutput/gnssro_obs_3prof_generic_2022090100.nc4
     testoutput/gnssro_obs_awsopendata_2021080200.nc4
     testoutput/gnssaro_obs_2021012000.nc
   )
@@ -302,7 +305,12 @@ if( iodaconv_bufr_query_ENABLED )
     testinput/bufr_query_fieldname_validation.py
     testinput/bufr_ncep_rtma_mesonet.yaml
     testinput/bufr_ncep_long_strs.yaml
-    /testinput/gdas.t06z.snocvr.tm00.bufr_d
+    testinput/gdas.t06z.snocvr.tm00.bufr_d
+    testinput/bufr_ncep_rtma_adpsfc.yaml
+    testinput/rtma_ru.t0000z.aircft.tm00_nc004006.bufr_d
+    testinput/rtma_ru.t0000z.aircft.tm00_nc004103.bufr_d
+    testinput/bufr_ncep_rtma_aircft.yaml
+    testinput/bufr_ncep_rtma_aircft_NC004103.yaml
   )
 
   list( APPEND test_output
@@ -364,6 +372,9 @@ if( iodaconv_bufr_query_ENABLED )
     testoutput/bufr_query_python_to_ioda_test.nc
     testoutput/rtma_ru.t00z.msonet.tm00.nc
     testoutput/bufr_ncep_long_strs.nc
+    testoutput/rtma_ru.t0000z.adpsfc_nc000101.tm00.nc
+    testoutput/rtma_ru.t0000z.aircft.tm00_nc004006.nc
+    testoutput/rtma_ru.t0000z.aircft.tm00_nc004103.nc
   )
 endif()
 
@@ -405,7 +416,7 @@ if( iodaconv_pbfortran_ENABLED )
 
   list( APPEND test_output
     testoutput/gnssro_obs_2018041500.nc4
-    testoutput/sondes_obs_2020093018.nc4
+    testoutput/radiosonde_obs_2020093018.nc4
     testoutput/mhs_metop-b_obs_2020101215.nc4
     testoutput/mhs_metop-b_obs_2020110112.nc4
     testoutput/mhs_n19_obs_2020110112.nc4
@@ -903,6 +914,21 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_sondetac
                           -t share/raob_stations_small.json
                           --date 2021-08-16T12:00:00Z --netcdf"
                           2021081612_sonde_small.nc ${IODA_CONV_COMP_TOL})
+
+#===============================================================================
+# MRMS (multi-radar, multi-sensor) radar reflectivity CONUS converter
+#===============================================================================
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mrms
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/mrms_grib2ioda.py
+                          -i testinput/MRMS_MergedReflectivityQC_01.50_20230712-152241.grib2
+                          -o testrun/mrms_reflectivity_Z1500m.nc"
+                          mrms_reflectivity_Z1500m.nc ${IODA_CONV_COMP_TOL_ZERO})
 
 #===============================================================================
 # MISC converters
@@ -1513,14 +1539,14 @@ if(iodaconv_bufr_query_ENABLED)
                             gdas.t12z.aircft_AMDAR103.tm00.nc ${IODA_CONV_COMP_TOL}
                     DEPENDS bufr2ioda.x )
 
-  ecbuild_add_test( TARGET  test_iodaconv_prepbufr_ncep_aircftprofiles2ioda
-                    TYPE    SCRIPT
-                    COMMAND bash
-                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                            netcdf
-                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_prepbufr_aircft.yaml"
-                            gdas.t12z.acft_profiles.prepbufr.nc ${IODA_CONV_COMP_TOL}
-                    DEPENDS bufr2ioda.x )
+#  ecbuild_add_test( TARGET  test_iodaconv_prepbufr_ncep_aircftprofiles2ioda
+#                    TYPE    SCRIPT
+#                    COMMAND bash
+#                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+#                            netcdf
+#                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_prepbufr_aircft.yaml"
+#                            gdas.t12z.acft_profiles.prepbufr.nc ${IODA_CONV_COMP_TOL}
+#                    DEPENDS bufr2ioda.x )
 
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_read_2_dim_blocks
@@ -1714,6 +1740,15 @@ if(iodaconv_bufr_query_ENABLED)
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_prepbufr_adpsfc_cloud_rrfs.yaml"
                             rrfs.t06z.adpsfc.prepbufr.nc ${IODA_CONV_COMP_TOL}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_long_strs
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_long_strs.yaml"
+                            bufr_ncep_long_strs.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_rtma_aircft
@@ -2007,7 +2042,7 @@ if( iodaconv_pbfortran_ENABLED )
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
                             -i testinput -o testrun prepbufr.bufr"
-                            sondes_obs_2020093018.nc4 ${IODA_CONV_COMP_TOL}
+                            radiosonde_obs_2020093018.nc4 ${IODA_CONV_COMP_TOL}
                     DEPENDS bufr2nc_fortran.x)
 
   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mhs_conv

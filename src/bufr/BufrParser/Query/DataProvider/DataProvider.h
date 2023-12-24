@@ -76,6 +76,11 @@ namespace bufr {
         {
             if (bits == 0) return false;
 
+            if (scale == 0 && reference == 0 && bits == 0)
+            {
+                return false;
+            }
+
             bool is64Bit;
             if (isInteger() && !isSigned())
             {

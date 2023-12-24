@@ -19,6 +19,10 @@
 #include "Constants.h"
 #include "Data.h"
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> develop
 namespace Ingester {
 namespace bufr {
 

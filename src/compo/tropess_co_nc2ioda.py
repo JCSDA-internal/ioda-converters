@@ -119,7 +119,7 @@ class tropess(object):
                 ap[:, lev] = ln(xa[:, lev]) - np.sum(this_term, axis=1)
                 nom[:, lev] = nom_pressure[int(userLevel)]
 
-                if(np.isnan(ap[:, lev]).any()):
+                if (np.isnan(ap[:, lev]).any()):
                     nan_flag[np.argwhere(np.isnan(ap[:, lev]))] = False
                     flag = np.logical_and(nan_flag, flag)
             flag = np.logical_and(nan_flag, thin)
