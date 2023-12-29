@@ -11,6 +11,7 @@
 """
 Python code to ingest netCDF4 MU ON data
 """
+import re
 import pdb
 import logging
 import argparse
@@ -45,10 +46,12 @@ GlobalAttrs = {
 
 # The outgoing IODA MetaData variables, their data type, units, and group name
 MetaDataKeyList = [
-    ("sensorChannelNumber", "integer", "", metaDataName),
-    ("latitude", "float", "degrees_north", metaDataName),
-    ("longitude", "float", "degrees_east", metaDataName),
-    ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z",metaDataName),
+    ("sensorChannelNumber", "integer", ""),
+    ("latitude", "float", "degrees_north"),
+    ("longitude", "float", "degrees_east"),
+    ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z"),
+    ("sensorAzimuthAngle", "float", "degrees"),
+    ("sensorIdentification", "string", ""),
 #    ("wind_speed_level2_error", "float", "m s-1", "ObsError"),
 #    ("ddm_qual_flag_lhcp", "int", "", "PreQC"),
 #    ("retrieval_qual_flag", "int", "", "PreQC"),
@@ -113,7 +116,8 @@ def main(args):
             sys.exit()
         logging.debug(f"Reading input file: {file_name}")
 
-        # Open file
+        # Open file 
+        ##### (need to move file and dat ref into get_data_from_file, but then need to move adjust data_append inside also.)
         file = h5py.File(file_name, 'r')
 
         # Get reference time and convert to epoch time 
@@ -127,7 +131,7 @@ def main(args):
 #            obs_data['stationElevation'] = None
 
         # Get data from file to append to obs_data dataframe
-        obs_data_append = get_data_from_file(file, obs_data.keys())
+        obs_data_append = get_data_from_file(file, obs_data.keys(), file_name)
 
         # Convert variables
         # Change time reference
@@ -136,7 +140,7 @@ def main(args):
         # Append to data frame containing all timestamp data
         obs_data = pd.concat([obs_data, obs_data_append], ignore_index=True)
 
-        print(file_cnt)
+        pdb.set_trace()
         file.close()
         # count files
         file_cnt += 1
@@ -149,7 +153,10 @@ def main(args):
         obs_data[MetaDataKey[0]].fillna(missing_vals[MetaDataKey[1]], inplace=True)
     for n, obsvar in enumerate(obsvars):
         obs_data[obsvar].fillna(missing_vals[obsvars_dtype[n]], inplace=True)
-    ########## QC ############
+
+    # sort by instrument and then time
+    if args.sort:
+        obs_data.sort_values(['stationIdentification', 'dateTime'], ascending=[True, True], inplace=True)
 
     # count number of locations
     ntotal = obs_data.shape[0]
@@ -196,7 +203,14 @@ def main(args):
     writer.BuildIoda(ioda_data, VarDims, varAttrs, GlobalAttrs)
 
 
-def get_data_from_file(afile, col_names):
+def get_data_from_file(afile, col_names, file_name):
+
+    # Get instrument reference
+    subst='CY..._G..'
+    temp = re.compile(subst) 
+    res = temp.search(file_name)
+    instrument_ref = res.group(0)
+
     # Pull each data type (variable) and create a list
     latitude = [afile['lat'][ii] for ii in range(len(afile['lat']))]
     longitude = [afile['lon'][ii] for ii in range(len(afile['lon']))]
@@ -205,14 +219,18 @@ def get_data_from_file(afile, col_names):
     wind_speed_level2 = [afile['wind_speed_level2'][ii] for ii in range(len(afile['wind_speed_level2']))]
     ERA5_total_swell = [afile['ERA5_total_swell'][ii] for ii in range(len(afile['ERA5_total_swell']))]
     ERA5_wind_speed = [afile['ERA5_wind_speed'][ii] for ii in range(len(afile['ERA5_wind_speed']))]
+    sensorAzimuthAngle = [afile['azimuth'][ii] for ii in range(len(afile['azimuth']))]
+
+    sensorIdentification = [instrument_ref]*len(latitude) 
+
 #    # List of release time (earliest time in file. this needs to be updated to be earliest time for each instrument, since the file can have multiple)
 #    releaseTime = [min(dateTime)]*len(height)
 #    # Make a dummy column to have a constant elevation for the "station"
 #    stationElevation = [2]*len(dateTime)
         
     # Make a list of lists to feed into dataframe
-    data_lists = list(zip(sensorChannelNumber, latitude, longitude, dateTime, 
-                          wind_speed_level2, ERA5_total_swell, ERA5_wind_speed)) 
+    data_lists = list(zip(sensorChannelNumber, latitude, longitude, dateTime, sensorAzimuthAngle,  
+                          sensorIdentification, wind_speed_level2, ERA5_total_swell, ERA5_wind_speed)) 
 
     # All observation data for this file to append to the master dataframe
     obs_data_append = pd.DataFrame(data_lists, columns=col_names)
