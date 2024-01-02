@@ -216,8 +216,8 @@ def get_data_from_file(afile, col_names, file_name):
 
 #    # List of release time (earliest time in file. this needs to be updated to be earliest time for each instrument, since the file can have multiple)
 #    releaseTime = [min(dateTime)]*len(height)
-#    # Make a dummy column to have a constant elevation for the "station"
-    stationElevation = [2]*len(dateTime)
+    # Make a column to have a constant elevation for the "station"
+    stationElevation = [10]*len(dateTime)
         
     # Make a list of lists to feed into dataframe
     data_lists = list(zip(sensorChannelNumber, latitude, longitude, dateTime, sensorAzimuthAngle,  
