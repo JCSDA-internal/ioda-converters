@@ -52,6 +52,7 @@ MetaDataKeyList = [
     ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z"),
     ("sensorAzimuthAngle", "float", "degrees"),
     ("sensorIdentification", "string", ""),
+    ("sensorElevation", "float", "m"),
 #    ("wind_speed_level2_error", "float", "m s-1", "ObsError"),
 #    ("ddm_qual_flag_lhcp", "int", "", "PreQC"),
 #    ("retrieval_qual_flag", "int", "", "PreQC"),
@@ -59,20 +60,14 @@ MetaDataKeyList = [
 meta_keys = [m_item[0] for m_item in MetaDataKeyList]
 
 # The outgoing IODA variables (ObsValues), their units, and assigned constant ObsError.
-obsvars = ['wind_speed_level2',
-           'ERA5_total_swell',
-           'ERA5_wind_speed']
-obsvars_units = ['m s-1', 'm', 'm s-1']
-#obserrlist = [1.2, 0.75E-3, 1.5, 1.7, 1.7]
-obsvars_dtype = ['float',
-                 'float',
-                 'float']
+obsvars = ['windSpeedAt10M']
+obsvars_units = ['m s-1']
+#obserrlist = [1.2]
+obsvars_dtype = ['float']
 
 # Assign dimensions to the obs values 
 VarDims = {
-    'wind_speed_level2': ['Location'],
-    'ERA5_total_swell': ['Location'],
-    'ERA5_wind_speed': ['Location']
+    'windSpeedAt10M': ['Location'],
 }
 
 # creating data types
@@ -128,7 +123,6 @@ def main(args):
             #initialize the DF 
             obs_data = pd.DataFrame(columns=meta_keys+obsvars) 
 #            obs_data['releaseTime'] = None
-#            obs_data['stationElevation'] = None
 
         # Get data from file to append to obs_data dataframe
         obs_data_append = get_data_from_file(file, obs_data.keys(), file_name)
@@ -140,7 +134,6 @@ def main(args):
         # Append to data frame containing all timestamp data
         obs_data = pd.concat([obs_data, obs_data_append], ignore_index=True)
 
-        pdb.set_trace()
         file.close()
         # count files
         file_cnt += 1
@@ -216,9 +209,7 @@ def get_data_from_file(afile, col_names, file_name):
     longitude = [afile['lon'][ii] for ii in range(len(afile['lon']))]
     dateTime = [int(afile['time'][ii]) for ii in range(len(afile['time']))]  # datetime with different ref time
     sensorChannelNumber = [afile['channel'][ii] for ii in range(len(afile['channel']))]
-    wind_speed_level2 = [afile['wind_speed_level2'][ii] for ii in range(len(afile['wind_speed_level2']))]
-    ERA5_total_swell = [afile['ERA5_total_swell'][ii] for ii in range(len(afile['ERA5_total_swell']))]
-    ERA5_wind_speed = [afile['ERA5_wind_speed'][ii] for ii in range(len(afile['ERA5_wind_speed']))]
+    windSpeedAt10M = [afile['wind_speed_level2'][ii] for ii in range(len(afile['wind_speed_level2']))]
     sensorAzimuthAngle = [afile['azimuth'][ii] for ii in range(len(afile['azimuth']))]
 
     sensorIdentification = [instrument_ref]*len(latitude) 
@@ -226,11 +217,11 @@ def get_data_from_file(afile, col_names, file_name):
 #    # List of release time (earliest time in file. this needs to be updated to be earliest time for each instrument, since the file can have multiple)
 #    releaseTime = [min(dateTime)]*len(height)
 #    # Make a dummy column to have a constant elevation for the "station"
-#    stationElevation = [2]*len(dateTime)
+    stationElevation = [2]*len(dateTime)
         
     # Make a list of lists to feed into dataframe
     data_lists = list(zip(sensorChannelNumber, latitude, longitude, dateTime, sensorAzimuthAngle,  
-                          sensorIdentification, wind_speed_level2, ERA5_total_swell, ERA5_wind_speed)) 
+                          sensorIdentification, stationElevation, windSpeedAt10M))
 
     # All observation data for this file to append to the master dataframe
     obs_data_append = pd.DataFrame(data_lists, columns=col_names)
@@ -248,8 +239,7 @@ def quality_control(obs_data):
     lat_range = [-90, 90]
     lon_range = [-180, 180]
     # Replace with None to be filled with missing value later
-    obs_data.loc[((obs_data['wind_speed_level2'] < wind_range[0]) | (obs_data['wind_speed_level2'] > wind_range[1])), 'wind_speed_level2'] = None
-    obs_data.loc[((obs_data['ERA5_wind_speed'] < wind_range[0]) | (obs_data['ERA5_wind_speed'] > wind_range[1])), 'ERA5_wind_speed'] = None
+    obs_data.loc[((obs_data['windSpeedAt10M'] < wind_range[0]) | (obs_data['windSpeedAt10M'] > wind_range[1])), 'windSpeedAt10M'] = None
     obs_data.loc[((obs_data['latitude'] < lat_range[0]) | (obs_data['latitude'] > lat_range[1])), 'latitude'] = None
     obs_data.loc[((obs_data['longitude'] < lon_range[0]) | (obs_data['longitude'] > lon_range[1])), 'longitude'] = None
 
