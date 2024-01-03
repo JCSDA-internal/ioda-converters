@@ -365,7 +365,7 @@ if( iodaconv_bufr_query_ENABLED )
     testoutput/rrfs.t06z.lgycld.bufr.nc
     testoutput/rrfs.t06z.adpsfc.prepbufr.nc
     testoutput/bufr_query_filtering.nc
-    testoutput/bufr_ncep_prepbufr_adpupa.nc
+    testoutput/gdas.t12z.adpupa.prepbufr.nc
     testoutput/prepbufr_adpupa_api.nc
     testoutput/bufr_query_python_to_ioda_test.nc
     testoutput/rtma_ru.t00z.msonet.tm00.nc
@@ -1643,7 +1643,7 @@ if(iodaconv_bufr_query_ENABLED)
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_prepbufr_adpupa.yaml"
-                            bufr_ncep_prepbufr_adpupa.nc ${IODA_CONV_COMP_TOL}
+                            gdas.t12z.adpupa.prepbufr.nc ${IODA_CONV_COMP_TOL}
                     DEPENDS bufr2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_prepbufr_adpupa_api

@@ -97,7 +97,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/bufr_ncep_prepbufr_adpupa.nc"
+      obsdataout: "./testrun/gdas.t12z.adpupa.prepbufr.nc"
 
       variables:
         # MetaData
