@@ -54,19 +54,16 @@ MetaDataKeyList = [
     ("sensorIdentification", "string", ""),
     ("stationElevation", "float", "m"),
     ("height", "float", "m"),
-#    ("wind_speed_level2_error", "float", "m s-1", "ObsError"),
-#    ("ddm_qual_flag_lhcp", "int", "", "PreQC"),
-#    ("retrieval_qual_flag", "int", "", "PreQC"),
 ]
 meta_keys = [m_item[0] for m_item in MetaDataKeyList]
 
 # The outgoing IODA variables (ObsValues), their units, and assigned constant ObsError.
 obsvars = ['windSpeedAt10M']
 obsvars_units = ['m s-1']
-#obserrlist = [1.2]
+# obserrlist = [1.2]
 obsvars_dtype = ['float']
 
-# Assign dimensions to the obs values 
+# Assign dimensions to the obs values
 VarDims = {
     'windSpeedAt10M': ['Location'],
 }
@@ -94,6 +91,7 @@ dtypes = {'string': object,
           'long': np.int64,
           'float': np.float32}
 
+
 def main(args):
     if args.debug:
         logging.basicConfig(level=logging.INFO)
@@ -112,17 +110,17 @@ def main(args):
             sys.exit()
         logging.debug(f"Reading input file: {file_name}")
 
-        # Open file 
-        ##### (need to move file and dat ref into get_data_from_file, but then need to move adjust data_append inside also.)
+        # Open file
+        # (need to move file and dat ref into get_data_from_file, but then need to move adjust data_append inside also.)
         file = h5py.File(file_name, 'r')
 
-        # Get reference time and convert to epoch time 
+        # Get reference time and convert to epoch time
         dat_ref = file['time'].attrs['units'][-19:].decode('UTF-8')
         dat_ref = datetime.strptime(dat_ref, '%Y-%m-%d %H:%M:%S').timestamp()
 
-        if 'obs_data' not in locals(): 
-            #initialize the DF 
-            obs_data = pd.DataFrame(columns=meta_keys+obsvars) 
+        if 'obs_data' not in locals():
+            # initialize the DF
+            obs_data = pd.DataFrame(columns=meta_keys+obsvars)
 #            obs_data['releaseTime'] = None
 
         # Get data from file to append to obs_data dataframe
@@ -131,7 +129,7 @@ def main(args):
         # Convert variables
         # Change time reference
         obs_data_append = adjust_dateTime(obs_data_append, dat_ref)
- 
+
         # Append to data frame containing all timestamp data
         obs_data = pd.concat([obs_data, obs_data_append], ignore_index=True)
 
@@ -165,7 +163,7 @@ def main(args):
     varDict = defaultdict(lambda: DefaultOrderedDict(dict))
     varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
-     # Set coordinates and units of the ObsValues.
+    # Set coordinates and units of the ObsValues.
     for n, iodavar in enumerate(obsvars):
         # set the obs space attributes
         varDict[iodavar]['valKey'] = iodavar, obsValName
@@ -200,8 +198,8 @@ def main(args):
 def get_data_from_file(afile, col_names, file_name):
 
     # Get instrument reference
-    subst='CY..._G..'
-    temp = re.compile(subst) 
+    subst = 'CY..._G..'
+    temp = re.compile(subst)
     res = temp.search(file_name)
     instrument_ref = res.group(0)
 
@@ -212,16 +210,16 @@ def get_data_from_file(afile, col_names, file_name):
     sensorChannelNumber = [afile['channel'][ii] for ii in range(len(afile['channel']))]
     windSpeedAt10M = [afile['wind_speed_level2'][ii] for ii in range(len(afile['wind_speed_level2']))]
     sensorAzimuthAngle = [afile['azimuth'][ii] for ii in range(len(afile['azimuth']))]
-    sensorIdentification = [instrument_ref]*len(latitude) 
+    sensorIdentification = [instrument_ref]*len(latitude)
 
 #    # List of release time (earliest time in file. this needs to be updated to be earliest time for each instrument, since the file can have multiple)
 #    releaseTime = [min(dateTime)]*len(height)
     # Make a column to have a constant elevation for the "station"
     stationElevation = [10]*len(dateTime)
     height = [10]*len(dateTime)
-        
+
     # Make a list of lists to feed into dataframe
-    data_lists = list(zip(sensorChannelNumber, latitude, longitude, dateTime, sensorAzimuthAngle,  
+    data_lists = list(zip(sensorChannelNumber, latitude, longitude, dateTime, sensorAzimuthAngle,
                           sensorIdentification, stationElevation, height, windSpeedAt10M,))
 
     # All observation data for this file to append to the master dataframe
@@ -230,7 +228,7 @@ def get_data_from_file(afile, col_names, file_name):
 
 
 def adjust_dateTime(obs_DF, dat_ref):
-    obs_DF['dateTime'] = obs_DF['dateTime']+int(dat_ref) 
+    obs_DF['dateTime'] = obs_DF['dateTime']+int(dat_ref)
     return obs_DF
 
 
