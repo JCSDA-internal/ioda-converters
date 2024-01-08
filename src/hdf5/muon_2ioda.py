@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# testing command: python3 muon_2ioda.py -i trackwiseOceanWindSpeed_muon_CY002_G01_20220215T021826Z_580_vPLD.nc4 -o test.nc
+# testing command: python3 muon_2ioda.py -i /Users/smaticka/Downloads/ocean_surface_wind/20220215_partial/trackwiseOceanWindSpe*.nc4 -o test.nc
 #
 # (C) Copyright 2020-2023 UCAR
 #
@@ -52,7 +52,8 @@ MetaDataKeyList = [
     ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z"),
     ("sensorAzimuthAngle", "float", "degrees"),
     ("sensorIdentification", "string", ""),
-    ("sensorElevation", "float", "m"),
+    ("stationElevation", "float", "m"),
+    ("height", "float", "m"),
 #    ("wind_speed_level2_error", "float", "m s-1", "ObsError"),
 #    ("ddm_qual_flag_lhcp", "int", "", "PreQC"),
 #    ("retrieval_qual_flag", "int", "", "PreQC"),
@@ -211,17 +212,17 @@ def get_data_from_file(afile, col_names, file_name):
     sensorChannelNumber = [afile['channel'][ii] for ii in range(len(afile['channel']))]
     windSpeedAt10M = [afile['wind_speed_level2'][ii] for ii in range(len(afile['wind_speed_level2']))]
     sensorAzimuthAngle = [afile['azimuth'][ii] for ii in range(len(afile['azimuth']))]
-
     sensorIdentification = [instrument_ref]*len(latitude) 
 
 #    # List of release time (earliest time in file. this needs to be updated to be earliest time for each instrument, since the file can have multiple)
 #    releaseTime = [min(dateTime)]*len(height)
     # Make a column to have a constant elevation for the "station"
     stationElevation = [10]*len(dateTime)
+    height = [10]*len(dateTime)
         
     # Make a list of lists to feed into dataframe
     data_lists = list(zip(sensorChannelNumber, latitude, longitude, dateTime, sensorAzimuthAngle,  
-                          sensorIdentification, stationElevation, windSpeedAt10M))
+                          sensorIdentification, stationElevation, height, windSpeedAt10M,))
 
     # All observation data for this file to append to the master dataframe
     obs_data_append = pd.DataFrame(data_lists, columns=col_names)
