@@ -88,6 +88,7 @@ phases:
       - echo $CODEBUILD_BUILD_SUCCEEDING
 
       - cd /build_container
+      - source /opt/spack-environment/activate.sh
       # Additional exports for running OpenMPI MPI jobs as root
       # and with more resources than available
       - export OMPI_ALLOW_RUN_AS_ROOT=1
