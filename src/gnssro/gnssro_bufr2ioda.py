@@ -279,7 +279,7 @@ def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None):
         good = quality_control(profile_meta_data, height, lats, lons)
         if len(lats[good]) == 0:
             # exit if entire profile is missing
-            return{}
+            return {}
         for k in obs_data.keys():
             obs_data[k] = obs_data[k][good]
 
@@ -352,7 +352,7 @@ def def_meta_types():
 
 
 def get_normalized_bit(value, bit_index):
-    return(value >> bit_index) & 1
+    return (value >> bit_index) & 1
 
 
 def assign_values(data):
