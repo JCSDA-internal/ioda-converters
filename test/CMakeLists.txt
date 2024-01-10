@@ -1224,7 +1224,6 @@ endforeach()
 foreach (coltype total troposphere stratosphere)
   foreach (spec no2) #hcho not tested and o3 not out yet with real data
     if (NOT (${spec} STREQUAL "hcho" AND (${coltype} STREQUAL "total" OR ${coltype} STREQUAL "stratosphere")))
-       SPEC=`echo ${spec} | tr '[:lower:]' '[:upper:]'`
        ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tempo_${spec}_${coltype}
                           TYPE    SCRIPT
                           ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
@@ -1232,9 +1231,9 @@ foreach (coltype total troposphere stratosphere)
                           ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                                   netcdf
                                   "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tempo_nc2ioda.py
-				  -i testinput/TEMPO_${SPEC}_L2_V01_20231101T210157Z_S011G07.nc
-				     testinput/TEMPO_${SPEC}_L2_V01_20231101T210834Z_S011G08.nc
-				     testinput/TEMPO_${SPEC}_L2_V01_20231101T211511Z_S011G09.nc
+				  -i testinput/TEMPO_${spec}_L2_V01_20231101T210157Z_S011G07.nc
+				     testinput/TEMPO_${spec}_L2_V01_20231101T210834Z_S011G08.nc
+				     testinput/TEMPO_${spec}_L2_V01_20231101T211511Z_S011G09.nc
 				  -o testrun/tempo_${spec}_${coltype}.nc
                                   -v ${spec}
                                   -c ${coltype}"
