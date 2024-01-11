@@ -233,58 +233,57 @@ class tempo(object):
 
             # flip 2d arrays to have increaing pressure
             if np.shape(lats)[0] > 0:
-               preslev = np.flip(preslev, axis=1)
-               avg_kernel = np.flip(avg_kernel, axis=1)
+                 preslev = np.flip(preslev, axis=1)
+                 avg_kernel = np.flip(avg_kernel, axis=1)
 
-               # print after compression
-               print('AFTER COMPRESSION')
-               print('lats: ', np.shape(lats))
-               print('lons: ',  np.shape(lons))
-               print('time: ',  np.shape(time))
-               print('flg: ',  np.shape(flg))
-               print('qa_value: ',  np.shape(qa_value))
-               print('cld_fra: ',  np.shape(cld_fra))
-               print('qc_flag: ',  np.shape(qc_flag))
-               print('obs: ',  np.shape(obs))
-               print('err: ',  np.shape(err))
-               print('preslev: ',  np.shape(preslev))
-               print('avg_kernel: ',  np.shape(avg_kernel))
+                 # print after compression
+                 print('AFTER COMPRESSION')
+                 print('lats: ', np.shape(lats))
+                 print('lons: ',  np.shape(lons))
+                 print('time: ',  np.shape(time))
+                 print('flg: ',  np.shape(flg))
+                 print('qa_value: ',  np.shape(qa_value))
+                 print('cld_fra: ',  np.shape(cld_fra))
+                 print('qc_flag: ',  np.shape(qc_flag))
+                 print('obs: ',  np.shape(obs))
+                 print('err: ',  np.shape(err))
+                 print('preslev: ',  np.shape(preslev))
+                 print('avg_kernel: ',  np.shape(avg_kernel))
+                 print(np.shape(time[flg]))
+                 if first:
+                     self.outdata[('dateTime', 'MetaData')] = time[flg]
+                     self.outdata[('latitude', 'MetaData')] = lats[flg]
+                     self.outdata[('longitude', 'MetaData')] = lons[flg]
+                     self.outdata[('quality_assurance_value', 'MetaData')] = qa_value[flg]
+                     self.outdata[('cloud_fraction', 'MetaData')] = cld_fra[flg]
+                     self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = avg_kernel[flg]
+                     self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = preslev[flg]
+                     self.outdata[self.varDict[iodavar]['valKey']] = obs[flg]
+                     self.outdata[self.varDict[iodavar]['errKey']] = err[flg]
+                     self.outdata[self.varDict[iodavar]['qcKey']] = qc_flag[flg]
+                 else:
+                     self.outdata[('dateTime', 'MetaData')] = np.concatenate((
+                         self.outdata[('dateTime', 'MetaData')], time[flg]))
+                     self.outdata[('latitude', 'MetaData')] = np.concatenate((
+                         self.outdata[('latitude', 'MetaData')], lats[flg]))
+                     self.outdata[('longitude', 'MetaData')] = np.concatenate((
+                         self.outdata[('longitude', 'MetaData')], lons[flg]))
+                     self.outdata[('quality_assurance_value', 'MetaData')] = np.concatenate((
+                         self.outdata[('quality_assurance_value', 'MetaData')], qa_value[flg]))
+                     self.outdata[('cloud_fraction', 'MetaData')] = np.concatenate((
+                         self.outdata[('cloud_fraction', 'MetaData')], cld_fra[flg]))
+                     self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = np.concatenate((
+                         self.outdata[('averagingKernel', 'RetrievalAncillaryData')], avg_kernel[flg]))
+                     self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = np.concatenate((
+                         self.outdata[('pressureVertice', 'RetrievalAncillaryData')], preslev[flg]))
+                     self.outdata[self.varDict[iodavar]['valKey']] = np.concatenate(
+                         (self.outdata[self.varDict[iodavar]['valKey']], obs[flg]))
+                     self.outdata[self.varDict[iodavar]['errKey']] = np.concatenate(
+                         (self.outdata[self.varDict[iodavar]['errKey']], err[flg]))
+                     self.outdata[self.varDict[iodavar]['qcKey']] = np.concatenate(
+                         (self.outdata[self.varDict[iodavar]['qcKey']], qc_flag[flg]))
 
-               print(np.shape(time[flg]))
-               if first:
-                  self.outdata[('dateTime', 'MetaData')] = time[flg]
-                  self.outdata[('latitude', 'MetaData')] = lats[flg]
-                  self.outdata[('longitude', 'MetaData')] = lons[flg]
-                  self.outdata[('quality_assurance_value', 'MetaData')] = qa_value[flg]
-                  self.outdata[('cloud_fraction', 'MetaData')] = cld_fra[flg]
-                  self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = avg_kernel[flg]
-                  self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = preslev[flg]
-                  self.outdata[self.varDict[iodavar]['valKey']] = obs[flg]
-                  self.outdata[self.varDict[iodavar]['errKey']] = err[flg]
-                  self.outdata[self.varDict[iodavar]['qcKey']] = qc_flag[flg]
-               else:
-                  self.outdata[('dateTime', 'MetaData')] = np.concatenate((
-                      self.outdata[('dateTime', 'MetaData')], time[flg]))
-                  self.outdata[('latitude', 'MetaData')] = np.concatenate((
-                      self.outdata[('latitude', 'MetaData')], lats[flg]))
-                  self.outdata[('longitude', 'MetaData')] = np.concatenate((
-                      self.outdata[('longitude', 'MetaData')], lons[flg]))
-                  self.outdata[('quality_assurance_value', 'MetaData')] = np.concatenate((
-                      self.outdata[('quality_assurance_value', 'MetaData')], qa_value[flg]))
-                  self.outdata[('cloud_fraction', 'MetaData')] = np.concatenate((
-                      self.outdata[('cloud_fraction', 'MetaData')], cld_fra[flg]))
-                  self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = np.concatenate((
-                      self.outdata[('averagingKernel', 'RetrievalAncillaryData')], avg_kernel[flg]))
-                  self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = np.concatenate((
-                      self.outdata[('pressureVertice', 'RetrievalAncillaryData')], preslev[flg]))
-                  self.outdata[self.varDict[iodavar]['valKey']] = np.concatenate(
-                      (self.outdata[self.varDict[iodavar]['valKey']], obs[flg]))
-                  self.outdata[self.varDict[iodavar]['errKey']] = np.concatenate(
-                      (self.outdata[self.varDict[iodavar]['errKey']], err[flg]))
-                  self.outdata[self.varDict[iodavar]['qcKey']] = np.concatenate(
-                      (self.outdata[self.varDict[iodavar]['qcKey']], qc_flag[flg]))
-
-               first = False
+                 first = False
 
         DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
         AttrData['Location'] = np.int32(DimDict['Location'])
