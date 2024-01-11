@@ -83,9 +83,9 @@ list( APPEND test_input
   testinput/sst_ostia.nc
   testinput/2021081612_RAOB_small.txt
   testinput/tropomi_co.nc
-  testinput/TEMPO_NO2_L2_V01_20231101T210834Z_S011G08.nc
-  testinput/TEMPO_NO2_L2_V01_20231101T211511Z_S011G09.nc
-  testinput/TEMPO_NO2_L2_V01_20231101T210157Z_S011G07.nc  
+  testinput/TEMPO_no2_L2_V01_20231101T210834Z_S011G08.nc
+  testinput/TEMPO_no2_L2_V01_20231101T211511Z_S011G09.nc
+  testinput/TEMPO_no2_L2_V01_20231101T210157Z_S011G07.nc  
   testinput/gdas.t18z.abias_air
   testinput/MRMS_MergedReflectivityQC_01.50_20230712-152241.grib2
   testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t162415_small.h5
