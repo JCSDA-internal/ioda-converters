@@ -260,7 +260,11 @@ def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None, on
     obs_data[('latitude', 'MetaData')] = assign_values(lats)
     obs_data[('longitude', 'MetaData')] = assign_values(lons)
     obs_data[('impactParameterRO', 'MetaData')] = assign_values(impact)
-    obs_data[('height', 'MetaData')] = assign_values(height)
+    if only_bang:
+        obs_data[('height', 'MetaData')] = assign_values(impact)
+    else:
+        obs_data[('height', 'MetaData')] = assign_values(height)      
+
     for k, v in profile_meta_data.items():
         if type(v) is np.int64:
             obs_data[(k, 'MetaData')] = np.array(np.repeat(v, krepfac[0]), dtype=np.int64)
