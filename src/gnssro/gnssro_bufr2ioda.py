@@ -246,9 +246,9 @@ def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None, on
         refrac_err = codes_get_array(bufr, 'atmosphericRefractivity')[1::2]
 
     try:
-        height = codes_get_array(bufr, 'geopotentialHeight', ktype=float)
-    except Exception as e:
         height = codes_get_array(bufr, 'height', ktype=float)
+    except Exception as e:
+        height = codes_get_array(bufr, 'geopotentialHeight', ktype=float)
 
     # value, ob_error, qc
     obs_data[('atmosphericRefractivity', "ObsValue")] = assign_values(refrac)
@@ -263,7 +263,7 @@ def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None, on
     if only_bang:
         obs_data[('height', 'MetaData')] = assign_values(impact)
     else:
-        obs_data[('height', 'MetaData')] = assign_values(height)      
+        obs_data[('height', 'MetaData')] = assign_values(height)
 
     for k, v in profile_meta_data.items():
         if type(v) is np.int64:
