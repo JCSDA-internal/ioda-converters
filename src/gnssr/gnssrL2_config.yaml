@@ -1,0 +1,13 @@
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+# Sanita Vetra-Carvalho @Spire Global UK Ltd
+# www.spire.com
+
+# set up the IODA writer for each 6h DA window to produce IODA files for each 00, 06, 12, 18 hour
+qflg: True
+da_window_length: 6 # hours
+da_window_shift: 3 # hours
+datetime_start: "2023-04-15T00:00:00"
+datetime_end: "2023-04-16T18:00:00"
+out_dir: "<YOUR INPUT DIR OF ORIGNAL NETCDF FILES>"
+in_dir: "<YOUR OUTPUT DIR OF IODA NETCDF FILES>"
