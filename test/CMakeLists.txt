@@ -304,6 +304,8 @@ if( iodaconv_bufr_query_ENABLED )
     testinput/rtma_ru.t0000z.aircft.tm00_nc004103.bufr_d
     testinput/bufr_ncep_rtma_aircft.yaml
     testinput/bufr_ncep_rtma_aircft_NC004103.yaml
+    testinput/bufr_ncep_rtma_aircar.yaml
+    testinput/rtma_ru.t0000z.aircar_NC004004.tm00.bufr_d
   )
 
   list( APPEND test_output
@@ -1760,6 +1762,15 @@ if(iodaconv_bufr_query_ENABLED)
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_rtma_aircft_NC004103.yaml"
                             rtma_ru.t0000z.aircft.tm00_nc004103.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_rtma_aircar
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_rtma_aircar.yaml"
+                            rtma_ru.t0000z.aircar_NC004004.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
 #  FIXME: Greg Thompson
