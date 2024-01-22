@@ -71,8 +71,8 @@ namespace Ingester
         int nobs = (radObj->getDims())[0];
         int nchn = (radObj->getDims())[1];
 
-        oops::Log::info()  << "nobs =  " << nobs << std::endl;
-        oops::Log::info()  << "nchn =  " << nchn << std::endl;
+        oops::Log::info()  << "RemappedBrightnessTemperatureVariable: nobs =  " << nobs << std::endl;
+        oops::Log::info()  << "RemappedBrightnessTemperatureVariable: nchn =  " << nchn << std::endl;
 
         // Declare and initialize scanline array
         // scanline has the same dimension as fovn
