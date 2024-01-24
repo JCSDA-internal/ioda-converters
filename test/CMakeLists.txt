@@ -259,7 +259,6 @@ if( iodaconv_bufr_query_ENABLED )
     testinput/bufr_ncep_prepbufr_adpupa.yaml
     testinput/prepbufr_adpsfc_api.py
     testinput/prepbufr_sfcshp_api.py
-    testinput/adpupa_prepbufr.yaml
     testinput/bufr_ncep_prepbufr_adpupa.py
     testinput/aircar_BUFR2ioda.yaml
     testinput/gdas.aircar.t00z.20210801.bufr
@@ -341,7 +340,6 @@ if( iodaconv_bufr_query_ENABLED )
     testoutput/bufr_simple_groupby.nc
     testoutput/bufr_empty_fields.nc
     testoutput/bufr_sfcshp.nc
-    testoutput/adpupa_prepbufr.nc
     testoutput/gdas.aircar.t00z.20210801.nc
     testoutput/airep_multi.nc
     testoutput/bufr_wmo_amdar_multi.nc
@@ -362,7 +360,7 @@ if( iodaconv_bufr_query_ENABLED )
     testoutput/rrfs.t06z.lgycld.bufr.nc
     testoutput/rrfs.t06z.adpsfc.prepbufr.nc
     testoutput/bufr_query_filtering.nc
-    testoutput/bufr_ncep_prepbufr_adpupa.nc
+    testoutput/gdas.t12z.adpupa.prepbufr.nc
     testoutput/prepbufr_adpupa_api.nc
     testoutput/bufr_query_python_to_ioda_test.nc
     testoutput/rtma_ru.t00z.msonet.tm00.nc
@@ -1634,22 +1632,13 @@ if(iodaconv_bufr_query_ENABLED)
                             bufr_sfcshp.nc ${IODA_CONV_COMP_TOL}
                     DEPENDS bufr2ioda.x )
 
-  ecbuild_add_test( TARGET  test_iodaconv_bufr_adpupa
-                    TYPE    SCRIPT
-                    COMMAND bash
-                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                            netcdf
-                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/adpupa_prepbufr.yaml"
-                    adpupa_prepbufr.nc ${IODA_CONV_COMP_TOL}
-                    DEPENDS bufr2ioda.x )
-
   ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_prepbufr_adpupa
                     TYPE    SCRIPT
                     COMMAND bash
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_prepbufr_adpupa.yaml"
-                            bufr_ncep_prepbufr_adpupa.nc ${IODA_CONV_COMP_TOL}
+                            gdas.t12z.adpupa.prepbufr.nc ${IODA_CONV_COMP_TOL}
                     DEPENDS bufr2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_prepbufr_adpupa_api
