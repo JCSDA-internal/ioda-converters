@@ -126,6 +126,9 @@ def main(args):
         # Change time reference
         obs_data_append = adjust_dateTime(obs_data_append, dat_ref)
 
+        # Change longitude range 
+        obs_data_append = adjust_longitude(obs_data_append)
+
         # Append to data frame containing all timestamp data
         obs_data = pd.concat([obs_data, obs_data_append], ignore_index=True)
 
@@ -217,6 +220,10 @@ def get_data_from_file(afile, col_names, file_name):
 
 def adjust_dateTime(obs_DF, dat_ref):
     obs_DF['dateTime'] = obs_DF['dateTime']+int(dat_ref)
+    return obs_DF
+
+def adjust_longitude(obs_DF):
+    obs_DF['longitude'] = (obs_DF['longitude']+int(180)) % 360 - int(180)
     return obs_DF
 
 
