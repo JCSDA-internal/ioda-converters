@@ -71,6 +71,9 @@ namespace Ingester
         int nobs = (radObj->getDims())[0];
         int nchn = (radObj->getDims())[1];
 
+        oops::Log::info()  << "RemappedBrightnessTemperatureVariable: nobs = " << nobs << std::endl;
+        oops::Log::info()  << "RemappedBrightnessTemperatureVariable: nchn = " << nchn << std::endl;
+
         // Declare and initialize scanline array
         // scanline has the same dimension as fovn
         std::vector<int> scanline(fovnObj->size(), DataObject<int>::missingValue());
@@ -104,9 +107,11 @@ namespace Ingester
         // Perform FFT image remapping
         // input only variables: nobs, nchn obstime, fovn, channel
         // input & output variables: btobs, scanline, error_status
-        int error_status;
-        ATMS_Spatial_Average_f(nobs, nchn, &obstime, &fovn, &channel, &btobs,
-                                           &scanline, &error_status);
+        if (nobs > 0) {
+            int error_status;
+            ATMS_Spatial_Average_f(nobs, nchn, &obstime, &fovn, &channel, &btobs,
+                                               &scanline, &error_status);
+        }
 
         // Export remapped observation (btobs)
         return std::make_shared<DataObject<float>>(btobs,

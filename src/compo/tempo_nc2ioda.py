@@ -72,8 +72,10 @@ class tempo(object):
         for f in self.filenames:
             ncd = nc.Dataset(f, 'r')
 
-            # conversion factor fron constants
-            conv = cm2m2 * molarmass[self.varname] / Na
+            print('FILENAME: ', f)
+
+            # conversion factor from constants
+            conv = cm2m2 / Na
 
             # get dimensions
             mirror = ncd.dimensions['mirror_step'].size
@@ -89,21 +91,28 @@ class tempo(object):
             lons = ncd.groups['geolocation'].variables['longitude'][:].ravel()
             qc_flag = ncd.groups['support_data'].variables['ground_pixel_quality_flag'][:]\
                 .ravel()
+            cld_fra = ncd.groups['support_data'].variables['eff_cloud_fraction'][:]\
+                .ravel()
             qa_value = ncd.groups['product'].variables['main_data_quality_flag'][:]\
                 .ravel()
 
             # there are inconsitencies in masking between different variables
             # choose one from one variable and apply it to all the other variables
-            mask = np.ma.getmask(qa_value)
+            mask1 = np.ma.getmask(qa_value)
+            mask2 = np.ma.getmask(lats)
+            mask = np.ma.mask_or(mask1, mask2)
             if np.ndim(mask) == 0:
                 mask = [mask] * np.shape(qa_value)[0]
             lats = np.ma.array(lats, mask=mask)
             lons = np.ma.array(lons, mask=mask)
             qc_flag = np.ma.array(qc_flag, mask=mask)
+            cld_fra.mask = False
+            cld_fra = np.ma.array(cld_fra, mask=mask)
+            qa_value = np.ma.array(qa_value, mask=mask)
 
             # adding ability to pre filter the data using the qa value
             # and also perform thinning using random uniform draw
-            qaf = qa_value <= self.qa_flg
+            qaf = ((qa_value <= self.qa_flg) & (qa_value >= 0))
             thi = np.random.uniform(size=len(qa_value)) > self.thin
             flg = np.logical_and(qaf, thi)
 
@@ -164,6 +173,7 @@ class tempo(object):
                             avg_kernel[t_diff > 0] = 0.0
 
                     # make sure that the avk mask is correctly put
+                    avg_kernel.mask = False
                     avg_kernel = np.ma.array(avg_kernel, mask=np.repeat(mask, levels))
 
                 # obs value and error
@@ -187,12 +197,26 @@ class tempo(object):
                 exit()
 
             # clean data
-            neg_obs = obs > 0.0
-            nan_obs = obs != np.nan
+            neg_obs = ((obs > 0.0) & (err > 0.0))
+            nan_obs = ((obs != np.nan) & (err != np.nan))
             cln = np.logical_and(neg_obs, nan_obs)
 
             # final flag before sending this to ioda engines
             flg = np.logical_and(flg, cln)
+
+            # print before compression
+            print('BEFORE COMPRESSION')
+            print('lats: ', np.shape(lats))
+            print('lons: ', np.shape(lons))
+            print('time: ', np.shape(time))
+            print('flg: ', np.shape(flg))
+            print('qa_value: ', np.shape(qa_value))
+            print('cld_fra: ', np.shape(cld_fra))
+            print('qc_flag: ', np.shape(qc_flag))
+            print('obs: ', np.shape(obs))
+            print('err: ', np.shape(err))
+            print('preslev: ', np.shape(preslev))
+            print('avg_kernel: ', np.shape(avg_kernel))
 
             # remove masked Data and make sure types are correct
             lats = np.ma.compressed(lats).astype('float32')
@@ -200,6 +224,7 @@ class tempo(object):
             time = np.ma.compressed(time)
             flg = np.ma.compressed(flg)
             qa_value = np.ma.compressed(qa_value).astype('float32')
+            cld_fra = np.ma.compressed(cld_fra).astype('float32')
             qc_flag = np.ma.compressed(qc_flag).astype('int32')
             obs = np.ma.compressed(obs).astype('float32')
             err = np.ma.compressed(err).astype('float32')
@@ -207,40 +232,58 @@ class tempo(object):
             avg_kernel = np.ma.compress_rowcols(avg_kernel, axis=0).astype('float32')
 
             # flip 2d arrays to have increaing pressure
-            preslev = np.flip(preslev, axis=1)
-            avg_kernel = np.flip(avg_kernel, axis=1)
+            if np.shape(lats)[0] > 0:
+                preslev = np.flip(preslev, axis=1)
+                avg_kernel = np.flip(avg_kernel, axis=1)
 
-            if first:
-                self.outdata[('dateTime', 'MetaData')] = time[flg]
-                self.outdata[('latitude', 'MetaData')] = lats[flg]
-                self.outdata[('longitude', 'MetaData')] = lons[flg]
-                self.outdata[('quality_assurance_value', 'MetaData')] = qa_value[flg]
-                self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = avg_kernel[flg]
-                self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = preslev[flg]
-                self.outdata[self.varDict[iodavar]['valKey']] = obs[flg]
-                self.outdata[self.varDict[iodavar]['errKey']] = err[flg]
-                self.outdata[self.varDict[iodavar]['qcKey']] = qc_flag[flg]
-            else:
-                self.outdata[('dateTime', 'MetaData')] = np.concatenate((
-                    self.outdata[('dateTime', 'MetaData')], time[flg]))
-                self.outdata[('latitude', 'MetaData')] = np.concatenate((
-                    self.outdata[('latitude', 'MetaData')], lats[flg]))
-                self.outdata[('longitude', 'MetaData')] = np.concatenate((
-                    self.outdata[('longitude', 'MetaData')], lons[flg]))
-                self.outdata[('quality_assurance_value', 'MetaData')] = np.concatenate((
-                    self.outdata[('quality_assurance_value', 'MetaData')], qa_value[flg]))
-                self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = np.concatenate((
-                    self.outdata[('averagingKernel', 'RetrievalAncillaryData')], avg_kernel[flg]))
-                self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = np.concatenate((
-                    self.outdata[('pressureVertice', 'RetrievalAncillaryData')], preslev[flg]))
-                self.outdata[self.varDict[iodavar]['valKey']] = np.concatenate(
-                    (self.outdata[self.varDict[iodavar]['valKey']], obs[flg]))
-                self.outdata[self.varDict[iodavar]['errKey']] = np.concatenate(
-                    (self.outdata[self.varDict[iodavar]['errKey']], err[flg]))
-                self.outdata[self.varDict[iodavar]['qcKey']] = np.concatenate(
-                    (self.outdata[self.varDict[iodavar]['qcKey']], qc_flag[flg]))
+                # print after compression
+                print('AFTER COMPRESSION')
+                print('lats: ', np.shape(lats))
+                print('lons: ', np.shape(lons))
+                print('time: ', np.shape(time))
+                print('flg: ', np.shape(flg))
+                print('qa_value: ', np.shape(qa_value))
+                print('cld_fra: ', np.shape(cld_fra))
+                print('qc_flag: ', np.shape(qc_flag))
+                print('obs: ', np.shape(obs))
+                print('err: ', np.shape(err))
+                print('preslev: ', np.shape(preslev))
+                print('avg_kernel: ', np.shape(avg_kernel))
+                print(np.shape(time[flg]))
+                if first:
+                    self.outdata[('dateTime', 'MetaData')] = time[flg]
+                    self.outdata[('latitude', 'MetaData')] = lats[flg]
+                    self.outdata[('longitude', 'MetaData')] = lons[flg]
+                    self.outdata[('quality_assurance_value', 'MetaData')] = qa_value[flg]
+                    self.outdata[('cloud_fraction', 'MetaData')] = cld_fra[flg]
+                    self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = avg_kernel[flg]
+                    self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = preslev[flg]
+                    self.outdata[self.varDict[iodavar]['valKey']] = obs[flg]
+                    self.outdata[self.varDict[iodavar]['errKey']] = err[flg]
+                    self.outdata[self.varDict[iodavar]['qcKey']] = qc_flag[flg]
+                else:
+                    self.outdata[('dateTime', 'MetaData')] = np.concatenate((
+                        self.outdata[('dateTime', 'MetaData')], time[flg]))
+                    self.outdata[('latitude', 'MetaData')] = np.concatenate((
+                        self.outdata[('latitude', 'MetaData')], lats[flg]))
+                    self.outdata[('longitude', 'MetaData')] = np.concatenate((
+                        self.outdata[('longitude', 'MetaData')], lons[flg]))
+                    self.outdata[('quality_assurance_value', 'MetaData')] = np.concatenate((
+                        self.outdata[('quality_assurance_value', 'MetaData')], qa_value[flg]))
+                    self.outdata[('cloud_fraction', 'MetaData')] = np.concatenate((
+                        self.outdata[('cloud_fraction', 'MetaData')], cld_fra[flg]))
+                    self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = np.concatenate((
+                        self.outdata[('averagingKernel', 'RetrievalAncillaryData')], avg_kernel[flg]))
+                    self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = np.concatenate((
+                        self.outdata[('pressureVertice', 'RetrievalAncillaryData')], preslev[flg]))
+                    self.outdata[self.varDict[iodavar]['valKey']] = np.concatenate(
+                        (self.outdata[self.varDict[iodavar]['valKey']], obs[flg]))
+                    self.outdata[self.varDict[iodavar]['errKey']] = np.concatenate(
+                        (self.outdata[self.varDict[iodavar]['errKey']], err[flg]))
+                    self.outdata[self.varDict[iodavar]['qcKey']] = np.concatenate(
+                        (self.outdata[self.varDict[iodavar]['qcKey']], qc_flag[flg]))
 
-            first = False
+                first = False
 
         DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
         AttrData['Location'] = np.int32(DimDict['Location'])
@@ -293,7 +336,7 @@ def main():
         '-q', '--qa_value',
         help="qa value used to preflag data that goes into file before QC"
         "0 normal, 1 suspicious, 2 bad",
-        type=float, default=0.0)
+        type=int, default=0)
     optional.add_argument(
         '-n', '--thin',
         help="percentage of random thinning from 0.0 to 1.0. Zero indicates"

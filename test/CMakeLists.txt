@@ -83,15 +83,9 @@ list( APPEND test_input
   testinput/sst_ostia.nc
   testinput/2021081612_RAOB_small.txt
   testinput/tropomi_co.nc
-  testinput/tempo_no2_proxy_20130801T100000Z_S002G01.nc
-  testinput/tempo_no2_proxy_20130801T100600Z_S002G02.nc
-  testinput/tempo_no2_proxy_20130801T101200Z_S002G03.nc
-  testinput/tempo_hcho_proxy_20130801T100000Z_S002G01.nc
-  testinput/tempo_hcho_proxy_20130801T100600Z_S002G02.nc
-  testinput/tempo_hcho_proxy_20130801T101200Z_S002G03.nc
-  testinput/tempo_o3_proxy_20130801T100000Z_S002G01.nc
-  testinput/tempo_o3_proxy_20130801T100600Z_S002G02.nc
-  testinput/tempo_o3_proxy_20130801T101200Z_S002G03.nc
+  testinput/TEMPO_no2_L2_V01_20231101T210834Z_S011G08.nc
+  testinput/TEMPO_no2_L2_V01_20231101T211511Z_S011G09.nc
+  testinput/TEMPO_no2_L2_V01_20231101T210157Z_S011G07.nc  
   testinput/gdas.t18z.abias_air
   testinput/MRMS_MergedReflectivityQC_01.50_20230712-152241.grib2
   testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t162415_small.h5
@@ -177,7 +171,6 @@ list( APPEND test_output
   testoutput/tempo_no2_total.nc
   testoutput/tempo_no2_troposphere.nc
   testoutput/tempo_no2_stratosphere.nc
-  testoutput/tempo_hcho_troposphere.nc
   testoutput/gdas.t18z.abias_air_ascent.csv
   testoutput/mrms_reflectivity_Z1500m.nc
   testoutput/omps_o3_nm.nc
@@ -266,7 +259,6 @@ if( iodaconv_bufr_query_ENABLED )
     testinput/bufr_ncep_prepbufr_adpupa.yaml
     testinput/prepbufr_adpsfc_api.py
     testinput/prepbufr_sfcshp_api.py
-    testinput/adpupa_prepbufr.yaml
     testinput/bufr_ncep_prepbufr_adpupa.py
     testinput/aircar_BUFR2ioda.yaml
     testinput/gdas.aircar.t00z.20210801.bufr
@@ -346,7 +338,6 @@ if( iodaconv_bufr_query_ENABLED )
     testoutput/bufr_simple_groupby.nc
     testoutput/bufr_empty_fields.nc
     testoutput/bufr_sfcshp.nc
-    testoutput/adpupa_prepbufr.nc
     testoutput/gdas.aircar.t00z.20210801.nc
     testoutput/airep_multi.nc
     testoutput/bufr_wmo_amdar_multi.nc
@@ -367,7 +358,7 @@ if( iodaconv_bufr_query_ENABLED )
     testoutput/rrfs.t06z.lgycld.bufr.nc
     testoutput/rrfs.t06z.adpsfc.prepbufr.nc
     testoutput/bufr_query_filtering.nc
-    testoutput/bufr_ncep_prepbufr_adpupa.nc
+    testoutput/gdas.t12z.adpupa.prepbufr.nc
     testoutput/prepbufr_adpupa_api.nc
     testoutput/bufr_query_python_to_ioda_test.nc
     testoutput/rtma_ru.t00z.msonet.tm00.nc
@@ -1229,19 +1220,19 @@ foreach (coltype total tropo)
 endforeach()
 
 foreach (coltype total troposphere stratosphere)
-  foreach (spec no2 hcho)
+  foreach (spec no2) #hcho not tested and o3 not out yet with real data
     if (NOT (${spec} STREQUAL "hcho" AND (${coltype} STREQUAL "total" OR ${coltype} STREQUAL "stratosphere")))
-        ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tempo_${spec}_${coltype}
+       ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tempo_${spec}_${coltype}
                           TYPE    SCRIPT
                           ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                           COMMAND bash
                           ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                                   netcdf
                                   "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tempo_nc2ioda.py
-                                  -i testinput/tempo_${spec}_proxy_20130801T100000Z_S002G01.nc
-                                     testinput/tempo_${spec}_proxy_20130801T100600Z_S002G02.nc
-                                     testinput/tempo_${spec}_proxy_20130801T101200Z_S002G03.nc
-                                  -o testrun/tempo_${spec}_${coltype}.nc
+				  -i testinput/TEMPO_${spec}_L2_V01_20231101T210157Z_S011G07.nc
+				     testinput/TEMPO_${spec}_L2_V01_20231101T210834Z_S011G08.nc
+				     testinput/TEMPO_${spec}_L2_V01_20231101T211511Z_S011G09.nc
+				  -o testrun/tempo_${spec}_${coltype}.nc
                                   -v ${spec}
                                   -c ${coltype}"
                                   tempo_${spec}_${coltype}.nc ${IODA_CONV_COMP_TOL})
@@ -1655,22 +1646,13 @@ if(iodaconv_bufr_query_ENABLED)
                             bufr_sfcshp.nc ${IODA_CONV_COMP_TOL}
                     DEPENDS bufr2ioda.x )
 
-  ecbuild_add_test( TARGET  test_iodaconv_bufr_adpupa
-                    TYPE    SCRIPT
-                    COMMAND bash
-                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                            netcdf
-                    "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/adpupa_prepbufr.yaml"
-                    adpupa_prepbufr.nc ${IODA_CONV_COMP_TOL}
-                    DEPENDS bufr2ioda.x )
-
   ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_prepbufr_adpupa
                     TYPE    SCRIPT
                     COMMAND bash
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_prepbufr_adpupa.yaml"
-                            bufr_ncep_prepbufr_adpupa.nc ${IODA_CONV_COMP_TOL}
+                            gdas.t12z.adpupa.prepbufr.nc ${IODA_CONV_COMP_TOL}
                     DEPENDS bufr2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_prepbufr_adpupa_api
