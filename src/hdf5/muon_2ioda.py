@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# testing command: python3 muon_2ioda.py -i /Users/smaticka/Downloads/ocean_surface_wind/20220215_partial/trackwiseOceanWindSpe*.nc4 -o test.nc
 #
 # (C) Copyright 2020-2023 UCAR
 #
@@ -9,13 +8,12 @@
 
 
 """
-Python code to ingest netCDF4 MU ON data
+Python code to ingest netCDF4 Muon Space data
 """
 import re
-import pdb
 import logging
 import argparse
-from datetime import datetime
+from datetime import datetime, timezone
 import os.path
 import sys
 import time
@@ -44,7 +42,7 @@ GlobalAttrs = {
     "sourceFiles": ""
 }
 
-# The outgoing IODA MetaData variables, their data type, units, and group name
+# The outgoing IODA MetaData variables, their data type, units
 MetaDataKeyList = [
     ("sensorChannelNumber", "integer", ""),
     ("latitude", "float", "degrees_north"),
@@ -116,12 +114,11 @@ def main(args):
 
         # Get reference time and convert to epoch time
         dat_ref = file['time'].attrs['units'][-19:].decode('UTF-8')
-        dat_ref = datetime.strptime(dat_ref, '%Y-%m-%d %H:%M:%S').timestamp()
+        dat_ref = datetime.strptime(dat_ref, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc).timestamp()
 
         if 'obs_data' not in locals():
             # initialize the DF
             obs_data = pd.DataFrame(columns=meta_keys+obsvars)
-#            obs_data['releaseTime'] = None
 
         # Get data from file to append to obs_data dataframe
         obs_data_append = get_data_from_file(file, obs_data.keys(), file_name)
@@ -212,8 +209,6 @@ def get_data_from_file(afile, col_names, file_name):
     sensorAzimuthAngle = [afile['azimuth'][ii] for ii in range(len(afile['azimuth']))]
     sensorIdentification = [instrument_ref]*len(latitude)
 
-#    # List of release time (earliest time in file. this needs to be updated to be earliest time for each instrument, since the file can have multiple)
-#    releaseTime = [min(dateTime)]*len(height)
     # Make a column to have a constant elevation for the "station"
     stationElevation = [10]*len(dateTime)
     height = [10]*len(dateTime)
