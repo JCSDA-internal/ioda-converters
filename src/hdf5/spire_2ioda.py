@@ -223,13 +223,13 @@ def adjust_dateTime(obs_DF, dat_ref):
     return obs_DF
 
 def adjust_longitude(obs_DF):
-    obs_DF['longitude'] = (obs_DF['longitude']+int(180)) % 360 - int(180)
+    obs_DF['longitude'] = (obs_DF['longitude']+180) % 360 - 180
     return obs_DF
 
 
 def quality_control(obs_data):
-    # Apply initial QC for physically possible values (wind, lat, lon) need to add swells
-    wind_range = [-100, 100]
+    # Apply initial QC for physically possible values (wind, lat, lon)
+    wind_range = [0, 100]
     lat_range = [-90, 90]
     lon_range = [-180, 180]
     # Replace with None to be filled with missing value later
