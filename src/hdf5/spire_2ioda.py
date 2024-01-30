@@ -123,7 +123,7 @@ def main(args):
         # Change time reference
         obs_data_append = adjust_dateTime(obs_data_append, dat_ref)
 
-        # Change longitude range 
+        # Change longitude range
         obs_data_append = adjust_longitude(obs_data_append)
 
         # Append to data frame containing all timestamp data
@@ -194,7 +194,7 @@ def main(args):
 def get_data_from_file(afile, col_names, file_name):
 
     # Get instrument reference
-    instrument_ref = afile.attrs['tx_id'].decode('UTF-8') 
+    instrument_ref = afile.attrs['tx_id'].decode('UTF-8')
 
     # Pull each data type (variable) and create a list
     latitude = [afile['sp_lat'][ii] for ii in range(len(afile['sp_lat']))]
@@ -218,6 +218,7 @@ def get_data_from_file(afile, col_names, file_name):
 def adjust_dateTime(obs_DF, dat_ref):
     obs_DF['dateTime'] = obs_DF['dateTime']+int(dat_ref)
     return obs_DF
+
 
 def adjust_longitude(obs_DF):
     obs_DF['longitude'] = (obs_DF['longitude']+180).mod(360) - 180
