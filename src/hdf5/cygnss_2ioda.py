@@ -10,8 +10,6 @@
 """
 Python code to ingest netCDF4 CYGNSS data
 """
-import re
-import pdb
 import logging
 import argparse
 from datetime import datetime, timezone
@@ -49,7 +47,6 @@ MetaDataKeyList = [
     ("longitude", "float", "degrees_east"),
     ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z"),
     ("sensorIdentification", "string", ""),
-#    ("stationElevation", "float", "m"),
     ("height", "float", "m"),
 ]
 meta_keys = [m_item[0] for m_item in MetaDataKeyList]
@@ -126,7 +123,7 @@ def main(args):
         # Change time reference
         obs_data_append = adjust_dateTime(obs_data_append, dat_ref)
 
-        # Change longitude range 
+        # Change longitude range
         obs_data_append = adjust_longitude(obs_data_append)
 
         # Append to data frame containing all timestamp data
@@ -201,7 +198,7 @@ def get_data_from_file(afile, col_names):
     longitude = [afile['lon'][ii] for ii in range(len(afile['lon']))]
     dateTime = [int(afile['sample_time'][ii]) for ii in range(len(afile['sample_time']))]  # datetime with different ref time
     windSpeedAt10M = [afile['wind_speed'][ii] for ii in range(len(afile['wind_speed']))]
-    sensorIdentification = [str(afile['sv_num'][ii]) for ii in range(len(afile['sv_num']))] # sv_num is the GPS space vehicle number
+    sensorIdentification = [str(afile['sv_num'][ii]) for ii in range(len(afile['sv_num']))]  # sv_num is the GPS space vehicle number
 
     # Make a column to have a constant elevation for the "station"
     height = [10]*len(dateTime)
@@ -212,13 +209,13 @@ def get_data_from_file(afile, col_names):
 
     # All observation data for this file to append to the master dataframe
     obs_data_append = pd.DataFrame(data_lists, columns=col_names)
-#    pdb.set_trace()
     return obs_data_append
 
 
 def adjust_dateTime(obs_DF, dat_ref):
     obs_DF['dateTime'] = obs_DF['dateTime']+int(dat_ref)
     return obs_DF
+
 
 def adjust_longitude(obs_DF):
     obs_DF['longitude'] = (obs_DF['longitude']+int(180)) % 360 - int(180)
