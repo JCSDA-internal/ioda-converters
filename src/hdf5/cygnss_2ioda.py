@@ -218,7 +218,7 @@ def adjust_dateTime(obs_DF, dat_ref):
 
 
 def adjust_longitude(obs_DF):
-    obs_DF['longitude'] = (obs_DF['longitude']+int(180)) % 360 - int(180)
+    obs_DF['longitude'] = (obs_DF['longitude']+180).mod(360) - 180
     return obs_DF
 
 
