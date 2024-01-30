@@ -10,8 +10,6 @@
 """
 Python code to ingest netCDF4 Spire data
 """
-import re
-import pdb
 import logging
 import argparse
 from datetime import datetime, timezone
@@ -49,7 +47,6 @@ MetaDataKeyList = [
     ("longitude", "float", "degrees_east"),
     ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z"),
     ("sensorIdentification", "string", ""),
-#    ("stationElevation", "float", "m"),
     ("height", "float", "m"),
 ]
 meta_keys = [m_item[0] for m_item in MetaDataKeyList]
@@ -223,7 +220,7 @@ def adjust_dateTime(obs_DF, dat_ref):
     return obs_DF
 
 def adjust_longitude(obs_DF):
-    obs_DF['longitude'] = (obs_DF['longitude']+180) % 360 - 180
+    obs_DF['longitude'] = (obs_DF['longitude']+180).mod(360) - 180
     return obs_DF
 
 
