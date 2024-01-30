@@ -216,7 +216,7 @@ def get_data_from_file(afile, col_names, file_name):
 
 
 def adjust_dateTime(obs_DF, dat_ref):
-    obs_DF['dateTime'] = obs_DF['dateTime']+int(dat_ref)
+    obs_DF['dateTime'] = obs_DF['dateTime']+dat_ref
     return obs_DF
 
 
