@@ -7,8 +7,7 @@ observations:
   - obs space:
       name: bufr
 
-      obsdatain: "./rtma_ADPUPA.prepbufr"
-      #obsdatain: "testinput/rtma_ADPUPA.prepbufr"
+      obsdatain: "testinput/rtma_ADPUPA.prepbufr"
 
       exports:
         group_by_variable: prepbufrDataLevelCategory
@@ -90,7 +89,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "../testoutput/gdas.t00z.rtma_adpupa.prepbufr.nc"
+      obsdataout: "testrun/gdas.t00z.rtma_adpupa.prepbufr.nc"
 
       variables:
         # MetaData
