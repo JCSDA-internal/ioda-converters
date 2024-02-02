@@ -7,7 +7,8 @@ observations:
   - obs space:
       name: bufr
 
-      obsdatain: "testinput/rtma_ADPUPA.prepbufr"
+      obsdatain: "./rtma_ADPUPA.prepbufr"
+      #obsdatain: "testinput/rtma_ADPUPA.prepbufr"
 
       exports:
         group_by_variable: prepbufrDataLevelCategory
@@ -77,8 +78,6 @@ observations:
           # ObsError
           airTemperatureObsError:
             query: "*/PRSLEVEL/T___INFO/T__BACKG/TOE"
-            transforms:
-              - offset: 273.15
           pressureObsError:
             query: "*/PRSLEVEL/P___INFO/P__BACKG/POE"
             transforms:
@@ -91,7 +90,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "testrun/gdas.t00z.rtma_adpupa.prepbufr.nc"
+      obsdataout: "../testoutput/gdas.t00z.rtma_adpupa.prepbufr.nc"
 
       variables:
         # MetaData
