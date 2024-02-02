@@ -305,8 +305,8 @@ if( iodaconv_bufr_query_ENABLED )
     testinput/bufr_ncep_rtma_aircft_NC004103.yaml
     testinput/bufr_ncep_rtma_aircar.yaml
     testinput/rtma_ru.t0000z.aircar_NC004004.tm00.bufr_d
-    testinput/rtma_ADPUPA.prepbufr
     testinput/bufr_ncep_rtma_prepbufr_adpupa.yaml
+    testinput/rtma_ADPUPA.prepbufr
   )
 
   list( APPEND test_output
