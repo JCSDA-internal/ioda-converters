@@ -102,10 +102,10 @@ def main(args):
         # Open file
         # (need to move file and dat ref into get_data_from_file, but then need to move adjust data_append inside also.)
         file = h5py.File(file_name, 'r')
-        
+ 
         # Figure out what source the file is coming from (e.g. cygnss, muon, spire)
         osw_source = get_data_source(file)
-        
+ 
         # Get reference time and convert to epoch time
         dat_ref = get_reference_time(file, osw_source)
 
@@ -260,7 +260,7 @@ def adjust_dateTime(obs_DF, dat_ref):
 
 
 def adjust_longitude(obs_DF, osw_source):
-    if osw_source in ('CYGNSS','Spire'):
+    if osw_source in ('CYGNSS', 'Spire'):
         mask = obs_DF['longitude'] > 180
         obs_DF.loc[mask, 'longitude'] = obs_DF['longitude'].loc[mask].values - 360
     return obs_DF
