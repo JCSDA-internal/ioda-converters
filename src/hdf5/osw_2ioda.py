@@ -8,7 +8,7 @@
 
 
 """
-Python code to ingest netCDF4 CYGNSS data
+Python code to ingest Ocean Surface Wind (OSW) data
 """
 import logging
 import argparse
@@ -22,6 +22,7 @@ import numpy as np
 
 import pyiodaconv.ioda_conv_engines as iconv
 from pyiodaconv.orddicts import DefaultOrderedDict
+from pyiodaconv.def_jedi_utils import int_missing_value, long_missing_value, float_missing_value
 from collections import defaultdict
 
 metaDataName = iconv.MetaDataName()
@@ -31,7 +32,7 @@ GlobalAttrs = {
     "converter": os.path.basename(__file__),
     "ioda_version": 2,
     "platformCommonName": "OSW",
-    "platformLongDescription": "Ocean Surface Winds retrieved from sea surface. CYGNSS satellite source",
+    "platformLongDescription": "Ocean Surface Winds retrieved from sea surface.",
     "source": "OSW",
     "sourceFiles": ""
 }
@@ -65,11 +66,6 @@ qcName = iconv.OqcName()
 
 # Assign missing value details for the variables
 string_missing_value = '_'
-int_missing_value = iconv.get_default_fill_val(np.int32)
-long_missing_value = iconv.get_default_fill_val(np.int64)
-float_missing_value = iconv.get_default_fill_val(np.float32)
-iso8601_string = MetaDataKeyList[meta_keys.index('dateTime')][2]
-epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 missing_vals = {'string': string_missing_value,
                 'integer': int_missing_value,
@@ -148,6 +144,9 @@ def main(args):
 
     # set global reference date to release time
     GlobalAttrs['datetimeReference'] = datetime.fromtimestamp(obs_data['dateTime'].min()).strftime("%Y-%m-%dT%H:%M:%SZ")
+    # append platform to long description
+    long_description = add_long_description(osw_source)
+    GlobalAttrs['platformLongDescription'].append(long_description)
 
     # Export into IODA formatted netCDF file
     ioda_data = {}
@@ -264,6 +263,19 @@ def adjust_longitude(obs_DF, osw_source):
         mask = obs_DF['longitude'] > 180
         obs_DF.loc[mask, 'longitude'] = obs_DF['longitude'].loc[mask].values - 360
     return obs_DF
+
+
+def add_long_description(osw_source):
+
+    # Add some additional information to platformLongDescription global attribute
+    long_description = ''
+    if osw_source == 'CYGNSS':
+        long_description = 'Derived from CYGNSS GNSS-R recievers.'
+    elif osw_source == 'Muon':
+        long_description = 'Proxy Muon data derived from CYGNSS GNSS-R recievers.'
+    elif osw_source == 'Spire':
+        long_description = 'Derived from Spire GNSS-R recievers.'
+    return long_description
 
 
 def quality_control(obs_data):
