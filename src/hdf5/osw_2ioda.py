@@ -47,14 +47,14 @@ MetaDataKeyList = [
 meta_keys = [m_item[0] for m_item in MetaDataKeyList]
 
 # The outgoing IODA variables (ObsValues), their units, and assigned constant ObsError.
-obsvars = ['windSpeedAt10M']
+obsvars = ['windSpeed']
 obsvars_units = ['m s-1']
 # obserrlist = [1.2]
 obsvars_dtype = ['float']
 
 # Assign dimensions to the obs values
 VarDims = {
-    'windSpeedAt10M': ['Location'],
+    'windSpeed': ['Location'],
 }
 
 # creating data types
@@ -217,7 +217,7 @@ def get_data_from_file(afile, col_names, osw_source, file_name):
         latitude = [afile['lat'][ii] for ii in range(len(afile['lat']))]
         longitude = [afile['lon'][ii] for ii in range(len(afile['lon']))]
         dateTime = [int(afile['sample_time'][ii]) for ii in range(len(afile['sample_time']))]  # datetime with different ref time
-        windSpeedAt10M = [afile['wind_speed'][ii] for ii in range(len(afile['wind_speed']))]
+        windSpeed = [afile['wind_speed'][ii] for ii in range(len(afile['wind_speed']))]
         sensorIdentification = [str(afile['sv_num'][ii]) for ii in range(len(afile['sv_num']))]  # sv_num is the GPS space vehicle number
     elif osw_source == 'Muon':
         # Get instrument reference
@@ -230,7 +230,7 @@ def get_data_from_file(afile, col_names, osw_source, file_name):
         latitude = [afile['lat'][ii] for ii in range(len(afile['lat']))]
         longitude = [afile['lon'][ii] for ii in range(len(afile['lon']))]
         dateTime = [int(afile['time'][ii]) for ii in range(len(afile['time']))]  # datetime with different ref time
-        windSpeedAt10M = [afile['wind_speed_level2'][ii] for ii in range(len(afile['wind_speed_level2']))]
+        windSpeed = [afile['wind_speed_level2'][ii] for ii in range(len(afile['wind_speed_level2']))]
         sensorIdentification = [instrument_ref]*len(latitude)
     elif osw_source == 'Spire':
         # Get instrument reference
@@ -239,7 +239,7 @@ def get_data_from_file(afile, col_names, osw_source, file_name):
         latitude = [afile['sp_lat'][ii] for ii in range(len(afile['sp_lat']))]
         longitude = [afile['sp_lon'][ii] for ii in range(len(afile['sp_lon']))]
         dateTime = [int(afile['sample_time'][ii]) for ii in range(len(afile['sample_time']))]  # datetime with different ref time
-        windSpeedAt10M = [afile['wind'][ii] for ii in range(len(afile['wind']))]
+        windSpeed = [afile['wind'][ii] for ii in range(len(afile['wind']))]
         sensorIdentification = [instrument_ref]*len(latitude)
 
     # Make a column to have a constant elevation for the "station"
@@ -247,7 +247,7 @@ def get_data_from_file(afile, col_names, osw_source, file_name):
 
     # Make a list of lists to feed into dataframe
     data_lists = list(zip(latitude, longitude, dateTime, sensorIdentification,
-                          height, windSpeedAt10M))
+                          height, windSpeed))
 
     # All observation data for this file to append to the master dataframe
     obs_data_append = pd.DataFrame(data_lists, columns=col_names)
@@ -272,7 +272,7 @@ def quality_control(obs_data):
     lat_range = [-90, 90]
     lon_range = [-180, 180]
     # Replace with None to be filled with missing value later
-    obs_data.loc[((obs_data['windSpeedAt10M'] < wind_range[0]) | (obs_data['windSpeedAt10M'] > wind_range[1])), 'windSpeedAt10M'] = None
+    obs_data.loc[((obs_data['windSpeed'] < wind_range[0]) | (obs_data['windSpeed'] > wind_range[1])), 'windSpeed'] = None
     obs_data.loc[((obs_data['latitude'] < lat_range[0]) | (obs_data['latitude'] > lat_range[1])), 'latitude'] = None
     obs_data.loc[((obs_data['longitude'] < lon_range[0]) | (obs_data['longitude'] > lon_range[1])), 'longitude'] = None
 
