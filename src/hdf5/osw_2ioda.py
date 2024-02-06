@@ -32,7 +32,7 @@ GlobalAttrs = {
     "converter": os.path.basename(__file__),
     "ioda_version": 2,
     "platformCommonName": "OSW",
-    "platformLongDescription": "Ocean Surface Winds retrieved from sea surface.",
+    "platformLongDescription": "Ocean Surface Winds retrieved from sea surface. ",
     "source": "OSW",
     "sourceFiles": ""
 }
@@ -146,7 +146,7 @@ def main(args):
     GlobalAttrs['datetimeReference'] = datetime.fromtimestamp(obs_data['dateTime'].min()).strftime("%Y-%m-%dT%H:%M:%SZ")
     # append platform to long description
     long_description = add_long_description(osw_source)
-    GlobalAttrs['platformLongDescription'].append(long_description)
+    GlobalAttrs['platformLongDescription'] + long_description
 
     # Export into IODA formatted netCDF file
     ioda_data = {}
