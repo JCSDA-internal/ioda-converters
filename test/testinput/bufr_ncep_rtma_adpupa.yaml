@@ -41,10 +41,10 @@ observations:
             query: "*/CLON"
           stationElevation:
             query: "*/SELV"
-
-          # ObsValue
           pressure:
             query: "*/UARLV/PRLC"
+
+          # ObsValue
           airTemperature:
             query: "*/UARLV/UATMP/TMDB"
           dewPointTemperature:
@@ -121,13 +121,13 @@ observations:
           longName: "Elevation of Observing Location"
           units: "m"
 
-        # ObsValue
-        - name: "ObsValue/pressure"
+        - name: "MetaData/pressure"
           coordinates: "longitude latitude"
           source: variables/pressure
           longName: "Pressure"
           units: "Pa"
 
+        # ObsValue
         - name: "ObsValue/airTemperature"
           coordinates: "longitude latitude"
           source: variables/airTemperature
