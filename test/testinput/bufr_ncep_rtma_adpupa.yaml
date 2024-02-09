@@ -43,6 +43,7 @@ observations:
             query: "*/SELV"
           pressure:
             query: "*/UARLV/PRLC"
+            type: float
 
           # ObsValue
           airTemperature:
