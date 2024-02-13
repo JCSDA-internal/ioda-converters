@@ -16,6 +16,8 @@
 #include <numeric>
 #include <limits>
 #include <math.h>
+#include <cmath>
+#include <sstream>
 
 #include "eckit/exception/Exceptions.h"
 
@@ -231,8 +233,27 @@ namespace Ingester
         static constexpr T missingValue
             (typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr)
         {
-//            return std::numeric_limits<T>::max();
-            return static_cast<T>(999);
+            T missingValue;
+
+            if (typeid(T) == typeid(int32_t))
+                missingValue = static_cast<T>(std::pow(10, 31)) - 1;
+            else if (typeid(T) == typeid(uint32_t))
+                missingValue = static_cast<T>(std::pow(10, 32)) - 1;
+            else if (typeid(T) == typeid(int64_t))
+                missingValue = static_cast<T>(std::pow(10, 63)) - 1;
+            else if (typeid(T) == typeid(size_t) || \
+                     typeid(T) == typeid(uint64_t))
+                missingValue = static_cast<T>(std::pow(10, 64)) - 1;
+            else if (typeid(T) == typeid(float))
+                missingValue = static_cast<T>(3.40282346638528859811704183484516925440e+38);
+            else if (typeid(T) == typeid(double))
+                missingValue = static_cast<T>(1.797693134862315708145274237317043567981e+308);
+            else
+            {
+                throw eckit::BadParameter("Unknown type encountered in missing value.");
+            }
+
+            return missingValue;
         }
 
         template<typename U = void>
