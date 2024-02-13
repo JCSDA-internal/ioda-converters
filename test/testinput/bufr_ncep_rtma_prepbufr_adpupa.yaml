@@ -85,9 +85,6 @@ observations:
               - scale: 100
           windObsError:
             query: "*/PRSLEVEL/W___INFO/W__BACKG/WOE"
-          relativeHumidityObsError:
-            query: "*/PRSLEVEL/Q___INFO/Q__BACKG/QOE"
-
 
     ioda:
       backend: netcdf
@@ -219,9 +216,3 @@ observations:
           source: variables/windObsError
           longName: "East and Northward wind error"
           units: "m s-1"
-
-        - name: "ObsError/relativeHumidity"
-          coordinates: "longitude latitude"
-          source: variables/relativeHumidityObsError
-          longName: "Relative Humidity Error"
-          units: "1"
