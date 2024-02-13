@@ -231,7 +231,8 @@ namespace Ingester
         static constexpr T missingValue
             (typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr)
         {
-            return std::numeric_limits<T>::max();
+//            return std::numeric_limits<T>::max();
+            return static_cast<T>(999);
         }
 
         template<typename U = void>
