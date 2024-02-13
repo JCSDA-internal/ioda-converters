@@ -18,7 +18,7 @@ observations:
               timeOffset: "*/PRSLEVEL/DRFTINFO/HRDR"
               transforms:
                 - scale: 3600
-              referenceTime: "2020-11-01T12:00:00Z"
+              referenceTime: "2024-01-11T00:00:00Z"
           stationIdentification:
             query: "*/SID"
           stationElevation:
