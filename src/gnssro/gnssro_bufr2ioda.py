@@ -282,14 +282,6 @@ def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None, on
         nrec = record_number
     obs_data[('sequenceNumber', 'MetaData')] = np.array(np.repeat(nrec, krepfac[0]), dtype=ioda_int_type)
 
-    if not only_bang:
-        # get derived profiles -- these are not written out
-        geop = codes_get_array(bufr, 'geopotentialHeight')[:-1]
-        pres = codes_get_array(bufr, 'nonCoordinatePressure')[0:-2:2]
-        temp = codes_get_array(bufr, 'airTemperature')[0::2]
-        spchum = codes_get_array(bufr, 'specificHumidity')[0::2]
-        prof_conf = codes_get_array(bufr, 'percentConfidence')[sum(krepfac[:2])+1:sum(krepfac)+1]
-
     # Compute impact height
     obs_data[('impactHeightRO', 'MetaData')] = \
         obs_data[('impactParameterRO', 'MetaData')] - \
