@@ -77,6 +77,8 @@ observations:
           # ObsError
           airTemperatureObsError:
             query: "*/PRSLEVEL/T___INFO/T__BACKG/TOE"
+            transforms:
+              - offset: 273.15
           pressureObsError:
             query: "*/PRSLEVEL/P___INFO/P__BACKG/POE"
             transforms:
