@@ -230,24 +230,32 @@ namespace Ingester
         typedef T value_type;
 
         template<typename U = void>
-        static constexpr T missingValue
+        static T missingValue
             (typename std::enable_if<std::is_arithmetic<T>::value, U>::type* = nullptr)
         {
             T missingValue;
 
-            if (typeid(T) == typeid(int32_t))
-                missingValue = static_cast<T>(std::pow(10, 31)) - 1;
-            else if (typeid(T) == typeid(uint32_t))
-                missingValue = static_cast<T>(std::pow(10, 32)) - 1;
-            else if (typeid(T) == typeid(int64_t))
-                missingValue = static_cast<T>(std::pow(10, 63)) - 1;
-            else if (typeid(T) == typeid(size_t) || \
-                     typeid(T) == typeid(uint64_t))
-                missingValue = static_cast<T>(std::pow(10, 64)) - 1;
+            if (typeid(T) == typeid(int16_t) ||
+                typeid(T) == typeid(int32_t) ||
+                typeid(T) == typeid(int64_t))
+            {
+                missingValue = static_cast<T>(std::pow(2, sizeof(T) * 8 - 1)) - 1;
+            }
+            else if (typeid(T) == typeid(uint16_t) ||
+                     typeid(T) == typeid(uint32_t) ||
+                     typeid(T) == typeid(uint64_t) ||
+                     typeid(T) == typeid(size_t))
+            {
+                missingValue = static_cast<T>(std::pow(2, sizeof(T) * 8)) - 1;
+            }
             else if (typeid(T) == typeid(float))
-                missingValue = static_cast<T>(3.40282346638528859811704183484516925440e+38);
+            {
+                missingValue = static_cast<T>(3.402823466e38);
+            }
             else if (typeid(T) == typeid(double))
-                missingValue = static_cast<T>(1.797693134862315708145274237317043567981e+308);
+            {
+                missingValue = static_cast<T>(1.7976931348623158e+308);
+            }
             else
             {
                 throw eckit::BadParameter("Unknown type encountered in missing value.");
