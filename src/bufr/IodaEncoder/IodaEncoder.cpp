@@ -35,18 +35,6 @@ namespace Ingester
         auto backendParams = ioda::Engines::BackendCreationParameters();
         std::map<SubCategory, ioda::ObsGroup> obsGroups;
 
-        auto p = dataContainer->get("variables/pressure");
-        //print
-        std::cout << "PRESSURE" << std::endl;
-        std::cout << "p->getDims().size() = " << p->getDims().size() << std::endl;
-        p->print(std::cout);
-
-        p = dataContainer->get("variables/pressureError");
-        //print
-        std::cout << "PRESSURE ERROR" << std::endl;
-        std::cout << "p->getDims().size() = " << p->getDims().size() << std::endl;
-        p->print(std::cout);
-
         // Get the named dimensions
         NamedPathDims namedLocDims;
         NamedPathDims namedExtraDims;
@@ -130,6 +118,22 @@ namespace Ingester
                 if (!dimDesc.source.empty())
                 {
                     auto dataObject = dataContainer->get(dimDesc.source, categories);
+
+                    if (dimDesc.source == "variables/pressure")
+                    {
+                        //print
+                        std::cout << "PRESSURE" << std::endl;
+                        std::cout << "dataObject->getDims().size() = " << dataObject->getDims().size() << std::endl;
+                        dataObject->print(std::cout);
+                    }
+
+                    if (dimDesc.source == "variables/pressureError")
+                    {
+                        //print
+                        std::cout << "PRESSURE ERROR" << std::endl;
+                        std::cout << "dataObject->getDims().size() = " << dataObject->getDims().size() << std::endl;
+                        dataObject->print(std::cout);
+                    }
 
                     // Validate the path for the source field makes sense for the dimension
                     if (std::find(dimDesc.paths.begin(),
