@@ -35,6 +35,18 @@ namespace Ingester
         auto backendParams = ioda::Engines::BackendCreationParameters();
         std::map<SubCategory, ioda::ObsGroup> obsGroups;
 
+        auto p = dataContainer->get("variables/pressure");
+        //print
+        std::cout << "PRESSURE" << std::endl;
+        std::cout << "p->getDims().size() = " << p->getDims().size() << std::endl;
+        p->print(std::cout);
+
+        p = dataContainer->get("variables/pressureError");
+        //print
+        std::cout << "PRESSURE ERROR" << std::endl;
+        std::cout << "p->getDims().size() = " << p->getDims().size() << std::endl;
+        p->print(std::cout);
+
         // Get the named dimensions
         NamedPathDims namedLocDims;
         NamedPathDims namedExtraDims;
