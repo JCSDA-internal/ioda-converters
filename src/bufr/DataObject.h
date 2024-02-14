@@ -385,7 +385,49 @@ namespace Ingester
         {
             auto params = makeCreationParams(chunks, compressionLevel);
             auto var = obsGroup.vars.createWithScales<T>(name, dimensions, params);
+
+//            if (name == "ObsValue/pressure")
+//            {
+//                //print
+//                std::cout << "PRESSURE" << std::endl;
+//                std::cout << "getDims().size() = " << getDims().size() << std::endl;
+//                print(std::cout);
+//            }
+//
+//            if (name == "ObsError/pressure")
+//            {
+//                //print
+//                std::cout << "PRESSURE ERROR" << std::endl;
+//                std::cout << "getDims().size() = " << getDims().size() << std::endl;
+//                print(std::cout);
+//            }
+
             var.write(data_);
+
+            if (name == "ObsValue/pressure")
+            {
+                std::cout << "PRESSURE" << std::endl;
+                std::vector<double> buf(data_.size());
+                var.read(gsl::make_span(buf));
+                for (const auto& d : buf)
+                {
+                    std::cout << d << ", " ;
+                }
+                std::cout << std::endl;
+            }
+
+            if (name == "ObsError/pressure")
+            {
+                std::cout << "PRESSURE ERROR" << std::endl;
+                std::vector<double> buf(data_.size());
+                var.read(gsl::make_span(buf));
+                for (const auto& d : buf)
+                {
+                    std::cout << d << ", ";
+                }
+                std::cout << std::endl;
+            }
+
             return var;
         };
 

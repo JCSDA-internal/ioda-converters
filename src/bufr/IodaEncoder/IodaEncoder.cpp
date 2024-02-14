@@ -278,22 +278,6 @@ namespace Ingester
                     }
                 }
 
-                if (varDesc.name == "ObsValue/pressure")
-                {
-                    //print
-                    std::cout << "PRESSURE" << std::endl;
-                    std::cout << "dataObject->getDims().size() = " << dataObject->getDims().size() << std::endl;
-                    dataObject->print(std::cout);
-                }
-
-                if (varDesc.name == "ObsError/pressure")
-                {
-                    //print
-                    std::cout << "PRESSURE ERROR" << std::endl;
-                    std::cout << "dataObject->getDims().size() = " << dataObject->getDims().size() << std::endl;
-                    dataObject->print(std::cout);
-                }
-
                 auto var = dataObject->createVariable(obsGroup,
                                                       varDesc.name,
                                                       dimensions,
