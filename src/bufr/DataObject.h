@@ -235,18 +235,29 @@ namespace Ingester
         {
             T missingValue;
 
-            if (typeid(T) == typeid(int16_t) ||
-                typeid(T) == typeid(int32_t) ||
-                typeid(T) == typeid(int64_t))
+            if (typeid(T) == typeid(int16_t))
             {
-                missingValue = static_cast<T>(std::pow(2, sizeof(T) * 8 - 1)) - 1;
+                missingValue = static_cast<T>(32767);
             }
-            else if (typeid(T) == typeid(uint16_t) ||
-                     typeid(T) == typeid(uint32_t) ||
-                     typeid(T) == typeid(uint64_t) ||
-                     typeid(T) == typeid(size_t))
+            else if (typeid(T) == typeid(uint16_t))
             {
-                missingValue = static_cast<T>(std::pow(2, sizeof(T) * 8)) - 1;
+                missingValue = static_cast<T>(65535u);
+            }
+            else if (typeid(T) == typeid(int32_t))
+            {
+                missingValue = static_cast<T>(2147483647);
+            }
+            else if (typeid(T) == typeid(uint32_t))
+            {
+                missingValue = static_cast<T>(4294967295u);
+            }
+            else if (typeid(T) == typeid(int64_t))
+            {
+                missingValue = static_cast<T>(9223372036854775807);
+            }
+            else if (typeid(T) == typeid(uint64_t) || typeid(T) == typeid(size_t))
+            {
+                missingValue = static_cast<T>(18446744073709551615u);
             }
             else if (typeid(T) == typeid(float))
             {
