@@ -824,7 +824,7 @@ namespace Ingester
             {
                 for (size_t i = 0; i < data_.size(); i++)
                 {
-                    if (data_[i] != missingValue())
+                    if (!isMissing(i))
                     {
                         data_[i] = static_cast<T>(static_cast<double>(data_[i]) * val);
                     }

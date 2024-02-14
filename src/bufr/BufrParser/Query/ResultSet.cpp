@@ -59,6 +59,19 @@ namespace bufr {
                                      data.dims,
                                      data.dimPaths);
 
+        if (fieldName == "pressure")
+        {
+            // print object dims
+            std::cout << "Dims: ";
+            for (auto dim : object->getDims())
+            {
+                std::cout << dim << " ";
+            }
+            std::cout << std::endl;
+
+            object->print(std::cout);
+        }
+
         return object;
     }
 
