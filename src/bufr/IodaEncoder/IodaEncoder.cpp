@@ -119,22 +119,6 @@ namespace Ingester
                 {
                     auto dataObject = dataContainer->get(dimDesc.source, categories);
 
-                    if (dimDesc.source == "variables/pressure")
-                    {
-                        //print
-                        std::cout << "PRESSURE" << std::endl;
-                        std::cout << "dataObject->getDims().size() = " << dataObject->getDims().size() << std::endl;
-                        dataObject->print(std::cout);
-                    }
-
-                    if (dimDesc.source == "variables/pressureError")
-                    {
-                        //print
-                        std::cout << "PRESSURE ERROR" << std::endl;
-                        std::cout << "dataObject->getDims().size() = " << dataObject->getDims().size() << std::endl;
-                        dataObject->print(std::cout);
-                    }
-
                     // Validate the path for the source field makes sense for the dimension
                     if (std::find(dimDesc.paths.begin(),
                                   dimDesc.paths.end(),
@@ -292,6 +276,22 @@ namespace Ingester
                     {
                         chunks.push_back(dimVar.getChunkSizes()[0]);
                     }
+                }
+
+                if (varDesc.name == "ObsValue/pressure")
+                {
+                    //print
+                    std::cout << "PRESSURE" << std::endl;
+                    std::cout << "dataObject->getDims().size() = " << dataObject->getDims().size() << std::endl;
+                    dataObject->print(std::cout);
+                }
+
+                if (varDesc.name == "ObsError/pressureError")
+                {
+                    //print
+                    std::cout << "PRESSURE ERROR" << std::endl;
+                    std::cout << "dataObject->getDims().size() = " << dataObject->getDims().size() << std::endl;
+                    dataObject->print(std::cout);
                 }
 
                 auto var = dataObject->createVariable(obsGroup,
