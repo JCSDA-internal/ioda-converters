@@ -61,6 +61,21 @@ namespace bufr {
 
         if (fieldName == "pressure")
         {
+            std::cout << "PRESSURE: " << std::endl;
+            // print object dims
+            std::cout << "Dims: ";
+            for (auto dim : object->getDims())
+            {
+                std::cout << dim << " ";
+            }
+            std::cout << std::endl;
+
+            object->print(std::cout);
+        }
+
+        if (fieldName == "pressureError")
+        {
+            std::cout << "PRESSURE ERROR: " << std::endl;
             // print object dims
             std::cout << "Dims: ";
             for (auto dim : object->getDims())
