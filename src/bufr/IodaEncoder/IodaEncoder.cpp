@@ -286,7 +286,7 @@ namespace Ingester
                     dataObject->print(std::cout);
                 }
 
-                if (varDesc.name == "ObsError/pressureError")
+                if (varDesc.name == "ObsError/pressure")
                 {
                     //print
                     std::cout << "PRESSURE ERROR" << std::endl;
