@@ -221,29 +221,40 @@ namespace bufr {
             for (auto p = target->path.begin(); p != target->path.end() - 1; ++p)
             {
                 const auto& counts = frame[p->nodeId].counts;
-                if (name == "pressureError" && p->nodeId == 467)
-                {
-                    std::cout << "ResultSet::analyzeTarget counts.size() " << counts.size() << ": ";
-                    for (const auto& c : counts)
-                    {
-                        std::cout << c << ", ";
-                    }
-                    std::cout << std::endl;
-                }
+//                if (name == "pressureError" && p->nodeId == 467)
+//                {
+//                    std::cout << "ResultSet::analyzeTarget counts.size() " << counts.size() << ": ";
+//                    for (const auto& c : counts)
+//                    {
+//                        std::cout << c << ", ";
+//                    }
+//                    std::cout << std::endl;
+//                }
 
                 if (counts.empty())
                 {
+                    if (name == "pressureError")
+                    {
+                        std::cout << "ResultSet::analyzeTarget Empty" << std::endl;
+                    }
+
                     metaData->missingFrames[frameIdx] = true;
                     break;
                 }
 
                 const auto& maxCount = std::max(max(counts), 1);
+
+                if (name == "pressureError" && p->nodeId == 467)
+                {
+                    std::cout << "ResultSet::analyzeTarget rawDims count "  << metaData->rawDims[pathIdx] << " " << maxCount << std::endl;
+                }
+
                 if (maxCount > metaData->rawDims[pathIdx])
                 {
-                    if (name == "pressureError" && p->nodeId == 467)
-                    {
-                        std::cout << "ResultSet::analyzeTarget rawDim node " << p->nodeId << " " << maxCount << std::endl;
-                    }
+//                    if (name == "pressureError" && p->nodeId == 467)
+//                    {
+//                        std::cout << "ResultSet::analyzeTarget rawDim node " << p->nodeId << " " << maxCount << std::endl;
+//                    }
 //                    if (name == "pressureError")
 //                    {
 //                        std::cout << "ResultSet::analyzeTarget rawDim node " << p->nodeId << " " << maxCount << std::endl;
