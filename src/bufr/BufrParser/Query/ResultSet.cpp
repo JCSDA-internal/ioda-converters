@@ -199,13 +199,14 @@ namespace bufr {
             }
 
             // Capture the dimensional information
+
             auto pathIdx = 0;
             auto exportIdxIdx = 0;
-//            if (name == "pressureError")
-//            {
-//                std::cout << "ResultSet::analyzeTarget target->path.size() "
-//                          << target->path.size() << std::endl;
-//            }
+            if (name == "pressureError")
+            {
+                std::cout << "ResultSet::analyzeTarget target->path.size() "
+                          << target->path.size() << std::endl;
+            }
             for (auto p = target->path.begin(); p != target->path.end() - 1; ++p)
             {
                 const auto& counts = frame[p->nodeId].counts;
