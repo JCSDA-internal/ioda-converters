@@ -54,7 +54,6 @@ namespace bufr {
         if (fieldName == "pressureError")
         {
             std::cout << "ResultSet::get frames_.size() " << frames_.size() << std::endl;
-
             std::cout << "ResultSet::get dims.size() " << data.dims.size() << std::endl;
             std::cout << "ResultSet::get dims ";
             int rowLength = 1;
@@ -67,10 +66,6 @@ namespace bufr {
             std::cout << std::endl;
 
             std::cout << "ResultSet::get row size: " << std::max(rowLength, 1) << std::endl;
-
-            // need to preserve one spot for the MissingValue even if there is no data
-
-
             std::cout << "ResultSet::get pressureError.size() " << data.buffer.size()  << std::endl;
         }
 
@@ -206,6 +201,11 @@ namespace bufr {
             // Capture the dimensional information
             auto pathIdx = 0;
             auto exportIdxIdx = 0;
+//            if (name == "pressureError")
+//            {
+//                std::cout << "ResultSet::analyzeTarget target->path.size() "
+//                          << target->path.size() << std::endl;
+//            }
             for (auto p = target->path.begin(); p != target->path.end() - 1; ++p)
             {
                 const auto& counts = frame[p->nodeId].counts;
@@ -218,6 +218,11 @@ namespace bufr {
                 const auto& maxCount = std::max(max(counts), 1);
                 if (maxCount > metaData->rawDims[pathIdx])
                 {
+                    if (name == "pressureError")
+                    {
+                        std::cout << "ResultSet::analyzeTarget rawDim node " << p->nodeId << std::endl;
+                    }
+
                     metaData->rawDims[pathIdx] = maxCount;
                 }
 
