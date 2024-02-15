@@ -202,14 +202,35 @@ namespace bufr {
 
             auto pathIdx = 0;
             auto exportIdxIdx = 0;
-            if (name == "pressureError")
-            {
-                std::cout << "ResultSet::analyzeTarget target->path.size() "
-                          << target->path.size() << std::endl;
-            }
+//            if (name == "pressureError")
+//            {
+//                std::cout << "ResultSet::analyzeTarget target->path.size() "
+//                          << target->path.size() << std::endl;
+//            }
+//            if (name == "pressureError")
+//            {
+//                std::cout << "ResultSet::analyzeTarget Export Idxs: ";
+//                // print target exportDimIdxs
+//                for (const auto& e : target->exportDimIdxs)
+//                {
+//                    std::cout << e << ", ";
+//                }
+//                std::cout << std::endl;
+//            }
+
             for (auto p = target->path.begin(); p != target->path.end() - 1; ++p)
             {
                 const auto& counts = frame[p->nodeId].counts;
+                if (name == "pressureError" && p->nodeId == 467)
+                {
+                    std::cout << "ResultSet::analyzeTarget counts.size() " << counts.size() << ": ";
+                    for (const auto& c : counts)
+                    {
+                        std::cout << c << ", ";
+                    }
+                    std::cout << std::endl;
+                }
+
                 if (counts.empty())
                 {
                     metaData->missingFrames[frameIdx] = true;
@@ -219,10 +240,14 @@ namespace bufr {
                 const auto& maxCount = std::max(max(counts), 1);
                 if (maxCount > metaData->rawDims[pathIdx])
                 {
-                    if (name == "pressureError")
+                    if (name == "pressureError" && p->nodeId == 467)
                     {
-                        std::cout << "ResultSet::analyzeTarget rawDim node " << p->nodeId << std::endl;
+                        std::cout << "ResultSet::analyzeTarget rawDim node " << p->nodeId << " " << maxCount << std::endl;
                     }
+//                    if (name == "pressureError")
+//                    {
+//                        std::cout << "ResultSet::analyzeTarget rawDim node " << p->nodeId << " " << maxCount << std::endl;
+//                    }
 
                     metaData->rawDims[pathIdx] = maxCount;
                 }
