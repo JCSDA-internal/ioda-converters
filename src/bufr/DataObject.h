@@ -386,60 +386,16 @@ namespace Ingester
             auto params = makeCreationParams(chunks, compressionLevel);
             auto var = obsGroup.vars.createWithScales<T>(name, dimensions, params);
 
-            if (name == "ObsValue/pressure")
-            {
-                //print
-                std::cout << "PRESSURE " << data_.size() << " " << std::endl;
-                std::cout << "getDims().size() = " << getDims().size() << std::endl;
-                for (const auto& d : getDims())
-                {
-                    std::cout << d << ", ";
-                }
-                std::cout << std::endl;
-
-//                print(std::cout);
-            }
-
             if (name == "ObsError/pressure")
             {
-                //print
                 std::cout << "PRESSURE ERROR " << data_.size() << " "  << std::endl;
-                std::cout << "getDims().size() = " << getDims().size() << std::endl;
-                for (const auto& d : getDims())
-                {
-                    std::cout << d << ", ";
-                }
-                std::cout << std::endl;
-
-//                print(std::cout);
             }
 
             var.write(data_);
 
-            if (name == "ObsValue/pressure")
-            {
-                auto num = var.getDimensions().numElements;
-                std::cout << "VAR PRESSURE " << num << std::endl;
-//                std::vector<double> buf(num);
-//                var.read(gsl::make_span(buf));
-//                for (const auto& d : buf)
-//                {
-//                    std::cout << d << ", " ;
-//                }
-//                std::cout << std::endl;
-            }
-
             if (name == "ObsError/pressure")
             {
-                auto num = var.getDimensions().numElements;
-                std::cout << "VAR PRESSURE ERROR " << num << std::endl;
-//                std::vector<double> buf(num);
-//                var.read(gsl::make_span(buf));
-//                for (const auto& d : buf)
-//                {
-//                    std::cout << d << ", ";
-//                }
-//                std::cout << std::endl;
+                std::cout << "VAR PRESSURE ERROR " << var.getDimensions().numElements << std::endl;
             }
 
             return var;

@@ -51,6 +51,29 @@ namespace bufr {
             applyGroupBy(data, targetMetaData, groupByFieldName);
         }
 
+        if (fieldName == "pressureError")
+        {
+            std::cout << "ResultSet::get frames_.size() " << frames_.size() << std::endl;
+
+            std::cout << "ResultSet::get dims.size() " << data.dims.size() << std::endl;
+            std::cout << "ResultSet::get dims ";
+            int rowLength = 1;
+            for (size_t dimIdx = 1; dimIdx < targetMetaData->rawDims.size(); ++dimIdx)
+            {
+                rowLength *= targetMetaData->rawDims[dimIdx];
+
+                std::cout << targetMetaData->rawDims[dimIdx] << ", " ;
+            }
+            std::cout << std::endl;
+
+            std::cout << "ResultSet::get row size: " << std::max(rowLength, 1) << std::endl;
+
+            // need to preserve one spot for the MissingValue even if there is no data
+
+
+            std::cout << "ResultSet::get pressureError.size() " << data.buffer.size()  << std::endl;
+        }
+
         auto object = makeDataObject(fieldName,
                                      groupByFieldName,
                                      targetMetaData->typeInfo,
