@@ -406,8 +406,9 @@ namespace Ingester
 
             if (name == "ObsValue/pressure")
             {
+                auto num = var.getDimensions().numElements;
                 std::cout << "PRESSURE" << std::endl;
-                std::vector<double> buf(data_.size());
+                std::vector<double> buf(num);
                 var.read(gsl::make_span(buf));
                 for (const auto& d : buf)
                 {
@@ -418,8 +419,9 @@ namespace Ingester
 
             if (name == "ObsError/pressure")
             {
+                auto num = var.getDimensions().numElements;
                 std::cout << "PRESSURE ERROR" << std::endl;
-                std::vector<double> buf(data_.size());
+                std::vector<double> buf(num);
                 var.read(gsl::make_span(buf));
                 for (const auto& d : buf)
                 {
