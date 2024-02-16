@@ -97,20 +97,26 @@ def main(args):
 
         # Open file
         # (need to move file and dat ref into get_data_from_file, but then need to move adjust data_append inside also.)
-        file = h5py.File(file_name, 'r')
+        nc4 = False
+        if h5py.is_hdf5(file_name):
+            file = h5py.File(file_name, 'r')
+        else:
+            import netCDF4 as nc
+            nc4 = True
+            file = nc.Dataset(file_name, 'r')
 
         # Figure out what source the file is coming from (e.g. cygnss, muon, spire)
-        osw_source = get_data_source(file)
+        osw_source = get_data_source(file, nc4=nc4)
 
         # Get reference time and convert to epoch time
-        dat_ref = get_reference_time(file, osw_source)
+        dat_ref = get_reference_time(file, osw_source, nc4=nc4)
 
         if 'obs_data' not in locals():
             # initialize the DF
             obs_data = pd.DataFrame(columns=meta_keys+obsvars)
 
         # Get data from file to append to obs_data dataframe
-        obs_data_append = get_data_from_file(file, obs_data.keys(), osw_source, file_name)
+        obs_data_append = get_data_from_file(file, obs_data.keys(), osw_source, file_name, nc4=nc4)
 
         # Convert variables
         # Change time reference
@@ -187,7 +193,13 @@ def main(args):
     writer.BuildIoda(ioda_data, VarDims, varAttrs, GlobalAttrs)
 
 
-def get_data_source(afile):
+def get_data_source(afile, nc4=False):
+    if nc4:
+        if  'title' in afile.ncattrs() and 'CYGNSS' in afile.getncattr('title'):
+            return 'CYGNSS'
+        else:
+            return 'unsupported file type'
+
     if 'title' in afile.attrs.keys() and 'CYGNSS' in afile.attrs['title'].decode('UTF-8'):
         return 'CYGNSS'
     elif 'title' in afile.attrs.keys() and 'Muon' in afile.attrs['title'].decode('UTF-8'):
@@ -196,9 +208,12 @@ def get_data_source(afile):
         return 'Spire'
 
 
-def get_reference_time(afile, osw_source):
+def get_reference_time(afile, osw_source, nc4=False):
     if osw_source in ('CYGNSS'):
-        dat_ref = afile['sample_time'].attrs['units'][-19:].decode('UTF-8')
+        if nc4:
+            dat_ref = afile.variables['sample_time'].getncattr('units')[-19:]
+        else:
+            dat_ref = afile['sample_time'].attrs['units'][-19:].decode('UTF-8')
         dat_ref = datetime.strptime(dat_ref, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc).timestamp()
     elif osw_source in ('Muon'):
         dat_ref = afile['time'].attrs['units'][-19:].decode('UTF-8')
@@ -209,15 +224,22 @@ def get_reference_time(afile, osw_source):
     return dat_ref
 
 
-def get_data_from_file(afile, col_names, osw_source, file_name):
+def get_data_from_file(afile, col_names, osw_source, file_name, nc4=False):
 
     # Pull each data type (variable) and create a list
     if osw_source == 'CYGNSS':
-        latitude = [afile['lat'][ii] for ii in range(len(afile['lat']))]
-        longitude = [afile['lon'][ii] for ii in range(len(afile['lon']))]
-        dateTime = [int(afile['sample_time'][ii]) for ii in range(len(afile['sample_time']))]  # datetime with different ref time
-        windSpeed = [afile['wind_speed'][ii] for ii in range(len(afile['wind_speed']))]
-        sensorIdentification = [str(afile['sv_num'][ii]) for ii in range(len(afile['sv_num']))]  # sv_num is the GPS space vehicle number
+        if nc4:
+            latitude = [afile.variables['lat'][ii] for ii in range(len(afile.variables['lat']))]
+            longitude = [afile.variables['lon'][ii] for ii in range(len(afile.variables['lon']))]
+            dateTime = [int(afile.variables['sample_time'][ii]) for ii in range(len(afile.variables['sample_time']))]  # datetime with different ref time
+            windSpeed = [afile.variables['wind_speed'][ii] for ii in range(len(afile.variables['wind_speed']))]
+            sensorIdentification = [str(afile.variables['sv_num'][ii]) for ii in range(len(afile.variables['sv_num']))]  # sv_num is the GPS space vehicle number
+        else:
+            latitude = [afile['lat'][ii] for ii in range(len(afile['lat']))]
+            longitude = [afile['lon'][ii] for ii in range(len(afile['lon']))]
+            dateTime = [int(afile['sample_time'][ii]) for ii in range(len(afile['sample_time']))]  # datetime with different ref time
+            windSpeed = [afile['wind_speed'][ii] for ii in range(len(afile['wind_speed']))]
+            sensorIdentification = [str(afile['sv_num'][ii]) for ii in range(len(afile['sv_num']))]  # sv_num is the GPS space vehicle number
     elif osw_source == 'Muon':
         # Get instrument reference
         import re
