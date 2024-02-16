@@ -242,7 +242,7 @@ namespace bufr {
                     break;
                 }
 
-                const auto& maxCount = std::max(*std::max_element(counts.begin(), counts.end()), 1);
+                const auto maxCount = std::max(*std::max_element(counts.begin(), counts.end()), 1);
 
                 if (name == "pressureError" && p->nodeId == 467)
                 {
