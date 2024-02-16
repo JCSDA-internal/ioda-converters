@@ -125,7 +125,7 @@ class tropomi(object):
                 preslv = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].\
                     groups['DETAILED_RESULTS'].variables['pressure_levels'][:]
                 preslv = np.reshape(preslv, (nlocs, nlevs))
-                top = np.zeros(nlocs)
+                top = np.zeros(nlocs, dtype=np.float32)
 
             # assemble presvertices with top vertice
             preslv = np.append(top[:, np.newaxis], preslv, axis=1)
