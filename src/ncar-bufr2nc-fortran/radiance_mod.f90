@@ -1073,7 +1073,7 @@ contains
             xdata(i, ii)%xseninfo_float(:, :) = missing_r
             xdata(i, ii)%xseninfo_int(:, :) = missing_i
             if (index(inst_list(i), 'iasi') > 0 .or. &
-                index(inst_list(i), 'cris') > 0) then
+                index(inst_list(i), 'cris-fsr') > 0) then
                allocate (xdata(i, ii)%wavenumber(nvars(i)))
             end if
             if (nvars(i) > 0) then
@@ -1250,7 +1250,7 @@ contains
       case ('iasi')
          start = -50.0_r_kind
          step = 5.0_r_kind/6.0_r_kind
-      case ('cris')
+      case ('cris-fsr')
          start = -51.615_r_kind
          step = 3.33_r_kind
       case default
@@ -1280,9 +1280,9 @@ contains
       fgat_loop: do ii = 1, nfgat
          inst_loop: do i = 1, ninst
 
-            if (trim(inst_list(i)) /= 'cris_npp' .and. &
-                trim(inst_list(i)) /= 'cris_n20' .and. &
-                trim(inst_list(i)) /= 'cris_n21' .and. &
+            if (trim(inst_list(i)) /= 'cris-fsr_npp' .and. &
+                trim(inst_list(i)) /= 'cris-fsr_n20' .and. &
+                trim(inst_list(i)) /= 'cris-fsr_n21' .and. &
                 trim(inst_list(i)) /= 'iasi_metop-a' .and. &
                 trim(inst_list(i)) /= 'iasi_metop-b' .and. &
                 trim(inst_list(i)) /= 'iasi_metop-c') then
