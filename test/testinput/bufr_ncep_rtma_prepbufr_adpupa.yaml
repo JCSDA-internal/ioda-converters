@@ -8,7 +8,6 @@ observations:
       name: bufr
 
       obsdatain: "./testinput/rtma_ADPUPA.prepbufr"
-      #obsdatain: "./rtma_ADPUPA.prepbufr"
 
       exports:
         group_by_variable: prepbufrDataLevelCategory
@@ -92,14 +91,11 @@ observations:
               - scale: 100
           windObsError:
             query: "*/PRSLEVEL/W___INFO/W__BACKG/WOE"
-          relativeHumidityObsError:
-            query: "*/PRSLEVEL/Q___INFO/Q__BACKG/QOE"
 
 
     ioda:
       backend: netcdf
       obsdataout: "./testrun/gdas.t00z.rtma_adpupa.prepbufr.nc"
-      #obsdataout: "../testoutput/gdas.t00z.rtma_adpupa.prepbufr.nc"
 
       variables:
         # MetaData
@@ -248,9 +244,3 @@ observations:
           source: variables/windObsError
           longName: "East and Northward wind error"
           units: "m s-1"
-
-        - name: "ObsError/relativeHumidity"
-          coordinates: "longitude latitude"
-          source: variables/relativeHumidityObsError
-          longName: "Relative Humidity Error"
-          units: "1"
