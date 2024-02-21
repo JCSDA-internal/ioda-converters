@@ -1540,14 +1540,14 @@ if(iodaconv_bufr_query_ENABLED)
                             gdas.t12z.aircft_AMDAR103.tm00.nc ${IODA_CONV_COMP_TOL}
                     DEPENDS bufr2ioda.x )
 
-#  ecbuild_add_test( TARGET  test_iodaconv_prepbufr_ncep_aircftprofiles2ioda
-#                    TYPE    SCRIPT
-#                    COMMAND bash
-#                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-#                            netcdf
-#                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_prepbufr_aircft.yaml"
-#                            gdas.t12z.acft_profiles.prepbufr.nc ${IODA_CONV_COMP_TOL}
-#                    DEPENDS bufr2ioda.x )
+  ecbuild_add_test( TARGET  test_iodaconv_prepbufr_ncep_aircftprofiles2ioda
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_prepbufr_aircft.yaml"
+                            gdas.t12z.acft_profiles.prepbufr.nc ${IODA_CONV_COMP_TOL}
+                    DEPENDS bufr2ioda.x )
 
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_read_2_dim_blocks
