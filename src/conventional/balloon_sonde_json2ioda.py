@@ -168,7 +168,7 @@ def main(args):
         # convert pressure to Pascals from Hectopascals
         pressure = [press_i*100 if press_i is not None else press_i for press_i in pressure]
 
-        # convert temperature from celcius to kelvin
+        # convert temperature from Celsius to Kelvin
         airTemperature = [temp_i+273.15 if temp_i is not None else temp_i for temp_i in airTemperature]
 
         # Make a list of lists to feed into dataframe
@@ -259,7 +259,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         description=(
-            'Read windorne json files and convert into IODA output file')
+            'Read windborne json files and convert into IODA output file')
     )
     required = parser.add_argument_group(title='required arguments')
     required.add_argument('-i', '--input-files', nargs='+', dest='file_names',
