@@ -12,26 +12,19 @@
 Python code to ingest JSON WindBorne Data
 """
 
-import re
 import logging
-import math
 import os
-import sys
 import time
 import json
-from datetime import datetime, timedelta
-from pathlib import Path
+from datetime import datetime
+from collections import defaultdict
 import pandas as pd
 
 import numpy as np
-import netCDF4 as nc
 
 # These modules need the path to lib-python modules
 import pyiodaconv.ioda_conv_engines as iconv
-import pyiodaconv.meteo_utils as meteo_utils
-import pyiodaconv.meteo_sounding_utils as meteo_souding_utils
 from pyiodaconv.orddicts import DefaultOrderedDict
-from collections import defaultdict
 
 logger = logging.getLogger("decodeSounding")
 
@@ -121,14 +114,11 @@ def main(args):
         #---------------------------------------------------------------------------------------------
     """
     # Loop through input files and concatenate into dataframe
-    metaData_files = []
     file_cnt = 0
     for file_name in args.file_names:
         # check if file exists
         if not os.path.isfile(file_name):
-            logging.debug(f'Input (-i option) file: {file_name} does not exist')
-            print(f'Input (-i option) file: {file_name} does not exist')
-            sys.exit()
+            raise ValueError(f'Input (-i option) file: {file_name} does not exist')
         logging.debug(f"Reading input file: {file_name}")
 
         file = json.load(open(file_name))
@@ -221,7 +211,7 @@ def main(args):
     # set global reference date to release time
     AttrData['datetimeReference'] = datetime.fromtimestamp(obs_data['dateTime'].min()).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    # Export into IODA formatted netCDF file
+    # Export into IODA formatted file
     ioda_data = {}
     DimDict = {'Location': ntotal}
     AttrData['sourceFiles'] = AttrData['sourceFiles'][2:]
