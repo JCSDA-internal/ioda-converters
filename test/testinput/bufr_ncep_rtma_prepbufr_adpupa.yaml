@@ -21,15 +21,9 @@ observations:
               referenceTime: "2024-01-11T00:00:00Z"
           stationIdentification:
             query: "*/SID"
-          obsTimeMinusCycleTime:
-            query: "*/DHR"
           stationElevation:
             query: "*/ELV"
             type: float
-          prepbufrReportType:
-            query: "*/TYP"
-          dumpReportType:
-            query: "*/T29"
           prepbufrDataLevelCategory:
             query: "*/PRSLEVEL/CAT"
           longitude:
@@ -110,32 +104,11 @@ observations:
           source: variables/stationIdentification
           longName: "Station Identification"
 
-        - name: "MetaData/obsTimeMinusCycleTime"
-          coordinates: "longitude latitude"
-          source: variables/obsTimeMinusCycleTime
-          longName: "Observation Time Minus Cycle Time"
-          units: "hour"
-
         - name: "MetaData/stationElevation"
           coordinates: "longitude latitude"
           source: variables/stationElevation
           longName: "Height of Station"
           units: "m"
-
-        - name: "MetaData/prepbufrReportType"
-          coordinates: "longitude latitude"
-          source: variables/prepbufrReportType
-          longName: "Prepbufr Report Type"
-
-        - name: "MetaData/dumpReportType"
-          coordinates: "longitude latitude"
-          source: variables/dumpReportType
-          longName: "Data Dump Report Type"
-
-        - name: "MetaData/prepbufrDataLevelCategory"
-          coordinates: "longitude latitude"
-          source: variables/prepbufrDataLevelCategory
-          longName: "Prepbufr Data Level Category"
 
         - name: "MetaData/longitude"
           coordinates: "longitude latitude"
@@ -211,10 +184,15 @@ observations:
           source: variables/pressureQualityMarker
           longName: "Pressure Quality Marker"
 
-        - name: "QualityMarker/wind"
+        - name: "QualityMarker/windEastward"
           coordinates: "longitude latitude"
           source: variables/windQualityMarker
-          longName: "U, V-Component of Wind Quality Marker"
+          longName: "U-Component of Wind Quality Marker"
+
+        - name: "QualityMarker/windNorthward"
+          coordinates: "longitude latitude"
+          source: variables/windQualityMarker
+          longName: "V-Component of Wind Quality Marker"
 
         - name: "QualityMarker/specificHumidity"
           coordinates: "longitude latitude"
@@ -239,8 +217,14 @@ observations:
           longName: "Pressure Error"
           units: "Pa"
 
-        - name: "ObsError/wind"
+        - name: "ObsError/windEastward"
           coordinates: "longitude latitude"
           source: variables/windObsError
-          longName: "East and Northward wind error"
+          longName: "Eastward wind error"
+          units: "m s-1"
+
+        - name: "ObsError/windNorthward"
+          coordinates: "longitude latitude"
+          source: variables/windObsError
+          longName: "Northward wind error"
           units: "m s-1"
