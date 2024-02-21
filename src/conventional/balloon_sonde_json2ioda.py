@@ -171,25 +171,15 @@ def main(args):
 
         # List of release time (earliest time in file. this needs to be updated to be earliest time for each instrument, since the file can have multiple)
         releaseTime = [min(dateTime)]*len(height)
+
         # Make a dummy column to have a constant elevation for the "station"
         stationElevation = [10]*len(height)
+
         # convert pressure to Pascals from Hectopascals
-        try:
-            pressure = pressure*100
-        except Exception:
-            try:
-                pressure = [press_i*100 if press_i is not None else press_i for press_i in pressure]  # if some values are None
-            except Exception:
-                pass  # if pressure is all None
+        pressure = [press_i*100 if press_i is not None else press_i for press_i in pressure]
 
         # convert temperature from celcius to kelvin
-        try:
-            airTemperature = airTemperature+np.array(273.15)
-        except Exception:
-            try:
-                airTemperature = [temp_i*273.15 if temp_i is not None else temp_i for temp_i in airTemperature]  # if some values are None
-            except Exception:
-                pass  # If airTemperature is all None
+        airTemperature = [temp_i+273.15 if temp_i is not None else temp_i for temp_i in airTemperature]
 
         # Make a list of lists to feed into dataframe
         data_lists = list(zip(height, relativeHumidity, latitude, longitude, stationIdentification, pressure,
