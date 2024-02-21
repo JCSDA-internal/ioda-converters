@@ -279,11 +279,4 @@ if __name__ == "__main__":
     # read in arguments to function call
     args = parser.parse_args()
 
-#    # verify time format
-#    try:
-#        target_time = datetime.fromisoformat(args.date_string[:-1])
-#    except Exception:
-#        parser.error('Date format invalid: ', args.date_string, ' must be like: 2022-05-18T12:00:00Z')
-#        sys.exit()
-
     main(args)
