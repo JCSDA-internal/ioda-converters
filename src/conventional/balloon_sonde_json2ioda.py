@@ -12,26 +12,19 @@
 Python code to ingest JSON WindBorne Data
 """
 
-import re
 import logging
-import math
 import os
-import sys
 import time
 import json
-from datetime import datetime, timedelta
-from pathlib import Path
+from datetime import datetime
+from collections import defaultdict
 import pandas as pd
 
 import numpy as np
-import netCDF4 as nc
 
 # These modules need the path to lib-python modules
 import pyiodaconv.ioda_conv_engines as iconv
-import pyiodaconv.meteo_utils as meteo_utils
-import pyiodaconv.meteo_sounding_utils as meteo_souding_utils
 from pyiodaconv.orddicts import DefaultOrderedDict
-from collections import defaultdict
 
 logger = logging.getLogger("decodeSounding")
 
@@ -121,14 +114,11 @@ def main(args):
         #---------------------------------------------------------------------------------------------
     """
     # Loop through input files and concatenate into dataframe
-    metaData_files = []
     file_cnt = 0
     for file_name in args.file_names:
         # check if file exists
         if not os.path.isfile(file_name):
-            logging.debug(f'Input (-i option) file: {file_name} does not exist')
-            print(f'Input (-i option) file: {file_name} does not exist')
-            sys.exit()
+            raise ValueError(f'Input (-i option) file: {file_name} does not exist')
         logging.debug(f"Reading input file: {file_name}")
 
         file = json.load(open(file_name))
@@ -171,25 +161,15 @@ def main(args):
 
         # List of release time (earliest time in file. this needs to be updated to be earliest time for each instrument, since the file can have multiple)
         releaseTime = [min(dateTime)]*len(height)
+
         # Make a dummy column to have a constant elevation for the "station"
         stationElevation = [10]*len(height)
-        # convert pressure to Pascals from Hectopascals
-        try:
-            pressure = pressure*100
-        except Exception:
-            try:
-                pressure = [press_i*100 if press_i is not None else press_i for press_i in pressure]  # if some values are None
-            except Exception:
-                pass  # if pressure is all None
 
-        # convert temperature from celcius to kelvin
-        try:
-            airTemperature = airTemperature+np.array(273.15)
-        except Exception:
-            try:
-                airTemperature = [temp_i*273.15 if temp_i is not None else temp_i for temp_i in airTemperature]  # if some values are None
-            except Exception:
-                pass  # If airTemperature is all None
+        # convert pressure to Pascals from Hectopascals
+        pressure = [press_i*100 if press_i is not None else press_i for press_i in pressure]
+
+        # convert temperature from Celsius to Kelvin
+        airTemperature = [temp_i+273.15 if temp_i is not None else temp_i for temp_i in airTemperature]
 
         # Make a list of lists to feed into dataframe
         data_lists = list(zip(height, relativeHumidity, latitude, longitude, stationIdentification, pressure,
@@ -231,7 +211,7 @@ def main(args):
     # set global reference date to release time
     AttrData['datetimeReference'] = datetime.fromtimestamp(obs_data['dateTime'].min()).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    # Export into IODA formatted netCDF file
+    # Export into IODA formatted file
     ioda_data = {}
     DimDict = {'Location': ntotal}
     AttrData['sourceFiles'] = AttrData['sourceFiles'][2:]
@@ -279,7 +259,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         description=(
-            'Read windorne json files and convert into IODA output file')
+            'Read windborne json files and convert into IODA output file')
     )
     required = parser.add_argument_group(title='required arguments')
     required.add_argument('-i', '--input-files', nargs='+', dest='file_names',
@@ -298,12 +278,5 @@ if __name__ == "__main__":
 
     # read in arguments to function call
     args = parser.parse_args()
-
-#    # verify time format
-#    try:
-#        target_time = datetime.fromisoformat(args.date_string[:-1])
-#    except Exception:
-#        parser.error('Date format invalid: ', args.date_string, ' must be like: 2022-05-18T12:00:00Z')
-#        sys.exit()
 
     main(args)

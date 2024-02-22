@@ -1,0 +1,230 @@
+# (C) Copyright 2024 NOAA/NWS/NCEP/EMC
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+observations:
+  - obs space:
+      name: bufr
+
+      obsdatain: "./testinput/rtma_ADPUPA.prepbufr"
+
+      exports:
+        group_by_variable: prepbufrDataLevelCategory
+        variables:
+          # MetaData
+          timestamp:
+            timeoffset:
+              timeOffset: "*/PRSLEVEL/DRFTINFO/HRDR"
+              transforms:
+                - scale: 3600
+              referenceTime: "2024-01-11T00:00:00Z"
+          stationIdentification:
+            query: "*/SID"
+          stationElevation:
+            query: "*/ELV"
+            type: float
+          prepbufrDataLevelCategory:
+            query: "*/PRSLEVEL/CAT"
+          longitude:
+            query: "*/PRSLEVEL/DRFTINFO/XDR"
+          latitude:
+            query: "*/PRSLEVEL/DRFTINFO/YDR"
+          height:
+            query: "*/PRSLEVEL/Z___INFO/Z__EVENT{1}/ZOB"
+            type: float
+          pressure:
+            query: "*/PRSLEVEL/P___INFO/P__EVENT{1}/POB"
+            type: float
+            transforms:
+              - scale: 100
+
+          # ObsValue
+          airTemperature:
+            query: "*/PRSLEVEL/T___INFO/T__EVENT{1}/TOB"
+            transforms:
+              - offset: 273.15
+          dewpointTemperature:
+            query: "*/PRSLEVEL/Q___INFO/TDO"
+            transforms:
+              - offset: 273.15
+          virtualTemperature:
+            query: "*/PRSLEVEL/T___INFO/TVO"
+            transforms:
+              - offset: 273.15
+          windEastward:
+            query: "*/PRSLEVEL/W___INFO/W__EVENT{1}/UOB"
+          windNorthward:
+            query: "*/PRSLEVEL/W___INFO/W__EVENT{1}/VOB"
+          specificHumidity:
+            query: "*/PRSLEVEL/Q___INFO/Q__EVENT{1}/QOB"
+            type: float
+            transforms:
+              - scale: 0.000001
+
+          # QualityMark
+          airTemperatureQualityMarker:
+            query: "*/PRSLEVEL/T___INFO/T__EVENT{1}/TQM"
+          pressureQualityMarker:
+            query: "*/PRSLEVEL/P___INFO/P__EVENT{1}/PQM"
+          windQualityMarker:
+            query: "*/PRSLEVEL/W___INFO/W__EVENT{1}/WQM"
+          specificHumidityQualityMarker:
+            query: "*/PRSLEVEL/Q___INFO/Q__EVENT{1}/QQM"
+          heightQualityMarker:
+            query: "*/PRSLEVEL/Z___INFO/Z__EVENT{1}/ZQM"
+
+          # ObsError
+          airTemperatureObsError:
+            query: "*/PRSLEVEL/T___INFO/T__BACKG/TOE"
+            transforms:
+              - offset: 273.15
+          pressureObsError:
+            query: "*/PRSLEVEL/P___INFO/P__BACKG/POE"
+            transforms:
+              - scale: 100
+          windObsError:
+            query: "*/PRSLEVEL/W___INFO/W__BACKG/WOE"
+
+
+    ioda:
+      backend: netcdf
+      obsdataout: "./testrun/gdas.t00z.rtma_adpupa.prepbufr.nc"
+
+      variables:
+        # MetaData
+        - name: "MetaData/dateTime"
+          coordinates: "longitude latitude"
+          source: variables/timestamp
+          longName: "Datetime"
+          units: "seconds since 1970-01-01T00:00:00Z"
+
+        - name: "MetaData/stationIdentification"
+          coordinates: "longitude latitude"
+          source: variables/stationIdentification
+          longName: "Station Identification"
+
+        - name: "MetaData/stationElevation"
+          coordinates: "longitude latitude"
+          source: variables/stationElevation
+          longName: "Height of Station"
+          units: "m"
+
+        - name: "MetaData/longitude"
+          coordinates: "longitude latitude"
+          source: variables/longitude
+          longName: "Longitude"
+          units: "degrees_east"
+          range: [0, 360]
+
+        - name: "MetaData/latitude"
+          coordinates: "longitude latitude"
+          source: variables/latitude
+          longName: "Latitude"
+          units: "degrees_north"
+          range: [-90, 90]
+
+        - name: "MetaData/height"
+          coordinates: "longitude latitude"
+          source: variables/height
+          longName: "Height of Observation"
+          units: "m"
+
+        - name: "MetaData/pressure"
+          coordinates: "longitude latitude"
+          source: variables/pressure
+          longName: "Pressure"
+          units: "Pa"
+
+        # ObsValue
+        - name: "ObsValue/airTemperature"
+          coordinates: "longitude latitude"
+          source: variables/airTemperature
+          longName: "Temperature"
+          units: "K"
+
+        - name: "ObsValue/dewPointTemperature"
+          coordinates: "longitude latitude"
+          source: variables/dewpointTemperature
+          longName: "Dewpoint Temperature"
+          units: "K"
+
+        - name: "ObsValue/virtualTemperature"
+          coordinates: "longitude latitude"
+          source: variables/virtualTemperature
+          longName: "Virtual Temperature Non-Q Controlled"
+          units: "K"
+
+        - name: "ObsValue/windEastward"
+          coordinates: "longitude latitude"
+          source: variables/windEastward
+          longName: "Eastward Wind"
+          units: "m s-1"
+
+        - name: "ObsValue/windNorthward"
+          coordinates: "longitude latitude"
+          source: variables/windNorthward
+          longName: "Northward Wind"
+          units: "m s-1"
+
+        - name: "ObsValue/specificHumidity"
+          coordinates: "longitude latitude"
+          source: variables/specificHumidity
+          longName: "Specific Humidity"
+          units: "kg kg-1"
+
+        # QualityMarker
+        - name: "QualityMarker/airTemperature"
+          coordinates: "longitude latitude"
+          source: variables/airTemperatureQualityMarker
+          longName: "Temperature Quality Marker"
+
+        - name: "QualityMarker/pressure"
+          coordinates: "longitude latitude"
+          source: variables/pressureQualityMarker
+          longName: "Pressure Quality Marker"
+
+        - name: "QualityMarker/windEastward"
+          coordinates: "longitude latitude"
+          source: variables/windQualityMarker
+          longName: "U-Component of Wind Quality Marker"
+
+        - name: "QualityMarker/windNorthward"
+          coordinates: "longitude latitude"
+          source: variables/windQualityMarker
+          longName: "V-Component of Wind Quality Marker"
+
+        - name: "QualityMarker/specificHumidity"
+          coordinates: "longitude latitude"
+          source: variables/specificHumidityQualityMarker
+          longName: "Specific Humidity Quality Marker"
+
+        - name: "QualityMarker/height"
+          coordinates: "longitude latitude"
+          source: variables/heightQualityMarker
+          longName: "Height Quality Marker"
+
+        # ObsError
+        - name: "ObsError/airTemperature"
+          coordinates: "longitude latitude"
+          source: variables/airTemperatureObsError
+          longName: "Temperature Error"
+          units: "K"
+
+        - name: "ObsError/pressure"
+          coordinates: "longitude latitude"
+          source: variables/pressureObsError
+          longName: "Pressure Error"
+          units: "Pa"
+
+        - name: "ObsError/windEastward"
+          coordinates: "longitude latitude"
+          source: variables/windObsError
+          longName: "Eastward wind error"
+          units: "m s-1"
+
+        - name: "ObsError/windNorthward"
+          coordinates: "longitude latitude"
+          source: variables/windObsError
+          longName: "Northward wind error"
+          units: "m s-1"
