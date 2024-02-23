@@ -102,10 +102,9 @@ class smap(object):
         # str_datetime = ncd.groups['Metadata'].groups['DatasetIdentification'].getncattr('creationDate')
         # my_datetime = datetime.strptime(str_datetime, "%Y-%m-%d")
         # get datetime from filename
-        str_split = self.filename.split("_")
-        str_datetime = str_split[7]
-        my_datetime = datetime.strptime(str_datetime, "%Y%m%dT%H%M%S")
-        time_offset = round((my_datetime - epoch).total_seconds())
+        file_refTime = re.search(r"\d{8}T\d{6}", self.filename).group()
+        file_refTime = datetime.strptime(file_refTime, "%Y%m%dT%H%M%S")
+        time_offset = round((file_refTime - epoch).total_seconds())
         vals = vals.astype('float32')
         lats = lats.astype('float32')
         lons = lons.astype('float32')
