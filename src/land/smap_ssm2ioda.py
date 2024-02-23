@@ -9,6 +9,7 @@ import os
 import argparse
 import netCDF4 as nc
 import numpy as np
+import re
 from datetime import datetime
 
 import pyiodaconv.ioda_conv_engines as iconv
