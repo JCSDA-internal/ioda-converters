@@ -44,6 +44,8 @@ def main(args):
 
     dtg = datetime.strptime(args.date, '%Y%m%d%H')
     qc = args.qualitycontrol
+    addLSW = args.localspectralwidth
+    only_bang = args.onlybendingangle
 
     # read / process files in parallel
     pool_input_01 = args.input
@@ -52,7 +54,7 @@ def main(args):
     obs_data = {}
     # create a thread pool
     with ProcessPoolExecutor(max_workers=args.threads) as executor:
-        for file_obs_data in executor.map(read_input, pool_inputs, repeat(qc)):
+        for file_obs_data in executor.map(read_input, pool_inputs, repeat(qc), repeat(addLSW), repeat(only_bang)):
             if not file_obs_data:
                 print(f"INFO: non-nominal file skipping")
                 continue
@@ -110,11 +112,15 @@ def main(args):
     VarAttrs[('longitude', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('height', 'MetaData')]['_FillValue'] = float_missing_value
 
+    if addLSW:
+        VarAttrs[('localSpectralWidth', 'MetaData')]['units'] = 'Percentage'
+        VarAttrs[('localSpectralWidth', 'MetaData')]['_FillValue'] = float_missing_value
+
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
 
-def read_input(input_file_and_record, add_qc):
+def read_input(input_file_and_record, add_qc, addLSW, only_bang):
     """
     Reads/converts input file(s)
 
@@ -135,8 +141,10 @@ def read_input(input_file_and_record, add_qc):
     codes_set(bufr, 'unpack', 1)
 
     profile_meta_data = get_meta_data(bufr)
+    if not profile_meta_data:
+        return None
 
-    obs_data = get_obs_data(bufr, profile_meta_data, add_qc, record_number=record_number)
+    obs_data = get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=record_number, only_bang=only_bang)
 
     return obs_data
 
@@ -149,7 +157,10 @@ def get_meta_data(bufr):
     # these are the MetaData we are interested in
     profile_meta_data = {}
     for k, v in meta_data_keys.items():
-        profile_meta_data[k] = codes_get(bufr, v)
+        try:
+            profile_meta_data[k] = codes_get(bufr, v)
+        except Exception as e:
+            print(f'  WARNING: could not retrieve key: {k} -- Skipping')
 
     # do the hokey time structure to time structure
     year = codes_get(bufr, 'year')
@@ -158,7 +169,7 @@ def get_meta_data(bufr):
     hour = codes_get(bufr, 'hour')
     minute = codes_get(bufr, 'minute')
     second = codes_get(bufr, 'second')  # non-integer value
-    second = round(second)
+    second = np.floor(second)
 
     # get string date, translate to a datetime object, then offset from epoch
     dtg = ("%4i-%.2i-%.2iT%.2i:%.2i:%.2iZ" % (year, month, day, hour, minute, second))
@@ -169,7 +180,7 @@ def get_meta_data(bufr):
     return profile_meta_data
 
 
-def get_obs_data(bufr, profile_meta_data, add_qc, record_number=None):
+def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None, only_bang=False):
 
     # allocate space for output depending on which variables are to be saved
     obs_data = {}
@@ -195,6 +206,8 @@ def get_obs_data(bufr, profile_meta_data, add_qc, record_number=None):
     impact = codes_get_array(bufr, 'impactParameter')[offset::drepfac[0]]
     bang = codes_get_array(bufr, 'bendingAngle')[offset*2::drepfac[0]*2]
     bang_err = codes_get_array(bufr, 'bendingAngle')[offset*2+1::drepfac[0]*2]
+    if only_bang:
+        bang_err[:] = 0.003
     bang_conf = codes_get_array(bufr, 'percentConfidence')[1:krepfac[0]+1]
     # len (bang) Out[19]: 1482  (krepfac * 6) -or- (krepfac * drepfac * 2 )`
 
@@ -222,12 +235,20 @@ def get_obs_data(bufr, profile_meta_data, add_qc, record_number=None):
     obs_data[('bendingAngle', "PreQC")] = np.full(krepfac[0], 0, dtype=ioda_int_type)
 
     # (geometric) height is read as integer but expected as float in output
-    height = codes_get_array(bufr, 'height', ktype=float)
+    if only_bang:
+        refrac = np.empty_like(bang)
+        refrac[:] = float_missing_value
+        refrac_err = np.empty_like(bang_err)
+        refrac_err[:] = float_missing_value
+    else:
+        # get the refractivity
+        refrac = codes_get_array(bufr, 'atmosphericRefractivity')[0::2]
+        refrac_err = codes_get_array(bufr, 'atmosphericRefractivity')[1::2]
 
-    # get the refractivity
-    refrac = codes_get_array(bufr, 'atmosphericRefractivity')[0::2]
-    refrac_err = codes_get_array(bufr, 'atmosphericRefractivity')[1::2]
-    refrac_conf = codes_get_array(bufr, 'percentConfidence')[sum(krepfac[:1])+1:sum(krepfac[:2])+1]
+    try:
+        height = codes_get_array(bufr, 'height', ktype=float)
+    except Exception as e:
+        height = codes_get_array(bufr, 'geopotentialHeight', ktype=float)
 
     # value, ob_error, qc
     obs_data[('atmosphericRefractivity', "ObsValue")] = assign_values(refrac)
@@ -239,7 +260,11 @@ def get_obs_data(bufr, profile_meta_data, add_qc, record_number=None):
     obs_data[('latitude', 'MetaData')] = assign_values(lats)
     obs_data[('longitude', 'MetaData')] = assign_values(lons)
     obs_data[('impactParameterRO', 'MetaData')] = assign_values(impact)
-    obs_data[('height', 'MetaData')] = assign_values(height)
+    if only_bang:
+        obs_data[('height', 'MetaData')] = assign_values(impact)
+    else:
+        obs_data[('height', 'MetaData')] = assign_values(height)
+
     for k, v in profile_meta_data.items():
         if type(v) is np.int64:
             obs_data[(k, 'MetaData')] = np.array(np.repeat(v, krepfac[0]), dtype=np.int64)
@@ -257,13 +282,6 @@ def get_obs_data(bufr, profile_meta_data, add_qc, record_number=None):
         nrec = record_number
     obs_data[('sequenceNumber', 'MetaData')] = np.array(np.repeat(nrec, krepfac[0]), dtype=ioda_int_type)
 
-    # get derived profiles
-    geop = codes_get_array(bufr, 'geopotentialHeight')[:-1]
-    pres = codes_get_array(bufr, 'nonCoordinatePressure')[0:-2:2]
-    temp = codes_get_array(bufr, 'airTemperature')[0::2]
-    spchum = codes_get_array(bufr, 'specificHumidity')[0::2]
-    prof_conf = codes_get_array(bufr, 'percentConfidence')[sum(krepfac[:2])+1:sum(krepfac)+1]
-
     # Compute impact height
     obs_data[('impactHeightRO', 'MetaData')] = \
         obs_data[('impactParameterRO', 'MetaData')] - \
@@ -271,22 +289,31 @@ def get_obs_data(bufr, profile_meta_data, add_qc, record_number=None):
         obs_data[('earthRadiusCurvature', 'MetaData')]
 
     if add_qc:
-        good = quality_control(profile_meta_data, height, lats, lons)
+        impactHeight = obs_data[('impactHeightRO', 'MetaData')]
+        good = quality_control(profile_meta_data, impactHeight, lats, lons)
         if len(lats[good]) == 0:
             # exit if entire profile is missing
-            return{}
+            return {}
         for k in obs_data.keys():
             obs_data[k] = obs_data[k][good]
 
+    if addLSW:
+        bangid = bang == 0
+        bang[bangid] = float_missing_value
+        bang_err[bangid] = float_missing_value
+
+        lsw = bang_err/bang * 100   # CDACC saves LSW in radians as bang_err. Convert to percentage
+        lsw[bang == float_missing_value] = float_missing_value
+        obs_data[('localSpectralWidth', "MetaData")] = assign_values(lsw)
     return obs_data
 
 
-def quality_control(profile_meta_data, heights, lats, lons):
+def quality_control(profile_meta_data, impact_heights, lats, lons):
     try:
-        good = (heights > 0.) & (heights < 100000.) & (abs(lats) <= 90.) & (abs(lons) <= 360.)
+        good = (impact_heights > 0.) & (impact_heights < 100000.) & (abs(lats) <= 90.) & (abs(lons) <= 360.)
     except ValueError:
         print(f" quality control on impact_height and lat/lon did not pass")
-        print(f" maybe length of vectors not consistent: {len(heights)}, {len(lats)}, {len(lons)}")
+        print(f" maybe length of vectors not consistent: {len(impact_heights)}, {len(lats)}, {len(lons)}")
         return []
 
     # bad radius or
@@ -307,6 +334,7 @@ def def_meta_data():
         # "timeIncrement": 'timeIncrement',
         "earthRadiusCurvature": 'earthLocalRadiusOfCurvature',
         "satelliteIdentifier": 'satelliteIdentifier',
+        "satelliteSubIdentifier": 'satelliteSubIdentifier',
         "satelliteInstrument": 'satelliteInstruments',
         "dataProviderOrigin": 'centre',
         "satelliteTransmitterId": 'platformTransmitterIdNumber',
@@ -329,6 +357,7 @@ def def_meta_types():
         "geoidUndulation": 'float',
         "earthRadiusCurvature": 'float',
         "satelliteIdentifier": 'integer',
+        "satelliteSubIdentifier": 'integer',
         "satelliteInstrument": 'integer',
         "dataProviderOrigin": 'string',
         "satelliteTransmitterId": 'integer',
@@ -339,7 +368,7 @@ def def_meta_types():
 
 
 def get_normalized_bit(value, bit_index):
-    return(value >> bit_index) & 1
+    return (value >> bit_index) & 1
 
 
 def assign_values(data):
@@ -416,6 +445,16 @@ if __name__ == "__main__":
         '-q', '--qualitycontrol',
         help='turn on quality control georeality checks',
         default=False, action='store_true', required=False)
+
+    optional.add_argument(
+        '-lsw', '--localspectralwidth',
+        help='Calculate and output error metrics, LSW and STD4060',
+        default=False, action='store_true', required=False)
+
+    optional.add_argument(
+        '--onlybendingangle',
+        help='only encode bending angle ignore refractivity and profiles',
+        action='store_true', required=False)
 
     args = parser.parse_args()
     main(args)
