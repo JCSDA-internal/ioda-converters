@@ -17,20 +17,12 @@ if( ecbuild_VERSION VERSION_LESS 3.4 )
   include(GNUInstallDirs)
 endif()
 
+## Compiler flags and other cmake settings
+find_package( jedicmake REQUIRED )  # Prefer find modules from jedi-cmake
+list( APPEND CMAKE_MODULE_PATH $ENV{jedi_cmake_ROOT}/share/jedicmake/Flags )
 list( APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake )
-
+include( jedi_compiler_flags )
 include( iodaconv_extra_macros )
-include( iodaconv_compiler_flags )
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_FORTRAN_STANDARD 08)
-set(CMAKE_FORTRAN_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_C_EXTENSIONS OFF)
-set(CMAKE_FORTRAN_EXTENSIONS OFF)
 
 # Location of .pycodestyle for norm checking within IODA-converters
 set( IODACONV_PYLINT_CFG_DIR ${CMAKE_CURRENT_SOURCE_DIR} )
