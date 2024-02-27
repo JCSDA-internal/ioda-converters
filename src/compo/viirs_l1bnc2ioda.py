@@ -23,17 +23,28 @@ locationKeyList = [
     ("dateTime", "long")
 ]
 
-obsvars = ["reflectance"]
+obsvars = ["albedo"]
 channels = [1,2,3,4,5,6,7,8,9,10,11]
+
+# VIIRS M-band 11 reflective channels centeral wavelength
+wavelength = [0.412, 0.445, 0.488, 0.555, 0.672, 0.746,
+              0.865, 1.24, 1.378, 1.61, 2.25]
+speed_light = 2.99792458E8
+frequency = speed_light*1.0E6/np.array(wavelength,dtype=np.float32)
+
 # A dictionary of global attributes.  More filled in further down.
 AttrData = {}
-AttrData['ioda_object_type'] = 'TOA reflectance (factor)'
+AttrData['ioda_object_type'] = 'TOA reflectance factor'
 
 # A dictionary of variable dimensions.
 DimDict = {}
 
 # A dictionary of variable names and their dimensions.
-VarDims = {'toaReflectance': ['Location', 'Channel']}
+VarDims = {'albedo': ['Location', 'Channel'],
+           'sensorCentralFrequency': ['Channel'],
+           'sensorCentralWavelength': ['Channel'],
+           'sensorChannelNumber': ['Channel'],
+          }
 
 # Get the group names we use the most.
 metaDataName = iconv.MetaDataName()
@@ -41,13 +52,14 @@ obsValName = iconv.OvalName()
 obsErrName = iconv.OerrName()
 qcName = iconv.OqcName()
 
-long_missing_value = nc.default_fillvals['i8']
+float_missing_value = iconv.get_default_fill_val(np.float32)
+int_missing_value = iconv.get_default_fill_val(np.int32)
+long_missing_value = iconv.get_default_fill_val(np.int64)
 
 
-class TOA_R(object):
-    def __init__(self, filenames, method, mask, thin):
+class viirs_l1b_rf(object):
+    def __init__(self, filenames, thin):
         self.filenames = filenames
-        self.mask = mask
         self.thin = thin
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
@@ -63,11 +75,14 @@ class TOA_R(object):
             self.varAttrs[iodavar, obsValName]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, obsErrName]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, qcName]['coordinates'] = 'longitude latitude'
-            self.varAttrs[iodavar, obsValName]['_FillValue'] = -9999.
-            self.varAttrs[iodavar, obsErrName]['_FillValue'] = -9999.
-            self.varAttrs[iodavar, qcName]['_FillValue'] = -9999
+            self.varAttrs[iodavar, obsValName]['_FillValue'] = float_missing_value
+            self.varAttrs[iodavar, obsErrName]['_FillValue'] = float_missing_value
+            self.varAttrs[iodavar, qcName]['_FillValue'] = int_missing_value
             self.varAttrs[iodavar, obsValName]['units'] = '1'
             self.varAttrs[iodavar, obsErrName]['units'] = '1'
+            self.varAttrs[iodavar, obsValName]['long_name'] = 'TOA reflectance factor'
+            self.varAttrs[iodavar, obsErrName]['long_name'] = 'TOA reflectance factor'
+            self.varAttrs[iodavar, qcName]['long_name'] = 'TOA reflectance factor'
 
         # Make empty lists for the output vars
         self.outdata[('latitude', metaDataName)] = np.array([], dtype=np.float32)
@@ -82,52 +97,64 @@ class TOA_R(object):
         for obs, geo in self.filenames:
             geo_ncd = nc.Dataset(geo, 'r')
             obs_ncd = nc.Dataset(obs, 'r')
-            gatts = {attr: getattr(ncd, attr) for attr in ncd.ncattrs()}
+            gatts = {attr: getattr(obs_ncd, attr) for attr in obs_ncd.ncattrs()}
             base_datetime = datetime.strptime(gatts["time_coverage_end"], '%Y-%m-%dT%H:%M:%S.000Z')
-            self.satellite = gatts["satellite_name"]
-            self.sensor = gatts["instrument_name"]
-            AttrData["platform"] = self.satellite
-            AttrData["sensor"] = self.sensor
+            self.satellite = gatts["platform"]
+            self.sensor = gatts["instrument"]
+            self.satellite_instrument = gatts["SatelliteInstrument"]
 
-            if AttrData['sensor'] == 'VIIRS':
-                AttrData['sensor'] = "v.viirs-m_npp"
-            if AttrData['platform'] == 'NPP':
+            if self.satellite_instrument == 'JP1VIIRS':
+                AttrData['sensor'] = "v.viirs-m_n20"
+            if self.satellite == 'NPP':
                 AttrData['platform'] = "suomi_npp"
 
-            lons = ncd.variables['Longitude'][:].ravel()
-            lats = ncd.variables['Latitude'][:].ravel()
-            vals = ncd.variables['AOD550'][:].ravel()
-            errs = ncd.variables['Residual'][:].ravel()
+            lons = geo_ncd.groups['geolocation_data'].variables['longitude'][:].data.ravel()
+            lats = geo_ncd.groups['geolocation_data'].variables['latitude'][:].data.ravel()
+            nlocs = lons.size
+            print('Locations: ',nlocs)
 
-            # QCPath is the flag for retrieval path. The valid range is 0-127 in the
-            # ATBD: https://www.star.nesdis.noaa.gov/jpss/documents/ATBD/ATBD_EPS_Aerosol_AOD_v3.4.pdf.
-            # QCPath's valid range in the input file is not correct, so we define the valid range here.
-            qcpath = ncd.variables['QCPath'][:].data.ravel()
-            qcpath = np.ma.masked_array(qcpath, np.logical_or(qcpath < 0, qcpath > 127))
+            obsgrp = obs_ncd.groups['observation_data']
 
-            qcall = ncd.variables['QCAll'][:].ravel().astype('int32')
-            obs_time = np.full(np.shape(qcall), base_datetime, dtype=object)
-            if self.mask == "maskout":
-                mask = np.logical_not(vals.mask)
-                vals = vals[mask]
-                lons = lons[mask]
-                lats = lats[mask]
-                errs = errs[mask]
-                qcpath = qcpath[mask]
-                qcall = qcall[mask]
-                obs_time = obs_time[mask]
+            vals = np.zeros((nlocs,len(channels)), dtype=np.float32)
+            errs = np.zeros_like(vals)
+            qcfs = np.zeros(np.shape(vals), dtype=np.int32)
 
-            ncd.close()
+            ichan = 0
+            for chan in channels:
+                obsname = 'M%2.2i' %(chan)
+                qcfname = '%s_quality_flags' %(obsname)
+                errname = '%s_uncert_index' %(obsname)
+
+                obs = obsgrp.variables[obsname]
+                obs_mask = obs[:].mask.ravel()
+                qcf = obsgrp.variables[qcfname]
+                err = obsgrp.variables[errname]
+                err.set_auto_scale(False)
+                
+                vals[:,ichan] = obs[:].data.ravel() #.astype(np.float32)
+                qcfs[:,ichan] = qcf[:].data.ravel() #.astype(np.int32)
+                errs[:,ichan] = 1. + err.scale_factor * err[:].data.ravel() ** 2
+
+                # Apply _FillValue to masked points
+                vals[obs_mask,ichan] = float_missing_value
+
+                ichan += 1
+
+            # Apply base_datetime to whole obs_time array,
+            # may need to derive from scan_start_time, scan_end_time
+            obs_time = np.full(np.shape(lons), base_datetime, dtype=object)
+
+            geo_ncd.close()
+            obs_ncd.close()
 
             # apply thinning mask
             if self.thin > 0.0:
                 mask_thin = np.random.uniform(size=len(lons)) > self.thin
                 lons = lons[mask_thin]
                 lats = lats[mask_thin]
-                vals = vals[mask_thin]
-                errs = errs[mask_thin]
-                qcpath = qcpath[mask_thin]
-                qcall = qcall[mask_thin]
+                vals = vals[mask_thin,:]
+                errs = errs[mask_thin,:]
+                qcfs = qcfs[mask_thin,:]
                 obs_time = obs_time[mask_thin]
 
             #  Write out data
@@ -141,10 +168,18 @@ class TOA_R(object):
                 self.outdata[self.varDict[iodavar]['errKey']] = np.append(
                     self.outdata[self.varDict[iodavar]['errKey']], np.array(errs, dtype=np.float32))
                 self.outdata[self.varDict[iodavar]['qcKey']] = np.append(
-                    self.outdata[self.varDict[iodavar]['qcKey']], np.array(qcall, dtype=np.int32))
+                    self.outdata[self.varDict[iodavar]['qcKey']], np.array(qcfs, dtype=np.int32))
 
+        # Write other MetaData 
+        output_chidx = np.array(channels, dtype=np.int32) - 1
+        self.outdata[('sensorCentralFrequency', metaDataName)] = np.array(frequency[output_chidx], dtype=np.float32)
+        self.varAttrs[('sensorCentralFrequency', metaDataName)]['units'] = 'Hz'
+        self.outdata[('sensorCentralWavelength', metaDataName)] = np.array(frequency[output_chidx], dtype=np.float32)
+        self.varAttrs[('sensorCentralWavelength', metaDataName)]['units'] = 'micron'
+        self.outdata[('sensorChannelNumber', metaDataName)] = np.array(channels, dtype=np.int32)
+    
         DimDict['Location'] = len(self.outdata[('latitude', metaDataName)])
-        DimDict['Channel'] = np.array(channels)
+        DimDict['Channel'] = len(channels)
 
 
 def main():
@@ -157,7 +192,7 @@ def main():
     parser = argparse.ArgumentParser(
         description=('Read NASA VIIRS M-band Level 1b file(s) and Converter'
                      ' of native NetCDF format for observations of TOA reflectance'
-                     ' from VIIRS to IODA-V2 netCDF format.')
+                     ' from VIIRS to IODA NetCDF format.')
     )
     parser.add_argument(
         '-i', '--obsinfo',
@@ -172,10 +207,6 @@ def main():
         help="name of ioda-v2 output file",
         type=str, required=True)
     parser.add_argument(
-        '-k', '--mask',
-        help="maskout missing values: maskout/default, default=none",
-        type=str, required=True)
-    parser.add_argument(
         '-n', '--thin',
         help="percentage of random thinning fro 0.0 to 1.0. Zero indicates"
         " no thinning is performed. (default: %(default)s)",
@@ -187,13 +218,12 @@ def main():
 
     # setup the IODA writer
 
-    # Read in the reflectance data
-    toa_r = TOA_R(zipped_list, args.method, args.mask, args.thin)
+    # Read in the reflectance factor data
+    toa_rf = viirs_l1b_rf(zipped_list, args.thin)
 
-    # write everything out
-
+    # write everything out (albedo)
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
-    writer.BuildIoda(toa_r.outdata, VarDims, toa_r.varAttrs, AttrData)
+    writer.BuildIoda(toa_rf.outdata, VarDims, toa_rf.varAttrs, AttrData)
 
 
 if __name__ == '__main__':
