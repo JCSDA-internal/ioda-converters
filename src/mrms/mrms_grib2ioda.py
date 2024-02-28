@@ -194,6 +194,8 @@ def read_grib(input_file, obsvars):
     # Use a mask to remove the missing value points entirely from the dataset.
     # This is FLAWED because there could be different missing values on different
     # height levels, or potentially different missing values depending on product.
+    # Currently -999 values are outside radar coverage and -99 values are used
+    # for valid signal below minimum detectable threshold for reflectivity.
     '''
 
     mask = None
@@ -220,8 +222,13 @@ def read_grib(input_file, obsvars):
 
         Z = Z.reshape(ni*nj).astype('float')
         if obsvar == 'reflectivity':
-            mask = np.logical_and(Z >= -25, Z <= 80)
+            mask_inside = np.logical_and(Z <= -98.5, Z > -99.5)  # Capture -99 as special
+            Z[mask_inside] = -34.5                               # and reset to -34.5
+            mask = np.logical_and(Z >= -35, Z <= 80)
             Z = Z[mask]
+        else:
+            print(f"CAUTION: no added processing done for this product: {obsvar}")
+
         Z = Z.tolist()
         print(f"DEBUG: min, max of data: {min(Z)}, {max(Z)}")
         mrms_data[obsvar].extend(Z)
