@@ -24,13 +24,13 @@ locationKeyList = [
 ]
 
 obsvars = ["albedo"]
-channels = [1,2,3,4,5,6,7,8,9,10,11]
+channels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 
 # VIIRS M-band 11 reflective channels centeral wavelength
 wavelength = [0.412, 0.445, 0.488, 0.555, 0.672, 0.746,
               0.865, 1.24, 1.378, 1.61, 2.25]
 speed_light = 2.99792458E8
-frequency = speed_light*1.0E6/np.array(wavelength,dtype=np.float32)
+frequency = speed_light*1.0E6/np.array(wavelength, dtype=np.float32)
 
 # A dictionary of global attributes.  More filled in further down.
 AttrData = {}
@@ -44,7 +44,7 @@ VarDims = {'albedo': ['Location', 'Channel'],
            'sensorCentralFrequency': ['Channel'],
            'sensorCentralWavelength': ['Channel'],
            'sensorChannelNumber': ['Channel'],
-          }
+           }
 
 # Get the group names we use the most.
 metaDataName = iconv.MetaDataName()
@@ -111,32 +111,31 @@ class viirs_l1b_rf(object):
             lons = geo_ncd.groups['geolocation_data'].variables['longitude'][:].data.ravel()
             lats = geo_ncd.groups['geolocation_data'].variables['latitude'][:].data.ravel()
             nlocs = lons.size
-            print('Locations: ',nlocs)
 
             obsgrp = obs_ncd.groups['observation_data']
 
-            vals = np.zeros((nlocs,len(channels)), dtype=np.float32)
+            vals = np.zeros((nlocs, len(channels)), dtype=np.float32)
             errs = np.zeros_like(vals)
             qcfs = np.zeros(np.shape(vals), dtype=np.int32)
 
             ichan = 0
             for chan in channels:
-                obsname = 'M%2.2i' %(chan)
-                qcfname = '%s_quality_flags' %(obsname)
-                errname = '%s_uncert_index' %(obsname)
+                obsname = 'M%2.2i' % (chan)
+                qcfname = '%s_quality_flags' % (obsname)
+                errname = '%s_uncert_index' % (obsname)
 
                 obs = obsgrp.variables[obsname]
                 obs_mask = obs[:].mask.ravel()
                 qcf = obsgrp.variables[qcfname]
                 err = obsgrp.variables[errname]
                 err.set_auto_scale(False)
-                
-                vals[:,ichan] = obs[:].data.ravel() #.astype(np.float32)
-                qcfs[:,ichan] = qcf[:].data.ravel() #.astype(np.int32)
-                errs[:,ichan] = 1. + err.scale_factor * err[:].data.ravel() ** 2
+
+                vals[:, ichan] = obs[:].data.ravel()
+                qcfs[:, ichan] = qcf[:].data.ravel()
+                errs[:, ichan] = 1. + err.scale_factor * err[:].data.ravel() ** 2
 
                 # Apply _FillValue to masked points
-                vals[obs_mask,ichan] = float_missing_value
+                vals[obs_mask, ichan] = float_missing_value
 
                 ichan += 1
 
@@ -152,9 +151,9 @@ class viirs_l1b_rf(object):
                 mask_thin = np.random.uniform(size=len(lons)) > self.thin
                 lons = lons[mask_thin]
                 lats = lats[mask_thin]
-                vals = vals[mask_thin,:]
-                errs = errs[mask_thin,:]
-                qcfs = qcfs[mask_thin,:]
+                vals = vals[mask_thin, :]
+                errs = errs[mask_thin, :]
+                qcfs = qcfs[mask_thin, :]
                 obs_time = obs_time[mask_thin]
 
             #  Write out data
@@ -170,14 +169,14 @@ class viirs_l1b_rf(object):
                 self.outdata[self.varDict[iodavar]['qcKey']] = np.append(
                     self.outdata[self.varDict[iodavar]['qcKey']], np.array(qcfs, dtype=np.int32))
 
-        # Write other MetaData 
+        # Write other MetaData
         output_chidx = np.array(channels, dtype=np.int32) - 1
         self.outdata[('sensorCentralFrequency', metaDataName)] = np.array(frequency[output_chidx], dtype=np.float32)
         self.varAttrs[('sensorCentralFrequency', metaDataName)]['units'] = 'Hz'
         self.outdata[('sensorCentralWavelength', metaDataName)] = np.array(frequency[output_chidx], dtype=np.float32)
         self.varAttrs[('sensorCentralWavelength', metaDataName)]['units'] = 'micron'
         self.outdata[('sensorChannelNumber', metaDataName)] = np.array(channels, dtype=np.int32)
-    
+
         DimDict['Location'] = len(self.outdata[('latitude', metaDataName)])
         DimDict['Channel'] = len(channels)
 
