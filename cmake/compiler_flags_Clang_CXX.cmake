@@ -19,7 +19,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3")
 # DEBUG FLAGS
 ####################################################################
 
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -O0")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS}")
 
 ####################################################################
 # BIT REPRODUCIBLE FLAGS
@@ -31,7 +31,7 @@ set(CMAKE_CXX_FLAGS_BIT "${CMAKE_CXX_FLAGS} -O2 -ffp-model=strict")
 # LINK FLAGS
 ####################################################################
 
-set(CMAKE_CXX_LINK_FLAGS "")
+set(CMAKE_CXX_LINK_FLAGS "-Wl,-no_compact_unwind")
 
 ####################################################################
 
