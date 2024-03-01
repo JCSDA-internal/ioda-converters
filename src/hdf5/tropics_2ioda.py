@@ -42,6 +42,10 @@ TROPICS04_WMO_sat_ID = 966
 TROPICS05_WMO_sat_ID = 967
 TROPICS06_WMO_sat_ID = 968
 TROPICS07_WMO_sat_ID = 969
+# what to use here
+TOMORROWIO_S3_sat_ID = 333
+TOMORROWIO_S1_sat_ID = 333
+TOMORROWIO_GENERIC_sat_ID = 333
 
 # TROPICS Epoch Time (TET) offset
 tet_offset = 946684721.0
@@ -134,10 +138,15 @@ def get_data_from_files(afile):
     obs_data = init_obs_loc()
 
     f = h5py.File(afile, 'r')
-    software_version = f.attrs['L1b_SW_Ver'].decode("utf-8").split('.')
-    if int(software_version[0]) >= 3:
+    software_version = True
+    if 'L1b_SW_Ver' in f.attrs.keys():
+        software_version = int(f.attrs['L1b_SW_Ver'].decode("utf-8").split('.')[0]) >=3
+    nc_properties = True
+    if '_NCProperties' in f.attrs.keys():
+        nc_properties = 'version=2' in f.attrs['_NCProperties'].decode("utf-8")
+    if software_version or nc_properties:
         obs_data = get_data(f, obs_data)
-    elif int(software_version[0]) == 2:
+    elif int(f.attrs['L1b_SW_Ver'].decode("utf-8").split('.')[0]) == 2:
         obs_data = get_data_deprecated(f, obs_data)
     else:
         print(f'unknown software version: {software_version}')
@@ -335,9 +344,15 @@ def get_WMO_satellite_ID(attrs_shortname):
         WMO_sat_ID = TROPICS06_WMO_sat_ID
     elif 'TROPICS07' in attrs_shortname:
         WMO_sat_ID = TROPICS07_WMO_sat_ID
+    elif 'TMS_S3_BRTTL1B' in attrs_shortname:
+        WMO_sat_ID = TOMORROWIO_S3_sat_ID
+    elif 'TMS_S1_BRTTL1B' in attrs_shortname:
+        WMO_sat_ID = TOMORROWIO_S1_sat_ID
+    elif 'TMS' in attrs_shortname and 'BRTTL1B' in attrs_shortname:
+        WMO_sat_ID = TOMORROWIO_GENERIC_sat_ID
     else:
         WMO_sat_ID = -1
-        print("could not determine satellite from filename: %s" % afile)
+        print("could not determine satellite from filename: %s" % attrs_shortname)
         sys.exit()
 
     return WMO_sat_ID
