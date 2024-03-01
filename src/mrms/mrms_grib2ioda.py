@@ -232,7 +232,7 @@ def read_grib(input_file, obsvars, min_dbz):
             Z = Z.reshape(ni*nj).astype('float')
             if obsvar == 'reflectivity':
                 mask_inside = np.logical_and(Z <= -98.5, Z > -99.5)  # Capture -99 as special
-                Z[mask_inside] = -34.5                               # and reset to -34.5
+                Z[mask_inside] = -34.9                               # and reset to -34.9
                 mask = np.logical_and(Z >= min_dbz, Z <= 80)
                 Z = Z[mask]
             else:
