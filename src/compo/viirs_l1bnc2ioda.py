@@ -178,7 +178,9 @@ class viirs_l1b_rf(object):
         self.outdata[('sensorChannelNumber', metaDataName)] = np.array(channels, dtype=np.int32)
 
         DimDict['Location'] = len(self.outdata[('latitude', metaDataName)])
+        AttrData['Location'] = np.int32(DimDict['Location'])
         DimDict['Channel'] = len(channels)
+        AttrData['Channel'] = np.int32(DimDict['Channel'])
 
 
 def main():
