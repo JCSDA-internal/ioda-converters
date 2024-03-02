@@ -31,7 +31,7 @@ def satbias_upgrader(infile, outfile):
     if 'channels' in oldnc.variables.keys():
         nvars = newnc.createDimension("Channel", len(oldnc.dimensions['nchannels']))
         channels_in = oldnc.variables['channels'][:]
-        channels_out = newnc.createVariable("Channel", "i4", ("Channel",))
+        channels_out = newnc.createVariable("sensorChannelNumber", "i4", ("Channel",))
         channels_out[:] = channels_in
         dimname = 'Channel'
     if 'variables' in oldnc.variables.keys():
@@ -53,8 +53,8 @@ def satbias_upgrader(infile, outfile):
         for i, pred in enumerate(predictors):
             temp = pred.split('_')
             predOut = temp[0] + ''.join(ele.title() for ele in temp[1:])
-            if predOut == 'emissivity':
-                predOut = 'emissivityK'
+            #Hui if predOut == 'emissivity':
+            #Hui     predOut = 'emissivityK'
             var1_out = newnc.createVariable(f"BiasCoefficients/{predOut}", "f4", ("Record", dimname),
                                             fill_value=-3.36879526e+38)
             var1_out[0, :] = bias_coeff[i, :]
@@ -63,8 +63,8 @@ def satbias_upgrader(infile, outfile):
         for i, pred in enumerate(predictors):
             temp = pred.split('_')
             predOut = temp[0] + ''.join(ele.title() for ele in temp[1:])
-            if predOut == 'emissivity':
-                predOut = 'emissivityK'
+            #Hui if predOut == 'emissivity':
+            #Hui     predOut = 'emissivityK'
             var2_out = newnc.createVariable(f"BiasCoefficientErrors/{predOut}", "f4", ("Record", dimname),
                                             fill_value=-3.36879526e+38)
             var2_out[0, :] = bias_coeff_err[i, :]
