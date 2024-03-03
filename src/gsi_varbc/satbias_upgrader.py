@@ -40,8 +40,11 @@ def satbias_upgrader(infile, outfile):
         vars_out = newnc.createVariable("Variable", str, ("Variable",))
         vars_out[:] = vars_in
         dimname = 'Variable'
-    nrecs_out = newnc.createVariable("Record", str, ("Record"))
-    nrecs_out[0] = ' '
+    #Hui: TODO once using string Record is fixed in OOPS and UFO, change Record to str.
+    #Hui: nrecs_out = newnc.createVariable("Record", str, ("Record"))
+    #Hui: nrecs_out[0] = ' '
+    nrecs_out = newnc.createVariable("Record", "i4", ("Record"))
+    nrecs_out[0] = 0
     if 'number_obs_assimilated' in oldnc.variables.keys():
         nobs_assim_in = oldnc.variables['number_obs_assimilated'][:]
         nobs_assim_out = newnc.createVariable("numberObservationsUsed", "i4", ("Record", dimname))
@@ -52,9 +55,16 @@ def satbias_upgrader(infile, outfile):
         bias_coeff = oldnc.variables['bias_coefficients'][:]
         for i, pred in enumerate(predictors):
             temp = pred.split('_')
-            predOut = temp[0] + ''.join(ele.title() for ele in temp[1:])
-            #Hui if predOut == 'emissivity':
-            #Hui     predOut = 'emissivityK'
+            if "order" in temp:
+                idorder=temp.index('order')
+                predOut = temp[0] + ''.join(ele.title() for ele in temp[1:idorder])+'_'+temp[idorder]+'_'+temp[idorder+1]
+            else:
+                predOut = temp[0] + ''.join(ele.title() for ele in temp[1:])
+            #Hui: naming convention to be confirmed 
+            #Hui: if predOut == 'emissivity':
+            #Hui:     predOut = 'emissivityK'
+            if 'scanAngle' in predOut:
+                predOut = predOut.replace("scanAngle", "sensorScanAngle")
             var1_out = newnc.createVariable(f"BiasCoefficients/{predOut}", "f4", ("Record", dimname),
                                             fill_value=-3.36879526e+38)
             var1_out[0, :] = bias_coeff[i, :]
@@ -62,9 +72,16 @@ def satbias_upgrader(infile, outfile):
         bias_coeff_err = oldnc.variables['bias_coeff_errors'][:]
         for i, pred in enumerate(predictors):
             temp = pred.split('_')
-            predOut = temp[0] + ''.join(ele.title() for ele in temp[1:])
-            #Hui if predOut == 'emissivity':
-            #Hui     predOut = 'emissivityK'
+            if "order" in temp:
+                idorder=temp.index('order')
+                predOut = temp[0] + ''.join(ele.title() for ele in temp[1:idorder])+'_'+temp[idorder]+'_'+temp[idorder+1]
+            else:
+                predOut = temp[0] + ''.join(ele.title() for ele in temp[1:])
+            #Hui: naming convention to be confirmed 
+            #Hui: if predOut == 'emissivity':
+            #Hui:     predOut = 'emissivityK'
+            if 'scanAngle' in predOut:
+                predOut = predOut.replace("scanAngle", "sensorScanAngle")
             var2_out = newnc.createVariable(f"BiasCoefficientErrors/{predOut}", "f4", ("Record", dimname),
                                             fill_value=-3.36879526e+38)
             var2_out[0, :] = bias_coeff_err[i, :]
