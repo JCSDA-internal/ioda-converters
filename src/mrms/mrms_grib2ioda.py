@@ -317,4 +317,4 @@ if __name__ == "__main__":
         if not os.path.isfile(file_name):
             parser.error('Input (-i option) file: ', file_name, ' does not exist')
 
-    main(args.file_names, args.output_file, args.min_dbz)
+    main(args.file_names, args.output_file, float(args.min_dbz))
