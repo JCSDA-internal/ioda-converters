@@ -20,7 +20,11 @@ from pyiodaconv.orddicts import DefaultOrderedDict
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("dateTime", "long")
+    ("dateTime", "long"),
+    ("solarZenithAngle", "float"),
+    ("solarAzimuthAngle", "float"),
+    ("sensorZenithAngle", "float"),
+    ("sensorAzimuthAngle", "float"),
 ]
 
 obsvars = ["albedo"]
@@ -88,6 +92,10 @@ class viirs_l1b_rf(object):
         self.outdata[('latitude', metaDataName)] = np.array([], dtype=np.float32)
         self.outdata[('longitude', metaDataName)] = np.array([], dtype=np.float32)
         self.outdata[('dateTime', metaDataName)] = np.array([], dtype=object)
+        self.outdata[('solarZenithAngle', metaDataName)] = np.array([], dtype=np.float32)
+        self.outdata[('solarAzimuthAngle', metaDataName)] = np.array([], dtype=np.float32)
+        self.outdata[('sensorZenithAngle', metaDataName)] = np.array([], dtype=np.float32)
+        self.outdata[('sensorAzimuthAngle', metaDataName)] = np.array([], dtype=np.float32)
         for iodavar in obsvars:
             self.outdata[self.varDict[iodavar]['valKey']] = np.array([], dtype=np.float32)
             self.outdata[self.varDict[iodavar]['errKey']] = np.array([], dtype=np.float32)
@@ -110,6 +118,11 @@ class viirs_l1b_rf(object):
 
             lons = geo_ncd.groups['geolocation_data'].variables['longitude'][:].data.ravel()
             lats = geo_ncd.groups['geolocation_data'].variables['latitude'][:].data.ravel()
+            solar_za = geo_ncd.groups['geolocation_data'].variables['solar_zenith'][:].data.ravel()
+            solar_aa = geo_ncd.groups['geolocation_data'].variables['solar_azimuth'][:].data.ravel()
+            sensor_za = geo_ncd.groups['geolocation_data'].variables['sensor_zenith'][:].data.ravel()
+            sensor_aa = geo_ncd.groups['geolocation_data'].variables['sensor_azimuth'][:].data.ravel()
+        
             nlocs = lons.size
 
             obsgrp = obs_ncd.groups['observation_data']
@@ -161,6 +174,15 @@ class viirs_l1b_rf(object):
             self.outdata[('longitude', metaDataName)] = np.append(self.outdata[('longitude', metaDataName)], np.array(lons, dtype=np.float32))
             self.outdata[('dateTime', metaDataName)] = np.append(self.outdata[('dateTime', metaDataName)], np.array(obs_time, dtype=object))
 
+            self.outdata[('solarZenithAngle', metaDataName)] = np.append(self.outdata[('solarZenithAngle', metaDataName)],
+                                                                         np.array(solar_za, dtype=np.float32))
+            self.outdata[('solarAzimuthAngle', metaDataName)] = np.append(self.outdata[('solarAzimuthAngle', metaDataName)],
+                                                                          np.array(solar_aa, dtype=np.float32))
+            self.outdata[('sensorZenithAngle', metaDataName)] = np.append(self.outdata[('sensorZenithAngle', metaDataName)],
+                                                                          np.array(sensor_za, dtype=np.float32))
+            self.outdata[('sensorAzimuthAngle', metaDataName)] = np.append(self.outdata[('sensorAzimuthAngle', metaDataName)],
+                                                                           np.array(sensor_aa, dtype=np.float32))
+
             for iodavar in obsvars:
                 self.outdata[self.varDict[iodavar]['valKey']] = np.append(
                     self.outdata[self.varDict[iodavar]['valKey']], np.array(vals, dtype=np.float32))
@@ -176,6 +198,10 @@ class viirs_l1b_rf(object):
         self.outdata[('sensorCentralWavelength', metaDataName)] = np.array(frequency[output_chidx], dtype=np.float32)
         self.varAttrs[('sensorCentralWavelength', metaDataName)]['units'] = 'micron'
         self.outdata[('sensorChannelNumber', metaDataName)] = np.array(channels, dtype=np.int32)
+
+        for tmpvar in ['solarZenithAngle', 'solarAzimuthAngle', 'sensorZenithAngle', 'sensorAzimuthAngle']:
+            self.varAttrs[(tmpvar, metaDataName)]['_FillValue'] = float_missing_value
+            self.varAttrs[(tmpvar, metaDataName)]['units'] = 'degrees'
 
         DimDict['Location'] = len(self.outdata[('latitude', metaDataName)])
         AttrData['Location'] = np.int32(DimDict['Location'])
