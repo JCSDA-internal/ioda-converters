@@ -16,6 +16,8 @@ import pyiodaconv.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from pyiodaconv.orddicts import DefaultOrderedDict
 
+float_missing_value = iconv.get_default_fill_val(np.float32)
+
 os.environ["TZ"] = "UTC"
 
 locationKeyList = [
@@ -60,6 +62,8 @@ class smap(object):
             self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
             self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
             self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
+            self.varAttrs[iodavar, iconv.OvalName()]['_FillValue'] = float_missing_value
+            self.varAttrs[iodavar, iconv.OerrName()]['_FillValue'] = float_missing_value
             self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
@@ -98,6 +102,8 @@ class smap(object):
             errs = errs[mask]
             qflg = qflg[mask]
             times = times[mask]
+            fill = (vals < valid_min) | (vals > valid_max) | (vals == _FillValue)
+            vals[fill] = float_missing_value
 
         # file provides yyyy-mm-dd as an attribute
         # str_datetime = ncd.groups['Metadata'].groups['DatasetIdentification'].getncattr('creationDate')
