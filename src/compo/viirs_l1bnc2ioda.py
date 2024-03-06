@@ -211,10 +211,10 @@ class viirs_l1b_rf(object):
 def main():
 
     # get command line arguments
-    # Usage: python blah.py -i /path/to/obs/2021060801.nc /path/to/obs/2021060802.nc ... 
-    #                       -g /path/to/geo/2021060801.nc /path/to/geo/2021060802.nc ... 
+    # Usage: python blah.py -i /path/to/obs/2021060801.nc /path/to/obs/2021060802.nc ...
+    #                       -g /path/to/geo/2021060801.nc /path/to/geo/2021060802.nc ...
     #                       -o /path/to/ioda/20210608.nc
-    # where the input obs could be for any desired interval to concatenated together. 
+    # where the input obs could be for any desired interval to concatenated together.
     parser = argparse.ArgumentParser(
         description=('Read NASA VIIRS M-band Level 1b file(s) from:'
                      'Obs data: https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/5201/VJ102MOD/'
