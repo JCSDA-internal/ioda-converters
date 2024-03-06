@@ -122,7 +122,6 @@ class viirs_l1b_rf(object):
             solar_aa = geo_ncd.groups['geolocation_data'].variables['solar_azimuth'][:].data.ravel()
             sensor_za = geo_ncd.groups['geolocation_data'].variables['sensor_zenith'][:].data.ravel()
             sensor_aa = geo_ncd.groups['geolocation_data'].variables['sensor_azimuth'][:].data.ravel()
-        
             nlocs = lons.size
 
             obsgrp = obs_ncd.groups['observation_data']
