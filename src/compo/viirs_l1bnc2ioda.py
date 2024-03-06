@@ -211,22 +211,24 @@ class viirs_l1b_rf(object):
 def main():
 
     # get command line arguments
-    # Usage: python blah.py -i /path/to/obs/2021060801.nc /path/to/obs/2021060802.nc ... -t Analysis_time /path/to/obs/2021060823.nc
-    # -o /path/to/ioda/20210608.nc
-    # where the input obs could be for any desired interval to concatenated together. Analysis time is generally the midpoint of
-    # analysis window.
+    # Usage: python blah.py -i /path/to/obs/2021060801.nc /path/to/obs/2021060802.nc ... 
+    #                       -g /path/to/geo/2021060801.nc /path/to/geo/2021060802.nc ... 
+    #                       -o /path/to/ioda/20210608.nc
+    # where the input obs could be for any desired interval to concatenated together. 
     parser = argparse.ArgumentParser(
-        description=('Read NASA VIIRS M-band Level 1b file(s) and Converter'
-                     ' of native NetCDF format for observations of TOA reflectance'
+        description=('Read NASA VIIRS M-band Level 1b file(s) from:'
+                     'Obs data: https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/5201/VJ102MOD/'
+                     'Geo data: https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/5201/VJ103MOD/'
+                     'and converter of native NetCDF format for observations of TOA reflectance'
                      ' from VIIRS to IODA NetCDF format.')
     )
     parser.add_argument(
         '-i', '--obsinfo',
-        help="path of viirs l1b 6-min observation input file(s)",
+        help="path of viirs l1b 6-min observation (VJ102MOD) input file(s)",
         type=str, nargs='+', required=True)
     parser.add_argument(
         '-g', '--geoinfo',
-        help="path of viirs l1b 6-min geolocation input file(s)",
+        help="path of viirs l1b 6-min geolocation (VJ103MOD) input file(s)",
         type=str, nargs='+', required=True)
     parser.add_argument(
         '-o', '--output',
