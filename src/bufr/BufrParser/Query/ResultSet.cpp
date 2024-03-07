@@ -192,10 +192,16 @@ namespace bufr {
                     break;
                 }
 
-                const auto& maxCount = std::max(max(counts), 1);
+                const auto maxCount = std::max(max(counts), 1);
                 if (maxCount > metaData->rawDims[pathIdx])
                 {
                     metaData->rawDims[pathIdx] = maxCount;
+                }
+
+                if (target->exportDimIdxs.size() - 1 < static_cast<size_t>(exportIdxIdx))
+                {
+                    ++pathIdx;
+                    continue;
                 }
 
                 if (target->exportDimIdxs[exportIdxIdx] != pathIdx)

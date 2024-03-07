@@ -305,6 +305,8 @@ if( iodaconv_bufr_query_ENABLED )
     testinput/bufr_ncep_rtma_aircft_NC004103.yaml
     testinput/bufr_ncep_rtma_aircar.yaml
     testinput/rtma_ru.t0000z.aircar_NC004004.tm00.bufr_d
+    testinput/bufr_ncep_rtma_prepbufr_adpupa.yaml
+    testinput/rtma_ADPUPA.prepbufr
     testinput/bufr_ncep_rtma_adpupa.yaml
     testinput/rtma.t00z.adpupa.tm00.bufr_d
   )
@@ -371,6 +373,7 @@ if( iodaconv_bufr_query_ENABLED )
     testoutput/rtma_ru.t0000z.aircft.tm00_nc004006.nc
     testoutput/rtma_ru.t0000z.aircft.tm00_nc004103.nc
     testoutput/rtma_ru.t0000z.aircar_NC004004.tm00.nc
+    testoutput/gdas.t00z.rtma_adpupa.prepbufr.nc
     testoutput/rtma.t00z.adpupa.tm00.nc
   )
 endif()
@@ -1536,14 +1539,14 @@ if(iodaconv_bufr_query_ENABLED)
                             gdas.t12z.aircft_AMDAR103.tm00.nc ${IODA_CONV_COMP_TOL}
                     DEPENDS bufr2ioda.x )
 
-#  ecbuild_add_test( TARGET  test_iodaconv_prepbufr_ncep_aircftprofiles2ioda
-#                    TYPE    SCRIPT
-#                    COMMAND bash
-#                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-#                            netcdf
-#                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_prepbufr_aircft.yaml"
-#                            gdas.t12z.acft_profiles.prepbufr.nc ${IODA_CONV_COMP_TOL}
-#                    DEPENDS bufr2ioda.x )
+  ecbuild_add_test( TARGET  test_iodaconv_prepbufr_ncep_aircftprofiles2ioda
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_prepbufr_aircft.yaml"
+                            gdas.t12z.acft_profiles.prepbufr.nc ${IODA_CONV_COMP_TOL}
+                    DEPENDS bufr2ioda.x )
 
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_read_2_dim_blocks
@@ -1764,6 +1767,15 @@ if(iodaconv_bufr_query_ENABLED)
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_rtma_aircar.yaml"
                             rtma_ru.t0000z.aircar_NC004004.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_rtma_prepbufr_adpupa
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_rtma_prepbufr_adpupa.yaml"
+                            gdas.t00z.rtma_adpupa.prepbufr.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_rtma_adpupa
