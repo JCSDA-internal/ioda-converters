@@ -19,7 +19,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_FXX_FLAGS} -O3")
 # DEBUG FLAGS
 ####################################################################
 
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_FXX_FLAGS} -O0")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_FXX_FLAGS} -g -ggdb")
 
 ####################################################################
 # BIT REPRODUCIBLE FLAGS
