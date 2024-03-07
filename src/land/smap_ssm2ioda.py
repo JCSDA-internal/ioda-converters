@@ -164,11 +164,11 @@ def main():
                         type=str, required=True)
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
-        '-m', '--maskMissing',
+        '--maskMissing',
         help="switch to mask missing values: default=False",
         default=False, action='store_true', required=False)
     optional.add_argument(
-        '-d', '--assumedSoilDepth',
+        '--assumedSoilDepth',
         help="default assumed depth of soil moisture in meters",
         type=float, default=0.025, required=False)
 
