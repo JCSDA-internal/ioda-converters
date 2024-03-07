@@ -102,8 +102,8 @@ class smap(object):
             errs = errs[mask]
             qflg = qflg[mask]
             times = times[mask]
-            fill = (vals < valid_min) | (vals > valid_max) | (vals == _FillValue)
-            vals[fill] = float_missing_value
+        # set fillValue to IODA missing
+        vals[vals == _FillValue] = float_missing_value
 
         # file provides yyyy-mm-dd as an attribute
         # str_datetime = ncd.groups['Metadata'].groups['DatasetIdentification'].getncattr('creationDate')
