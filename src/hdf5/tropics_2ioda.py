@@ -140,7 +140,7 @@ def get_data_from_files(afile):
     f = h5py.File(afile, 'r')
     software_version = True
     if 'L1b_SW_Ver' in f.attrs.keys():
-        software_version = int(f.attrs['L1b_SW_Ver'].decode("utf-8").split('.')[0]) >=3
+        software_version = int(f.attrs['L1b_SW_Ver'].decode("utf-8").split('.')[0]) >= 3
     nc_properties = True
     if '_NCProperties' in f.attrs.keys():
         nc_properties = 'version=2' in f.attrs['_NCProperties'].decode("utf-8")
