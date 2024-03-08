@@ -60,11 +60,14 @@ def satbias_upgrader(infile, outfile):
                 predOut = temp[0] + ''.join(ele.title() for ele in temp[1:idorder])+'_'+temp[idorder]+'_'+temp[idorder+1]
             else:
                 predOut = temp[0] + ''.join(ele.title() for ele in temp[1:])
-            #Hui: naming convention to be confirmed 
-            #Hui: if predOut == 'emissivity':
-            #Hui:     predOut = 'emissivityK'
             if 'scanAngle' in predOut:
                 predOut = predOut.replace("scanAngle", "sensorScanAngle")
+            if 'zenithAngle' in predOut:
+                predOut = predOut.replace("zenithAngle", "sensorZenithAngle")
+            if 'cloudLiquidWater' in predOut:
+                predOut = predOut.replace("cloudLiquidWater", "cloudWaterContent")
+            if 'orbialAngle' in predOut:
+                predOut = predOut.replace("orbialAngle", "satelliteOrbitalAngle")
             var1_out = newnc.createVariable(f"BiasCoefficients/{predOut}", "f4", ("Record", dimname),
                                             fill_value=-3.36879526e+38)
             var1_out[0, :] = bias_coeff[i, :]
@@ -77,11 +80,14 @@ def satbias_upgrader(infile, outfile):
                 predOut = temp[0] + ''.join(ele.title() for ele in temp[1:idorder])+'_'+temp[idorder]+'_'+temp[idorder+1]
             else:
                 predOut = temp[0] + ''.join(ele.title() for ele in temp[1:])
-            #Hui: naming convention to be confirmed 
-            #Hui: if predOut == 'emissivity':
-            #Hui:     predOut = 'emissivityK'
             if 'scanAngle' in predOut:
                 predOut = predOut.replace("scanAngle", "sensorScanAngle")
+            if 'zenithAngle' in predOut:
+                predOut = predOut.replace("zenithAngle", "sensorZenithAngle")
+            if 'cloudLiquidWater' in predOut:
+                predOut = predOut.replace("cloudLiquidWater", "cloudWaterContent")
+            if 'orbialAngle' in predOut:
+                predOut = predOut.replace("orbialAngle", "satelliteOrbitalAngle")
             var2_out = newnc.createVariable(f"BiasCoefficientErrors/{predOut}", "f4", ("Record", dimname),
                                             fill_value=-3.36879526e+38)
             var2_out[0, :] = bias_coeff_err[i, :]
