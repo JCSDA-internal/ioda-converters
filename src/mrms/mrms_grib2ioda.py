@@ -60,7 +60,8 @@ obsValName = iconv.OvalName()
 obsErrName = iconv.OerrName()
 qcName = iconv.OqcName()
 
-float_missing_value = -999.0    # or netCDF value,  nc.default_fillvals['f4']
+grib_missing_value = -999.0
+float_missing_value = nc.default_fillvals['f4']
 int_missing_value = nc.default_fillvals['i4']
 double_missing_value = nc.default_fillvals['f8']
 long_missing_value = nc.default_fillvals['i8']
@@ -79,7 +80,7 @@ dtypes = {'string': object,
           'double': np.float64}
 
 
-def main(file_names, output_file):
+def main(file_names, output_file, min_dbz):
 
     # Initialize
     varDict = defaultdict(lambda: DefaultOrderedDict(dict))
@@ -104,23 +105,22 @@ def main(file_names, output_file):
     for fname in file_names:
         AttrData['sourceFiles'] += ", " + fname
 
-        dt, heights, lat, lon, vars_mrms = read_grib(fname, obsvars)
+        dt, vars_mrms = read_grib(fname, obsvars, min_dbz)
 
         time_offset = round((dt - epoch).total_seconds())
 
-        for height in heights:
-            nobs = len(lat)
-            nlocs = nlocs + nobs
-            logging.info(f" adding {nobs} data locations for total of {nlocs}")
-            x = np.full(nobs, time_offset)
-            data['dateTime'].extend(x.tolist())
-            x = np.full(nobs, height)
-            data['height'].extend(x.tolist())
-            data['latitude'].extend(lat)
-            data['longitude'].extend(lon)
+        nobs = len(vars_mrms['lat'])
+        nlocs = nlocs + nobs
 
-            for key in vars_mrms.keys():
-                data[key].extend(vars_mrms[key])
+        x = np.full(nobs, time_offset)
+        data['dateTime'].extend(x.tolist())
+        x = None
+        data['height'].extend(vars_mrms['height'])
+        data['latitude'].extend(vars_mrms['lat'])
+        data['longitude'].extend(vars_mrms['lon'])
+
+        for key in obsvars:
+            data[key].extend(vars_mrms[key])
 
         vars_mrms.clear()
 
@@ -153,7 +153,7 @@ def main(file_names, output_file):
         obs_data[(iodavar, obsValName)] = np.array(data[iodavar], dtype=np.float32)
         obs_data[(iodavar, obsErrName)] = np.full(nlocs, obserrlist[n], dtype=np.float32)
         obs_data[(iodavar, qcName)] = np.full(nlocs, 2, dtype=np.int32)
-        varAttrs[(iodavar, obsValName)]['_FillValue'] = float_missing_value
+        varAttrs[(iodavar, obsValName)]['_FillValue'] = grib_missing_value
 
     VarDims = {}
     for vname in obsvars:
@@ -168,84 +168,112 @@ def main(file_names, output_file):
     writer.BuildIoda(obs_data, VarDims, varAttrs, AttrData)
 
 
-def read_grib(input_file, obsvars):
+def read_grib(input_file, obsvars, min_dbz):
     logging.debug(f"Reading file: {input_file}")
-
-    with open(input_file, "rb") as f:
-        try:
-            gid = eccodes.codes_grib_new_from_file(f)
-        except Exception as e:
-            logging.warning(f"ABORT, failure to open file: {input_file}. MSG: {e}")
-            sys.exit()
 
     dt = None
     heights = []
     mrms_data = {}
+    mrms_data['lat'] = []
+    mrms_data['lon'] = []
+    mrms_data['height'] = []
     for obsvar in obsvars:
         mrms_data[obsvar] = []
 
-    product_id = ''
-    for key in grib_keys:
-        product_id = product_id + str(eccodes.codes_get(gid, key)) + '-'
-    product_id = product_id[:-1]
-    logging.debug(f"DEBUG: the grib file has variable reference: {product_id}")
+    with open(input_file, "rb") as f:
+        try:
+            iid = eccodes.codes_index_new_from_file(input_file, ["level"])
+            levs = eccodes.codes_index_get(iid, "level")
+            for height in levs:
+                heights.append(height)
+        except Exception as e:
+            logging.warning(f"ABORT, failure to open file: {input_file}. MSG: {e}")
+            sys.exit()
 
-    '''
-    # Use a mask to remove the missing value points entirely from the dataset.
-    # This is FLAWED because there could be different missing values on different
-    # height levels, or potentially different missing values depending on product.
-    '''
+    for height in heights:
+        logging.debug(f"DEBUG: deciphering data at height: {height}")
+        eccodes.codes_index_select(iid, "level", height)
+        gid = eccodes.codes_new_from_index(iid)
 
-    mask = None
-    if product_id in mrms_products.keys():
-        obsvar = mrms_products[product_id]
-        d = eccodes.codes_get(gid, "dataDate")
-        t = eccodes.codes_get(gid, "dataTime")
-        if t > 2359:
-            logging.debug(f"DEBUG: dataTime is more than 4 digits, adjusting")
-            t = t/100
-        dt = datetime.strptime(str(d)+str(t), "%Y%m%d%H%M")
-        logging.debug(f"DEBUG: date info: {d} {t}Z")
+        product_id = ''
+        for key in grib_keys:
+            product_id = product_id + str(eccodes.codes_get(gid, key)) + '-'
+        product_id = product_id[:-1]
+        logging.debug(f"DEBUG: the grib file has variable reference: {product_id}")
 
-        height = eccodes.codes_get(gid, "level")
-        heights.append(height)
-        ni = eccodes.codes_get(gid, "Ni")
-        nj = eccodes.codes_get(gid, "Nj")
-        logging.debug(f"DEBUG: number of x,y points {ni}, {nj} and level: {height}")
+        '''
+        # Use a mask to remove the missing value points entirely from the dataset.
+        # This is FLAWED because there could be different missing values on different
+        # height levels, or potentially different missing values depending on product.
+        # Currently -999 values are outside radar coverage and -99 values are used
+        # for valid signal below minimum detectable threshold for reflectivity.
+        '''
 
-        lats = eccodes.codes_get_array(gid, "latitudes")
-        lons = eccodes.codes_get_array(gid, "longitudes")
+        mask = None
+        if product_id in mrms_products.keys():
+            obsvar = mrms_products[product_id]
+            d = eccodes.codes_get(gid, "dataDate")
+            t = eccodes.codes_get(gid, "dataTime")
+            if t > 2359:
+                logging.debug(f"DEBUG: dataTime is more than 4 digits, adjusting")
+                t = t/100
+            dt = datetime.strptime(str(d)+str(t), "%Y%m%d%H%M")
+            logging.debug(f"DEBUG: date info: {d} {t}Z")
 
-        Z = eccodes.codes_get_double_array(gid, 'values')
+            ni = eccodes.codes_get(gid, "Ni")
+            nj = eccodes.codes_get(gid, "Nj")
+            logging.debug(f"DEBUG: number of x,y points {ni}, {nj} and level: {height}")
 
-        Z = Z.reshape(ni*nj).astype('float')
-        if obsvar == 'reflectivity':
-            mask = np.logical_and(Z >= -25, Z <= 80)
-            Z = Z[mask]
-        Z = Z.tolist()
-        print(f"DEBUG: min, max of data: {min(Z)}, {max(Z)}")
-        mrms_data[obsvar].extend(Z)
-        Z.clear()
-    else:
-        pass
+            lats = eccodes.codes_get_array(gid, "latitudes")
+            lons = eccodes.codes_get_array(gid, "longitudes")
 
-    eccodes.codes_release(gid)
+            Z = eccodes.codes_get_double_array(gid, 'values')
 
-    if dt is None:
-        print("No GRIB messages match the requested product(s) in variable mrms_products")
-        sys.exit()
+            Z = Z.reshape(ni*nj).astype('float')
+            if obsvar == 'reflectivity':
+                mask_inside = np.logical_and(Z <= -98.5, Z > -99.5)  # Capture -99 as special
+                Z[mask_inside] = -34.9                               # and reset to -34.9
+                mask = np.logical_and(Z >= min_dbz, Z <= 80)
+                Z = Z[mask]
+            else:
+                print(f"CAUTION: no added processing done for this product: {obsvar}")
 
-    lats = lats.reshape(ni*nj).astype('float')
-    if mask is not None and (len(heights) == 1):
-        lats = lats[mask]
-    lats = lats.tolist()
-    lons = lons.reshape(ni*nj).astype('float')
-    lons[lons > 180.0] = lons - 360.0
-    if mask is not None and (len(heights) == 1):
-        lons = lons[mask]
-    lons = lons.tolist()
+            Z = Z.tolist()
+            logging.debug(f"DEBUG: min, max of data: {min(Z)}, {max(Z)}")
+            mrms_data[obsvar].extend(Z)
+            Z.clear()
+        else:
+            pass
 
-    return dt, heights, lats, lons, mrms_data
+        if dt is None:
+            print("No GRIB messages match the requested product(s) in variable mrms_products")
+            sys.exit()
+
+        lats = lats.reshape(ni*nj).astype('float')
+        if mask is not None and (len(heights) >= 1):
+            lats = lats[mask]
+        lats = lats.tolist()
+        mrms_data['lat'].extend(lats)
+        lats.clear()
+        lons = lons.reshape(ni*nj).astype('float')
+        lons[lons > 180.0] = lons - 360.0
+        if mask is not None and (len(heights) >= 1):
+            lons = lons[mask]
+        lons = lons.tolist()
+        mrms_data['lon'].extend(lons)
+        lons.clear()
+        if mask is not None and (len(heights) >= 1):
+            xht = np.full(ni*nj, height)
+            xht = xht[mask]
+        xht = xht.tolist()
+        mrms_data['height'].extend(xht)
+        xht = None
+
+        eccodes.codes_release(gid)
+
+    eccodes.codes_index_release(iid)
+
+    return dt, mrms_data
 
 
 if __name__ == "__main__":
@@ -267,7 +295,10 @@ if __name__ == "__main__":
 
     parser.set_defaults(debug=False)
     parser.set_defaults(verbose=False)
+    parser.set_defaults(min_dbz=-35.0)
     optional = parser.add_argument_group(title='optional arguments')
+    optional.add_argument('-s', '--skip', action='store', dest='min_dbz',
+                          default=-35, help='skip values lower than X')
     optional.add_argument('--debug', action='store_true',
                           help='enable debug messages')
     optional.add_argument('--verbose', action='store_true',
@@ -286,4 +317,4 @@ if __name__ == "__main__":
         if not os.path.isfile(file_name):
             parser.error('Input (-i option) file: ', file_name, ' does not exist')
 
-    main(args.file_names, args.output_file)
+    main(args.file_names, args.output_file, float(args.min_dbz))
