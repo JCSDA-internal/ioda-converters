@@ -40,7 +40,7 @@ def satbias_upgrader(infile, outfile):
         vars_out = newnc.createVariable("Variable", str, ("Variable",))
         vars_out[:] = vars_in
         dimname = 'Variable'
-    #Hui: TODO once using string Record is fixed in OOPS and UFO, change Record to str.
+    #Hui: TODO change Record to str so that it can be used to store extra information, like identifier
     #Hui: nrecs_out = newnc.createVariable("Record", str, ("Record"))
     #Hui: nrecs_out[0] = ' '
     nrecs_out = newnc.createVariable("Record", "i4", ("Record"))
