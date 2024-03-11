@@ -120,6 +120,8 @@ class viirs_l1b_rf(object):
             geo_ncd = nc.Dataset(geo, 'r')
             obs_ncd = nc.Dataset(obs, 'r')
             gatts = {attr: getattr(obs_ncd, attr) for attr in obs_ncd.ncattrs()}
+            if gatts['DayNightFlag'] != "Day":
+                continue
             self.satellite = gatts["platform"]
             self.sensor = gatts["instrument"]
             self.satellite_instrument = gatts["SatelliteInstrument"]
@@ -132,7 +134,7 @@ class viirs_l1b_rf(object):
             min_time = min(s_time, min_time)
             max_time = max(e_time, max_time)
 
-            AttrData['sourceFiles'] += ", " + obs
+            AttrData['sourceFiles'] += str(obs.split('/')[-1]) + ", "
             if self.satellite_instrument == 'JP1VIIRS':
                 AttrData['sensor'] = "v.viirs-m_n20"
             if self.satellite == 'NPP':
@@ -153,7 +155,7 @@ class viirs_l1b_rf(object):
             qcfs = np.zeros(np.shape(vals), dtype=np.int32)
             orbit_ad = np.zeros_like(qcfs)
             if self.ascend_or_descend == "Ascending":
-                orbit_ad = 1
+                orbit_ad[:] = 1
             self.varAttrs['satelliteAscendingFlag', metaDataName]['description'] = '0=descending, 1=ascending'
 
             ichan = 0
@@ -200,7 +202,7 @@ class viirs_l1b_rf(object):
             self.outdata[('dateTime', metaDataName)] = np.append(self.outdata[('dateTime', metaDataName)], np.array(obs_time, dtype=np.int64))
 
             self.outdata[('satelliteAscendingFlag', metaDataName)] = np.append(self.outdata[('satelliteAscendingFlag', metaDataName)],
-                                                                         np.array(orbit_ad, dtype=np.int32))
+                                                                               np.array(orbit_ad, dtype=np.int32))
             self.outdata[('solarZenithAngle', metaDataName)] = np.append(self.outdata[('solarZenithAngle', metaDataName)],
                                                                          np.array(solar_za, dtype=np.float32))
             self.outdata[('solarAzimuthAngle', metaDataName)] = np.append(self.outdata[('solarAzimuthAngle', metaDataName)],
@@ -234,8 +236,9 @@ class viirs_l1b_rf(object):
 
         DimDict['Location'] = len(self.outdata[('latitude', metaDataName)])
         DimDict['Channel'] = len(channels)
-        AttrData['sourceFiles'] = AttrData['sourceFiles'][2:]    # Strip away the trail comma and space
-        AttrData['datetimeRange'] = np.array([datetime.fromtimestamp(min_time).strftime("%Y-%m-%dT%H:%M:%SZ"), datetime.fromtimestamp(max_time).strftime("%Y-%m-%dT%H:%M:%SZ")], dtype=object)
+        AttrData['sourceFiles'] = AttrData['sourceFiles']
+        AttrData['datetimeRange'] = np.array([datetime.fromtimestamp(min_time).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                                              datetime.fromtimestamp(max_time).strftime("%Y-%m-%dT%H:%M:%SZ")], dtype=object)
         print(f"Processed data for datetimeRange: {AttrData['datetimeRange']}")
 
 
@@ -250,8 +253,8 @@ def main():
         description=('Read NASA VIIRS M-band Level 1b file(s) from:'
                      'Obs data: https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/5201/VJ102MOD/'
                      'Geo data: https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/5201/VJ103MOD/'
-                     'and converter of native NetCDF format for observations of TOA reflectance'
-                     ' from VIIRS to IODA NetCDF format.')
+                     'and converter of native NetCDF format for observations of TOA reflectance during'
+                     ' daytime from VIIRS to IODA NetCDF format.')
     )
     parser.add_argument(
         '-i', '--obsinfo',

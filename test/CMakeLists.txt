@@ -90,6 +90,8 @@ list( APPEND test_input
   testinput/MRMS_MergedReflectivityQC_01.50_20230712-152241.grib2
   testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t162415_small.h5
   testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t180544_small.h5
+  testinput/viirs_j1_l1b_albedo_geoloc_202108050600.nc
+  testinput/viirs_j1_l1b_albedo_obsval_202108050600.nc
 )
 
 list( APPEND test_output
@@ -174,6 +176,7 @@ list( APPEND test_output
   testoutput/gdas.t18z.abias_air_ascent.csv
   testoutput/mrms_reflectivity_Z1500m.nc
   testoutput/omps_o3_nm.nc
+  testoutput/viirs_j1_l1b_albedo_2021080506.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -1348,6 +1351,19 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_omps_o3_nm
                           -o testrun/omps_o3_nm.nc
                           -q 128"
                           omps_o3_nm.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_j1_l1b_albedo
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/viirs_l1bnc2ioda.py
+                          -i testinput/viirs_j1_l1b_albedo_obsval_202108050600.nc
+                          -g testinput/viirs_j1_l1b_albedo_geoloc_202108050600.nc
+                          -o testrun/viirs_j1_l1b_albedo_2021080506.nc"
+                          viirs_j1_l1b_albedo_2021080506.nc ${IODA_CONV_COMP_TOL})
+
 
 #==============================================================================
 # Bufr Ingester tests
