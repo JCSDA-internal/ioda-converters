@@ -47,7 +47,7 @@ obsvars = ['airTemperature',
            'windEastward',
            'windNorthward']
 obsvars_units = ['K', '1', 'm s-1', 'm s-1']
-obserrlist = [1.2, 2.0, 1.7, 1.7]
+obserrlist = [1.2, 20.0, 1.7, 1.7]
 obsvars_dtype = ['float',
                  'float',
                  'float',
