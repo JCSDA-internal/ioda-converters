@@ -40,9 +40,9 @@ def satbias_upgrader(infile, outfile):
         vars_out = newnc.createVariable("Variable", str, ("Variable",))
         vars_out[:] = vars_in
         dimname = 'Variable'
-    #Hui: TODO change Record to str so that it can be used to store extra information, like identifier
-    #Hui: nrecs_out = newnc.createVariable("Record", str, ("Record"))
-    #Hui: nrecs_out[0] = ' '
+    # Hui: TODO change Record to str so that it can be used to store extra information, like identifier
+    # nrecs_out = newnc.createVariable("Record", str, ("Record"))
+    # nrecs_out[0] = ' '
     nrecs_out = newnc.createVariable("Record", "i4", ("Record"))
     nrecs_out[0] = 0
     if 'number_obs_assimilated' in oldnc.variables.keys():
@@ -56,7 +56,7 @@ def satbias_upgrader(infile, outfile):
         for i, pred in enumerate(predictors):
             temp = pred.split('_')
             if "order" in temp:
-                idorder=temp.index('order')
+                idorder = temp.index('order')
                 predOut = temp[0] + ''.join(ele.title() for ele in temp[1:idorder])+'_'+temp[idorder]+'_'+temp[idorder+1]
             else:
                 predOut = temp[0] + ''.join(ele.title() for ele in temp[1:])
@@ -76,7 +76,7 @@ def satbias_upgrader(infile, outfile):
         for i, pred in enumerate(predictors):
             temp = pred.split('_')
             if "order" in temp:
-                idorder=temp.index('order')
+                idorder = temp.index('order')
                 predOut = temp[0] + ''.join(ele.title() for ele in temp[1:idorder])+'_'+temp[idorder]+'_'+temp[idorder+1]
             else:
                 predOut = temp[0] + ''.join(ele.title() for ele in temp[1:])
