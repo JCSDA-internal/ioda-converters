@@ -5,6 +5,7 @@ import argparse
 import netCDF4 as nc
 import numpy as np
 
+
 def satbias_upgrader(infile, outfile):
     # convert satbias files from old to new format
 
@@ -28,34 +29,39 @@ def satbias_upgrader(infile, outfile):
     variables = False
     # create top level variables
     if 'channels' in oldnc.variables.keys():
-        nvars = newnc.createDimension("Channel", len(oldnc.dimensions['nchannels']))
+        nvars = newnc.createDimension(
+            "Channel", len(oldnc.dimensions['nchannels']))
         channels_in = oldnc.variables['channels'][:]
-        channels_out = newnc.createVariable("sensorChannelNumber", "i4", ("Channel",))
+        channels_out = newnc.createVariable(
+            "sensorChannelNumber", "i4", ("Channel",))
         channels_out[:] = channels_in
         dimname = 'Channel'
     if 'variables' in oldnc.variables.keys():
-        nvars = newnc.createDimension("Variable", len(oldnc.dimensions['nvariables']))
+        nvars = newnc.createDimension(
+            "Variable", len(oldnc.dimensions['nvariables']))
         vars_in = oldnc.variables['variables'][:]
         vars_out = newnc.createVariable("Variable", str, ("Variable",))
         vars_out[:] = vars_in
         dimname = 'Variable'
-    # Hui: TODO change Record to str so that it can be used to store extra information, like identifier
+    # Hui: TODO change Record to str so that it can be used to store
+    # extra information, like identifier
     # nrecs_out = newnc.createVariable("Record", str, ("Record"))
     # nrecs_out[0] = ' '
     nrecs_out = newnc.createVariable("Record", "i4", ("Record"))
     nrecs_out[0] = 0
     if 'number_obs_assimilated' in oldnc.variables.keys():
         nobs_assim_in = oldnc.variables['number_obs_assimilated'][:]
-        nobs_assim_out = newnc.createVariable("numberObservationsUsed", "i4", ("Record", dimname))
+        nobs_assim_out = newnc.createVariable(
+            "numberObservationsUsed", "i4", ("Record", dimname))
         nobs_assim_out[0, :] = nobs_assim_in
 
     # loop through predictors and create predictor variables
     replace_dict = {
-    'scanAngle': 'sensorScanAngle',
-    'zenithAngle': 'sensorZenithAngle',
-    'cloudLiquidWater': 'cloudWaterContent',
-    'orbialAngle': 'satelliteOrbitalAngle',
-    'emissivity': 'emissivityJacobian'
+        'scanAngle': 'sensorScanAngle',
+        'zenithAngle': 'sensorZenithAngle',
+        'cloudLiquidWater': 'cloudWaterContent',
+        'orbialAngle': 'satelliteOrbitalAngle',
+        'emissivity': 'emissivityJacobian'
     }
 
     if 'bias_coefficients' in oldnc.variables.keys():
@@ -64,7 +70,8 @@ def satbias_upgrader(infile, outfile):
             temp = pred.split('_')
             idorder = temp.index('order') if "order" in temp else None
             predOut = temp[0] + ''.join(ele.title() for ele in temp[1:idorder]) + \
-                  ('_' + temp[idorder] + '_' + temp[idorder + 1] if idorder is not None else '')
+                ('_' + temp[idorder] + '_' + temp[idorder + 1]
+                 if idorder is not None else '')
 
             # Replace strings using dictionary
             for key, value in replace_dict.items():
@@ -81,7 +88,8 @@ def satbias_upgrader(infile, outfile):
             temp = pred.split('_')
             idorder = temp.index('order') if "order" in temp else None
             predOut = temp[0] + ''.join(ele.title() for ele in temp[1:idorder]) + \
-                  ('_' + temp[idorder] + '_' + temp[idorder + 1] if idorder is not None else '')
+                ('_' + temp[idorder] + '_' + temp[idorder + 1]
+                 if idorder is not None else '')
 
             # Replace strings using dictionary
             for key, value in replace_dict.items():
