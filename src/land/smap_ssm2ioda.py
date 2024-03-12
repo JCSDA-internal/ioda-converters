@@ -16,6 +16,8 @@ import pyiodaconv.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from pyiodaconv.orddicts import DefaultOrderedDict
 
+float_missing_value = iconv.get_default_fill_val(np.float32)
+
 os.environ["TZ"] = "UTC"
 
 locationKeyList = [
@@ -60,6 +62,8 @@ class smap(object):
             self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
             self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
             self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
+            self.varAttrs[iodavar, iconv.OvalName()]['_FillValue'] = float_missing_value
+            self.varAttrs[iodavar, iconv.OerrName()]['_FillValue'] = float_missing_value
             self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'longitude latitude'
             self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'longitude latitude'
@@ -98,6 +102,8 @@ class smap(object):
             errs = errs[mask]
             qflg = qflg[mask]
             times = times[mask]
+        # set fillValue to IODA missing
+        vals[vals == _FillValue] = float_missing_value
 
         # file provides yyyy-mm-dd as an attribute
         # str_datetime = ncd.groups['Metadata'].groups['DatasetIdentification'].getncattr('creationDate')
@@ -158,11 +164,11 @@ def main():
                         type=str, required=True)
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
-        '-m', '--maskMissing',
+        '--maskMissing',
         help="switch to mask missing values: default=False",
         default=False, action='store_true', required=False)
     optional.add_argument(
-        '-d', '--assumedSoilDepth',
+        '--assumedSoilDepth',
         help="default assumed depth of soil moisture in meters",
         type=float, default=0.025, required=False)
 
