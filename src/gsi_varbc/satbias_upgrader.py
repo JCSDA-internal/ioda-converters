@@ -5,7 +5,6 @@ import argparse
 import netCDF4 as nc
 import numpy as np
 
-
 def satbias_upgrader(infile, outfile):
     # convert satbias files from old to new format
 
@@ -51,43 +50,43 @@ def satbias_upgrader(infile, outfile):
         nobs_assim_out[0, :] = nobs_assim_in
 
     # loop through predictors and create predictor variables
+    replace_dict = {
+    'scanAngle': 'sensorScanAngle',
+    'zenithAngle': 'sensorZenithAngle',
+    'cloudLiquidWater': 'cloudWaterContent',
+    'orbialAngle': 'satelliteOrbitalAngle'
+    }
+
     if 'bias_coefficients' in oldnc.variables.keys():
         bias_coeff = oldnc.variables['bias_coefficients'][:]
         for i, pred in enumerate(predictors):
             temp = pred.split('_')
-            if "order" in temp:
-                idorder = temp.index('order')
-                predOut = temp[0] + ''.join(ele.title() for ele in temp[1:idorder])+'_'+temp[idorder]+'_'+temp[idorder+1]
-            else:
-                predOut = temp[0] + ''.join(ele.title() for ele in temp[1:])
-            if 'scanAngle' in predOut:
-                predOut = predOut.replace("scanAngle", "sensorScanAngle")
-            if 'zenithAngle' in predOut:
-                predOut = predOut.replace("zenithAngle", "sensorZenithAngle")
-            if 'cloudLiquidWater' in predOut:
-                predOut = predOut.replace("cloudLiquidWater", "cloudWaterContent")
-            if 'orbialAngle' in predOut:
-                predOut = predOut.replace("orbialAngle", "satelliteOrbitalAngle")
+            idorder = temp.index('order') if "order" in temp else None
+            predOut = temp[0] + ''.join(ele.title() for ele in temp[1:idorder]) + \
+                  ('_' + temp[idorder] + '_' + temp[idorder + 1] if idorder is not None else '')
+
+            # Replace strings using dictionary
+            for key, value in replace_dict.items():
+                if key in predOut:
+                    predOut = predOut.replace(key, value)
+
             var1_out = newnc.createVariable(f"BiasCoefficients/{predOut}", "f4", ("Record", dimname),
                                             fill_value=-3.36879526e+38)
             var1_out[0, :] = bias_coeff[i, :]
+
     if 'bias_coeff_errors' in oldnc.variables.keys():
         bias_coeff_err = oldnc.variables['bias_coeff_errors'][:]
         for i, pred in enumerate(predictors):
             temp = pred.split('_')
-            if "order" in temp:
-                idorder = temp.index('order')
-                predOut = temp[0] + ''.join(ele.title() for ele in temp[1:idorder])+'_'+temp[idorder]+'_'+temp[idorder+1]
-            else:
-                predOut = temp[0] + ''.join(ele.title() for ele in temp[1:])
-            if 'scanAngle' in predOut:
-                predOut = predOut.replace("scanAngle", "sensorScanAngle")
-            if 'zenithAngle' in predOut:
-                predOut = predOut.replace("zenithAngle", "sensorZenithAngle")
-            if 'cloudLiquidWater' in predOut:
-                predOut = predOut.replace("cloudLiquidWater", "cloudWaterContent")
-            if 'orbialAngle' in predOut:
-                predOut = predOut.replace("orbialAngle", "satelliteOrbitalAngle")
+            idorder = temp.index('order') if "order" in temp else None
+            predOut = temp[0] + ''.join(ele.title() for ele in temp[1:idorder]) + \
+                  ('_' + temp[idorder] + '_' + temp[idorder + 1] if idorder is not None else '')
+
+            # Replace strings using dictionary
+            for key, value in replace_dict.items():
+                if key in predOut:
+                    predOut = predOut.replace(key, value)
+
             var2_out = newnc.createVariable(f"BiasCoefficientErrors/{predOut}", "f4", ("Record", dimname),
                                             fill_value=-3.36879526e+38)
             var2_out[0, :] = bias_coeff_err[i, :]
