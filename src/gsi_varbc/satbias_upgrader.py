@@ -54,7 +54,8 @@ def satbias_upgrader(infile, outfile):
     'scanAngle': 'sensorScanAngle',
     'zenithAngle': 'sensorZenithAngle',
     'cloudLiquidWater': 'cloudWaterContent',
-    'orbialAngle': 'satelliteOrbitalAngle'
+    'orbialAngle': 'satelliteOrbitalAngle',
+    'emissivity': 'emissivityJacobian'
     }
 
     if 'bias_coefficients' in oldnc.variables.keys():
