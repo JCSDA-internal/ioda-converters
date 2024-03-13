@@ -60,7 +60,7 @@ def satbias_upgrader(infile, outfile):
         'scanAngle': 'sensorScanAngle',
         'zenithAngle': 'sensorZenithAngle',
         'cloudLiquidWater': 'cloudWaterContent',
-        'orbialAngle': 'satelliteOrbitalAngle',
+        'orbitalAngle': 'satelliteOrbitalAngle',
         'emissivity': 'emissivityJacobian'
     }
 
