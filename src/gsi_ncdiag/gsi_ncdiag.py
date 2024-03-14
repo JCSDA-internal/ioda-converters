@@ -120,6 +120,8 @@ all_LocKeyList = {
     'geoid_height_above_reference_ellipsoid': ('geoidUndulation', 'float'),
     'gnss_sat_class': ('satelliteConstellationRO', 'string'),
     'impact_height': ('impactHeightRO', 'float'),
+    'height': ('impactHeightRO', 'float'),
+    'Height': ('impactHeightRO', 'float'),
     'impact_parameter': ('impactParameterRO', 'float'),
     'Latitude': ('latitude', 'float'),
     'Longitude': ('longitude', 'float'),
@@ -926,8 +928,10 @@ class Conv(BaseGSI):
 
                 if v == 'bend':
                     # sort record_number
-                    record_number = self.var('record_number')[idx]
-                    id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
+                    idx = range(self.nobs)
+                    ### record_number = self.var('record_number')[idx]
+                    ### record_number = self.var('sequenceNumber')[idx]
+                    ### id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
                     print("Sorting ", v, " obs referring to record_number")
                     # record_number_sorted = [ record_number[ksort] for ksort in id_recordnum_sort ]
                     # print('record_number:', record_number)
@@ -937,10 +941,10 @@ class Conv(BaseGSI):
                     #         record_number[isort], record_number_sorted[isort] )
 
                     # Shuffle idx referring to sorted record_number's subscripts "id_recordnum_sort".
-                    idx_tuples = np.where(idx.data)
-                    idx_id = idx_tuples[0]
-                    idx_sorted = [idx_id[ksort] for ksort in id_recordnum_sort]
-                    idx = idx_sorted
+                    ### idx_tuples = np.where(idx.data)
+                    ### idx_id = idx_tuples[0]
+                    ### idx_sorted = [idx_id[ksort] for ksort in id_recordnum_sort]
+                    ### idx = idx_sorted
 
                 for o in range(len(outvars)):
                     obsdata = self.var(conv_gsivarnames[v][o])[idx]
@@ -1092,6 +1096,10 @@ class Conv(BaseGSI):
                             #     hgt[hgt > 9998.] = self.FLOAT_FILL
                             #     tmp = hgt
                             outdata[(loc_mdata_name, 'MetaData')] = tmp
+                            varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'm'
+                        elif v == 'bend':
+                            loc_mdata_name = 'impactHeightRO'
+                            outdata[(loc_mdata_name, 'MetaData')] = self.var(lvar)[idx]
                             varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'm'
                         elif p == 'sondes' or p == 'aircraft' or p == 'satwind' or p == 'pibal':
                             tmp = self.var(lvar)[idx]
