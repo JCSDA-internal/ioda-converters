@@ -704,7 +704,6 @@ class Conv(BaseGSI):
       validtime   - datetime object of valid observation time
       nobs        - number of observations
     """
-
     def __init__(self, filename):
         self.filename = filename
         splitfname = self.filename.split('/')[-1].split('_')
@@ -761,8 +760,7 @@ class Conv(BaseGSI):
                         self.validtime.strftime("%Y%m%d%H") + '.nc4'
                 if not clobber:
                     if (os.path.exists(outname)):
-                        print(
-                            "File exists. Skipping and not overwriting:%s" % outname)
+                        print("File exists. Skipping and not overwriting:%s" % outname)
                         continue
                 OutVars = []
                 InVars = []
@@ -782,10 +780,8 @@ class Conv(BaseGSI):
                 if v == 'bend':
                     # sort record_number
                     record_number = self.var('record_number')[idx]
-                    id_recordnum_sort = sorted(
-                        range(len(record_number)), key=record_number.__getitem__)
-                    print("Sorting ", v,
-                          " obs referring to record_number in geovals")
+                    id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
+                    print("Sorting ", v, " obs referring to record_number in geovals")
                     # record_number_sorted = [ record_number[ksort] for ksort in id_recordnum_sort ]
 
                     # Shuffle idx referring to sorted record_number's subscripts "id_recordnum_sort".
@@ -812,12 +808,10 @@ class Conv(BaseGSI):
                     ncout.createDimension(
                         "ninterfaces", self.df.dimensions["atmosphere_pressure_coordinate_interface_arr_dim"].size)
                 dimname = "Station_ID_maxstrlen"
-                ncout.createDimension(
-                    dimname, self.df.dimensions[dimname].size)
+                ncout.createDimension(dimname, self.df.dimensions[dimname].size)
 
                 dimname = "Observation_Class_maxstrlen"
-                ncout.createDimension(
-                    dimname, self.df.dimensions[dimname].size)
+                ncout.createDimension(dimname, self.df.dimensions[dimname].size)
 
                 for var in self.df.variables.values():
                     vname = var.name
@@ -825,14 +819,12 @@ class Conv(BaseGSI):
                     if (vname in geovals_metadata_dict.keys()) or (
                             vname in geovals_vars.keys()):
                         vdata = var[...].data
-                        dims = tuple([len(self.df.dimensions[d])
-                                     for d in var.dimensions])
+                        dims = tuple([len(self.df.dimensions[d]) for d in var.dimensions])
                         vdata = np.frombuffer(vdata, dtype=var.dtype)
                         vdata = np.reshape(vdata, dims)
                         if vname in geovals_metadata_dict.keys():
                             dims = ("nlocs",) + var.dimensions[1:]
-                            var_out = ncout.createVariable(
-                                geovals_metadata_dict[vname], vdata.dtype, dims)
+                            var_out = ncout.createVariable(geovals_metadata_dict[vname], vdata.dtype, dims)
                             if v == 'bend':
                                 var_out[...] = vdata[idx_sorted, ...]
                             else:
@@ -848,8 +840,7 @@ class Conv(BaseGSI):
                                 else:
                                     dims = ("nlocs", "nlevs")
 
-                            var_out = ncout.createVariable(
-                                geovals_vars[vname], vdata.dtype, dims)
+                            var_out = ncout.createVariable(geovals_vars[vname], vdata.dtype, dims)
 
                             if v == 'bend':
                                 var_out[...] = vdata[idx_sorted, ...]
@@ -892,8 +883,7 @@ class Conv(BaseGSI):
                         self.validtime.strftime("%Y%m%d%H") + '.nc4'
                 if not clobber:
                     if (os.path.exists(outname)):
-                        print(
-                            "File exists. Skipping and not overwriting: %s" % outname)
+                        print("File exists. Skipping and not overwriting: %s" % outname)
                         continue
 
                 LocKeyList = []
@@ -927,29 +917,21 @@ class Conv(BaseGSI):
                     varDict[value]['errKey'] = value, iconv.OerrName()
                     varDict[value]['qcKey'] = value, iconv.OqcName()
                     VarDims[value] = ['Location']
-                    varAttrs[varDict[value]['valKey']
-                             ]['units'] = units_values[value]
-                    varAttrs[varDict[value]['errKey']
-                             ]['units'] = units_values[value]
-                    varAttrs[varDict[value]['valKey']
-                             ]['coordinates'] = 'longitude latitude'
-                    varAttrs[varDict[value]['errKey']
-                             ]['coordinates'] = 'longitude latitude'
-                    varAttrs[varDict[value]['qcKey']
-                             ]['coordinates'] = 'longitude latitude'
-                    varAttrs[varDict[value]['valKey']
-                             ]['_FillValue'] = self.FLOAT_FILL
-                    varAttrs[varDict[value]['errKey']
-                             ]['_FillValue'] = self.FLOAT_FILL
-                    varAttrs[varDict[value]['qcKey']
-                             ]['_FillValue'] = self.INT_FILL
+                    varAttrs[varDict[value]['valKey']]['units'] = units_values[value]
+                    varAttrs[varDict[value]['errKey']]['units'] = units_values[value]
+                    varAttrs[varDict[value]['valKey']]['coordinates'] = 'longitude latitude'
+                    varAttrs[varDict[value]['errKey']]['coordinates'] = 'longitude latitude'
+                    varAttrs[varDict[value]['qcKey']]['coordinates'] = 'longitude latitude'
+                    varAttrs[varDict[value]['valKey']]['_FillValue'] = self.FLOAT_FILL
+                    varAttrs[varDict[value]['errKey']]['_FillValue'] = self.FLOAT_FILL
+                    varAttrs[varDict[value]['qcKey']]['_FillValue'] = self.INT_FILL
 
                 if v == 'bend':
                     # sort record_number
                     idx = range(self.nobs)
-                    # record_number = self.var('record_number')[idx]
-                    # record_number = self.var('sequenceNumber')[idx]
-                    # id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
+                    ### record_number = self.var('record_number')[idx]
+                    ### record_number = self.var('sequenceNumber')[idx]
+                    ### id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
                     print("Sorting ", v, " obs referring to record_number")
                     # record_number_sorted = [ record_number[ksort] for ksort in id_recordnum_sort ]
                     # print('record_number:', record_number)
@@ -959,18 +941,17 @@ class Conv(BaseGSI):
                     #         record_number[isort], record_number_sorted[isort] )
 
                     # Shuffle idx referring to sorted record_number's subscripts "id_recordnum_sort".
-                    # idx_tuples = np.where(idx.data)
-                    # idx_id = idx_tuples[0]
-                    # idx_sorted = [idx_id[ksort] for ksort in id_recordnum_sort]
-                    # idx = idx_sorted
+                    ### idx_tuples = np.where(idx.data)
+                    ### idx_id = idx_tuples[0]
+                    ### idx_sorted = [idx_id[ksort] for ksort in id_recordnum_sort]
+                    ### idx = idx_sorted
 
                 for o in range(len(outvars)):
                     obsdata = self.var(conv_gsivarnames[v][o])[idx]
                     if outvars[o] == 'stationPressure':
                         if np.median(obsdata) < 1100.:
                             obsdata = obsdata * 100.  # convert to Pa from hPa
-                        # 1e11 is fill value for surface_pressure
-                        obsdata[obsdata > 4e8] = self.FLOAT_FILL
+                        obsdata[obsdata > 4e8] = self.FLOAT_FILL  # 1e11 is fill value for surface_pressure
                     try:
                         # All original observation errors are saved as "Error_Input". J.Jin 10/24/2022.
                         obserr = self.var('Error_Input')[idx]
@@ -1063,8 +1044,7 @@ class Conv(BaseGSI):
                     # store values in output data dictionary
                     outdata[varDict[outvars[o]]['valKey']] = obsdata
                     outdata[varDict[outvars[o]]['errKey']] = obserr
-                    outdata[varDict[outvars[o]]['qcKey']
-                            ] = obsqc.astype(np.int32)
+                    outdata[varDict[outvars[o]]['qcKey']] = obsqc.astype(np.int32)
                     if (TotalBias):
                         # compute final bias correction
                         key1 = 'Obs_Minus_Forecast_adjusted'
@@ -1073,31 +1053,23 @@ class Conv(BaseGSI):
                             tmp = self.var(key1) - self.var(key2)
                             iodavar = 'GsiBc'
                             gvname = outvars[o], iodavar
-                            outdata[gvname] = np.reshape(
-                                tmp, np.shape(self.df.variables['Observation']))
+                            outdata[gvname] = np.reshape(tmp, np.shape(self.df.variables['Observation']))
                             VarDims[gvname] = ['Location']
                         else:
-                            print(
-                                f' ... can not add total bias missing {key1} or {key2} from input file')
+                            print(f' ... can not add total bias missing {key1} or {key2} from input file')
 
                 for lvar in LocVars:
                     loc_mdata_name = all_LocKeyList[lvar][0]
                     dtype = all_LocKeyList[lvar][1]
                     if lvar == 'Station_ID':
                         tmp = self.var(lvar)[idx]
-                        StationIDs = [bytes((b''.join(tmp[a])).decode(
-                            'iso-8859-1').encode('utf8')) for a in range(len(tmp))]
-                        outdata[(loc_mdata_name, 'MetaData')] = np.array(
-                            StationIDs, dtype=object)
-                    # need to process into time stamp strings #"%Y-%m-%dT%H:%M:%SZ"
-                    elif (lvar == 'Time') or (lvar == 'time'):
+                        StationIDs = [bytes((b''.join(tmp[a])).decode('iso-8859-1').encode('utf8')) for a in range(len(tmp))]
+                        outdata[(loc_mdata_name, 'MetaData')] = np.array(StationIDs, dtype=object)
+                    elif (lvar == 'Time') or (lvar == 'time'):  # need to process into time stamp strings #"%Y-%m-%dT%H:%M:%SZ"
                         tmp = self.var(lvar)[idx]
-                        obstimes = [
-                            self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
-                        obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ")
-                                    for a in obstimes]
-                        outdata[(loc_mdata_name, 'MetaData')] = np.array(
-                            obstimes, dtype=object)
+                        obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
+                        obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
+                        outdata[(loc_mdata_name, 'MetaData')] = np.array(obstimes, dtype=object)
                     #   varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'seconds since 1970-01-01T00:00:00Z'
                     # special logic for unit conversions depending on GSI version
                     elif lvar == 'Pressure':
@@ -1105,16 +1077,14 @@ class Conv(BaseGSI):
                         if np.median(tmpps) > 1100.:
                             outdata[(loc_mdata_name, 'MetaData')] = tmpps
                         else:
-                            outdata[(loc_mdata_name, 'MetaData')
-                                    ] = tmpps * 100.  # from hPa to Pa
+                            outdata[(loc_mdata_name, 'MetaData')] = tmpps * 100.  # from hPa to Pa
                         varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'Pa'
                     # special logic for missing station_elevation and height for surface obs
                     elif lvar in ['Station_Elevation', 'Height']:
                         if p == 'sfc':
                             tmp = self.var(lvar)[idx]
                             tmp[tmp == 9999.] = self.FLOAT_FILL
-                            # for u,v sfc Height values that are 10+9999
-                            tmp[tmp == 10009.] = self.FLOAT_FILL
+                            tmp[tmp == 10009.] = self.FLOAT_FILL  # for u,v sfc Height values that are 10+9999
                             # GSI sfc obs are at 0m agl, but operator assumes 2m agl, correct output to 2m agl
                             # this is correctly 10m agl though for u,v obs
                             # --- temporarily comment out the following so 2m_t & 2m_q can be properly combined
@@ -1126,39 +1096,28 @@ class Conv(BaseGSI):
                             #     hgt[hgt > 9998.] = self.FLOAT_FILL
                             #     tmp = hgt
                             outdata[(loc_mdata_name, 'MetaData')] = tmp
-                            varAttrs[(loc_mdata_name, 'MetaData')
-                                     ]['units'] = 'm'
+                            varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'm'
                         elif v == 'bend':
                             loc_mdata_name = 'impactHeightRO'
-                            outdata[(loc_mdata_name, 'MetaData')
-                                    ] = self.var(lvar)[idx]
-                            varAttrs[(loc_mdata_name, 'MetaData')
-                                     ]['units'] = 'm'
+                            outdata[(loc_mdata_name, 'MetaData')] = self.var(lvar)[idx]
+                            varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'm'
                         elif p == 'sondes' or p == 'aircraft' or p == 'satwind' or p == 'pibal':
                             tmp = self.var(lvar)[idx]
-                            # 1e11 is fill value for sondes, etc.
-                            tmp[tmp > 4e8] = self.FLOAT_FILL
+                            tmp[tmp > 4e8] = self.FLOAT_FILL  # 1e11 is fill value for sondes, etc.
                             outdata[(loc_mdata_name, 'MetaData')] = tmp
-                            varAttrs[(loc_mdata_name, 'MetaData')
-                                     ]['units'] = 'm'
+                            varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'm'
                         else:
-                            outdata[(loc_mdata_name, 'MetaData')
-                                    ] = self.var(lvar)[idx]
-                            varAttrs[(loc_mdata_name, 'MetaData')
-                                     ]['units'] = 'm'
+                            outdata[(loc_mdata_name, 'MetaData')] = self.var(lvar)[idx]
+                            varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'm'
                     else:
                         if dtype == 'integer':
-                            outdata[(loc_mdata_name, 'MetaData')] = self.var(
-                                lvar)[idx].astype(np.int32)
+                            outdata[(loc_mdata_name, 'MetaData')] = self.var(lvar)[idx].astype(np.int32)
                         elif dtype == 'long':
-                            outdata[(loc_mdata_name, 'MetaData')] = self.var(
-                                lvar)[idx].astype(np.int64)
+                            outdata[(loc_mdata_name, 'MetaData')] = self.var(lvar)[idx].astype(np.int64)
                         else:
-                            outdata[(loc_mdata_name, 'MetaData')
-                                    ] = self.var(lvar)[idx]
+                            outdata[(loc_mdata_name, 'MetaData')] = self.var(lvar)[idx]
                         if loc_mdata_name in units_values.keys():
-                            varAttrs[(loc_mdata_name, 'MetaData')
-                                     ]['units'] = units_values[loc_mdata_name]
+                            varAttrs[(loc_mdata_name, 'MetaData')]['units'] = units_values[loc_mdata_name]
 
                 # put the TestReference fields in the structure for writing out
                 for tvar in TestVars:
@@ -1174,8 +1133,7 @@ class Conv(BaseGSI):
                 writer = iconv.IodaWriter(outname, LocKeyList, DimDict)
                 writer.BuildIoda(outdata, VarDims, varAttrs, globalAttrs)
 
-                print("Processed %d Conventional obs processed to: %s" %
-                      (len(obsdata), outname))
+                print("Processed %d Conventional obs processed to: %s" % (len(obsdata), outname))
 
 
 def grabobsidx(obsdata, platform, var):
@@ -1283,8 +1241,7 @@ class Radiances(BaseGSI):
 
         # set up output file
         ncout = nc.Dataset(outname, 'w', format='NETCDF4')
-        ncout.setncattr("date_time", np.int32(
-            self.validtime.strftime("%Y%m%d%H")))
+        ncout.setncattr("date_time", np.int32(self.validtime.strftime("%Y%m%d%H")))
         ncout.setncattr("satellite", self.satellite)
         ncout.setncattr("sensor", self.sensor)
 
@@ -1293,17 +1250,14 @@ class Radiances(BaseGSI):
         ncout.createDimension("nlocs", nlocs)
 
         # other dims
-        ncout.createDimension(
-            "nlevs", self.df.dimensions["air_temperature_arr_dim"].size)
-        ncout.createDimension(
-            "nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
+        ncout.createDimension("nlevs", self.df.dimensions["air_temperature_arr_dim"].size)
+        ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
 
         for var in self.df.variables.values():
             vname = var.name
             if vname in geovals_metadata_dict.keys():
                 dims = ("nlocs",)
-                var_out = ncout.createVariable(
-                    geovals_metadata_dict[vname], var.dtype, dims)
+                var_out = ncout.createVariable(geovals_metadata_dict[vname], var.dtype, dims)
                 vdata = var[:]
                 vdata = vdata[::self.nchans]
                 var_out[:] = vdata
@@ -1314,15 +1268,13 @@ class Radiances(BaseGSI):
                     dims = ("nlocs", "nlevsp1")
                 else:
                     dims = ("nlocs", "nlevs")
-                var_out = ncout.createVariable(
-                    geovals_vars[vname], var.dtype, dims)
+                var_out = ncout.createVariable(geovals_vars[vname], var.dtype, dims)
                 vdata = var[...]
                 vdata = vdata[::self.nchans, ...]
                 var_out[...] = vdata
                 if vname == "Sfc_Height":
                     # Copy surface_geopotential_height to surface_geometric_height
-                    var_out = ncout.createVariable(
-                        geovals_vars["surface_height"], var.dtype, dims)
+                    var_out = ncout.createVariable(geovals_vars["surface_height"], var.dtype, dims)
                     vdata = var[...]
                     vdata = vdata[::self.nchans, ...]
                     var_out[...] = vdata
@@ -1354,8 +1306,7 @@ class Radiances(BaseGSI):
 
         # set up output file
         ncout = nc.Dataset(outname, 'w', format='NETCDF4')
-        ncout.setncattr("date_time", np.int32(
-            self.validtime.strftime("%Y%m%d%H")))
+        ncout.setncattr("date_time", np.int32(self.validtime.strftime("%Y%m%d%H")))
         ncout.setncattr("platform", self.satellite)
         ncout.setncattr("sensor", self.sensor)
 
@@ -1367,8 +1318,7 @@ class Radiances(BaseGSI):
         nlevs = self.df.dimensions["air_pressure_arr_dim"].size
         nlevsp1 = self.df.dimensions["air_pressure_levels_arr_dim"].size
 
-        ncout.createDimension(
-            "nlevs", self.df.dimensions["air_pressure_arr_dim"].size)
+        ncout.createDimension("nlevs", self.df.dimensions["air_pressure_arr_dim"].size)
 
         # get channel info and list
         chan_number = self.darr('sensor_chan')
@@ -1383,8 +1333,7 @@ class Radiances(BaseGSI):
             vname = var.name
             if vname in obsdiag_metadata_dict.keys():
                 dims = ("nlocs",)
-                var_out = ncout.createVariable(
-                    obsdiag_metadata_dict[vname], var.dtype, dims)
+                var_out = ncout.createVariable(obsdiag_metadata_dict[vname], var.dtype, dims)
                 vdata = var[:]
                 vdata = vdata[::self.nchans]
                 var_out[:] = vdata
@@ -1393,14 +1342,12 @@ class Radiances(BaseGSI):
                 if (len(var.dimensions) == 1):
                     dims = ("nlocs",)
                     for c in range(len(chanlist)):
-                        var_name = obsdiag_vars[vname] + \
-                            "_"+"{:d}".format(chanlist[c])
+                        var_name = obsdiag_vars[vname]+"_"+"{:d}".format(chanlist[c])
                         idx = chan_indx == c+1
                         if (np.sum(idx) == 0):
                             print("No matching observations for: %s" % value)
                             continue
-                        var_out = ncout.createVariable(
-                            var_name, var.dtype, dims)
+                        var_out = ncout.createVariable(var_name, var.dtype, dims)
                         vdata = var[:]
                         vdata = vdata[idx]
                         var_out[:] = vdata
@@ -1409,14 +1356,12 @@ class Radiances(BaseGSI):
                 else:
                     dims = ("nlocs", "nlevs")
                     for c in range(len(chanlist)):
-                        var_name = obsdiag_vars[vname] + \
-                            "_"+"{:d}".format(chanlist[c])
+                        var_name = obsdiag_vars[vname]+"_"+"{:d}".format(chanlist[c])
                         idx = chan_indx == c+1
                         if (np.sum(idx) == 0):
                             print("No matching observations for: %s" % value)
                             continue
-                        var_out = ncout.createVariable(
-                            var_name, var.dtype, dims)
+                        var_out = ncout.createVariable(var_name, var.dtype, dims)
                         vdata = var[...]
                         vdata = vdata[idx, ...]
                         var_out[...] = vdata
@@ -1430,8 +1375,7 @@ class Radiances(BaseGSI):
         to the JEDI/IODA observation format
         """
 
-        print("Input Parameters: ObsBias=%s TotalBias=%s QCVars=%s TestRefs=%s" % (
-            ObsBias, TotalBias, QCVars, TestRefs))
+        print("Input Parameters: ObsBias=%s TotalBias=%s QCVars=%s TestRefs=%s" % (ObsBias, TotalBias, QCVars, TestRefs))
         # set up a NcWriter class
         outname = OutDir + '/' + self.sensor + '_' + self.satellite + \
             '_obs_' + self.validtime.strftime("%Y%m%d%H") + '.nc4'
@@ -1519,8 +1463,7 @@ class Radiances(BaseGSI):
             obserr = self.var('Input_Observation_Error').astype(np.float32)
         except IndexError:
             # obserr = 1./self.var('Inverse_Observation_Error')
-            obserr = np.repeat(self.var('error_variance').astype(
-                np.float32), nlocs, axis=0)
+            obserr = np.repeat(self.var('error_variance').astype(np.float32), nlocs, axis=0)
         # obserr[:] = self.FLOAT_FILL  # commented this line so the obserr stores initial obs error
         obsqc = self.var('QC_Flag').astype(np.int32)
         if (ObsBias):
@@ -1568,11 +1511,9 @@ class Radiances(BaseGSI):
             dtype = all_LocKeyList[lvar][1]
             if lvar == 'Obs_Time':
                 tmp = self.var(lvar)[::nchans]
-                obstimes = [
-                    self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
+                obstimes = [self.validtime + dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                 obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
-                outdata[(loc_mdata_name, 'MetaData')] = np.array(
-                    obstimes, dtype=object)
+                outdata[(loc_mdata_name, 'MetaData')] = np.array(obstimes, dtype=object)
                 # varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'seconds since 1970-01-01T00:00:00Z'
             elif self.sensor == "gmi" and lvar in gmi_chan_dep_loc_vars:
                 # Channels 1-9
@@ -1580,15 +1521,13 @@ class Radiances(BaseGSI):
                 tmp[tmp > 4e8] = self.FLOAT_FILL
                 outdata[(loc_mdata_name, 'MetaData')] = tmp
                 if loc_mdata_name in units_values.keys():
-                    varAttrs[(loc_mdata_name, 'MetaData')
-                             ]['units'] = units_values[loc_mdata_name]
+                    varAttrs[(loc_mdata_name, 'MetaData')]['units'] = units_values[loc_mdata_name]
                 # Channels 10-13
                 tmp = self.var(lvar)[nchans-1::nchans]
                 tmp[tmp > 4e8] = self.FLOAT_FILL
                 outdata[(loc_mdata_name+'1', 'MetaData')] = tmp
                 if loc_mdata_name in units_values.keys():
-                    varAttrs[(loc_mdata_name+'1', 'MetaData')
-                             ]['units'] = units_values[loc_mdata_name]
+                    varAttrs[(loc_mdata_name+'1', 'MetaData')]['units'] = units_values[loc_mdata_name]
                 # tmp = self.var(lvar)[::nchans]
                 # tmp[tmp > 4e8] = self.FLOAT_FILL
                 # outdata[(loc_mdata_name, 'MetaData')] = tmp
@@ -1599,29 +1538,25 @@ class Radiances(BaseGSI):
                     tmp = self.var(lvar)[::nchans].astype(np.int32)
                     tmp[tmp > 4e8] = self.INT_FILL
                     outdata[(loc_mdata_name, 'MetaData')] = tmp
-                    varAttrs[(loc_mdata_name, 'MetaData')
-                             ]['_FillValue'] = self.INT_FILL
+                    varAttrs[(loc_mdata_name, 'MetaData')]['_FillValue'] = self.INT_FILL
                 else:
                     tmp = self.var(lvar)[::nchans]
                     tmp[tmp > 4e8] = self.FLOAT_FILL
                     outdata[(loc_mdata_name, 'MetaData')] = tmp
 
                 if loc_mdata_name in units_values.keys():
-                    varAttrs[(loc_mdata_name, 'MetaData')
-                             ]['units'] = units_values[loc_mdata_name]
+                    varAttrs[(loc_mdata_name, 'MetaData')]['units'] = units_values[loc_mdata_name]
 
         # put the TestReference fields in the structure for writing out
         for tvar in TestVars:
             if tvar in test_fields_with_channels_:
-                test_mdata_name = (test_fields_with_channels_[
-                                   tvar][0], 'MetaData')
+                test_mdata_name = (test_fields_with_channels_[tvar][0], 'MetaData')
                 tmp = self.var(tvar)[:]
                 tmp[tmp > 4e8] = self.FLOAT_FILL
                 outdata[test_mdata_name] = np.reshape(tmp, (nlocs, nchans))
                 VarDims[test_mdata_name] = ['Location', 'Channel']
                 if test_fields_with_channels_[tvar][0] in units_values.keys():
-                    varAttrs[test_mdata_name]['units'] = units_values[test_fields_with_channels_[
-                        tvar][0]]
+                    varAttrs[test_mdata_name]['units'] = units_values[test_fields_with_channels_[tvar][0]]
 
             if tvar in test_fields_:
                 test_mdata_name = (test_fields_[tvar][0], 'MetaData')
@@ -1631,8 +1566,7 @@ class Radiances(BaseGSI):
                 VarDims[test_mdata_name] = ['Location']
                 if test_fields_[tvar][0] in units_values.keys():
                     if tvar != 'scat_amsua':
-                        varAttrs[test_mdata_name]['units'] = units_values[test_fields_[
-                            tvar][0]]
+                        varAttrs[test_mdata_name]['units'] = units_values[test_fields_[tvar][0]]
 
         gsi_add_radvars = gsi_add_vars
         if (QCVars):
@@ -1690,8 +1624,7 @@ class Radiances(BaseGSI):
                 outdata[gvname] = np.reshape(tmp, (nlocs, nchans))
                 VarDims[gvname] = ['Location', 'Channel']
             else:
-                print(
-                    f' ... can not add total bias missing {key1} or {key2} from input file')
+                print(f' ... can not add total bias missing {key1} or {key2} from input file')
 
         # brightness temperature variables
         value = 'brightnessTemperature'
@@ -1699,11 +1632,9 @@ class Radiances(BaseGSI):
         obsqc[obsdata > 9e5] = self.INT_FILL
 
         # store values in output data dictionary
-        outdata[varDict[value]['valKey']] = np.reshape(
-            obsdata, (nlocs, nchans))
+        outdata[varDict[value]['valKey']] = np.reshape(obsdata, (nlocs, nchans))
         outdata[varDict[value]['errKey']] = np.reshape(obserr, (nlocs, nchans))
-        outdata[varDict[value]['qcKey']] = np.reshape(
-            obsqc.astype(np.int32), (nlocs, nchans))
+        outdata[varDict[value]['qcKey']] = np.reshape(obsqc.astype(np.int32), (nlocs, nchans))
 
         # create a GSI effective QC variable (group)
         gsiqcname = value, 'GsiEffectiveQC'
@@ -1750,32 +1681,25 @@ class Radiances(BaseGSI):
                 outdata[varDict[value]['bctKey']] = obsbiastermsub
                 outdata[varDict[value]['bcpKey']] = obsbiaspredsub
                 if valuebc in units_values.keys():
-                    varAttrs[varDict[value]['bctKey']
-                             ]['units'] = units_values[valuebc]
-                    varAttrs[varDict[value]['bptKey']
-                             ]['units'] = units_values[valuebc]
+                    varAttrs[varDict[value]['bctKey']]['units'] = units_values[valuebc]
+                    varAttrs[varDict[value]['bptKey']]['units'] = units_values[valuebc]
                 ii += 1
         # var metadata
         for key, value2 in chan_metadata_dict.items():
             try:
                 if value2 in chan_metadata_int:
-                    outdata[(value2, 'MetaData')] = self.var(
-                        key).astype(np.int32)
+                    outdata[(value2, 'MetaData')] = self.var(key).astype(np.int32)
                 else:
-                    outdata[(value2, 'MetaData')] = self.var(
-                        key).astype(np.float32)
+                    outdata[(value2, 'MetaData')] = self.var(key).astype(np.float32)
                     # Frequency units is GHz in CRTM/GSI
                     if value2 == 'sensorCentralFrequency':
-                        outdata[(value2, 'MetaData')] = outdata[(
-                            value2, 'MetaData')]*1.e9
+                        outdata[(value2, 'MetaData')] = outdata[(value2, 'MetaData')]*1.e9
                     # Wavenumber unit is cm-1 in CRTM/GSI
                     if value2 == 'sensorCentralWavenumber':
-                        outdata[(value2, 'MetaData')] = outdata[(
-                            value2, 'MetaData')]*1.e2
+                        outdata[(value2, 'MetaData')] = outdata[(value2, 'MetaData')]*1.e2
                 VarDims[(value2, 'MetaData')] = ['Channel']
                 if value2 in units_values.keys():
-                    varAttrs[(value2, 'MetaData')
-                             ]['units'] = units_values[value2]
+                    varAttrs[(value2, 'MetaData')]['units'] = units_values[value2]
             except IndexError:
                 pass
 
@@ -1805,7 +1729,6 @@ class Ozone(BaseGSI):
       nobs        - number of observations
 
     """
-
     def __init__(self, filename):
         self.filename = filename
         splitfname = self.filename.split('/')[-1].split('_')
@@ -1839,8 +1762,7 @@ class Ozone(BaseGSI):
         # ioda_conv_ncio or equivalent to handle the format
 
         # set up output file
-        outname = OutDir+'/'+self.sensor+'_'+self.satellite + \
-            '_geoval_'+self.validtime.strftime("%Y%m%d%H")+'.nc4'
+        outname = OutDir+'/'+self.sensor+'_'+self.satellite+'_geoval_'+self.validtime.strftime("%Y%m%d%H")+'.nc4'
         if not clobber:
             if (os.path.exists(outname)):
                 print("File exists. Skipping and not overwriting: %s" % outname)
@@ -1854,8 +1776,7 @@ class Ozone(BaseGSI):
 
         # set up output file
         ncout = nc.Dataset(outname, 'w', format='NETCDF4')
-        ncout.setncattr("date_time", np.int32(
-            self.validtime.strftime("%Y%m%d%H")))
+        ncout.setncattr("date_time", np.int32(self.validtime.strftime("%Y%m%d%H")))
         ncout.setncattr("satellite", self.satellite)
         ncout.setncattr("sensor", self.sensor)
 
@@ -1864,21 +1785,16 @@ class Ozone(BaseGSI):
         ncout.createDimension("nlocs", nlocs)
 
         # other dims
-        ncout.createDimension(
-            "nlevs", self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
-        dim = (
-            nlocs, self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
+        ncout.createDimension("nlevs", self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
+        dim = (nlocs, self.df.dimensions["mole_fraction_of_ozone_in_air_arr_dim"].size)
         if (self.sensor in oz_lay_sensors):
-            ncout.createDimension(
-                "nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
-            dim = (
-                nlocs, self.df.dimensions["air_pressure_levels_arr_dim"].size)
+            ncout.createDimension("nlevsp1", self.df.dimensions["air_pressure_levels_arr_dim"].size)
+            dim = (nlocs, self.df.dimensions["air_pressure_levels_arr_dim"].size)
         for var in self.df.variables.values():
             vname = var.name
             if vname in geovals_metadata_dict.keys():
                 dims = ("nlocs",)
-                var_out = ncout.createVariable(
-                    geovals_metadata_dict[vname], var.dtype, dims)
+                var_out = ncout.createVariable(geovals_metadata_dict[vname], var.dtype, dims)
                 vdata = var[:]
                 var_out[:] = vdata
             elif vname in geovals_vars.keys():
@@ -1891,8 +1807,7 @@ class Ozone(BaseGSI):
                 else:
                     dims = ("nlocs", "nlevs")
                     dim_names = ["Location", "Level"]
-                var_out = ncout.createVariable(
-                    geovals_vars[vname], var.dtype, dims)
+                var_out = ncout.createVariable(geovals_vars[vname], var.dtype, dims)
                 vdata = var[...]
                 var_out[...] = vdata
             else:
@@ -1906,8 +1821,7 @@ class Ozone(BaseGSI):
         to the JEDI/IODA observation format
         """
         # set up a NcWriter class
-        outname = OutDir+'/'+self.sensor+'_'+self.satellite + \
-            '_obs_'+self.validtime.strftime("%Y%m%d%H")+'.nc4'
+        outname = OutDir+'/'+self.sensor+'_'+self.satellite+'_obs_'+self.validtime.strftime("%Y%m%d%H")+'.nc4'
         if not clobber:
             if (os.path.exists(outname)):
                 print("File exists. Skipping and not overwriting: %s" % outname)
@@ -1954,19 +1868,16 @@ class Ozone(BaseGSI):
             loc_mdata_name = all_LocKeyList[lvar][0]
             if lvar == 'Time' or lvar == 'time':
                 tmp = self.var(lvar)
-                obstimes = [
-                    self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
+                obstimes = [self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                 obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
-                outdata[(loc_mdata_name, 'MetaData')] = np.array(
-                    obstimes, dtype=object)
+                outdata[(loc_mdata_name, 'MetaData')] = np.array(obstimes, dtype=object)
                 # varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'seconds since 1970-01-01T00:00:00Z'
             else:
                 tmp = self.var(lvar)
                 tmp[tmp > 4e8] = self.FLOAT_FILL
                 outdata[(loc_mdata_name, 'MetaData')] = tmp
                 if loc_mdata_name in units_values.keys():
-                    varAttrs[(loc_mdata_name, 'MetaData')
-                             ]['units'] = units_values[loc_mdata_name]
+                    varAttrs[(loc_mdata_name, 'MetaData')]['units'] = units_values[loc_mdata_name]
             VarDims[(loc_mdata_name, 'MetaData')] = ['Location']
 
         for gsivar, iodavar in gsi_add_vars.items():
@@ -2004,8 +1915,7 @@ class Ozone(BaseGSI):
                     outdata[gvname] = np.reshape(tmp, (nlocs))
                     VarDims[gvname] = ['Location']
                 else:
-                    print(
-                        f' ... can not add total bias missing {key1} or {key2} from input file')
+                    print(f' ... can not add total bias missing {key1} or {key2} from input file')
 
         # observation data
         outdata[varDict[vname]['valKey']] = obsdata
@@ -2042,7 +1952,6 @@ class Radar(BaseGSI):
       nobs        - number of observations
 
     """
-
     def __init__(self, filename):
         self.filename = filename
         splitfname = self.filename.split('/')[-1].split('_')
@@ -2075,8 +1984,7 @@ class Radar(BaseGSI):
         # ioda_conv_ncio or equivalent to handle the format
 
         # set up output file
-        outname = OutDir+'/'+self.sensor+'_'+self.obstype + \
-            '_geoval_'+self.validtime.strftime("%Y%m%d%H")+'.nc4'
+        outname = OutDir+'/'+self.sensor+'_'+self.obstype+'_geoval_'+self.validtime.strftime("%Y%m%d%H")+'.nc4'
         if not clobber:
             if (os.path.exists(outname)):
                 print("File exists. Skipping and not overwriting: %s" % outname)
@@ -2090,8 +1998,7 @@ class Radar(BaseGSI):
 
         # set up output file
         ncout = nc.Dataset(outname, 'w', format='NETCDF4')
-        ncout.setncattr("date_time", np.int32(
-            self.validtime.strftime("%Y%m%d%H")))
+        ncout.setncattr("date_time", np.int32(self.validtime.strftime("%Y%m%d%H")))
         # get nlocs
         nlocs = self.nobs
         ncout.createDimension("nlocs", nlocs)
@@ -2102,8 +2009,7 @@ class Radar(BaseGSI):
             vname = var.name
             if vname in geovals_metadata_dict.keys():
                 dims = ("nlocs",)
-                var_out = ncout.createVariable(
-                    geovals_metadata_dict[vname], var.dtype, dims)
+                var_out = ncout.createVariable(geovals_metadata_dict[vname], var.dtype, dims)
                 vdata = var[:]
                 var_out[:] = vdata
             elif vname in geovals_vars.keys():
@@ -2113,8 +2019,7 @@ class Radar(BaseGSI):
                     dims = ("nlocs", "nlevsp1")
                 else:
                     dims = ("nlocs", "nlevs")
-                var_out = ncout.createVariable(
-                    geovals_vars[vname], var.dtype, dims)
+                var_out = ncout.createVariable(geovals_vars[vname], var.dtype, dims)
                 vdata = var[...]
                 var_out[...] = vdata
             else:
@@ -2127,8 +2032,7 @@ class Radar(BaseGSI):
         to the JEDI/IODA observation format
         """
         # set up a NcWriter class
-        outname = OutDir+'/'+self.sensor+'_'+self.obstype + \
-            '_obs_'+self.validtime.strftime("%Y%m%d%H")+'.nc4'
+        outname = OutDir+'/'+self.sensor+'_'+self.obstype+'_obs_'+self.validtime.strftime("%Y%m%d%H")+'.nc4'
         if not clobber:
             if (os.path.exists(outname)):
                 print("File exists. Skipping and not overwriting:%s" % outname)
@@ -2202,19 +2106,16 @@ class Radar(BaseGSI):
             loc_mdata_name = all_LocKeyList[lvar][0]
             if lvar == 'Time':
                 tmp = self.var(lvar)[:]
-                obstimes = [
-                    self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
+                obstimes = [self.validtime+dt.timedelta(hours=float(tmp[a])) for a in range(len(tmp))]
                 obstimes = [a.strftime("%Y-%m-%dT%H:%M:%SZ") for a in obstimes]
-                outdata[(loc_mdata_name, 'MetaData')] = np.array(
-                    obstimes, dtype=object)
+                outdata[(loc_mdata_name, 'MetaData')] = np.array(obstimes, dtype=object)
                 # varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'seconds since 1970-01-01T00:00:00Z'
             else:
                 tmp = self.var(lvar)[:]
                 tmp[tmp > 4e8] = self.FLOAT_FILL
                 outdata[(loc_mdata_name, 'MetaData')] = tmp
                 if loc_mdata_name in units_values.keys():
-                    varAttrs[(loc_mdata_name, 'MetaData')
-                             ]['units'] = units_values[loc_mdata_name]
+                    varAttrs[(loc_mdata_name, 'MetaData')]['units'] = units_values[loc_mdata_name]
 
         globalAttrs["sensor"] = self.sensor
 
