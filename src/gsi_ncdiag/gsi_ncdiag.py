@@ -120,8 +120,6 @@ all_LocKeyList = {
     'geoid_height_above_reference_ellipsoid': ('geoidUndulation', 'float'),
     'gnss_sat_class': ('satelliteConstellationRO', 'string'),
     'impact_height': ('impactHeightRO', 'float'),
-    'height': ('impactHeightRO', 'float'),
-    'Height': ('impactHeightRO', 'float'),
     'impact_parameter': ('impactParameterRO', 'float'),
     'Latitude': ('latitude', 'float'),
     'Longitude': ('longitude', 'float'),
