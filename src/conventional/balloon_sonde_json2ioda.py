@@ -154,10 +154,10 @@ def main(args):
         longitude = [file['observations'][ii]['longitude'] for ii in range(len(file['observations']))]
         stationIdentification = [file['observations'][ii]['mission_name'] for ii in range(len(file['observations']))]
         pressure = [file['observations'][ii]['pressure'] for ii in range(len(file['observations']))]
-        #### NOTE: THESE 2 ARE TEMPORARILY REVERSED UNTIL DATA LABELING CONFIRMED
+        # NOTE: THESE 2 ARE TEMPORARILY REVERSED UNTIL DATA LABELING CONFIRMED
         windEastward = [file['observations'][ii]['speed_y'] for ii in range(len(file['observations']))]
         windNorthward = [file['observations'][ii]['speed_x'] for ii in range(len(file['observations']))]
-        ####
+        #
         airTemperature = [file['observations'][ii]['temperature'] for ii in range(len(file['observations']))]
         dateTime = [file['observations'][ii]['timestamp'] for ii in range(len(file['observations']))]  # datetime
 
