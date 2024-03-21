@@ -154,19 +154,13 @@ def main(args):
         longitude = [file['observations'][ii]['longitude'] for ii in range(len(file['observations']))]
         stationIdentification = [file['observations'][ii]['mission_name'] for ii in range(len(file['observations']))]
         pressure = [file['observations'][ii]['pressure'] for ii in range(len(file['observations']))]
-        # Check when the file was created to handle wind components accordingly
-        dat_created = datetime.strptime(file['CreateDateTime'], "%Y-%m-%dT%H:%M:%S.%f")
-        # UPDATE THIS DATE WHEN Windborne CHANGES THEIR OBS RECORDS
-        # CreateDateTime description is not reported on their website. It appears to be either the
-        # uploaded or downloaded date
-        dat_updated = datetime.strptime('2024-12-31T00:00:00', "%Y-%m-%dT%H:%M:%S")
-        if dat_created < dat_updated:
-            windEastward = [file['observations'][ii]['speed_y'] for ii in range(len(file['observations']))]
-            windNorthward = [file['observations'][ii]['speed_x'] for ii in range(len(file['observations']))]
+        # Check the speed variables available and handle accordingly (data changed in March 2024) 
+        if 'speed_u' in file['observations'][0].keys():
+            windEastward = [file['observations'][ii]['speed_u'] for ii in range(len(file['observations']))]
+            windNorthward = [file['observations'][ii]['speed_v'] for ii in range(len(file['observations']))]
         else:
-            windEastward = [file['observations'][ii]['speed_x'] for ii in range(len(file['observations']))]
-            windNorthward = [file['observations'][ii]['speed_y'] for ii in range(len(file['observations']))]
-        #
+            windEastward = [file['observations'][ii]['speed_y'] for ii in range(len(file['observations']))]
+            windNorthward = [file['observations'][ii]['speed_x'] for ii in range(len(file['observations']))] 
         airTemperature = [file['observations'][ii]['temperature'] for ii in range(len(file['observations']))]
         dateTime = [file['observations'][ii]['timestamp'] for ii in range(len(file['observations']))]  # datetime
 
