@@ -204,7 +204,7 @@ def get_reference_time(afile, osw_source):
         dat_ref = afile['time'].attrs['units'][-19:].decode('UTF-8')
         dat_ref = datetime.strptime(dat_ref, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc).timestamp()
     elif osw_source in ('Spire'):
-        # the precision of the seconds appears troublesome when too many digits 
+        # the precision of the seconds appears troublesome when too many digits
         # take the floor of the seconds by stripping of fractional seconds
         dat_ref = afile['sample_time'].attrs['units'].decode('UTF-8').split()[-1]
         dat_ref = dat_ref.split('.')[0]
