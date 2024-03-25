@@ -777,7 +777,7 @@ class Conv(BaseGSI):
                 print("Platform:%s Var:%s #Obs:%d" % (p, v, np.sum(idx)))
                 if v == 'bend':
                     # sort record_number
-                    record_number = self.var('record_number')[idx]
+                    record_number = self.var('Observation_Subtype')[idx]
                     id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
                     print("Sorting ", v, " obs referring to record_number in geovals")
                     # record_number_sorted = [ record_number[ksort] for ksort in id_recordnum_sort ]
@@ -787,7 +787,7 @@ class Conv(BaseGSI):
                     idx_id = idx_tuples[0]
                     idx_sorted = [idx_id[ksort] for ksort in id_recordnum_sort]
                     # another check if idx_sorted is correct to sort record_number
-                    # record_number_new = self.var('record_number')[idx_sorted]
+                    # record_number_new = self.var('Observation_Subtype')[idx_sorted]
                     # for isort in range(len(record_number_new)):
                     #     print('isort, idx, record_number, record_number_new',isort,\
                     #         record_number[isort], record_number_new[isort] )
@@ -926,9 +926,9 @@ class Conv(BaseGSI):
 
                 if v == 'bend':
                     # sort record_number
-                    record_number = self.var('record_number')[idx]
+                    record_number = self.var('Observation_Subtype')[idx]
                     id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
-                    print("Sorting ", v, " obs referring to record_number")
+                    # print("Sorting ", v, " obs referring to Observation_Subtype")
                     # record_number_sorted = [ record_number[ksort] for ksort in id_recordnum_sort ]
                     # print('record_number:', record_number)
                     # print('record_number.size:', record_number.size)
@@ -1092,6 +1092,10 @@ class Conv(BaseGSI):
                             #     hgt[hgt > 9998.] = self.FLOAT_FILL
                             #     tmp = hgt
                             outdata[(loc_mdata_name, 'MetaData')] = tmp
+                            varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'm'
+                        elif v == 'bend':
+                            loc_mdata_name = 'impactHeightRO'
+                            outdata[(loc_mdata_name, 'MetaData')] = self.var(lvar)[idx]
                             varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'm'
                         elif p == 'sondes' or p == 'aircraft' or p == 'satwind' or p == 'pibal':
                             tmp = self.var(lvar)[idx]
