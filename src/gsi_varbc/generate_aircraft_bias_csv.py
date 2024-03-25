@@ -24,6 +24,8 @@ import argparse
 #
 # csv
 #
+
+
 def csv_write(csvFileName, coefFileName, coordVariableName, coordVariableType, coordVariableColumn,
               drawVariableName, drawVariableType, drawVariableColumn):
     with open(csvFileName, 'w') as csvFile:
@@ -41,11 +43,13 @@ def csv_write(csvFileName, coefFileName, coordVariableName, coordVariableType, c
         #       using the str.ljust() command
         with open(coefFileName, 'r') as coefFile:
             for line in coefFile:
-                cwrite.writerow([line.split()[coordVariableColumn].ljust(8,' '), line.split()[drawVariableColumn]])
+                cwrite.writerow([line.split()[coordVariableColumn].ljust(8, ' '), line.split()[drawVariableColumn]])
     return
 #
 # begin
 #
+
+
 if __name__ == "__main__":
     # generate an argument parser to accept command-line inputs:
     #    coefFileName = file name containing GDAS aircraft bias correction coefficients
@@ -56,7 +60,8 @@ if __name__ == "__main__":
     #    drawGrpVar = gropu/variable name of returned draw variable in CSV file
     #    drawVarTyp = variable-type of returned draw variable
     #    drawColumn = column of coef. file containing returned draw variable
-    parser = argparse.ArgumentParser(description='define input coefficient file, output CSV file, and (group/variable, variable-type, column-number) of coordinate and draw variables')
+    parser = argparse.ArgumentParser(
+        description='define input coefficient file, output CSV file, and (group/variable, variable-type, column-number) of coordinate and draw variables')
     parser.add_argument('coefFileName', metavar='INFILE', type=str, help='name of input bias coefficient file')
     parser.add_argument('csvFileName', metavar='OUTFILE', type=str, help='name of output CSV file')
     parser.add_argument('coordGrpVar', metavar='group/var coordinate', type=str, help='group/variable name of coordinate variable')
@@ -69,8 +74,8 @@ if __name__ == "__main__":
     commandInputs = parser.parse_args()
     # read from coefFileName, write predictor coefficients to csvFileName file
     csv_write(commandInputs.csvFileName, commandInputs.coefFileName,
-              commandInputs.coordGrpVar, commandInputs.coordVarTyp,  commandInputs.coordColumn,
-              commandInputs.drawGrpVar,  commandInputs.drawVarTyp,   commandInputs.drawColumn) 
+              commandInputs.coordGrpVar, commandInputs.coordVarTyp, commandInputs.coordColumn,
+              commandInputs.drawGrpVar, commandInputs.drawVarTyp, commandInputs.drawColumn)
 #
 # end
 #
