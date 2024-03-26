@@ -80,12 +80,10 @@ macOS=False
 
 get_instru_path() {
     instru_path=GPM_L1C/GPM_1CGPMGMI_R.07             # GMI   - level 1C-R
-    # instru_path=GPM_L1C/GPM_1CGCOMW1AMSR2.07        # AMSR2 - level 1C
 }
 
 get_instrument() {
     instrument=gmi
-    # instrument=amsr2
 }
 
 get_macOS
