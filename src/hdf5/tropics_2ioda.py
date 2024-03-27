@@ -85,7 +85,7 @@ def main(args):
 #               obs_data = file_obs_data
 
     for afile in input_files:
-        file_obs_data = get_data_from_files(afile)
+        file_obs_data = get_data_from_files(afile, skip=args.skip)
         if not file_obs_data:
             print("INFO: non-nominal file skipping")
             continue
@@ -132,7 +132,7 @@ def main(args):
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
 
-def get_data_from_files(afile):
+def get_data_from_files(afile, skip=1):
 
     # allocate space for output depending on which variables are to be saved
     obs_data = init_obs_loc()
@@ -145,9 +145,9 @@ def get_data_from_files(afile):
     if '_NCProperties' in f.attrs.keys():
         nc_properties = 'version=2' in f.attrs['_NCProperties'].decode("utf-8")
     if software_version or nc_properties:
-        obs_data = get_data(f, obs_data)
+        obs_data = get_data(f, obs_data, skip=skip)
     elif int(f.attrs['L1b_SW_Ver'].decode("utf-8").split('.')[0]) == 2:
-        obs_data = get_data_deprecated(f, obs_data)
+        obs_data = get_data_deprecated(f, obs_data, skip=skip)
     else:
         print(f'unknown software version: {software_version}')
         obs_data = None
@@ -156,7 +156,7 @@ def get_data_from_files(afile):
     return obs_data
 
 
-def get_data(f, obs_data):
+def get_data(f, obs_data, skip=1):
 
     WMO_sat_ID = get_WMO_satellite_ID(f.attrs['ShortName'].decode("utf-8"))
 
@@ -211,12 +211,12 @@ def get_data(f, obs_data):
     obs_data[('sensorZenithAngle', metaDataName)][chk_geolocation] = float_missing_value
 
     obs_key = (k, "ObsValue")
-    obs_data = set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data)
+    obs_data = set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data, skip=skip)
 
     return obs_data
 
 
-def get_data_deprecated(f, obs_data):
+def get_data_deprecated(f, obs_data, skip=1):
 
     WMO_sat_ID = get_WMO_satellite_ID(f.attrs['ShortName'].decode("utf-8"))
 
@@ -282,12 +282,12 @@ def get_data_deprecated(f, obs_data):
     obs_data[('sensorZenithAngle', metaDataName)][chk_geolocation] = float_missing_value
 
     obs_key = (k, "ObsValue")
-    obs_data = set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data)
+    obs_data = set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data, skip=skip)
 
     return obs_data
 
 
-def set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data):
+def set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data, skip=1):
     # use quality word to determine where to set for missing values
     for jchan in np.arange(nchans):
         i_land = get_normalized_bit(quality_word[:, jchan], bit_index=1)
@@ -308,9 +308,9 @@ def set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data):
         (obs_data[(tb_key, obsValName)][:, 11] != float_missing_value)
     for k in obs_data:
         if metaDataName in k[1] and 'sensorChannelNumber' not in k[0]:
-            obs_data[k] = obs_data[k][good]     # [::24] ## add as skip
+            obs_data[k] = obs_data[k][good][::skip]
         elif tb_key in k[0]:
-            obs_data[k] = obs_data[k][good, :]  # [::24] ## add as skip
+            obs_data[k] = obs_data[k][good, :][::skip]
 
     return obs_data
 
@@ -457,6 +457,10 @@ if __name__ == "__main__":
         metavar="YYYYMMDDHH",
         help="base date for the center of the window",
         type=str, default=None)
+    optional.add_argument(
+        '--skip',
+        help="default pixel skip factor to be applied",
+        type=int, default=1)
 
     args = parser.parse_args()
 
