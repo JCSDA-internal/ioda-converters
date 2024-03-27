@@ -198,10 +198,11 @@ def get_data_source(afile):
 
 def get_reference_time(afile, osw_source):
     if osw_source in ('CYGNSS'):
-        dat_ref = afile['sample_time'].attrs['units'][-19:].decode('UTF-8')
+        dat_ref = afile['sample_time'].attrs['units'].decode('UTF-8').split('since ')[-1]
         dat_ref = datetime.strptime(dat_ref, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc).timestamp()
     elif osw_source in ('Muon'):
-        dat_ref = afile['time'].attrs['units'][-19:].decode('UTF-8')
+        # note same as CYGNSS except item key is simply time
+        dat_ref = afile['time'].attrs['units'].decode('UTF-8').split('since ')[-1]
         dat_ref = datetime.strptime(dat_ref, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc).timestamp()
     elif osw_source in ('Spire'):
         # the precision of the seconds appears troublesome when too many digits
