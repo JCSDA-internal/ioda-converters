@@ -94,6 +94,7 @@ def main(args):
             print(f'Input (-i option) file: {file_name} does not exist')
             sys.exit()
         logging.debug(f"Reading input file: {file_name}")
+        print(f"Reading input file: {file_name}")
 
         # Open file
         # (need to move file and dat ref into get_data_from_file, but then need to move adjust data_append inside also.)
@@ -137,7 +138,7 @@ def main(args):
 
     # sort by instrument and then time
     if args.sort:
-        obs_data.sort_values(['stationIdentification', 'dateTime'], ascending=[True, True], inplace=True)
+        obs_data.sort_values(['sensorIdentification', 'dateTime'], ascending=[True, True], inplace=True)
 
     # count number of locations
     ntotal = obs_data.shape[0]
