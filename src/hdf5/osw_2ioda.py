@@ -234,8 +234,10 @@ def get_data_from_file(afile, col_names, osw_source, file_name):
         longitude = [afile['lon'][ii] for ii in range(len(afile['lon']))]
         dateTime = [int(afile['time'][ii]) for ii in range(len(afile['time']))]  # datetime with different ref time
         windSpeed = [afile['wind_speed_level2'][ii] for ii in range(len(afile['wind_speed_level2']))]
+        # not implemented in proxy data all values in proxy data are set to -9999
         windSpeedPreQC = [0] * len(windSpeed)
-        windSpeedObsError = 0.1 * windSpeed
+        # windSpeedPreQC = [afile['retrieval_qual_flag'][ii] for ii in range(len(afile['retrieval_qual_flag']))]
+        windSpeedObsError = [afile['wind_speed_level2_error'][ii] for ii in range(len(afile['wind_speed_level2_error']))]
         sensorIdentification = [instrument_ref]*len(latitude)
     elif osw_source == 'Spire':
         # Get instrument reference
