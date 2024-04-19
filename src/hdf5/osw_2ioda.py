@@ -219,6 +219,8 @@ def get_data_from_file(afile, col_names, osw_source, file_name):
         longitude = [afile['lon'][ii] for ii in range(len(afile['lon']))]
         dateTime = [int(afile['sample_time'][ii]) for ii in range(len(afile['sample_time']))]  # datetime with different ref time
         windSpeed = [afile['wind_speed'][ii] for ii in range(len(afile['wind_speed']))]
+        windSpeedPreQC = [0] * len(windSpeed)
+        windSpeedObsError = [afile['wind_speed_uncertainty'][ii] for ii in range(len(afile['wind_speed_uncertainty']))]
         sensorIdentification = [str(afile['sv_num'][ii]) for ii in range(len(afile['sv_num']))]  # sv_num is the GPS space vehicle number
     elif osw_source == 'Muon':
         # Get instrument reference
@@ -232,6 +234,8 @@ def get_data_from_file(afile, col_names, osw_source, file_name):
         longitude = [afile['lon'][ii] for ii in range(len(afile['lon']))]
         dateTime = [int(afile['time'][ii]) for ii in range(len(afile['time']))]  # datetime with different ref time
         windSpeed = [afile['wind_speed_level2'][ii] for ii in range(len(afile['wind_speed_level2']))]
+        windSpeedPreQC = [0] * len(windSpeed)
+        windSpeedObsError = 0.1 * windSpeed
         sensorIdentification = [instrument_ref]*len(latitude)
     elif osw_source == 'Spire':
         # Get instrument reference
