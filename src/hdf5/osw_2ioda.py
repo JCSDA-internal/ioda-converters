@@ -90,7 +90,7 @@ def main(args):
             logging.debug(f'Input (-i option) file: {file_name} does not exist')
             print(f'Input (-i option) file: {file_name} does not exist')
             sys.exit()
-        logging.debug(f"Reading input file: {file_name}")
+        logging.info(f"Reading input file: {file_name}")
         print(f"Reading input file: {file_name}")
 
         # Open file
