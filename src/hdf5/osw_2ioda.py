@@ -91,7 +91,6 @@ def main(args):
             print(f'Input (-i option) file: {file_name} does not exist')
             sys.exit()
         logging.info(f"Reading input file: {file_name}")
-        print(f"Reading input file: {file_name}")
 
         # Open file
         # (need to move file and dat ref into get_data_from_file, but then need to move adjust data_append inside also.)
