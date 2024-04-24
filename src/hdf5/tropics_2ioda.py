@@ -42,10 +42,7 @@ TROPICS04_WMO_sat_ID = 966
 TROPICS05_WMO_sat_ID = 967
 TROPICS06_WMO_sat_ID = 968
 TROPICS07_WMO_sat_ID = 969
-# what to use here
-TOMORROWIO_S3_sat_ID = 1333
-TOMORROWIO_S1_sat_ID = 1333
-TOMORROWIO_GENERIC_sat_ID = 1333
+TOMORROWIO_GENERIC_sat_ID = 769
 
 # TROPICS Epoch Time (TET) offset
 tet_offset = 946684721.0
@@ -344,10 +341,6 @@ def get_WMO_satellite_ID(attrs_shortname):
         WMO_sat_ID = TROPICS06_WMO_sat_ID
     elif 'TROPICS07' in attrs_shortname:
         WMO_sat_ID = TROPICS07_WMO_sat_ID
-    elif 'TMS_S3_BRTTL1B' in attrs_shortname:
-        WMO_sat_ID = TOMORROWIO_S3_sat_ID
-    elif 'TMS_S1_BRTTL1B' in attrs_shortname:
-        WMO_sat_ID = TOMORROWIO_S1_sat_ID
     elif 'TMS' in attrs_shortname and 'BRTTL1B' in attrs_shortname:
         WMO_sat_ID = TOMORROWIO_GENERIC_sat_ID
     else:
