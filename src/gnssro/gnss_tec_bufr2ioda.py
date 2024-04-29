@@ -48,6 +48,7 @@ def main(args):
             print(f"INFO: non-nominal file skipping")
             continue
         if obs_data:
+            file_obs_data[('sequenceNumber', 'MetaData')] += 1
             concat_obs_dict(obs_data, file_obs_data)
         else:
             obs_data = file_obs_data
