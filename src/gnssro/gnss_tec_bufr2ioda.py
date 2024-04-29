@@ -107,6 +107,7 @@ def get_meta_data(ds):
 
     # get some of the global attributes that we are interested in
     meta_data_keys = def_meta_data()
+    meta_data_types = def_meta_types()
 
     # these are the MetaData we are interested in
     profile_meta_data = {}
@@ -117,24 +118,23 @@ def get_meta_data(ds):
         except Exception as e:
             print(f'  WARNING: could not retrieve key: {k} -- Skipping')
             continue
-        if type(attrValue) is np.int64:
+        if meta_data_types[k] == 'long':
             profile_meta_data[k] = np.array(np.repeat(attrValue, psize), dtype=np.int64)
-        elif type(attrValue) is int:
-            profile_meta_data = np.array(np.repeat(attrValue, psize), dtype=ioda_int_type)
-        elif type(attrValue) is float:
-            profile_meta_data = np.array(np.repeat(attrValue, psize), dtype=ioda_float_type)
+        elif meta_data_types[k] == 'integer':
+            profile_meta_data[k] = np.array(np.repeat(attrValue, psize), dtype=ioda_int_type)
+        elif meta_data_types[k] == 'float':
+            profile_meta_data[k] = np.array(np.repeat(attrValue, psize), dtype=ioda_float_type)
         else:  # something else (what do we do with it)
             print(f"Found neither float nor in, type={type(v)}; skipping")
 
     # the time convert to epoch and handle array of values
-    time_offset = np.array(ds['time'].add_offset - ds['time'][:])
-    profile_meta_data['dateTime'] = np.int64(time_offset)
+    profile_meta_data['dateTime'] = np.array(ds['time'].add_offset + ds['time'][:], np.int64)
 
     # bespoke table of letter to WMO code
     transmitterConstellationId = get_GNSS_constellation(ds.conid)
     profile_meta_data['satelliteConstellationRO'] = np.array(np.repeat(transmitterConstellationId, psize), dtype=ioda_int_type)
 
-    # bespoke table of letter to WMO code
+    # bespoke character string to WMO identifier
     satelliteId = get_GNSS_mission(ds)
     profile_meta_data['satelliteIdentifier'] = np.array(np.repeat(satelliteId, psize), dtype=ioda_int_type)
 
@@ -191,7 +191,7 @@ def def_meta_data():
     meta_data_keys = {
         "satelliteTransmitterId": 'prn_id',
         "satelliteSubIdentifier": 'leo_id',
-        "antennaTransmitterId": 'antenna_id',
+        "antennaReceiverId": 'antenna_id',
     }
 
 
@@ -209,6 +209,7 @@ def def_meta_types():
         "SATxECFPosition": "float",
         "SATyECFPosition": "float",
         "SATzECFPosition": "float",
+        "antennaReceiverId": 'float',
         "satelliteIdentifier": 'integer',
         "satelliteSubIdentifier": 'integer',
         "satelliteTransmitterId": 'integer',
