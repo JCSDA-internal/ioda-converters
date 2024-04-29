@@ -8,9 +8,8 @@
 #
 
 from __future__ import print_function
-import sys
 import argparse
-from datetime import datetime, timedelta
+from datetime import datetime
 import dateutil.parser
 from concurrent.futures import ProcessPoolExecutor
 import numpy as np
@@ -222,30 +221,30 @@ def def_meta_types():
 
 def get_GNSS_constellation(constellationId):
     # convert letter codes to WMO constellation ID
-    constellationId = int_missing_value
+    transmitterConstellationId = int_missing_value
     if constellationId == 'G':
-        constellationId = 401
+        transmitterConstellationId = 401
     elif constellationId == 'R':
-        constellationId = 402
+        transmitterConstellationId = 402
     elif constellationId == 'E':
-        constellationId = 403
+        transmitterConstellationId = 403
     elif constellationId == 'C':
-        constellationId = 404
+        transmitterConstellationId = 404
     else:
-        constellationId = int_missing_value
-    return constellationId
+        transmitterConstellationId = int_missing_value
+    return transmitterConstellationId
 
 
-def get_GNSS_mission(satID):
+def get_GNSS_mission(ds):
     # return WMO satellite ID
     try:
-        mission = getattr(ds.mission)
+        mission = ds.mission
     except Exception as e:
         return int_missing_value
 
     satID = int_missing_value
     if mission == 'COSEQ':
-        satID = 750 + ds.leo_id
+        satID = 749 + ds.leo_id
     return satID
 
 
