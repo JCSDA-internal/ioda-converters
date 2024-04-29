@@ -19,64 +19,38 @@ from itertools import repeat
 import netCDF4 as nc
 
 import pyiodaconv.ioda_conv_engines as iconv
-from pyiodaconv.def_jedi_utils import epoch, ioda_int_type, ioda_float_type
+from pyiodaconv.def_jedi_utils import epoch, iso8601_string, ioda_int_type, ioda_float_type, concat_obs_dict
 from pyiodaconv.orddicts import DefaultOrderedDict
 
 float_missing_value = iconv.get_default_fill_val(np.float32)
 int_missing_value = iconv.get_default_fill_val(np.int32)
 long_missing_value = iconv.get_default_fill_val(np.int64)
 
+locationKeyList = [
+    ('elevationAngleGNSSlink', 'float'),
+    ('GNSSxECFPosition', 'float'),
+    ('GNSSyECFPosition', 'float'),
+    ('GNSSzECFPosition', 'float'),
+    ('SATxECFPosition', 'float'),
+    ('SATyECFPosition', 'float'),
+    ('SATzECFPosition', 'float'),
+    ("dateTime", "long")
+]
+
 def main(args):
     RO_files = args.input
     print(f'{len(RO_files)} files to read')
-    RO_number = 0
+    obs_data = {}
+    # for file_obs_data in executor.map(read_input, pool_inputs, repeat(qc), repeat(addLSW), repeat(only_bang)):
     for ifile in RO_files:
- 
-        ds = nc.Dataset(ifile, "r")
-        # ds.variables.keys()
-        # ['time', 'TEC', 'S4', 'elevation', 'caL1_SNR', 'pL2_SNR', 'x_LEO', 'y_LEO', 'z_LEO', 'x_GPS', 'y_GPS', 'z_GPS']
-        # ds.ncattrs()
-        x_leo = np.array(ds['x_LEO'][:])        # LEO x position (ECF) at time of signal reception
-        y_leo = np.array(ds['y_LEO'][:])
-        z_leo = np.array(ds['z_LEO'][:])
-        x_gps = np.array(ds['x_GPS'][:])        # GPS x position (ECF) at time of signal transmission
-        y_gps = np.array(ds['y_GPS'][:])
-        z_gps = np.array(ds['z_GPS'][:])
-        tec = np.array(ds['TEC'][:])            # Total Electron Content along LEO-GPS link
-        elev = np.array(ds['elevation'][:])     # Elevation angle of LEO-GPS link
- 
-        RO_ind = np.zeros(x_leo.size) + RO_number
-        unique_number = np.full(x_leo.size, str(ds.leo_id) + '_' + str(ds.prn_id))
-
-        profile_meta_data = get_meta_data(bufr)
-
-        if RO_number == 0:
-            ax_leo = x_leo
-            ay_leo = y_leo
-            az_leo = z_leo
-            ax_gps = x_gps
-            ay_gps = y_gps
-            az_gps = z_gps
-            atec = tec
-            aelev = elev
-            aUT_RO = UT
-            aRO_ind = RO_ind
-            aunique_number = unique_number
+        file_obs_data = get_obs_data(ifile, args)
+        if not file_obs_data:
+            print(f"INFO: non-nominal file skipping")
+            continue
+        if obs_data:
+            concat_obs_dict(obs_data, file_obs_data)
         else:
-            ax_leo = np.concatenate((ax_leo, x_leo), axis=None)
-            ay_leo = np.concatenate((ay_leo, y_leo), axis=None)
-            az_leo = np.concatenate((az_leo, z_leo), axis=None)
-            ax_gps = np.concatenate((ax_gps, x_gps), axis=None)
-            ay_gps = np.concatenate((ay_gps, y_gps), axis=None)
-            az_gps = np.concatenate((az_gps, z_gps), axis=None)
-            atec = np.concatenate((atec, tec), axis=None)
-            aelev = np.concatenate((aelev, elev), axis=None)
-            aUT_RO = np.concatenate((aUT_RO, UT), axis=None)
-            aRO_ind = np.concatenate((aRO_ind, RO_ind), axis=None)
-            aunique_number = np.concatenate((aunique_number, unique_number), axis=None)
-        print(RO_number, np.shape(ax_leo))
- 
-        RO_number += 1
+            obs_data = file_obs_data
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
@@ -139,37 +113,87 @@ def get_meta_data(ds):
     psize = len(ds['time'])
     for k, v in meta_data_keys.items():
         try:
-            profile_meta_data[k] = getattr(ds, v)
+            attrValue = getattr(ds, v)
         except Exception as e:
             print(f'  WARNING: could not retrieve key: {k} -- Skipping')
-        if type(v) is np.int64:
-            obs_data[(k, 'MetaData')] = np.array(np.repeat(v, psize), dtype=np.int64)
-        elif type(v) is int:
-            obs_data[(k, 'MetaData')] = np.array(np.repeat(v, psize), dtype=ioda_int_type)
-        elif type(v) is float:
-            obs_data[(k, 'MetaData')] = np.array(np.repeat(v, psize), dtype=ioda_float_type)
+            continue
+        if type(attrValue) is np.int64:
+            profile_meta_data[k] = np.array(np.repeat(attrValue, psize), dtype=np.int64)
+        elif type(attrValue) is int:
+            profile_meta_data = np.array(np.repeat(attrValue, psize), dtype=ioda_int_type)
+        elif type(attrValue) is float:
+            profile_meta_data = np.array(np.repeat(attrValue, psize), dtype=ioda_float_type)
         else:  # something else (what do we do with it)
             print(f"Found neither float nor in, type={type(v)}; skipping")
 
+    # the time convert to epoch and handle array of values
     time_offset = np.array(ds['time'].add_offset - ds['time'][:])
     profile_meta_data['dateTime'] = np.int64(time_offset)
+
+    # bespoke table of letter to WMO code
+    transmitterConstellationId = get_GNSS_constellation(ds.conid)
+    profile_meta_data['satelliteConstellationRO'] = np.array(np.repeat(transmitterConstellationId, psize), dtype=ioda_int_type)
+
+    # bespoke table of letter to WMO code
+    satelliteId = get_GNSS_mission(ds)
+    profile_meta_data['satelliteIdentifier'] = np.array(np.repeat(satelliteId, psize), dtype=ioda_int_type)
 
     return profile_meta_data
 
 
+def get_obs_data(ifile, get_obs_data_args):
+    # allocate space for output depending on which variables are to be saved
+    obs_data = {}
+
+    ds = nc.Dataset(ifile, "r")
+    # ds.variables.keys()
+    # ['time', 'TEC', 'S4', 'elevation', 'caL1_SNR', 'pL2_SNR', 'x_LEO', 'y_LEO', 'z_LEO', 'x_GPS', 'y_GPS', 'z_GPS']
+    # ds.ncattrs()
+ 
+    profile_meta_data = get_meta_data(ds)
+    for k in profile_meta_data.keys():
+        obs_data[(k, 'MetaData')] = profile_meta_data[k]
+
+    # number to keep track of profile
+    obs_data[('sequenceNumber', 'MetaData')] = np.array(np.repeat(get_obs_data_args.recordnumber, ds['x_LEO'].size), dtype=ioda_int_type)
+    # Elevation angle of LEO-GPS link
+    obs_data[("elevationAngleGNSSlink", "MetaData")] = np.array(ds['elevation'][:])
+    # GPS x position (ECF) at time of signal transmission
+    obs_data[("GNSSxECFPosition", "MetaData")] = np.array(ds['x_GPS'][:])
+    obs_data[("GNSSyECFPosition", "MetaData")] = np.array(ds['y_GPS'][:])
+    obs_data[("GNSSzECFPosition", "MetaData")] = np.array(ds['z_GPS'][:])
+    # LEO x position (ECF) at time of signal reception
+    obs_data[("SATxECFPosition", "MetaData")] = np.array(ds['x_LEO'][:])
+    obs_data[("SATyECFPosition", "MetaData")] = np.array(ds['y_LEO'][:])
+    obs_data[("SATzECFPosition", "MetaData")] = np.array(ds['z_LEO'][:])
+
+    # the observation value
+    obs_data[("totalElectronContent", "ObsValue")] = np.array(ds['TEC'][:])
+
+    return obs_data
+
+
 def def_meta_data():
 
+    # define the keys to retrieve for global meta data attributes (scalars)
+    # this does NOT retrieve the ('Location') information (arrays)
+    #       "elevationAngleGNSSlink": 'elevation'
+    #       "GNSSxECFPosition": 'x_GPS'
+    # antenna_id
+    # attflag
+    # podflag
+    # leodcb_flag
+    # leodcb_rms
+    # gpsdcb_flag
+    # gpsdcb_rms
+    # leveling_err
+
     meta_data_keys = {
-#       "elevationAngleGNSSlink": 'elevation',
-#       "GNSSxECFPosition": 'x_GPS',
-#       "GNSSyECFPosition": 'y_GPS',
-#       "GNSSzECFPosition": 'z_GPS',
-#       "SATxECFPosition": 'x_GPS',
-#       "SATyECFPosition": 'y_GPS',
-#       "SATzECFPosition": 'z_GPS',
         "satelliteTransmitterId": 'prn_id',
-#       "satelliteConstellationRO": 'satelliteClassification',
+        "satelliteSubIdentifier": 'leo_id',
+        "antennaTransmitterId": 'antenna_id',
     }
+
 
     return meta_data_keys
 
@@ -187,12 +211,41 @@ def def_meta_types():
         "SATzECFPosition": "float",
         "satelliteIdentifier": 'integer',
         "satelliteSubIdentifier": 'integer',
-        "satelliteInstrument": 'integer',
         "satelliteTransmitterId": 'integer',
         "satelliteConstellationRO": 'integer',
     }
+#       "satelliteInstrument": 'integer',
 
     return meta_data_types
+
+
+def get_GNSS_constellation(constellationId):
+    # convert letter codes to WMO constellation ID
+    constellationId = int_missing_value
+    if constellationId == 'G':
+      constellationId = 401
+    elif constellationId == 'R':
+      constellationId = 402
+    elif constellationId == 'E':
+      constellationId = 403
+    elif constellationId == 'C':
+      constellationId = 404
+    else:
+      constellationId = int_missing_value
+    return constellationId
+
+
+def get_GNSS_mission(satID):
+    # return WMO satellite ID
+    try:
+        mission = getattr(ds.mission)
+    except Exception as e:
+        return int_missing_value
+
+    satID = int_missing_value
+    if mission == 'COSEQ':
+        satID = 750 + ds.leo_id
+    return satID
 
 
 if __name__ == "__main__":
