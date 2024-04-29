@@ -37,6 +37,7 @@ locationKeyList = [
     ("dateTime", "long")
 ]
 
+
 def main(args):
     RO_files = args.input
     print(f'{len(RO_files)} files to read')
@@ -93,7 +94,7 @@ def main(args):
     VarAttrs[('totalElectronContent', 'PreQC')]['_FillValue'] = int_missing_value
 
     VarAttrs[('elevationAngleGNSSlink', 'MetaData')]['_FillValue'] = float_missing_value
-    VarAttrs[('GNSSxECFPosition', 'MetaData')]['_FillValue'] = float_missing_value 
+    VarAttrs[('GNSSxECFPosition', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('GNSSyECFPosition', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('GNSSzECFPosition', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('SATxECFPosition', 'MetaData')]['_FillValue'] = float_missing_value
@@ -150,7 +151,7 @@ def get_obs_data(ifile, get_obs_data_args):
     # ds.variables.keys()
     # ['time', 'TEC', 'S4', 'elevation', 'caL1_SNR', 'pL2_SNR', 'x_LEO', 'y_LEO', 'z_LEO', 'x_GPS', 'y_GPS', 'z_GPS']
     # ds.ncattrs()
- 
+
     profile_meta_data = get_meta_data(ds)
     for k in profile_meta_data.keys():
         obs_data[(k, 'MetaData')] = profile_meta_data[k]
@@ -195,7 +196,6 @@ def def_meta_data():
         "antennaReceiverId": 'antenna_id',
     }
 
-
     return meta_data_keys
 
 
@@ -216,7 +216,6 @@ def def_meta_types():
         "satelliteTransmitterId": 'integer',
         "satelliteConstellationRO": 'integer',
     }
-#       "satelliteInstrument": 'integer',
 
     return meta_data_types
 
@@ -225,15 +224,15 @@ def get_GNSS_constellation(constellationId):
     # convert letter codes to WMO constellation ID
     constellationId = int_missing_value
     if constellationId == 'G':
-      constellationId = 401
+        constellationId = 401
     elif constellationId == 'R':
-      constellationId = 402
+        constellationId = 402
     elif constellationId == 'E':
-      constellationId = 403
+        constellationId = 403
     elif constellationId == 'C':
-      constellationId = 404
+        constellationId = 404
     else:
-      constellationId = int_missing_value
+        constellationId = int_missing_value
     return constellationId
 
 
