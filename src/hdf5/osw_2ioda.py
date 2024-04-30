@@ -214,13 +214,17 @@ def get_data_from_file(afile, col_names, osw_source, file_name):
 
     # Pull each data type (variable) and create a list
     if osw_source == 'CYGNSS':
-        latitude = [afile['lat'][ii] for ii in range(len(afile['lat']))]
-        longitude = [afile['lon'][ii] for ii in range(len(afile['lon']))]
-        dateTime = [int(afile['sample_time'][ii]) for ii in range(len(afile['sample_time']))]  # datetime with different ref time
-        windSpeed = [afile['wind_speed'][ii] for ii in range(len(afile['wind_speed']))]
-        windSpeedPreQC = [0] * len(windSpeed)
-        windSpeedObsError = [afile['wind_speed_uncertainty'][ii] for ii in range(len(afile['wind_speed_uncertainty']))]
-        sensorIdentification = [str(afile['sv_num'][ii]) for ii in range(len(afile['sv_num']))]  # sv_num is the GPS space vehicle number
+        latitude = [v for v in afile['lat']]
+        longitude = [v for v in afile['lon']]
+        dateTime = [int(v) for v in afile['sample_time']]  # datetime with different ref time
+        windSpeed = [v for v in afile['wind_speed']]
+        # bits are in afile['sample_flags'].attrs['flag_meanings']
+        # ! Bit 1=b'poor_overall_quality_flag
+        # ! Bit 2=Ascending Node Flag (1=ascending; 0=descending)
+        windSpeedPreQC = [get_normalized_bit(v, bit_index=1) for v in afile['sample_flags']]
+        satelliteAscendingFlag = [get_normalized_bit(v, bit_index=2) for v in afile['sample_flags']]
+        windSpeedObsError = [v for v in afile['wind_speed_uncertainty']]
+        sensorIdentification = [str(v) for v in afile['sv_num']]  # sv_num is the GPS space vehicle number
     elif osw_source == 'Muon':
         # Get instrument reference
         import re
@@ -229,25 +233,25 @@ def get_data_from_file(afile, col_names, osw_source, file_name):
         res = temp.search(file_name)
         instrument_ref = res.group(0)
 
-        latitude = [afile['lat'][ii] for ii in range(len(afile['lat']))]
-        longitude = [afile['lon'][ii] for ii in range(len(afile['lon']))]
-        dateTime = [int(afile['time'][ii]) for ii in range(len(afile['time']))]  # datetime with different ref time
-        windSpeed = [afile['wind_speed_level2'][ii] for ii in range(len(afile['wind_speed_level2']))]
+        latitude = [v for v in afile['lat']]
+        longitude = [v for v in afile['lon']]
+        dateTime = [int(v) for v in afile['time']]  # datetime with different ref time
+        windSpeed = [v for v in afile['wind_speed_level2']]
         # not implemented in proxy data all values in proxy data are set to -9999
         windSpeedPreQC = [0] * len(windSpeed)
-        # windSpeedPreQC = [afile['retrieval_qual_flag'][ii] for ii in range(len(afile['retrieval_qual_flag']))]
-        windSpeedObsError = [afile['wind_speed_level2_error'][ii] for ii in range(len(afile['wind_speed_level2_error']))]
+        # windSpeedPreQC = [v for v in afile['retrieval_qual_flag']]
+        windSpeedObsError = [v for v in afile['wind_speed_level2_error']]
         sensorIdentification = [instrument_ref]*len(latitude)
     elif osw_source == 'Spire':
         # Get instrument reference
         instrument_ref = afile.attrs['tx_id'].decode('UTF-8')
 
-        latitude = [afile['sp_lat'][ii] for ii in range(len(afile['sp_lat']))]
-        longitude = [afile['sp_lon'][ii] for ii in range(len(afile['sp_lon']))]
-        dateTime = [int(afile['sample_time'][ii]) for ii in range(len(afile['sample_time']))]  # datetime with different ref time
-        windSpeed = [afile['wind'][ii] for ii in range(len(afile['wind']))]
-        windSpeedPreQC = [1 - afile['wind_confidence'][ii] for ii in range(len(afile['wind_confidence']))]
-        windSpeedObsError = [afile['wind_std'][ii] for ii in range(len(afile['wind_std']))]
+        latitude = [v for v in afile['sp_lat']]
+        longitude = [v for v in afile['sp_lon']]
+        dateTime = [int(v) for v in afile['sample_time']]  # datetime with different ref time
+        windSpeed = [v for v in afile['wind']]
+        windSpeedPreQC = [1 - v for v in afile['wind_confidence']]
+        windSpeedObsError = [v for v in afile['wind_std']]
         sensorIdentification = [instrument_ref]*len(latitude)
 
     # Make a column to have a constant elevation for the "station"
@@ -298,6 +302,10 @@ def quality_control(obs_data):
     obs_data.loc[((obs_data['longitude'] < lon_range[0]) | (obs_data['longitude'] > lon_range[1])), 'longitude'] = None
 
     return obs_data
+
+
+def get_normalized_bit(value, bit_index):
+    return (value >> bit_index) & 1
 
 
 if __name__ == "__main__":
