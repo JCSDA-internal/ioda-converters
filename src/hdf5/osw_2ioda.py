@@ -102,29 +102,28 @@ def main(args):
         # Get reference time and convert to epoch time
         dat_ref = get_reference_time(file, osw_source)
 
+        # initialize the DF
         if 'obs_data' not in locals():
-            # initialize the DF
             obs_data = pd.DataFrame(columns=meta_keys+obsvars)
 
-        # Get data from file to append to obs_data dataframe
+        # Get data from file in temporary obs_data_append DF
         obs_data_append = get_data_from_file(file, obs_data.keys(), osw_source, file_name)
 
-        # Convert variables
         # Change time reference
         obs_data_append = adjust_dateTime(obs_data_append, dat_ref)
 
         # Change longitude range
         obs_data_append = adjust_longitude(obs_data_append, osw_source)
 
-        # Append to data frame containing all timestamp data
+        # Apply quality control add strict if selected
+        obs_data_append = quality_control(obs_data_append, qc_strict=args.qc_strict)
+
+        # Append to obs_data data frame
         obs_data = pd.concat([obs_data, obs_data_append], ignore_index=True)
 
         file.close()
         # count files
         file_cnt += 1
-
-    # Run gross qc on the variables
-    obs_data = quality_control(obs_data)
 
     # replace missing values
     for MetaDataKey in MetaDataKeyList:
@@ -219,8 +218,8 @@ def get_data_from_file(afile, col_names, osw_source, file_name):
         dateTime = [int(v) for v in afile['sample_time']]  # datetime with different ref time
         windSpeed = [v for v in afile['wind_speed']]
         # bits are in afile['sample_flags'].attrs['flag_meanings']
-        # ! Bit 1=b'poor_overall_quality_flag
-        # ! Bit 2=Ascending Node Flag (1=ascending; 0=descending)
+        # ! Bit 1 == 2^0 == poor_overall_quality_flag
+        # ! Bit 2 == 2^1 == Ascending Node Flag (1=ascending; 0=descending)
         windSpeedPreQC = [get_normalized_bit(v, bit_index=0) for v in afile['sample_flags']]
         satelliteAscendingFlag = [get_normalized_bit(v, bit_index=1) for v in afile['sample_flags']]
         windSpeedObsError = [v for v in afile['wind_speed_uncertainty']]
@@ -291,16 +290,45 @@ def add_long_description(osw_source):
     return long_description
 
 
-def quality_control(obs_data):
+def quality_control(obs_data, qc_strict=False):
     # Apply initial QC for physically possible values (wind, lat, lon) need to add swells
-    wind_range = [0.0, 75.0]
+    ob_range = [0.0, 75.0]
     lat_range = [-90, 90]
     lon_range = [-180, 180]
-    # Replace with None to be filled with missing value later
-    obs_data.loc[((obs_data['windSpeed'] < wind_range[0]) | (obs_data['windSpeed'] > wind_range[1])), 'windSpeed'] = None
-    obs_data.loc[((obs_data['latitude'] < lat_range[0]) | (obs_data['latitude'] > lat_range[1])), 'latitude'] = None
-    obs_data.loc[((obs_data['longitude'] < lon_range[0]) | (obs_data['longitude'] > lon_range[1])), 'longitude'] = None
+    ob_check = ((obs_data['windSpeed'] < ob_range[0]) | (obs_data['windSpeed'] > ob_range[1]))
+    lat_check = ((obs_data['latitude'] < lat_range[0]) | (obs_data['latitude'] > lat_range[1]))
+    lon_check = ((obs_data['longitude'] < lon_range[0]) | (obs_data['longitude'] > lon_range[1]))
 
+    # (default) Replace with None to be filled with missing value later
+    obs_data.loc[ob_check, 'windSpeed'] = None
+    obs_data.loc[lat_check, 'latitude'] = None
+    obs_data.loc[lon_check, 'longitude'] = None
+
+    if qc_strict:
+        # import pdb
+        # pdb.set_trace()
+        # import sys
+        # sys.exit()
+        # (strict) remove
+        # obs_data.drop(ob_check.index)
+        # obs_data.drop(lat_check.index)
+        # obs_data.drop(lon_check.index)
+        obs_data.loc[ob_check, 'windSpeed'] = None
+        obs_data.loc[ob_check, 'latitude'] = None
+        obs_data.loc[ob_check, 'longitude'] = None
+        obs_data.loc[lat_check, 'windSpeed'] = None
+        obs_data.loc[lat_check, 'latitude'] = None
+        obs_data.loc[lat_check, 'longitude'] = None
+        obs_data.loc[lon_check, 'windSpeed'] = None
+        obs_data.loc[lon_check, 'latitude'] = None
+        obs_data.loc[lon_check, 'longitude'] = None
+        # (strict) additional rejection on provider PreQC
+        qc_check = (obs_data['windSpeedPreQC'] == 1)
+        # obs_data.drop(qc_check.index)
+        obs_data.loc[qc_check, 'windSpeed'] = None
+        obs_data.loc[qc_check, 'latitude'] = None
+        obs_data.loc[qc_check, 'longitude'] = None
+        print(f'rejected by PreQC: {sum(qc_check)}')
     return obs_data
 
 
@@ -326,16 +354,20 @@ if __name__ == "__main__":
                           help='base date for the center of the window')
     optional.add_argument('--debug', action='store_true',
                           help='enable debug messages')
-    optional.add_argument('--verbose', action='store_true',
-                          help='enable verbose debug messages')
+    optional.add_argument('-q', '--qualitycontrol', dest='qc_strict',
+                          default=False, action='store_true', required=False,
+                          help='turn on quality control georeality checks')
     optional.add_argument('--sort', action='store_true',
                           default=False, help='Sort data by instruments then time')
+    optional.add_argument('--verbose', action='store_true',
+                          help='enable verbose debug messages')
 
     # read in arguments to function call
     args = parser.parse_args()
 
 #    # verify time format
 #    try:
+         # to do must convert 2022051812 to 2022-05-18T12:00:00Z
 #        target_time = datetime.fromisoformat(args.date_string[:-1])
 #    except Exception:
 #        parser.error('Date format invalid: ', args.date_string, ' must be like: 2022-05-18T12:00:00Z')
