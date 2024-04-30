@@ -221,8 +221,8 @@ def get_data_from_file(afile, col_names, osw_source, file_name):
         # bits are in afile['sample_flags'].attrs['flag_meanings']
         # ! Bit 1=b'poor_overall_quality_flag
         # ! Bit 2=Ascending Node Flag (1=ascending; 0=descending)
-        windSpeedPreQC = [get_normalized_bit(v, bit_index=1) for v in afile['sample_flags']]
-        satelliteAscendingFlag = [get_normalized_bit(v, bit_index=2) for v in afile['sample_flags']]
+        windSpeedPreQC = [get_normalized_bit(v, bit_index=0) for v in afile['sample_flags']]
+        satelliteAscendingFlag = [get_normalized_bit(v, bit_index=1) for v in afile['sample_flags']]
         windSpeedObsError = [v for v in afile['wind_speed_uncertainty']]
         sensorIdentification = [str(v) for v in afile['sv_num']]  # sv_num is the GPS space vehicle number
     elif osw_source == 'Muon':
