@@ -305,29 +305,13 @@ def quality_control(obs_data, qc_strict=False):
     obs_data.loc[lon_check, 'longitude'] = None
 
     if qc_strict:
-        # import pdb
-        # pdb.set_trace()
-        # import sys
-        # sys.exit()
         # (strict) remove
-        # obs_data.drop(ob_check.index)
-        # obs_data.drop(lat_check.index)
-        # obs_data.drop(lon_check.index)
-        obs_data.loc[ob_check, 'windSpeed'] = None
-        obs_data.loc[ob_check, 'latitude'] = None
-        obs_data.loc[ob_check, 'longitude'] = None
-        obs_data.loc[lat_check, 'windSpeed'] = None
-        obs_data.loc[lat_check, 'latitude'] = None
-        obs_data.loc[lat_check, 'longitude'] = None
-        obs_data.loc[lon_check, 'windSpeed'] = None
-        obs_data.loc[lon_check, 'latitude'] = None
-        obs_data.loc[lon_check, 'longitude'] = None
+        obs_data.drop(ob_check[ob_check].index, inplace=True)
+        obs_data.drop(lat_check[lat_check].index, inplace=True)
+        obs_data.drop(lon_check[lon_check].index, inplace=True)
         # (strict) additional rejection on provider PreQC
         qc_check = (obs_data['windSpeedPreQC'] == 1)
-        # obs_data.drop(qc_check.index)
-        obs_data.loc[qc_check, 'windSpeed'] = None
-        obs_data.loc[qc_check, 'latitude'] = None
-        obs_data.loc[qc_check, 'longitude'] = None
+        obs_data.drop(qc_check[qc_check].index, inplace=True)
         print(f'rejected by PreQC: {sum(qc_check)}')
     return obs_data
 
