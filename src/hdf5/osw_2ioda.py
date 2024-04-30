@@ -312,7 +312,7 @@ def quality_control(obs_data, qc_strict=False):
         # (strict) additional rejection on provider PreQC
         qc_check = (obs_data['windSpeedPreQC'] == 1)
         obs_data.drop(qc_check[qc_check].index, inplace=True)
-        print(f'rejected by PreQC: {sum(qc_check)}')
+        logging.debug(f'rejected by PreQC: {sum(qc_check)}')
     return obs_data
 
 
@@ -349,12 +349,12 @@ if __name__ == "__main__":
     # read in arguments to function call
     args = parser.parse_args()
 
-#    # verify time format
-#    try:
-         # to do must convert 2022051812 to 2022-05-18T12:00:00Z
-#        target_time = datetime.fromisoformat(args.date_string[:-1])
-#    except Exception:
-#        parser.error('Date format invalid: ', args.date_string, ' must be like: 2022-05-18T12:00:00Z')
-#        sys.exit()
+#   # verify time format
+#   try:
+#       # to do must convert 2022051812 to 2022-05-18T12:00:00Z
+#       target_time = datetime.fromisoformat(args.date_string[:-1])
+#   except Exception:
+#       parser.error('Date format invalid: ', args.date_string, ' must be like: 2022-05-18T12:00:00Z')
+#       sys.exit()
 
     main(args)
