@@ -92,6 +92,7 @@ list( APPEND test_input
   testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t180544_small.h5
   testinput/viirs_j1_l1b_albedo_geoloc_202108050600.nc
   testinput/viirs_j1_l1b_albedo_obsval_202108050600.nc
+  testinput/imsscf_fv3grid_20191201.C96.nc
 )
 
 list( APPEND test_output
@@ -177,6 +178,7 @@ list( APPEND test_output
   testoutput/mrms_reflectivity_Z1500m.nc
   testoutput/omps_o3_nm.nc
   testoutput/viirs_j1_l1b_albedo_2021080506.nc
+  testoutput/imsfv3grid_scf.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -2300,6 +2302,17 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_land_owp_snow_obs_dup_thin
                           -o testrun/owp_snow_obs_dup_thin_err_fn.nc
                           --thin_swe 1 --thin_depth .5 --thin_random_seed 3  --err_fn dummy_err"
                           owp_snow_obs_dup_thin_err_fn.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_imsfv3grid_scf
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/imsfv3grid_scf2ioda.py
+                            -i testinput/imsscf_fv3grid_20191201.C96.nc
+                            -o testrun/imsfv3grid_scf.nc"
+                            imsfv3grid_scf.nc ${IODA_CONV_COMP_TOL})
 
 #######################################################
 # Auto-generated tests for ioda file validation
