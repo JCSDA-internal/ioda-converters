@@ -33,7 +33,6 @@ def satbias_upgrader(infile, outfile):
             "Channel", len(oldnc.dimensions['nchannels']))
         channels_in = oldnc.variables['channels'][:]
         channels_out = newnc.createVariable(
-         #   "sensorChannelNumber", "i4", ("Channel",))
             "Channel", "i4", ("Channel",))
         channels_out[:] = channels_in
         dimname = 'Channel'
