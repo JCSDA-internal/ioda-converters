@@ -16,6 +16,7 @@ import os
 import pyiodaconv.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from pyiodaconv.orddicts import DefaultOrderedDict
+from pyiodaconv.def_jedi_utils import iso8601_string
 
 locationKeyList = [
     ("latitude", "float"),
@@ -93,18 +94,10 @@ class imsFV3(object):
         errsc = 0.0*sncv
         errsd = 0.0*sndv
         errsd[:] = 40.
+
+        times = get_observation_time(self.filename, sncv, ncd)
+
         ncd.close()
-
-        times = np.empty_like(sncv, dtype=object)
-
-        # get datetime from filename
-        str_date = re.search(r'\d{8}', self.filename).group()
-        my_date = datetime.strptime(str_date, "%Y%m%d")
-        start_datetime = my_date.strftime('%Y-%m-%d')
-        base_datetime = start_datetime + 'T00:00:00Z'
-
-        for i in range(len(lats)):
-            times[i] = base_datetime
 
         # add metadata variables
         self.outdata[('dateTime', 'MetaData')] = times
@@ -125,6 +118,32 @@ class imsFV3(object):
                     self.outdata[self.varDict[iodavar]['errKey']] = errsd
                     self.outdata[self.varDict[iodavar]['qcKey']] = qdflg
         DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
+
+
+def get_observation_time(filename, sncv, ncd):
+
+    # get the observation time as a long integer seconds from 1970-01-01T00:00:00Z
+    # inputs:
+    #   filename - only passed for fallback time from filename
+    #   sncv - passed for length of output array
+    #
+    # outputs:
+    #   times - array of long integer seconds
+
+    times = np.empty_like(sncv, dtype='int64')
+
+    try:
+        times[:] = ncd.variables['time'][:].ravel().astype('int64')
+    except KeyError:
+        # print(f' using time from filename, can not find variable key {time}')
+        pass
+
+    # get datetime from filename (last match of 8 consecutive digits)
+    str_date = re.search(r'(\d{8})(?!.*\d{8})', filename).group()
+    my_date = datetime.strptime(str_date, "%Y%m%d")
+    times[:] = my_date.timestamp()
+
+    return times
 
 
 def main():
