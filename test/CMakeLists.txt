@@ -2309,7 +2309,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_imsfv3grid_scf
                     COMMAND bash
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
-                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/imsfv3grid_scf2ioda.py
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/imsfv3_scf2ioda.py
                             -i testinput/imsscf_fv3grid_20191201.C96.nc
                             -o testrun/imsfv3grid_scf.nc"
                             imsfv3grid_scf.nc ${IODA_CONV_COMP_TOL})

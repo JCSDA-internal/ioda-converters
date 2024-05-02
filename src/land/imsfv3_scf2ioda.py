@@ -132,11 +132,9 @@ def get_observation_time(filename, sncv, ncd):
 
     times = np.empty_like(sncv, dtype='int64')
 
-    try:
+    if 'time' in ncd.variables.keys():
         times[:] = ncd.variables['time'][:].ravel().astype('int64')
-    except KeyError:
-        # print(f' using time from filename, can not find variable key {time}')
-        pass
+        return times
 
     # get datetime from filename (last match of 8 consecutive digits)
     str_date = re.search(r'(\d{8})(?!.*\d{8})', filename).group()
