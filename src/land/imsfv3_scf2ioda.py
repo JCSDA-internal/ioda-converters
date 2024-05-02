@@ -141,7 +141,7 @@ def get_observation_time(filename, sncv, ncd):
         times[:] = ncd.variables['time'][:].ravel().astype('int64')
     else:
         # get datetime from filename (last match of 8 consecutive digits)
-        str_date = re.search(r'(\d{8})(?!.*\1)', filename).group()
+        str_date = re.search(r'(\d{8})(?!.*\d{8})', filename).group()
         my_date = datetime.strptime(str_date, "%Y%m%d")
         times[:] = my_date.timestamp()
 
