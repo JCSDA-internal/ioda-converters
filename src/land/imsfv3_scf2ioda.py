@@ -101,6 +101,7 @@ class imsFV3(object):
 
         # add metadata variables
         self.outdata[('dateTime', 'MetaData')] = times
+        self.varAttrs[('dateTime', 'MetaData')]['units'] = iso8601_string
         self.outdata[('latitude', 'MetaData')] = lats
         self.outdata[('longitude', 'MetaData')] = lons
         self.outdata[('height', 'MetaData')] = oros
