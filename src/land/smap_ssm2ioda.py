@@ -93,7 +93,7 @@ class smap(object):
         errs = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture_error'][:].ravel()
         qflg = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['retrieval_qual_flag'][:].ravel()
 
-        times = get_observation_time(ncd, vals, lons)
+        times = get_observation_time(filename, ncd, vals)
         sflg_present, sflg, vegop, erowi, ecoli = get_ease_surface_param(ncd)
         deps = np.full_like(vals, self.assumedSoilDepth)
 
@@ -158,17 +158,17 @@ class smap(object):
         DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
 
 
-def get_observation_time(ncd, vals, lons):
+def get_observation_time(filename, ncd, vals):
     # get observation time from file if present fallback to extraction from filename
     times = np.empty_like(vals, dtype=np.int64)
     if 'tb_time_seconds' in ncd.variables.keys():
         refsec = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['tb_time_seconds'][:].ravel()
-        for i in range(len(lons)):
+        for i in range(len(vals)):
             dt = j2000_base_date + timedelta(seconds=int(refsec[i]))
             times[i] = round((dt - epoch).total_seconds())
     else:
         # get datetime from filename
-        file_refTime = re.search(r"\d{8}T\d{6}", self.filename).group()
+        file_refTime = re.search(r"\d{8}T\d{6}", filename).group()
         file_refTime = datetime.strptime(file_refTime, "%Y%m%dT%H%M%S")
         times[:] = round((file_refTime - epoch).total_seconds())
 
