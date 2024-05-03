@@ -43,6 +43,10 @@ VarDims = {
 
 iso8601_string = 'seconds since 1970-01-01T00:00:00Z'
 epoch = datetime.fromisoformat(iso8601_string[14:-1])
+# Usual reference time for these data is off j2000 base
+# really, I'm seeing j2000 is from noon why 11:58:55.816?
+j2000_string = 'second since 2000-01-01T11:58:55Z'
+j2000_base_date = datetime(2000, 1, 1, 11, 58, 55, 816)
 
 
 class smap(object):
@@ -89,8 +93,9 @@ class smap(object):
         errs = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture_error'][:].ravel()
         qflg = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['retrieval_qual_flag'][:].ravel()
 
+        times = get_observation_time(ncd, vals, lons)
+        sflg_present, sflg, vegop, erowi, ecoli = get_ease_surface_param(ncd)
         deps = np.full_like(vals, self.assumedSoilDepth)
-        times = np.empty_like(vals, dtype=np.int64)
 
         if self.mask:
             with np.errstate(invalid='ignore'):
@@ -102,16 +107,15 @@ class smap(object):
             errs = errs[mask]
             qflg = qflg[mask]
             times = times[mask]
+            refsec = refsec[mask]
+            if sflg_present:
+                sflg = sflg[mask]
+                vegop = vegop[mask]
+                erowi = erowi[mask]
+                ecoli = ecoli[mask]
         # set fillValue to IODA missing
         vals[vals == _FillValue] = float_missing_value
 
-        # file provides yyyy-mm-dd as an attribute
-        # str_datetime = ncd.groups['Metadata'].groups['DatasetIdentification'].getncattr('creationDate')
-        # my_datetime = datetime.strptime(str_datetime, "%Y-%m-%d")
-        # get datetime from filename
-        file_refTime = re.search(r"\d{8}T\d{6}", self.filename).group()
-        file_refTime = datetime.strptime(file_refTime, "%Y%m%dT%H%M%S")
-        time_offset = round((file_refTime - epoch).total_seconds())
         vals = vals.astype('float32')
         lats = lats.astype('float32')
         lons = lons.astype('float32')
@@ -131,7 +135,6 @@ class smap(object):
             else:
                 qflg[i] = 1
 
-            times[i] = time_offset
 
         # add metadata variables
         self.outdata[('dateTime', 'MetaData')] = times
@@ -140,6 +143,12 @@ class smap(object):
         self.outdata[('longitude', 'MetaData')] = lons
         self.outdata[('depthBelowSoilSurface', 'MetaData')] = deps
         self.varAttrs[('depthBelowSoilSurface', 'MetaData')]['units'] = 'm'
+        if sflg_present:
+            self.outdata[('surfaceQualifier', 'MetaData')] = sflg
+            self.varAttrs[('surfaceQualifier', 'MetaData')]['units'] = 'unitless'
+            self.outdata[('vegetationOpacity', 'MetaData')] = vegop
+            self.outdata[('easeRowIndex', 'MetaData')] = erowi
+            self.outdata[('easeColumnIndex', 'MetaData')] = ecoli
 
         for iodavar in ['soilMoistureVolumetric']:
             self.outdata[self.varDict[iodavar]['valKey']] = vals
@@ -147,6 +156,42 @@ class smap(object):
             self.outdata[self.varDict[iodavar]['qcKey']] = qflg
 
         DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
+
+
+def get_observation_time(ncd, vals, lons):
+    # get observation time from file if present fallback to extraction from filename
+    times = np.empty_like(vals, dtype=np.int64)
+    if 'tb_time_seconds' in ncd.variables.keys():
+        refsec = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['tb_time_seconds'][:].ravel()
+        for i in range(len(lons)):
+            dt = j2000_base_date + timedelta(seconds=int(refsec[i]))
+            times[i] = round((dt - epoch).total_seconds())
+    else:
+        # get datetime from filename
+        file_refTime = re.search(r"\d{8}T\d{6}", self.filename).group()
+        file_refTime = datetime.strptime(file_refTime, "%Y%m%dT%H%M%S")
+        times[:] = round((file_refTime - epoch).total_seconds())
+
+    return times
+
+
+def get_ease_surface_param(ncd):
+        sflg_present = False
+        # retrieve surface EASE grid parameters if present
+        sflg = None
+        vegop = None
+        erowi = None
+        ecoli = None
+        if 'surface_flag' in ncd.groups['Soil_Moisture_Retrieval_Data'].variables.keys() and \
+           'vegetation_opacity' in ncd.groups['Soil_Moisture_Retrieval_Data'].variables.keys() and \
+           'EASE_row_index' in ncd.groups['Soil_Moisture_Retrieval_Data'].variables.keys() and \
+           'EASE_column_index' in ncd.groups['Soil_Moisture_Retrieval_Data'].variables.keys():
+            sflg_present = True
+            sflg = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['surface_flag'][:].ravel()
+            vegop = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['vegetation_opacity'][:].ravel()
+            erowi = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['EASE_row_index'][:].ravel()
+            ecoli = ncd.groups['Soil_Moisture_Retrieval_Data'].varoiables['EASE_column_index'][:].ravel()
+        return sflg_present, sflg, vegop, erowi, ecoli
 
 
 def main():
