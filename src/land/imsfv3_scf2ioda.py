@@ -69,18 +69,16 @@ class imsFV3(object):
             if iodavar == 'snowCoverFraction':
                 self.varAttrs[iodavar, iconv.OvalName()]['units'] = '1'
                 self.varAttrs[iodavar, iconv.OerrName()]['units'] = '1'
-                # should use float_missing_value
-                self.varAttrs[iodavar, iconv.OvalName()]['_FillValue'] = -999.
-                self.varAttrs[iodavar, iconv.OerrName()]['_FillValue'] = -999.
-                # should use int_missing_value
-                self.varAttrs[iodavar, iconv.OqcName()]['_FillValue'] = -999
+                self.varAttrs[iodavar, iconv.OvalName()]['_FillValue'] = float_missing_value
+                self.varAttrs[iodavar, iconv.OerrName()]['_FillValue'] = float_missing_value
+                self.varAttrs[iodavar, iconv.OqcName()]['_FillValue'] = int_missing_value
 
             if iodavar == 'totalSnowDepth':
                 self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'mm'
                 self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'mm'
-                self.varAttrs[iodavar, iconv.OvalName()]['_FillValue'] = -999.
-                self.varAttrs[iodavar, iconv.OerrName()]['_FillValue'] = -999.
-                self.varAttrs[iodavar, iconv.OqcName()]['_FillValue'] = -999
+                self.varAttrs[iodavar, iconv.OvalName()]['_FillValue'] = float_missing_value
+                self.varAttrs[iodavar, iconv.OerrName()]['_FillValue'] = float_missing_value
+                self.varAttrs[iodavar, iconv.OqcName()]['_FillValue'] = int_missing_value
 
         # read netcdf file
         ncd = nc.Dataset(self.filename)
@@ -88,7 +86,9 @@ class imsFV3(object):
         lats = ncd.variables['lat'][:].ravel()
         oros = ncd.variables['oro'][:].ravel()
         sncv = ncd.variables['IMSscf'][:].ravel()
+        sncv[sncv == -999.] = float_missing_value
         sndv = ncd.variables['IMSsnd'][:].ravel()
+        sndv[sndv == -999.] = float_missing_value
 
         lons = lons.astype('float32')
         lats = lats.astype('float32')
