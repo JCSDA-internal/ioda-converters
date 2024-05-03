@@ -164,7 +164,7 @@ def get_observation_time(filename, ncd, vals):
     if 'tb_time_seconds' in ncd.variables.keys():
         refsec = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['tb_time_seconds'][:].ravel()
         for i, isec in enumerate(refsec):
-            dt = j2000_base_date + timedelta(seconds=isec))
+            dt = j2000_base_date + timedelta(seconds=isec)
             times[i] = round((dt - epoch).total_seconds())
     else:
         # get datetime from filename
