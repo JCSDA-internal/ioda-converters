@@ -135,7 +135,6 @@ class smap(object):
             else:
                 qflg[i] = 1
 
-
         # add metadata variables
         self.outdata[('dateTime', 'MetaData')] = times
         self.varAttrs[('dateTime', 'MetaData')]['units'] = iso8601_string
@@ -176,22 +175,22 @@ def get_observation_time(filename, ncd, vals):
 
 
 def get_ease_surface_param(ncd):
-        sflg_present = False
-        # retrieve surface EASE grid parameters if present
-        sflg = None
-        vegop = None
-        erowi = None
-        ecoli = None
-        if 'surface_flag' in ncd.groups['Soil_Moisture_Retrieval_Data'].variables.keys() and \
-           'vegetation_opacity' in ncd.groups['Soil_Moisture_Retrieval_Data'].variables.keys() and \
-           'EASE_row_index' in ncd.groups['Soil_Moisture_Retrieval_Data'].variables.keys() and \
-           'EASE_column_index' in ncd.groups['Soil_Moisture_Retrieval_Data'].variables.keys():
-            sflg_present = True
-            sflg = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['surface_flag'][:].ravel()
-            vegop = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['vegetation_opacity'][:].ravel()
-            erowi = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['EASE_row_index'][:].ravel()
-            ecoli = ncd.groups['Soil_Moisture_Retrieval_Data'].varoiables['EASE_column_index'][:].ravel()
-        return sflg_present, sflg, vegop, erowi, ecoli
+    sflg_present = False
+    # retrieve surface EASE grid parameters if present
+    sflg = None
+    vegop = None
+    erowi = None
+    ecoli = None
+    if 'surface_flag' in ncd.groups['Soil_Moisture_Retrieval_Data'].variables.keys() and \
+       'vegetation_opacity' in ncd.groups['Soil_Moisture_Retrieval_Data'].variables.keys() and \
+       'EASE_row_index' in ncd.groups['Soil_Moisture_Retrieval_Data'].variables.keys() and \
+       'EASE_column_index' in ncd.groups['Soil_Moisture_Retrieval_Data'].variables.keys():
+        sflg_present = True
+        sflg = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['surface_flag'][:].ravel()
+        vegop = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['vegetation_opacity'][:].ravel()
+        erowi = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['EASE_row_index'][:].ravel()
+        ecoli = ncd.groups['Soil_Moisture_Retrieval_Data'].varoiables['EASE_column_index'][:].ravel()
+    return sflg_present, sflg, vegop, erowi, ecoli
 
 
 def main():
