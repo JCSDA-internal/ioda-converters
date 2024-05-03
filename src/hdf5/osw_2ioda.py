@@ -340,7 +340,7 @@ if __name__ == "__main__":
                           help='enable debug messages')
     optional.add_argument('-q', '--qualitycontrol', dest='qc_strict',
                           default=False, action='store_true', required=False,
-                          help='turn on quality control georeality checks')
+                          help='turn on strict quality control checks dropping these points on output')
     optional.add_argument('--sort', action='store_true',
                           default=False, help='Sort data by instruments then time')
     optional.add_argument('--verbose', action='store_true',
