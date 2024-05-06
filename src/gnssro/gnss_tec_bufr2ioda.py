@@ -27,12 +27,14 @@ long_missing_value = iconv.get_default_fill_val(np.int64)
 
 locationKeyList = [
     ('elevationAngleGNSSlink', 'float'),
-    ('GNSSxECFPosition', 'float'),
-    ('GNSSyECFPosition', 'float'),
-    ('GNSSzECFPosition', 'float'),
-    ('SATxECFPosition', 'float'),
-    ('SATyECFPosition', 'float'),
-    ('SATzECFPosition', 'float'),
+    ('latitude', 'float'),
+    ('longitude', 'float'),
+    ('xECFPosition', 'float'),
+    ('yECFPosition', 'float'),
+    ('zECFPosition', 'float'),
+    ('xECFPositionGNSS', 'float'),
+    ('yECFPositionGNSS', 'float'),
+    ('zECFPositionGNSS', 'float'),
     ("dateTime", "long")
 ]
 
@@ -80,12 +82,14 @@ def main(args):
     VarAttrs[('totalElectronContent', 'ObsValue')]['units'] = 'Unknown'
     VarAttrs[('totalElectronContent', 'ObsError')]['units'] = 'Unknown'
     VarAttrs[('elevationAngleGNSSlink', 'MetaData')]['units'] = 'degree'
-    VarAttrs[('GNSSxECFPosition', 'MetaData')]['units'] = 'km'
-    VarAttrs[('GNSSyECFPosition', 'MetaData')]['units'] = 'km'
-    VarAttrs[('GNSSzECFPosition', 'MetaData')]['units'] = 'km'
-    VarAttrs[('SATxECFPosition', 'MetaData')]['units'] = 'km'
-    VarAttrs[('SATyECFPosition', 'MetaData')]['units'] = 'km'
-    VarAttrs[('SATzECFPosition', 'MetaData')]['units'] = 'km'
+    VarAttrs[('latitude', 'MetaData')]['units'] = 'degree'
+    VarAttrs[('longitude', 'MetaData')]['units'] = 'degree'
+    VarAttrs[('xECFPosition', 'MetaData')]['units'] = 'km'
+    VarAttrs[('yECFPosition', 'MetaData')]['units'] = 'km'
+    VarAttrs[('zECFPosition', 'MetaData')]['units'] = 'km'
+    VarAttrs[('xECFPositionGNSS', 'MetaData')]['units'] = 'km'
+    VarAttrs[('yECFPositionGNSS', 'MetaData')]['units'] = 'km'
+    VarAttrs[('zECFPositionGNSS', 'MetaData')]['units'] = 'km'
     VarAttrs[('dateTime', 'MetaData')]['units'] = iso8601_string
 
     VarAttrs[('totalElectronContent', 'ObsValue')]['_FillValue'] = float_missing_value
@@ -93,12 +97,14 @@ def main(args):
     VarAttrs[('totalElectronContent', 'PreQC')]['_FillValue'] = int_missing_value
 
     VarAttrs[('elevationAngleGNSSlink', 'MetaData')]['_FillValue'] = float_missing_value
-    VarAttrs[('GNSSxECFPosition', 'MetaData')]['_FillValue'] = float_missing_value
-    VarAttrs[('GNSSyECFPosition', 'MetaData')]['_FillValue'] = float_missing_value
-    VarAttrs[('GNSSzECFPosition', 'MetaData')]['_FillValue'] = float_missing_value
-    VarAttrs[('SATxECFPosition', 'MetaData')]['_FillValue'] = float_missing_value
-    VarAttrs[('SATyECFPosition', 'MetaData')]['_FillValue'] = float_missing_value
-    VarAttrs[('SATzECFPosition', 'MetaData')]['_FillValue'] = float_missing_value
+    VarAttrs[('latitude', 'MetaData')]['_FillValue'] = float_missing_value
+    VarAttrs[('longitude', 'MetaData')]['_FillValue'] = float_missing_value
+    VarAttrs[('xECFPosition', 'MetaData')]['_FillValue'] = float_missing_value
+    VarAttrs[('yECFPosition', 'MetaData')]['_FillValue'] = float_missing_value
+    VarAttrs[('zECFPosition', 'MetaData')]['_FillValue'] = float_missing_value
+    VarAttrs[('xECFPositionGNSS', 'MetaData')]['_FillValue'] = float_missing_value
+    VarAttrs[('yECFPositionGNSS', 'MetaData')]['_FillValue'] = float_missing_value
+    VarAttrs[('zECFPositionGNSS', 'MetaData')]['_FillValue'] = float_missing_value
 
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
@@ -160,14 +166,14 @@ def get_obs_data(ifile, get_obs_data_args):
     # Elevation angle of LEO-GPS link
     obs_data[("elevationAngleGNSSlink", "MetaData")] = np.array(ds['elevation'][:])
     # GPS x position (ECF) at time of signal transmission
-    obs_data[("GNSSxECFPosition", "MetaData")] = np.array(ds['x_GPS'][:])
-    obs_data[("GNSSyECFPosition", "MetaData")] = np.array(ds['y_GPS'][:])
-    obs_data[("GNSSzECFPosition", "MetaData")] = np.array(ds['z_GPS'][:])
+    obs_data[("xECFPositionGNSS", "MetaData")] = np.array(ds['x_GPS'][:])
+    obs_data[("yECFPositionGNSS", "MetaData")] = np.array(ds['y_GPS'][:])
+    obs_data[("zECFPositionGNSS", "MetaData")] = np.array(ds['z_GPS'][:])
     # LEO x position (ECF) at time of signal reception
-    obs_data[("SATxECFPosition", "MetaData")] = np.array(ds['x_LEO'][:])
-    obs_data[("SATyECFPosition", "MetaData")] = np.array(ds['y_LEO'][:])
-    obs_data[("SATzECFPosition", "MetaData")] = np.array(ds['z_LEO'][:])
-
+    obs_data[("xECFPosition", "MetaData")] = np.array(ds['x_LEO'][:])
+    obs_data[("yECFPosition", "MetaData")] = np.array(ds['y_LEO'][:])
+    obs_data[("zECFPosition", "MetaData")] = np.array(ds['z_LEO'][:])
+    obs_data = get_geolocation(obs_data)
     # the observation value
     obs_data[("totalElectronContent", "ObsValue")] = np.array(ds['TEC'][:])
 
@@ -201,14 +207,16 @@ def def_meta_data():
 def def_meta_types():
 
     meta_data_types = {
+        "latitude": "float",
+        "longitude": "float",
         "dateTime": "long",
         "elevationAngleGNSSlink": "float",
-        "GNSSxECFPosition": "float",
-        "GNSSyECFPosition": "float",
-        "GNSSzECFPosition": "float",
-        "SATxECFPosition": "float",
-        "SATyECFPosition": "float",
-        "SATzECFPosition": "float",
+        "xECFPositionGNSS": "float",
+        "yECFPositionGNSS": "float",
+        "zECFPositionGNSS": "float",
+        "xECFPosition": "float",
+        "yECFPosition": "float",
+        "zECFPosition": "float",
         "antennaReceiverId": 'float',
         "satelliteIdentifier": 'integer',
         "satelliteSubIdentifier": 'integer',
@@ -246,6 +254,77 @@ def get_GNSS_mission(ds):
     if mission == 'COSEQ':
         satID = 749 + ds.leo_id
     return satID
+
+
+def get_geolocation(obs_data):
+    # wrapper to compute a reasonably accurate latitude and longitude
+    #  from the Earth-centered Earth fixed coordinates
+    obs_data[("latitude", "MetaData")] = np.full_like(obs_data[("xECFPosition", "MetaData")], float_missing_value)
+    obs_data[("longitude", "MetaData")] = np.full_like(obs_data[("xECFPosition", "MetaData")], float_missing_value)
+    for i, x in enumerate(obs_data[("xECFPosition", "MetaData")]):
+        lat, lon, height = xyz2llh(x,
+                                   obs_data[("yECFPosition", "MetaData")][i],
+                                   obs_data[("zECFPosition", "MetaData")][i])
+        obs_data[("latitude", "MetaData")][i] = lat
+        obs_data[("longitude", "MetaData")][i] = lon
+
+    return obs_data
+
+
+def xyz2llh(x, y, z):
+    """
+    Function to convert xyz ECEF to llh
+    convert cartesian coordinate into geographic coordinate
+    ellipsoid definition: WGS84
+      a = 6,378,137m
+      f = 1 / 298.257
+
+    Input
+      x: coordinate X meters
+      y: coordinate y meters
+      z: coordinate z meters
+    Output
+      lat: latitude rad
+      lon: longitude rad
+      h: height meters
+    """
+    # --- WGS84 constants
+    a = 6378137.0
+    f = 1.0 / 298.257223563
+    # --- derived constants
+    b = a - f*a
+
+    # convert ECF from km to meters
+    x *= 1000.
+    y *= 1000.
+    z *= 1000.
+
+    # how do you use NPY_1_PI
+    rad2deg = 180. / np.pi
+
+    e = np.sqrt(a**2 - b**2.0)/a
+    lon = np.arctan2(y, x)
+    p = np.sqrt(x**2 + y**2)
+    h_old = 0.0
+    # first guess with h = 0 meters
+    lat = np.arctan2(z, p*(1.0 - e**2))
+    cs = np.cos(lat)
+    sn = np.sin(lat)
+    N = a**2 / np.sqrt((a*cs)**2 + (b*sn)**2)
+    h = p/cs - N
+    # k = 0
+    while abs(h - h_old) > 1.0e-6:
+        h_old = h
+        lat = np.arctan2(z, p*(1.0 - e**2*N/(N+h)))
+        cs = np.cos(lat)
+        sn = np.sin(lat)
+        N = a**2 / np.sqrt((a*cs)**2 + (b*sn)**2)
+        h = p/cs - N
+    lat *= rad2deg
+    lon *= rad2deg
+    if lon > 180:
+        lon -= 360.
+    return lat, lon, h
 
 
 if __name__ == "__main__":
