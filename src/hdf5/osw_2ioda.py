@@ -250,6 +250,9 @@ def get_data_from_file(afile, col_names, osw_source, file_name):
         dateTime = [int(v) for v in afile['sample_time']]  # datetime with different ref time
         windSpeed = [v for v in afile['wind']]
         windSpeedPreQC = [1 - v for v in afile['wind_confidence']]
+        # Data with 0 can be assumed to be ice free
+        qualIceFlag = [int(v > 0) for v in afile['quality_ice_flag']]
+        windSpeedPreQC += qualIceFlag
         windSpeedObsError = [v for v in afile['wind_std']]
         sensorIdentification = [instrument_ref]*len(latitude)
 
@@ -310,7 +313,7 @@ def quality_control(obs_data, qc_strict=False):
         obs_data.drop(lat_check[lat_check].index, inplace=True)
         obs_data.drop(lon_check[lon_check].index, inplace=True)
         # (strict) additional rejection on provider PreQC
-        qc_check = (obs_data['windSpeedPreQC'] == 1)
+        qc_check = (obs_data['windSpeedPreQC'] > 0)
         obs_data.drop(qc_check[qc_check].index, inplace=True)
         logging.debug(f'rejected by PreQC: {sum(qc_check)}')
     return obs_data
