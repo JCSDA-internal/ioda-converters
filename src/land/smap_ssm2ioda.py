@@ -171,7 +171,7 @@ def get_observation_time(filename, ncd, vals):
             times[i] = round((dt - epoch).total_seconds())
     else:
         # get datetime from filename
-        file_refTime = re.search(r"\d{8}T\d{6}", filename).group()
+        file_refTime = re.search(r"(\d{8}T\d{6})(?!.*\d{8}T\d{6})", filename).group()
         file_refTime = datetime.strptime(file_refTime, "%Y%m%dT%H%M%S")
         times[:] = round((file_refTime - epoch).total_seconds())
 
