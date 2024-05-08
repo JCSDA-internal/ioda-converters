@@ -112,8 +112,8 @@ class imsFV3(object):
         self.varAttrs[('dateTime', metaDataName)]['_FillValue'] = long_missing_value
         self.outdata[('latitude', metaDataName)] = lats
         self.outdata[('longitude', metaDataName)] = lons
-        self.outdata[('height', metaDataName)] = oros
-        self.varAttrs[('height', metaDataName)]['units'] = 'm'
+        self.outdata[('stationElevation', metaDataName)] = oros
+        self.varAttrs[('stationElevation', metaDataName)]['units'] = 'm'
 
         # add output variables
         for i in range(len(sncv)):
