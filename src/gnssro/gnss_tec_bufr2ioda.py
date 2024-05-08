@@ -26,7 +26,7 @@ int_missing_value = iconv.get_default_fill_val(np.int32)
 long_missing_value = iconv.get_default_fill_val(np.int64)
 
 locationKeyList = [
-    ('elevationAngleGNSSlink', 'float'),
+    ('elevationAngleGNSS', 'float'),
     ('latitude', 'float'),
     ('longitude', 'float'),
     ('xECFPosition', 'float'),
@@ -81,7 +81,7 @@ def main(args):
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     VarAttrs[('totalElectronContent', 'ObsValue')]['units'] = 'Unknown'
     VarAttrs[('totalElectronContent', 'ObsError')]['units'] = 'Unknown'
-    VarAttrs[('elevationAngleGNSSlink', 'MetaData')]['units'] = 'degree'
+    VarAttrs[('elevationAngleGNSS', 'MetaData')]['units'] = 'degree'
     VarAttrs[('latitude', 'MetaData')]['units'] = 'degree'
     VarAttrs[('longitude', 'MetaData')]['units'] = 'degree'
     VarAttrs[('xECFPosition', 'MetaData')]['units'] = 'km'
@@ -96,7 +96,7 @@ def main(args):
     VarAttrs[('totalElectronContent', 'ObsError')]['_FillValue'] = float_missing_value
     VarAttrs[('totalElectronContent', 'PreQC')]['_FillValue'] = int_missing_value
 
-    VarAttrs[('elevationAngleGNSSlink', 'MetaData')]['_FillValue'] = float_missing_value
+    VarAttrs[('elevationAngleGNSS', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('latitude', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('longitude', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('xECFPosition', 'MetaData')]['_FillValue'] = float_missing_value
@@ -161,10 +161,14 @@ def get_obs_data(ifile, get_obs_data_args):
     for k in profile_meta_data.keys():
         obs_data[(k, 'MetaData')] = profile_meta_data[k]
 
+    import pdb
+    pdb.set_trace()
+    import sys
+    sys.exit()
     # number to keep track of profile
     obs_data[('sequenceNumber', 'MetaData')] = np.array(np.repeat(get_obs_data_args.recordnumber, ds['x_LEO'].size), dtype=ioda_int_type)
     # Elevation angle of LEO-GPS link
-    obs_data[("elevationAngleGNSSlink", "MetaData")] = np.array(ds['elevation'][:])
+    obs_data[("elevationAngleGNSS", "MetaData")] = np.array(ds['elevation'][:])
     # GPS x position (ECF) at time of signal transmission
     obs_data[("xECFPositionGNSS", "MetaData")] = np.array(ds['x_GPS'][:])
     obs_data[("yECFPositionGNSS", "MetaData")] = np.array(ds['y_GPS'][:])
@@ -184,7 +188,7 @@ def def_meta_data():
 
     # define the keys to retrieve for global meta data attributes (scalars)
     # this does NOT retrieve the ('Location') information (arrays)
-    #       "elevationAngleGNSSlink": 'elevation'
+    #       "elevationAngleGNSS": 'elevation'
     #       "GNSSxECFPosition": 'x_GPS'
     # antenna_id
     # attflag
@@ -210,7 +214,7 @@ def def_meta_types():
         "latitude": "float",
         "longitude": "float",
         "dateTime": "long",
-        "elevationAngleGNSSlink": "float",
+        "elevationAngleGNSS": "float",
         "xECFPositionGNSS": "float",
         "yECFPositionGNSS": "float",
         "zECFPositionGNSS": "float",
