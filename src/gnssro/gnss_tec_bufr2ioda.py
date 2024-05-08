@@ -29,7 +29,7 @@ locationKeyList = [
     ('elevationAngleGNSS', 'float'),
     ('latitude', 'float'),
     ('longitude', 'float'),
-    ('xECFPosition', 'float'),
+    ('xECEFPosition', 'float'),
     ('yECFPosition', 'float'),
     ('zECFPosition', 'float'),
     ('xECFPositionGNSS', 'float'),
