@@ -10,7 +10,7 @@ import argparse
 import netCDF4 as nc
 import numpy as np
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pyiodaconv.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
@@ -130,7 +130,7 @@ class smap(object):
         for i in range(len(lons)):
 
             if vals[i] > 0.0:
-                # assumed 4% SM rathern than -999.0
+                # assumed 4% SM rather than -999.0
                 errs[i] = 0.04*vals[i]
                 if qflg[i] > 5:
                     qflg[i] = 0
@@ -163,17 +163,14 @@ class smap(object):
 
 def get_observation_time(filename, ncd, vals):
     # get observation time from file if present fallback to extraction from filename
-    times = np.empty_like(vals, dtype=np.int64)
-    if 'tb_time_seconds' in ncd.variables.keys():
-        refsec = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['tb_time_seconds'][:].ravel()
-        for i, isec in enumerate(refsec):
-            dt = j2000_base_date + timedelta(seconds=isec)
-            times[i] = round((dt - epoch).total_seconds())
+    if 'tb_time_seconds' in ncd.groups['Soil_Moisture_Retrieval_Data'].variables.keys():
+        times = np.array([round(((j2000_base_date + timedelta(seconds=isec)) - epoch).total_seconds())
+                         for isec in
+                         ncd.groups['Soil_Moisture_Retrieval_Data'].variables['tb_time_seconds'][:].ravel()], dtype=np.int64)
     else:
-        # get datetime from filename
-        file_refTime = re.search(r"(\d{8}T\d{6})(?!.*\d{8}T\d{6})", filename).group()
-        file_refTime = datetime.strptime(file_refTime, "%Y%m%dT%H%M%S")
-        times[:] = round((file_refTime - epoch).total_seconds())
+        atime = round((datetime.strptime(re.search(r"(\d{8}T\d{6})(?!.*\d{8}T\d{6})", filename).group(),
+                      "%Y%m%dT%H%M%S") - epoch).total_seconds())
+        times = np.full_like(vals, atime, dtype=np.int64)
 
     return times
 
