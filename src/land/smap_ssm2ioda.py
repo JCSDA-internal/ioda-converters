@@ -121,6 +121,11 @@ class smap(object):
         deps = deps.astype('float32')
         errs = errs.astype('float32')
         qflg = qflg.astype('int32')
+        if sflg_present:
+            sflg = sflg.astype('int32')
+            vegop = vegop.astype('float32')
+            erowi = erowi.astype('int32')
+            ecoli = ecoli.astype('int32')
 
         for i in range(len(lons)):
 
