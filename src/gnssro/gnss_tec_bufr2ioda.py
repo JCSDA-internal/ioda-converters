@@ -284,7 +284,7 @@ def xyz2llh(x, y, z):
       f = 1 / 298.257
 
     Input
-      x: coordinate X meters
+      x: coordinate x meters
       y: coordinate y meters
       z: coordinate z meters
     Output
