@@ -30,11 +30,11 @@ locationKeyList = [
     ('latitude', 'float'),
     ('longitude', 'float'),
     ('xECEFPosition', 'float'),
-    ('yECFPosition', 'float'),
-    ('zECFPosition', 'float'),
-    ('xECFPositionGNSS', 'float'),
-    ('yECFPositionGNSS', 'float'),
-    ('zECFPositionGNSS', 'float'),
+    ('yECEFPosition', 'float'),
+    ('zECEFPosition', 'float'),
+    ('xECEFPositionGNSS', 'float'),
+    ('yECEFPositionGNSS', 'float'),
+    ('zECEFPositionGNSS', 'float'),
     ("dateTime", "long")
 ]
 
