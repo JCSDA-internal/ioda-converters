@@ -93,7 +93,7 @@ class smap(object):
         errs = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['soil_moisture_error'][:].ravel()
         qflg = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['retrieval_qual_flag'][:].ravel()
 
-        times = get_observation_time(filename, ncd, vals)
+        times = get_observation_time(self.filename, ncd, vals)
         sflg_present, sflg, vegop, erowi, ecoli = get_ease_surface_param(ncd)
         deps = np.full_like(vals, self.assumedSoilDepth)
 
@@ -107,7 +107,6 @@ class smap(object):
             errs = errs[mask]
             qflg = qflg[mask]
             times = times[mask]
-            refsec = refsec[mask]
             if sflg_present:
                 sflg = sflg[mask]
                 vegop = vegop[mask]
@@ -189,7 +188,7 @@ def get_ease_surface_param(ncd):
         sflg = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['surface_flag'][:].ravel()
         vegop = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['vegetation_opacity'][:].ravel()
         erowi = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['EASE_row_index'][:].ravel()
-        ecoli = ncd.groups['Soil_Moisture_Retrieval_Data'].varoiables['EASE_column_index'][:].ravel()
+        ecoli = ncd.groups['Soil_Moisture_Retrieval_Data'].variables['EASE_column_index'][:].ravel()
     return sflg_present, sflg, vegop, erowi, ecoli
 
 
