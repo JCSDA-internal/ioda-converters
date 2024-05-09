@@ -119,6 +119,8 @@ class smap(object):
         lats = lats.astype('float32')
         lons = lons.astype('float32')
         deps = deps.astype('float32')
+        # reassign to contant (could be pass in)
+        errs[:] = 0.04
         errs = errs.astype('float32')
         qflg = qflg.astype('int32')
         if sflg_present:
@@ -127,14 +129,11 @@ class smap(object):
             erowi = erowi.astype('int32')
             ecoli = ecoli.astype('int32')
 
+###     qflg[(vals > 0.0)] = 0 if qflg[(vals > 0.0)] > 5 else 1
+###     qflg[(vals <= 0.0)] = 1
         for i in range(len(lons)):
             if vals[i] > 0.0:
-                # assumed 4% SM rather than -999.0
-                errs[i] = 0.04*vals[i]
-                if qflg[i] > 5:
-                    qflg[i] = 0
-                else:
-                    qflg[i] = 1
+                qflg[i] = 0 if qflg[i] > 5 else 1
             else:
                 qflg[i] = 1
 
