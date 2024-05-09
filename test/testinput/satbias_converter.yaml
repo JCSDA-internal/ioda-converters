@@ -2,17 +2,17 @@ input coeff file: testinput/satbias_crtm_in
 input err file: testinput/satbias_crtm_pc
 default predictors: &default_preds
 - constant
-- zenith_angle
-- cloud_liquid_water
-- lapse_rate_order_2
-- lapse_rate
-- cosine_of_latitude_times_orbit_node
-- sine_of_latitude
-- emissivity
-- scan_angle_order_4
-- scan_angle_order_3
-- scan_angle_order_2
-- scan_angle
+- zenithAngle
+- cloudLiquidWater
+- lapseRate_order_2
+- lapseRate
+- cosineOfLatitudeTimesOrbitNode
+- sineOfLatitude
+- emissivityK
+- scanAngle_order_4
+- scanAngle_order_3
+- scanAngle_order_2
+- scanAngle
 output:
 - sensor: amsua_n15
   output file: satbias_amsua_n15.nc4
@@ -204,17 +204,17 @@ output:
   output file: satbias_gmi_gpm.nc4
   predictors:
   - constant
-  - zenith_angle
-  - cosine_of_latitude_times_orbit_node
-  - lapse_rate_order_2
-  - lapse_rate
-  - cloud_liquid_water_order_2
-  - cloud_liquid_water
-  - emissivity
-  - scan_angle_order_4
-  - scan_angle_order_3
-  - scan_angle_order_2
-  - scan_angle
+  - zenithAngle
+  - cosineOfLatitudeTimesOrbitNode
+  - lapseRate_order_2
+  - lapseRate
+  - cloudLiquidWater_order_2
+  - cloudLiquidWater
+  - emissivityK
+  - scanAngle_order_4
+  - scanAngle_order_3
+  - scanAngle_order_2
+  - scanAngle
 - sensor: saphir_meghat
   output file: satbias_saphir_meghat.nc4
   predictors: *default_preds
