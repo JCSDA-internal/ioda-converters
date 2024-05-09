@@ -2297,7 +2297,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap9km_ssm
                     COMMAND bash
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
-                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/smap9km_ssm2ioda.py
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/smap_ssm2ioda.py
                             -i testinput/SMAP_L2_SM_P_E_36365_D_20211122T013945_R18240_001.h5
                             -o testrun/smap9km_ssm.nc
                             --maskMissing"
