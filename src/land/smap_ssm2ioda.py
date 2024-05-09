@@ -128,7 +128,6 @@ class smap(object):
             ecoli = ecoli.astype('int32')
 
         for i in range(len(lons)):
-
             if vals[i] > 0.0:
                 # assumed 4% SM rather than -999.0
                 errs[i] = 0.04*vals[i]
