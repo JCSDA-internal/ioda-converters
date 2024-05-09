@@ -142,7 +142,9 @@ class smap(object):
         self.outdata[('dateTime', 'MetaData')] = times
         self.varAttrs[('dateTime', 'MetaData')]['units'] = iso8601_string
         self.outdata[('latitude', 'MetaData')] = lats
+        self.varAttrs[('latitude', 'MetaData')]['units'] = 'degree_north'
         self.outdata[('longitude', 'MetaData')] = lons
+        self.varAttrs[('longitude', 'MetaData')]['units'] = 'degree_east'
         self.outdata[('depthBelowSoilSurface', 'MetaData')] = deps
         self.varAttrs[('depthBelowSoilSurface', 'MetaData')]['units'] = 'm'
         if sflg_present:
