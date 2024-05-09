@@ -29,6 +29,7 @@ locationKeyList = [
     ('elevationAngleGNSS', 'float'),
     ('latitude', 'float'),
     ('longitude', 'float'),
+    ('height', 'float'),
     ('xECEFPosition', 'float'),
     ('yECEFPosition', 'float'),
     ('zECEFPosition', 'float'),
@@ -84,6 +85,7 @@ def main(args):
     VarAttrs[('elevationAngleGNSS', 'MetaData')]['units'] = 'degree'
     VarAttrs[('latitude', 'MetaData')]['units'] = 'degree'
     VarAttrs[('longitude', 'MetaData')]['units'] = 'degree'
+    VarAttrs[('height', 'MetaData')]['units'] = 'm'
     VarAttrs[('xECEFPosition', 'MetaData')]['units'] = 'km'
     VarAttrs[('yECEFPosition', 'MetaData')]['units'] = 'km'
     VarAttrs[('zECEFPosition', 'MetaData')]['units'] = 'km'
@@ -99,6 +101,7 @@ def main(args):
     VarAttrs[('elevationAngleGNSS', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('latitude', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('longitude', 'MetaData')]['_FillValue'] = float_missing_value
+    VarAttrs[('height', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('xECEFPosition', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('yECEFPosition', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('zECEFPosition', 'MetaData')]['_FillValue'] = float_missing_value
@@ -186,19 +189,10 @@ def def_meta_data():
     # this does NOT retrieve the ('Location') information (arrays)
     #       "elevationAngleGNSS": 'elevation'
     #       "GNSSxECEFPosition": 'x_GPS'
-    # antenna_id
-    # attflag
-    # podflag
-    # leodcb_flag
-    # leodcb_rms
-    # gpsdcb_flag
-    # gpsdcb_rms
-    # leveling_err
 
     meta_data_keys = {
         "satelliteTransmitterId": 'prn_id',
         "satelliteSubIdentifier": 'leo_id',
-        "antennaReceiverId": 'antenna_id',
     }
 
     return meta_data_keys
@@ -262,6 +256,7 @@ def get_geolocation(obs_data):
     import pyproj
     obs_data[("latitude", "MetaData")] = np.full_like(obs_data[("xECEFPosition", "MetaData")], float_missing_value)
     obs_data[("longitude", "MetaData")] = np.full_like(obs_data[("xECEFPosition", "MetaData")], float_missing_value)
+    obs_data[("height", "MetaData")] = np.full_like(obs_data[("xECEFPosition", "MetaData")], float_missing_value)
     transformer = pyproj.Transformer.from_crs({"proj": 'geocent', "ellps": 'WGS84', "datum": 'WGS84'},
                                               {"proj": 'latlong', "ellps": 'WGS84', "datum": 'WGS84'})
     # handling of km to meters should be automated
@@ -272,6 +267,7 @@ def get_geolocation(obs_data):
                                                  radians=False)
         obs_data[("latitude", "MetaData")][i] = lat
         obs_data[("longitude", "MetaData")][i] = lon
+        obs_data[("height", "MetaData")][i] = height
 
     return obs_data
 
