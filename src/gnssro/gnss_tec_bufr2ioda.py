@@ -84,12 +84,12 @@ def main(args):
     VarAttrs[('elevationAngleGNSS', 'MetaData')]['units'] = 'degree'
     VarAttrs[('latitude', 'MetaData')]['units'] = 'degree'
     VarAttrs[('longitude', 'MetaData')]['units'] = 'degree'
-    VarAttrs[('xECFPosition', 'MetaData')]['units'] = 'km'
-    VarAttrs[('yECFPosition', 'MetaData')]['units'] = 'km'
-    VarAttrs[('zECFPosition', 'MetaData')]['units'] = 'km'
-    VarAttrs[('xECFPositionGNSS', 'MetaData')]['units'] = 'km'
-    VarAttrs[('yECFPositionGNSS', 'MetaData')]['units'] = 'km'
-    VarAttrs[('zECFPositionGNSS', 'MetaData')]['units'] = 'km'
+    VarAttrs[('xECEFPosition', 'MetaData')]['units'] = 'km'
+    VarAttrs[('yECEFPosition', 'MetaData')]['units'] = 'km'
+    VarAttrs[('zECEFPosition', 'MetaData')]['units'] = 'km'
+    VarAttrs[('xECEFPositionGNSS', 'MetaData')]['units'] = 'km'
+    VarAttrs[('yECEFPositionGNSS', 'MetaData')]['units'] = 'km'
+    VarAttrs[('zECEFPositionGNSS', 'MetaData')]['units'] = 'km'
     VarAttrs[('dateTime', 'MetaData')]['units'] = iso8601_string
 
     VarAttrs[('totalElectronContent', 'ObsValue')]['_FillValue'] = float_missing_value
@@ -99,12 +99,12 @@ def main(args):
     VarAttrs[('elevationAngleGNSS', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('latitude', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('longitude', 'MetaData')]['_FillValue'] = float_missing_value
-    VarAttrs[('xECFPosition', 'MetaData')]['_FillValue'] = float_missing_value
-    VarAttrs[('yECFPosition', 'MetaData')]['_FillValue'] = float_missing_value
-    VarAttrs[('zECFPosition', 'MetaData')]['_FillValue'] = float_missing_value
-    VarAttrs[('xECFPositionGNSS', 'MetaData')]['_FillValue'] = float_missing_value
-    VarAttrs[('yECFPositionGNSS', 'MetaData')]['_FillValue'] = float_missing_value
-    VarAttrs[('zECFPositionGNSS', 'MetaData')]['_FillValue'] = float_missing_value
+    VarAttrs[('xECEFPosition', 'MetaData')]['_FillValue'] = float_missing_value
+    VarAttrs[('yECEFPosition', 'MetaData')]['_FillValue'] = float_missing_value
+    VarAttrs[('zECEFPosition', 'MetaData')]['_FillValue'] = float_missing_value
+    VarAttrs[('xECEFPositionGNSS', 'MetaData')]['_FillValue'] = float_missing_value
+    VarAttrs[('yECEFPositionGNSS', 'MetaData')]['_FillValue'] = float_missing_value
+    VarAttrs[('zECEFPositionGNSS', 'MetaData')]['_FillValue'] = float_missing_value
 
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
@@ -161,22 +161,18 @@ def get_obs_data(ifile, get_obs_data_args):
     for k in profile_meta_data.keys():
         obs_data[(k, 'MetaData')] = profile_meta_data[k]
 
-    import pdb
-    pdb.set_trace()
-    import sys
-    sys.exit()
     # number to keep track of profile
     obs_data[('sequenceNumber', 'MetaData')] = np.array(np.repeat(get_obs_data_args.recordnumber, ds['x_LEO'].size), dtype=ioda_int_type)
     # Elevation angle of LEO-GPS link
     obs_data[("elevationAngleGNSS", "MetaData")] = np.array(ds['elevation'][:])
     # GPS x position (ECF) at time of signal transmission
-    obs_data[("xECFPositionGNSS", "MetaData")] = np.array(ds['x_GPS'][:])
-    obs_data[("yECFPositionGNSS", "MetaData")] = np.array(ds['y_GPS'][:])
-    obs_data[("zECFPositionGNSS", "MetaData")] = np.array(ds['z_GPS'][:])
+    obs_data[("xECEFPositionGNSS", "MetaData")] = np.array(ds['x_GPS'][:])
+    obs_data[("yECEFPositionGNSS", "MetaData")] = np.array(ds['y_GPS'][:])
+    obs_data[("zECEFPositionGNSS", "MetaData")] = np.array(ds['z_GPS'][:])
     # LEO x position (ECF) at time of signal reception
-    obs_data[("xECFPosition", "MetaData")] = np.array(ds['x_LEO'][:])
-    obs_data[("yECFPosition", "MetaData")] = np.array(ds['y_LEO'][:])
-    obs_data[("zECFPosition", "MetaData")] = np.array(ds['z_LEO'][:])
+    obs_data[("xECEFPosition", "MetaData")] = np.array(ds['x_LEO'][:])
+    obs_data[("yECEFPosition", "MetaData")] = np.array(ds['y_LEO'][:])
+    obs_data[("zECEFPosition", "MetaData")] = np.array(ds['z_LEO'][:])
     obs_data = get_geolocation(obs_data)
     # the observation value
     obs_data[("totalElectronContent", "ObsValue")] = np.array(ds['TEC'][:])
@@ -189,7 +185,7 @@ def def_meta_data():
     # define the keys to retrieve for global meta data attributes (scalars)
     # this does NOT retrieve the ('Location') information (arrays)
     #       "elevationAngleGNSS": 'elevation'
-    #       "GNSSxECFPosition": 'x_GPS'
+    #       "GNSSxECEFPosition": 'x_GPS'
     # antenna_id
     # attflag
     # podflag
@@ -215,12 +211,12 @@ def def_meta_types():
         "longitude": "float",
         "dateTime": "long",
         "elevationAngleGNSS": "float",
-        "xECFPositionGNSS": "float",
-        "yECFPositionGNSS": "float",
-        "zECFPositionGNSS": "float",
-        "xECFPosition": "float",
-        "yECFPosition": "float",
-        "zECFPosition": "float",
+        "xECEFPositionGNSS": "float",
+        "yECEFPositionGNSS": "float",
+        "zECEFPositionGNSS": "float",
+        "xECEFPosition": "float",
+        "yECEFPosition": "float",
+        "zECEFPosition": "float",
         "antennaReceiverId": 'float',
         "satelliteIdentifier": 'integer',
         "satelliteSubIdentifier": 'integer',
@@ -263,12 +259,20 @@ def get_GNSS_mission(ds):
 def get_geolocation(obs_data):
     # wrapper to compute a reasonably accurate latitude and longitude
     #  from the Earth-centered Earth fixed coordinates
-    obs_data[("latitude", "MetaData")] = np.full_like(obs_data[("xECFPosition", "MetaData")], float_missing_value)
-    obs_data[("longitude", "MetaData")] = np.full_like(obs_data[("xECFPosition", "MetaData")], float_missing_value)
-    for i, x in enumerate(obs_data[("xECFPosition", "MetaData")]):
+    import pyproj
+    obs_data[("latitude", "MetaData")] = np.full_like(obs_data[("xECEFPosition", "MetaData")], float_missing_value)
+    obs_data[("longitude", "MetaData")] = np.full_like(obs_data[("xECEFPosition", "MetaData")], float_missing_value)
+    transformer = pyproj.Transformer.from_crs({"proj": 'geocent', "ellps": 'WGS84', "datum": 'WGS84'},
+                                              {"proj": 'latlong', "ellps": 'WGS84', "datum": 'WGS84'})
+    for i, x in enumerate(obs_data[("xECEFPosition", "MetaData")]):
         lat, lon, height = xyz2llh(x,
-                                   obs_data[("yECFPosition", "MetaData")][i],
-                                   obs_data[("zECFPosition", "MetaData")][i])
+                                   obs_data[("yECEFPosition", "MetaData")][i],
+                                   obs_data[("zECEFPosition", "MetaData")][i])
+        # the transformer is returning 90 for all latitude fix this and use it and remove xyz2llh
+        # lon, lat, height = transformer.transform(x,
+        #                                        obs_data[("yECEFPosition", "MetaData")][i],
+        #                                        obs_data[("zECEFPosition", "MetaData")][i],
+        #                                        radians=False)
         obs_data[("latitude", "MetaData")][i] = lat
         obs_data[("longitude", "MetaData")][i] = lon
 
