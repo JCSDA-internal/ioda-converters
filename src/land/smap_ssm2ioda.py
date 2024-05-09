@@ -129,14 +129,6 @@ class smap(object):
             erowi = erowi.astype('int32')
             ecoli = ecoli.astype('int32')
 
-###     qflg[(vals > 0.0)] = 0 if qflg[(vals > 0.0)] > 5 else 1
-###     qflg[(vals <= 0.0)] = 1
-        for i in range(len(lons)):
-            if vals[i] > 0.0:
-                qflg[i] = 0 if qflg[i] > 5 else 1
-            else:
-                qflg[i] = 1
-
         # add metadata variables
         self.outdata[('dateTime', 'MetaData')] = times
         self.varAttrs[('dateTime', 'MetaData')]['units'] = iso8601_string
