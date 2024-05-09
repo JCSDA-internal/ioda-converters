@@ -264,75 +264,16 @@ def get_geolocation(obs_data):
     obs_data[("longitude", "MetaData")] = np.full_like(obs_data[("xECEFPosition", "MetaData")], float_missing_value)
     transformer = pyproj.Transformer.from_crs({"proj": 'geocent', "ellps": 'WGS84', "datum": 'WGS84'},
                                               {"proj": 'latlong', "ellps": 'WGS84', "datum": 'WGS84'})
+    # handling of km to meters should be automated
     for i, x in enumerate(obs_data[("xECEFPosition", "MetaData")]):
-        lat, lon, height = xyz2llh(x,
-                                   obs_data[("yECEFPosition", "MetaData")][i],
-                                   obs_data[("zECEFPosition", "MetaData")][i])
-        # the transformer is returning 90 for all latitude fix this and use it and remove xyz2llh
-        # lon, lat, height = transformer.transform(x,
-        #                                        obs_data[("yECEFPosition", "MetaData")][i],
-        #                                        obs_data[("zECEFPosition", "MetaData")][i],
-        #                                        radians=False)
+        lon, lat, height = transformer.transform(1000.*x,
+                                                 1000.*obs_data[("yECEFPosition", "MetaData")][i],
+                                                 1000.*obs_data[("zECEFPosition", "MetaData")][i],
+                                                 radians=False)
         obs_data[("latitude", "MetaData")][i] = lat
         obs_data[("longitude", "MetaData")][i] = lon
 
     return obs_data
-
-
-def xyz2llh(x, y, z):
-    """
-    Function to convert xyz ECEF to llh
-    convert cartesian coordinate into geographic coordinate
-    ellipsoid definition: WGS84
-      a = 6,378,137m
-      f = 1 / 298.257
-
-    Input
-      x: coordinate x meters
-      y: coordinate y meters
-      z: coordinate z meters
-    Output
-      lat: latitude rad
-      lon: longitude rad
-      h: height meters
-    """
-    # --- WGS84 constants
-    a = 6378137.0
-    f = 1.0 / 298.257223563
-    # --- derived constants
-    b = a - f*a
-
-    # convert ECF from km to meters
-    x *= 1000.
-    y *= 1000.
-    z *= 1000.
-
-    # how do you use NPY_1_PI
-    rad2deg = 180. / np.pi
-
-    e = np.sqrt(a**2 - b**2.0)/a
-    lon = np.arctan2(y, x)
-    p = np.sqrt(x**2 + y**2)
-    h_old = 0.0
-    # first guess with h = 0 meters
-    lat = np.arctan2(z, p*(1.0 - e**2))
-    cs = np.cos(lat)
-    sn = np.sin(lat)
-    N = a**2 / np.sqrt((a*cs)**2 + (b*sn)**2)
-    h = p/cs - N
-    # k = 0
-    while abs(h - h_old) > 1.0e-6:
-        h_old = h
-        lat = np.arctan2(z, p*(1.0 - e**2*N/(N+h)))
-        cs = np.cos(lat)
-        sn = np.sin(lat)
-        N = a**2 / np.sqrt((a*cs)**2 + (b*sn)**2)
-        h = p/cs - N
-    lat *= rad2deg
-    lon *= rad2deg
-    if lon > 180:
-        lon -= 360.
-    return lat, lon, h
 
 
 if __name__ == "__main__":
