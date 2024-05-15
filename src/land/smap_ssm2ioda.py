@@ -140,7 +140,6 @@ class smap(object):
         self.varAttrs[('depthBelowSoilSurface', 'MetaData')]['units'] = 'm'
         if sflg_present:
             self.outdata[('surfaceQualifier', 'MetaData')] = sflg
-            self.varAttrs[('surfaceQualifier', 'MetaData')]['units'] = 'unitless'
             self.outdata[('vegetationOpacity', 'MetaData')] = vegop
             self.outdata[('easeRowIndex', 'MetaData')] = erowi
             self.outdata[('easeColumnIndex', 'MetaData')] = ecoli
