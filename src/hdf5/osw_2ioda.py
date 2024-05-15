@@ -252,7 +252,8 @@ def get_data_from_file(afile, col_names, osw_source, file_name):
         windSpeedPreQC = [1 - v for v in afile['wind_confidence']]
         # Data with 0 can be assumed to be ice free
         qualIceFlag = [int(v > 0) for v in afile['quality_ice_flag']]
-        windSpeedPreQC += qualIceFlag
+        # combine quality_ice_flag into the wind_confidence
+        windSpeedPreQC = [a or b for a, b in zip(windSpeedPreQC, qualIceFlag)]
         windSpeedObsError = [v for v in afile['wind_std']]
         sensorIdentification = [instrument_ref]*len(latitude)
 
