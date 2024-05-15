@@ -116,6 +116,11 @@ class tempo(object):
             thi = np.random.uniform(size=len(qa_value)) > self.thin
             flg = np.logical_and(qaf, thi)
 
+            # add cloud fraction filter here as UFO one doesn't work
+            # needs FIX in future
+            cld = cld_fra < 0.05 # from TEMPO STM meetings 
+            flg = np.logical_and(flg, cld) 
+
             # time
             time_ref = np.datetime64(AttrData['date_time_string'])
             dt = ncd.groups['geolocation'].variables['time'][:].ravel()
@@ -190,6 +195,9 @@ class tempo(object):
                     .ravel() * conv * col_amf / tot_amf
                 err.mask = False
                 err = np.ma.array(err, mask=mask)
+
+                # error tuning for data assimilation, i.e. less weight to low obs values
+                err = err * (1.0 + err/obs)
 
             # O3
             if self.varname == 'o3':
