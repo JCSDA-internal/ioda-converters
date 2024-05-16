@@ -193,11 +193,12 @@ class tempo(object):
                 # error calculation:
                 err = ncd.groups['product'].variables[err_name+'_uncertainty'][:]\
                     .ravel() * conv * col_amf / tot_amf
-                err.mask = False
-                err = np.ma.array(err, mask=mask)
 
                 # error tuning for data assimilation, i.e. less weight to low obs values
                 err = err * (1.0 + err/obs)
+
+                err.mask = False
+                err = np.ma.array(err, mask=mask)
 
             # O3
             if self.varname == 'o3':
@@ -207,6 +208,9 @@ class tempo(object):
             # clean data
             neg_obs = ((obs > 0.0) & (err > 0.0))
             nan_obs = ((obs != np.nan) & (err != np.nan))
+            nan_obs = (~np.isnan(obs) & ~np.isnan(err) 
+                       & np.isreal(obs) & np.isreal(err)
+                       & np.isfinite(obs) & np.isfinite(err))
             cln = np.logical_and(neg_obs, nan_obs)
 
             # final flag before sending this to ioda engines
