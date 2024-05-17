@@ -119,7 +119,7 @@ class smap(object):
         lats = lats.astype('float32')
         lons = lons.astype('float32')
         deps = deps.astype('float32')
-        # reassign to contant (could be pass in)
+        # reassign to constant (could be pass in)
         errs[:] = 0.04
         errs = errs.astype('float32')
         qflg = qflg.astype('int32')
