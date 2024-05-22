@@ -41,7 +41,7 @@ molarmass = {"no2": 46.0055, "hcho": 30.031, "o3": 48.0}
 
 
 class tempo(object):
-    def __init__(self, filenames, varname, columnType, qa_flg, thin, obsVar, nrt):
+    def __init__(self, filenames, varname, columnType, qa_flg, thin, nrt, obsVar):
         self.filenames = filenames
         self.varname = varname
         self.columnType = columnType
