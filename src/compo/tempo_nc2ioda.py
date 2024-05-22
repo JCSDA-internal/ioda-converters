@@ -41,12 +41,13 @@ molarmass = {"no2": 46.0055, "hcho": 30.031, "o3": 48.0}
 
 
 class tempo(object):
-    def __init__(self, filenames, varname, columnType, qa_flg, thin, obsVar):
+    def __init__(self, filenames, varname, columnType, qa_flg, thin, obsVar, nrt):
         self.filenames = filenames
         self.varname = varname
         self.columnType = columnType
         self.qa_flg = qa_flg
         self.thin = thin
+        self.nrt = nrt
         self.obsVar = obsVar
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
@@ -118,7 +119,7 @@ class tempo(object):
 
             # add cloud fraction filter here as UFO one doesn't work
             # needs FIX in future
-            cld = cld_fra < 0.05 # from TEMPO STM meetings 
+            cld = cld_fra < 0.05 # from TEMPO STM meetings, experimental
             flg = np.logical_and(flg, cld) 
 
             # time
@@ -191,10 +192,16 @@ class tempo(object):
                 obs = np.ma.array(obs, mask=mask)
 
                 # error calculation:
-                err = ncd.groups['product'].variables[err_name+'_uncertainty'][:]\
-                    .ravel() * conv * col_amf / tot_amf
+                if self.nrt:
+                    err = ncd.groups['product'].variables[err_name+'_troposphere_uncertainty'][:]
+                    if self.columnType == "total" or self.columnType == "stratosphere":
+                        sys.exit("no error with total and strato NRT product")
+                else:
+                    err = ncd.groups['product'].variables[err_name+'_uncertainty'][:]\
+                        .ravel() * conv * col_amf / tot_amf
 
                 # error tuning for data assimilation, i.e. less weight to low obs values
+                # experimental
                 err = err * (1.0 + err/obs)
 
                 err.mask = False
@@ -350,10 +357,14 @@ def main():
         "0 normal, 1 suspicious, 2 bad",
         type=int, default=0)
     optional.add_argument(
-        '-n', '--thin',
+        '-t', '--thin',
         help="percentage of random thinning from 0.0 to 1.0. Zero indicates"
         " no thinning is performed. (default: %(default)s)",
         type=float, default=0.0)
+    optional.add_argument(
+        '-nrt',
+        action='store_true',
+        help='Read NRT V3 files and not V2 archive files')
 
     args = parser.parse_args()
 
@@ -391,7 +402,7 @@ def main():
     varDims['pressureVertice'] = ['Location', 'Vertice']
 
     # Read in the NO2 data
-    var = tempo(args.input, args.variable, args.column, args.qa_value, args.thin, obsVar)
+    var = tempo(args.input, args.variable, args.column, args.qa_value, args.thin, args.nrt, obsVar)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
