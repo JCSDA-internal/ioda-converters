@@ -119,8 +119,8 @@ class tempo(object):
 
             # add cloud fraction filter here as UFO one doesn't work
             # needs FIX in future
-            cld = cld_fra < 0.05 # from TEMPO STM meetings, experimental
-            flg = np.logical_and(flg, cld) 
+            cld = cld_fra < 0.05   # from TEMPO STM meetings, experimental
+            flg = np.logical_and(flg, cld)
 
             # time
             time_ref = np.datetime64(AttrData['date_time_string'])
@@ -215,9 +215,7 @@ class tempo(object):
             # clean data
             neg_obs = ((obs > 0.0) & (err > 0.0))
             nan_obs = ((obs != np.nan) & (err != np.nan))
-            nan_obs = (~np.isnan(obs) & ~np.isnan(err) 
-                       & np.isreal(obs) & np.isreal(err)
-                       & np.isfinite(obs) & np.isfinite(err))
+            nan_obs = (~np.isnan(obs) & ~np.isnan(err) & np.isreal(obs) & np.isreal(err) & np.isfinite(obs) & np.isfinite(err))
             cln = np.logical_and(neg_obs, nan_obs)
 
             # final flag before sending this to ioda engines
