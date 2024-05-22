@@ -102,29 +102,28 @@ def main(args):
         # Get reference time and convert to epoch time
         dat_ref = get_reference_time(file, osw_source)
 
+        # initialize the DF
         if 'obs_data' not in locals():
-            # initialize the DF
             obs_data = pd.DataFrame(columns=meta_keys+obsvars)
 
-        # Get data from file to append to obs_data dataframe
+        # Get data from file in temporary obs_data_append DF
         obs_data_append = get_data_from_file(file, obs_data.keys(), osw_source, file_name)
 
-        # Convert variables
         # Change time reference
         obs_data_append = adjust_dateTime(obs_data_append, dat_ref)
 
         # Change longitude range
         obs_data_append = adjust_longitude(obs_data_append, osw_source)
 
-        # Append to data frame containing all timestamp data
+        # Apply quality control add strict if selected
+        obs_data_append = quality_control(obs_data_append, qc_strict=args.qc_strict)
+
+        # Append to obs_data data frame
         obs_data = pd.concat([obs_data, obs_data_append], ignore_index=True)
 
         file.close()
         # count files
         file_cnt += 1
-
-    # Run gross qc on the variables
-    obs_data = quality_control(obs_data)
 
     # replace missing values
     for MetaDataKey in MetaDataKeyList:
@@ -214,13 +213,17 @@ def get_data_from_file(afile, col_names, osw_source, file_name):
 
     # Pull each data type (variable) and create a list
     if osw_source == 'CYGNSS':
-        latitude = [afile['lat'][ii] for ii in range(len(afile['lat']))]
-        longitude = [afile['lon'][ii] for ii in range(len(afile['lon']))]
-        dateTime = [int(afile['sample_time'][ii]) for ii in range(len(afile['sample_time']))]  # datetime with different ref time
-        windSpeed = [afile['wind_speed'][ii] for ii in range(len(afile['wind_speed']))]
-        windSpeedPreQC = [0] * len(windSpeed)
-        windSpeedObsError = [afile['wind_speed_uncertainty'][ii] for ii in range(len(afile['wind_speed_uncertainty']))]
-        sensorIdentification = [str(afile['sv_num'][ii]) for ii in range(len(afile['sv_num']))]  # sv_num is the GPS space vehicle number
+        latitude = [v for v in afile['lat']]
+        longitude = [v for v in afile['lon']]
+        dateTime = [int(v) for v in afile['sample_time']]  # datetime with different ref time
+        windSpeed = [v for v in afile['wind_speed']]
+        # bits are in afile['sample_flags'].attrs['flag_meanings']
+        # ! Bit 1 == 2^0 == poor_overall_quality_flag
+        # ! Bit 2 == 2^1 == Ascending Node Flag (1=ascending; 0=descending)
+        windSpeedPreQC = [get_normalized_bit(v, bit_index=0) for v in afile['sample_flags']]
+        satelliteAscendingFlag = [get_normalized_bit(v, bit_index=1) for v in afile['sample_flags']]
+        windSpeedObsError = [v for v in afile['wind_speed_uncertainty']]
+        sensorIdentification = [str(v) for v in afile['sv_num']]  # sv_num is the GPS space vehicle number
     elif osw_source == 'Muon':
         # Get instrument reference
         import re
@@ -229,25 +232,29 @@ def get_data_from_file(afile, col_names, osw_source, file_name):
         res = temp.search(file_name)
         instrument_ref = res.group(0)
 
-        latitude = [afile['lat'][ii] for ii in range(len(afile['lat']))]
-        longitude = [afile['lon'][ii] for ii in range(len(afile['lon']))]
-        dateTime = [int(afile['time'][ii]) for ii in range(len(afile['time']))]  # datetime with different ref time
-        windSpeed = [afile['wind_speed_level2'][ii] for ii in range(len(afile['wind_speed_level2']))]
+        latitude = [v for v in afile['lat']]
+        longitude = [v for v in afile['lon']]
+        dateTime = [int(v) for v in afile['time']]  # datetime with different ref time
+        windSpeed = [v for v in afile['wind_speed_level2']]
         # not implemented in proxy data all values in proxy data are set to -9999
         windSpeedPreQC = [0] * len(windSpeed)
-        # windSpeedPreQC = [afile['retrieval_qual_flag'][ii] for ii in range(len(afile['retrieval_qual_flag']))]
-        windSpeedObsError = [afile['wind_speed_level2_error'][ii] for ii in range(len(afile['wind_speed_level2_error']))]
+        # windSpeedPreQC = [v for v in afile['retrieval_qual_flag']]
+        windSpeedObsError = [v for v in afile['wind_speed_level2_error']]
         sensorIdentification = [instrument_ref]*len(latitude)
     elif osw_source == 'Spire':
         # Get instrument reference
         instrument_ref = afile.attrs['tx_id'].decode('UTF-8')
 
-        latitude = [afile['sp_lat'][ii] for ii in range(len(afile['sp_lat']))]
-        longitude = [afile['sp_lon'][ii] for ii in range(len(afile['sp_lon']))]
-        dateTime = [int(afile['sample_time'][ii]) for ii in range(len(afile['sample_time']))]  # datetime with different ref time
-        windSpeed = [afile['wind'][ii] for ii in range(len(afile['wind']))]
-        windSpeedPreQC = [1 - afile['wind_confidence'][ii] for ii in range(len(afile['wind_confidence']))]
-        windSpeedObsError = [afile['wind_std'][ii] for ii in range(len(afile['wind_std']))]
+        latitude = [v for v in afile['sp_lat']]
+        longitude = [v for v in afile['sp_lon']]
+        dateTime = [int(v) for v in afile['sample_time']]  # datetime with different ref time
+        windSpeed = [v for v in afile['wind']]
+        windSpeedPreQC = [1 - v for v in afile['wind_confidence']]
+        # Data with 0 can be assumed to be ice free
+        qualIceFlag = [int(v > 0) for v in afile['quality_ice_flag']]
+        # combine quality_ice_flag into the wind_confidence
+        windSpeedPreQC = [a or b for a, b in zip(windSpeedPreQC, qualIceFlag)]
+        windSpeedObsError = [v for v in afile['wind_std']]
         sensorIdentification = [instrument_ref]*len(latitude)
 
     # Make a column to have a constant elevation for the "station"
@@ -287,17 +294,34 @@ def add_long_description(osw_source):
     return long_description
 
 
-def quality_control(obs_data):
+def quality_control(obs_data, qc_strict=False):
     # Apply initial QC for physically possible values (wind, lat, lon) need to add swells
-    wind_range = [0.0, 75.0]
+    ob_range = [0.0, 75.0]
     lat_range = [-90, 90]
     lon_range = [-180, 180]
-    # Replace with None to be filled with missing value later
-    obs_data.loc[((obs_data['windSpeed'] < wind_range[0]) | (obs_data['windSpeed'] > wind_range[1])), 'windSpeed'] = None
-    obs_data.loc[((obs_data['latitude'] < lat_range[0]) | (obs_data['latitude'] > lat_range[1])), 'latitude'] = None
-    obs_data.loc[((obs_data['longitude'] < lon_range[0]) | (obs_data['longitude'] > lon_range[1])), 'longitude'] = None
+    ob_check = ((obs_data['windSpeed'] < ob_range[0]) | (obs_data['windSpeed'] > ob_range[1]))
+    lat_check = ((obs_data['latitude'] < lat_range[0]) | (obs_data['latitude'] > lat_range[1]))
+    lon_check = ((obs_data['longitude'] < lon_range[0]) | (obs_data['longitude'] > lon_range[1]))
 
+    # (default) Replace with None to be filled with missing value later
+    obs_data.loc[ob_check, 'windSpeed'] = None
+    obs_data.loc[lat_check, 'latitude'] = None
+    obs_data.loc[lon_check, 'longitude'] = None
+
+    if qc_strict:
+        # (strict) remove
+        obs_data.drop(ob_check[ob_check].index, inplace=True)
+        obs_data.drop(lat_check[lat_check].index, inplace=True)
+        obs_data.drop(lon_check[lon_check].index, inplace=True)
+        # (strict) additional rejection on provider PreQC
+        qc_check = (obs_data['windSpeedPreQC'] > 0)
+        obs_data.drop(qc_check[qc_check].index, inplace=True)
+        logging.debug(f'rejected by PreQC: {sum(qc_check)}')
     return obs_data
+
+
+def get_normalized_bit(value, bit_index):
+    return (value >> bit_index) & 1
 
 
 if __name__ == "__main__":
@@ -318,19 +342,23 @@ if __name__ == "__main__":
                           help='base date for the center of the window')
     optional.add_argument('--debug', action='store_true',
                           help='enable debug messages')
-    optional.add_argument('--verbose', action='store_true',
-                          help='enable verbose debug messages')
+    optional.add_argument('-q', '--qualitycontrol', dest='qc_strict',
+                          default=False, action='store_true', required=False,
+                          help='turn on strict quality control checks dropping these points on output')
     optional.add_argument('--sort', action='store_true',
                           default=False, help='Sort data by instruments then time')
+    optional.add_argument('--verbose', action='store_true',
+                          help='enable verbose debug messages')
 
     # read in arguments to function call
     args = parser.parse_args()
 
-#    # verify time format
-#    try:
-#        target_time = datetime.fromisoformat(args.date_string[:-1])
-#    except Exception:
-#        parser.error('Date format invalid: ', args.date_string, ' must be like: 2022-05-18T12:00:00Z')
-#        sys.exit()
+#   # verify time format
+#   try:
+#       # to do must convert 2022051812 to 2022-05-18T12:00:00Z
+#       target_time = datetime.fromisoformat(args.date_string[:-1])
+#   except Exception:
+#       parser.error('Date format invalid: ', args.date_string, ' must be like: 2022-05-18T12:00:00Z')
+#       sys.exit()
 
     main(args)
