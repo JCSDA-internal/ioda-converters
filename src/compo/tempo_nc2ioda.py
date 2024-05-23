@@ -145,11 +145,16 @@ class tempo(object):
                 # here we assume avk is scattering weights / AMF
                 # there is a mismatch between the mask in the scattering weights/box amf
                 # so we need to reset the mask and replace with the mask that is used
+
                 if self.varname == 'no2':
-                    tot_amf_name = 'amf_total'
-                    col_amf_name = 'amf_'+self.columnType
+                    if self.nrt:
+                        err_name = 'vertical_column_'+self.columnType
+                    else:
+                        err_name = 'vertical_column_total'
                     obs_name = 'vertical_column_'+self.columnType
-                    err_name = 'vertical_column_total'
+                    col_amf_name = 'amf_'+self.columnType
+                    tot_amf_name = 'amf_total'
+
                 if self.varname == 'hcho':
                     tot_amf_name = 'amf'
                     col_amf_name = 'amf'
@@ -192,24 +197,23 @@ class tempo(object):
                 obs = np.ma.array(obs, mask=mask)
 
                 # error calculation:
+                err = ncd.groups['product'].variables[err_name+'_uncertainty'][:].ravel()
                 if self.nrt:
-                    err = ncd.groups['product'].variables[err_name+'_troposphere_uncertainty'][:]
                     if self.columnType == "total" or self.columnType == "stratosphere":
                         sys.exit("no error with total and strato NRT product")
                 else:
-                    err = ncd.groups['product'].variables[err_name+'_uncertainty'][:]\
-                        .ravel() * conv * col_amf / tot_amf
-
-                # error tuning for data assimilation, i.e. less weight to low obs values
-                # experimental
-                err = err * (1.0 + err/obs)
+                    err = err * conv * col_amf / tot_amf
 
                 err.mask = False
                 err = np.ma.array(err, mask=mask)
 
+                # error tuning for data assimilation, i.e. less weight to low obs values
+                # experimental
+                # err = err * (1.0 + err/obs)
+
             # O3
             if self.varname == 'o3':
-                print("O3 proxy product not ready yet")
+                print("O3 product converter not ready yet")
                 exit()
 
             # clean data
