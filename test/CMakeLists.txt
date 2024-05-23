@@ -62,7 +62,8 @@ list( APPEND test_input
   testinput/SWOT_L2_SSHA.nc
   testinput/aeronet_cad.dat
   testinput/aeronet_tab.dat
-  testinput/imsscf_20191215_c48.nc
+  testinput/ascii_input_IMSscf.20230501.oro_C48.nc
+  testinput/nc_input_IMSscf.20230501.oro_C48.nc
   testinput/bfrPrf_C2E6.2021.214.12.00.G16_0001.0001_bufr
   testinput/sample.SNDR.SNPP.ATMS.2022021600.nc4
   testinput/sample.SNDR.J1.ATMS.2022021600.nc4
@@ -92,7 +93,6 @@ list( APPEND test_input
   testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t180544_small.h5
   testinput/viirs_j1_l1b_albedo_geoloc_202108050600.nc
   testinput/viirs_j1_l1b_albedo_obsval_202108050600.nc
-  testinput/imsscf_fv3grid_20191201.C96.nc
 )
 
 list( APPEND test_output
@@ -2289,7 +2289,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_imsfv3_scf
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                             "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/imsfv3_scf2ioda.py
-                            -i testinput/imsscf_20191215_c48.nc
+                            -i testinput/ascii_input_IMSscf.20230501.oro_C48.nc
                             -o testrun/imsfv3_scf.nc"
                             imsfv3_scf.nc ${IODA_CONV_COMP_TOL})
 
@@ -2324,7 +2324,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_imsfv3grid_scf
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                             "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/imsfv3_scf2ioda.py
-                            -i testinput/imsscf_fv3grid_20191201.C96.nc
+                            -i testinput/nc_input_IMSscf.20230501.oro_C48.nc
                             -o testrun/imsfv3grid_scf.nc"
                             imsfv3grid_scf.nc ${IODA_CONV_COMP_TOL})
 

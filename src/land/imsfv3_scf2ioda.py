@@ -143,11 +143,18 @@ def get_observation_time(filename, sncv, ncd):
     times = np.empty_like(sncv, dtype='int64')
     times[:] = long_missing_value
 
-    if 'time' in ncd.variables.keys():
-        times[:] = ncd.variables['time'][:].ravel().astype('int64')
+    if 'valid_epoch_time' in ncd.ncattrs():
+        times[:] = ncd.valid_epoch_time
+    elif 'valid_time_str' in ncd.ncattrs():
+        my_date = datetime.strptime(ncd.valid_time_str, "%Y%m%d%H")
+        times[:] = my_date.timestamp()
     else:
-        # get datetime from filename (last match of 8 consecutive digits)
+        print(f' ERROR: no time attribute found: {ncd.ncattrs()}')
+        # from filename (last match of 8 consecutive digits)
         str_date = re.search(r'(\d{8})(?!.*\d{8})', filename).group()
+        print(f'   ... could use last match for 8 consecutive digits: {str_date}')
+        import sys
+        sys.exit()
         my_date = datetime.strptime(str_date, "%Y%m%d")
         times[:] = my_date.timestamp()
 
