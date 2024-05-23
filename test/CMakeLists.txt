@@ -141,6 +141,7 @@ list( APPEND test_output
   testoutput/singleob.nc
   testoutput/ghcn_snod_20200228.nc
   testoutput/smap_ssm.nc
+  testoutput/smap_nrt_ssm.nc
   testoutput/smos_ssm.nc
   testoutput/ascat_ssm.nc
   testoutput/smos_sss_l2.nc
@@ -159,7 +160,6 @@ list( APPEND test_output
   testoutput/wmo_raob_double.nc4
   testoutput/wmo_raob_quadruple.nc4
   testoutput/avhrr_radiance.nc
-  testoutput/smap9km_ssm.nc
   testoutput/satwinds_ssec2021080103.nc
   testoutput/pace_oc_l2.nc
   testoutput/pace_radiance_L1B.nc
