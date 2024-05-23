@@ -141,6 +141,7 @@ list( APPEND test_output
   testoutput/singleob.nc
   testoutput/ghcn_snod_20200228.nc
   testoutput/smap_ssm.nc
+  testoutput/smap_nrt_ssm.nc
   testoutput/smos_ssm.nc
   testoutput/ascat_ssm.nc
   testoutput/smos_sss_l2.nc
@@ -159,7 +160,6 @@ list( APPEND test_output
   testoutput/wmo_raob_double.nc4
   testoutput/wmo_raob_quadruple.nc4
   testoutput/avhrr_radiance.nc
-  testoutput/smap9km_ssm.nc
   testoutput/satwinds_ssec2021080103.nc
   testoutput/pace_oc_l2.nc
   testoutput/pace_radiance_L1B.nc
@@ -2244,7 +2244,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ghcn_snod
                           -m maskout"
                           ghcn_snod_20200228.nc ${IODA_CONV_COMP_TOL})
 
-ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap_ssm
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap_nrt_ssm
                     TYPE    SCRIPT
                     ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                     COMMAND bash
@@ -2252,9 +2252,9 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap_ssm
                             netcdf
                             "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/smap_ssm2ioda.py
                             -i testinput/SMAP_L2_SM_P_NRT_24342_A_20190822T224858_N16023_002.h5
-                            -o testrun/smap_ssm.nc
+                            -o testrun/smap_nrt_ssm.nc
                             --maskMissing"
-                            smap_ssm.nc ${IODA_CONV_COMP_TOL})
+                            smap_nrt_ssm.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smos_ssm
                     TYPE    SCRIPT
@@ -2291,7 +2291,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_imsfv3_scf
                             -o testrun/imsfv3_scf.nc"
                             imsfv3_scf.nc ${IODA_CONV_COMP_TOL})
 
-ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap9km_ssm
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap_ssm
                     TYPE    SCRIPT
                     ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                     COMMAND bash
@@ -2299,9 +2299,9 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap9km_ssm
                             netcdf
                             "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/smap_ssm2ioda.py
                             -i testinput/SMAP_L2_SM_P_E_36365_D_20211122T013945_R18240_001.h5
-                            -o testrun/smap9km_ssm.nc
+                            -o testrun/smap_ssm.nc
                             --maskMissing"
-                            smap9km_ssm.nc ${IODA_CONV_COMP_TOL})
+                            smap_ssm.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_land_owp_snow_obs_dup_thin
                   TYPE    SCRIPT
