@@ -8,7 +8,7 @@ default predictors: &default_preds
 - lapseRate
 - cosineOfLatitudeTimesOrbitNode
 - sineOfLatitude
-- emissivityK
+- emissivityJacobian
 - scanAngle_order_4
 - scanAngle_order_3
 - scanAngle_order_2
@@ -210,7 +210,7 @@ output:
   - lapseRate
   - cloudLiquidWater_order_2
   - cloudLiquidWater
-  - emissivityK
+  - emissivityJacobian
   - scanAngle_order_4
   - scanAngle_order_3
   - scanAngle_order_2

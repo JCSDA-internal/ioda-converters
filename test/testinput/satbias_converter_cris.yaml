@@ -10,7 +10,7 @@ output:
   - lapseRate
   - cosineOfLatitudeTimesOrbitNode
   - sineOfLatitude
-  - emissivityK
+  - emissivityJacobian
   - scanAngle_order_4
   - scanAngle_order_3
   - scanAngle_order_2

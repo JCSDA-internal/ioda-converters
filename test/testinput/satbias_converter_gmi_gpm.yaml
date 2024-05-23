@@ -10,7 +10,7 @@ output:
   - lapseRate
   - cloudLiquidWaterOrder2
   - cloudLiquidWater
-  - emissivityK
+  - emissivityJacobian
   - scanAngle_order_4
   - scanAngle_order_3
   - scanAngle_order_2
