@@ -2,17 +2,17 @@ input coeff file: testinput/satbias_crtm_in
 input err file: testinput/satbias_crtm_pc
 default predictors: &default_preds
 - constant
-- zenithAngle
-- cloudLiquidWater
+- sensorZenithAngle
+- cloudWaterContent
 - lapseRate_order_2
 - lapseRate
 - cosineOfLatitudeTimesOrbitNode
 - sineOfLatitude
 - emissivityJacobian
-- scanAngle_order_4
-- scanAngle_order_3
-- scanAngle_order_2
-- scanAngle
+- sensorScanAngle_order_4
+- sensorScanAngle_order_3
+- sensorScanAngle_order_2
+- sensorScanAngle
 output:
 - sensor: amsua_n15
   output file: satbias_amsua_n15.nc4
