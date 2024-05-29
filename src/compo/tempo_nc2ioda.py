@@ -364,7 +364,7 @@ def main():
         " no thinning is performed. (default: %(default)s)",
         type=float, default=0.0)
     optional.add_argument(
-        '-v3', '--version3'
+        '-v3', '--version3',
         action='store_true',
         help='Read V3 files and not V2 files')
 
