@@ -4,15 +4,15 @@ output:
 - sensor: amsua_n18
   predictors:
   - constant
-  - zenithAngle
-  - cloudLiquidWater
+  - sensorZenithAngle
+  - cloudWaterContent
   - lapseRate_order_2
   - lapseRate
   - cosineOfLatitudeTimesOrbitNode
   - sineOfLatitude
-  - emissivityK
-  - scanAngle_order_4
-  - scanAngle_order_3
-  - scanAngle_order_2
-  - scanAngle
+  - emissivityJacobian
+  - sensorScanAngle_order_4
+  - sensorScanAngle_order_3
+  - sensorScanAngle_order_2
+  - sensorScanAngle
   output file: testrun/varbc/satbias_amsua_n18.nc4

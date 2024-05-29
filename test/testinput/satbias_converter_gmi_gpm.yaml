@@ -4,15 +4,15 @@ output:
 - sensor: gmi_gpm
   predictors:
   - constant
-  - zenithAngle
+  - sensorZenithAngle
   - cosineOfLatitudeTimesOrbitNode
   - lapseRate_order_2
   - lapseRate
-  - cloudLiquidWaterOrder2
-  - cloudLiquidWater
-  - emissivityK
-  - scanAngle_order_4
-  - scanAngle_order_3
-  - scanAngle_order_2
-  - scanAngle
+  - cloudWaterContent_order_2
+  - cloudWaterContent
+  - emissivityJacobian
+  - sensorScanAngle_order_4
+  - sensorScanAngle_order_3
+  - sensorScanAngle_order_2
+  - sensorScanAngle
   output file: testrun/varbc/satbias_gmi_gpm.nc4
