@@ -41,13 +41,13 @@ molarmass = {"no2": 46.0055, "hcho": 30.031, "o3": 48.0}
 
 
 class tempo(object):
-    def __init__(self, filenames, varname, columnType, qa_flg, thin, nrt, obsVar):
+    def __init__(self, filenames, varname, columnType, qa_flg, thin, v3, obsVar):
         self.filenames = filenames
         self.varname = varname
         self.columnType = columnType
         self.qa_flg = qa_flg
         self.thin = thin
-        self.nrt = nrt
+        self.v3 = v3
         self.obsVar = obsVar
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
@@ -147,7 +147,7 @@ class tempo(object):
                 # so we need to reset the mask and replace with the mask that is used
 
                 if self.varname == 'no2':
-                    if self.nrt:
+                    if self.v3:
                         err_name = 'vertical_column_'+self.columnType
                     else:
                         err_name = 'vertical_column_total'
@@ -198,7 +198,7 @@ class tempo(object):
 
                 # error calculation:
                 err = ncd.groups['product'].variables[err_name+'_uncertainty'][:].ravel()
-                if self.nrt:
+                if self.v3:
                     if self.columnType == "total" or self.columnType == "stratosphere":
                         sys.exit("no error with total and strato NRT product")
                 else:
@@ -364,9 +364,9 @@ def main():
         " no thinning is performed. (default: %(default)s)",
         type=float, default=0.0)
     optional.add_argument(
-        '-v3',
+        '-v3', '--version3'
         action='store_true',
-        help='Read NRT V3 files and not V2 archive files')
+        help='Read V3 files and not V2 files')
 
     args = parser.parse_args()
 
@@ -404,7 +404,7 @@ def main():
     varDims['pressureVertice'] = ['Location', 'Vertice']
 
     # Read in the NO2 data
-    var = tempo(args.input, args.variable, args.column, args.qa_value, args.thin, args.nrt, obsVar)
+    var = tempo(args.input, args.variable, args.column, args.qa_value, args.thin, args.version3, obsVar)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
