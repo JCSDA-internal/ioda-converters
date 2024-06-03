@@ -62,7 +62,8 @@ list( APPEND test_input
   testinput/SWOT_L2_SSHA.nc
   testinput/aeronet_cad.dat
   testinput/aeronet_tab.dat
-  testinput/imsscf_20191215_c48.nc
+  testinput/ascii_input_IMSscf.20230501.oro_C48.nc
+  testinput/nc_input_IMSscf.20230501.oro_C48.nc
   testinput/bfrPrf_C2E6.2021.214.12.00.G16_0001.0001_bufr
   testinput/sample.SNDR.SNPP.ATMS.2022021600.nc4
   testinput/sample.SNDR.J1.ATMS.2022021600.nc4
@@ -177,6 +178,7 @@ list( APPEND test_output
   testoutput/mrms_reflectivity_Z1500m.nc
   testoutput/omps_o3_nm.nc
   testoutput/viirs_j1_l1b_albedo_2021080506.nc
+  testoutput/imsfv3grid_scf.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -2287,7 +2289,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_imsfv3_scf
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                             "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/imsfv3_scf2ioda.py
-                            -i testinput/imsscf_20191215_c48.nc
+                            -i testinput/ascii_input_IMSscf.20230501.oro_C48.nc
                             -o testrun/imsfv3_scf.nc"
                             imsfv3_scf.nc ${IODA_CONV_COMP_TOL})
 
@@ -2314,6 +2316,17 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_land_owp_snow_obs_dup_thin
                           -o testrun/owp_snow_obs_dup_thin_err_fn.nc
                           --thin_swe 1 --thin_depth .5 --thin_random_seed 3  --err_fn dummy_err"
                           owp_snow_obs_dup_thin_err_fn.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_imsfv3grid_scf
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/imsfv3_scf2ioda.py
+                            -i testinput/nc_input_IMSscf.20230501.oro_C48.nc
+                            -o testrun/imsfv3grid_scf.nc"
+                            imsfv3grid_scf.nc ${IODA_CONV_COMP_TOL})
 
 #######################################################
 # Auto-generated tests for ioda file validation
