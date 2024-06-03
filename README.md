@@ -111,6 +111,8 @@ For method option (-m) of bias and uncertainty calculation (default/nesdis), dea
 
 ## land
 
+ADD SOME UPDATES HERE ;0)
+
 The land converters include all converter scripts for snowpack, soil, vegeation, and the other surface related land variables.
 
 For snow cover fraction(scf), IMS grib2 files are supported with `ims_scf2ioda.py`.
