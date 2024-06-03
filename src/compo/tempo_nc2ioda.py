@@ -41,12 +41,13 @@ molarmass = {"no2": 46.0055, "hcho": 30.031, "o3": 48.0}
 
 
 class tempo(object):
-    def __init__(self, filenames, varname, columnType, qa_flg, thin, obsVar):
+    def __init__(self, filenames, varname, columnType, qa_flg, thin, v3, obsVar):
         self.filenames = filenames
         self.varname = varname
         self.columnType = columnType
         self.qa_flg = qa_flg
         self.thin = thin
+        self.v3 = v3
         self.obsVar = obsVar
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
@@ -116,6 +117,11 @@ class tempo(object):
             thi = np.random.uniform(size=len(qa_value)) > self.thin
             flg = np.logical_and(qaf, thi)
 
+            # add cloud fraction filter here as UFO one doesn't work
+            # needs FIX in future
+            cld = cld_fra < 0.05   # from TEMPO STM meetings, experimental
+            flg = np.logical_and(flg, cld)
+
             # time
             time_ref = np.datetime64(AttrData['date_time_string'])
             dt = ncd.groups['geolocation'].variables['time'][:].ravel()
@@ -139,11 +145,16 @@ class tempo(object):
                 # here we assume avk is scattering weights / AMF
                 # there is a mismatch between the mask in the scattering weights/box amf
                 # so we need to reset the mask and replace with the mask that is used
+
                 if self.varname == 'no2':
-                    tot_amf_name = 'amf_total'
-                    col_amf_name = 'amf_'+self.columnType
+                    if self.v3:
+                        err_name = 'vertical_column_'+self.columnType
+                    else:
+                        err_name = 'vertical_column_total'
                     obs_name = 'vertical_column_'+self.columnType
-                    err_name = 'vertical_column_total'
+                    col_amf_name = 'amf_'+self.columnType
+                    tot_amf_name = 'amf_total'
+
                 if self.varname == 'hcho':
                     tot_amf_name = 'amf'
                     col_amf_name = 'amf'
@@ -186,19 +197,29 @@ class tempo(object):
                 obs = np.ma.array(obs, mask=mask)
 
                 # error calculation:
-                err = ncd.groups['product'].variables[err_name+'_uncertainty'][:]\
-                    .ravel() * conv * col_amf / tot_amf
+                err = ncd.groups['product'].variables[err_name+'_uncertainty'][:].ravel()
+                if self.v3:
+                    if self.columnType == "total" or self.columnType == "stratosphere":
+                        sys.exit("no error with total and strato NRT product")
+                else:
+                    err = err * conv * col_amf / tot_amf
+
                 err.mask = False
                 err = np.ma.array(err, mask=mask)
 
+                # error tuning for data assimilation, i.e. less weight to low obs values
+                # experimental
+                # err = err * (1.0 + err/obs)
+
             # O3
             if self.varname == 'o3':
-                print("O3 proxy product not ready yet")
+                print("O3 product converter not ready yet")
                 exit()
 
             # clean data
             neg_obs = ((obs > 0.0) & (err > 0.0))
             nan_obs = ((obs != np.nan) & (err != np.nan))
+            nan_obs = (~np.isnan(obs) & ~np.isnan(err) & np.isreal(obs) & np.isreal(err) & np.isfinite(obs) & np.isfinite(err))
             cln = np.logical_and(neg_obs, nan_obs)
 
             # final flag before sending this to ioda engines
@@ -338,10 +359,14 @@ def main():
         "0 normal, 1 suspicious, 2 bad",
         type=int, default=0)
     optional.add_argument(
-        '-n', '--thin',
+        '-t', '--thin',
         help="percentage of random thinning from 0.0 to 1.0. Zero indicates"
         " no thinning is performed. (default: %(default)s)",
         type=float, default=0.0)
+    optional.add_argument(
+        '-v3', '--version3',
+        action='store_true',
+        help='Read V3 files and not V2 files')
 
     args = parser.parse_args()
 
@@ -379,7 +404,7 @@ def main():
     varDims['pressureVertice'] = ['Location', 'Vertice']
 
     # Read in the NO2 data
-    var = tempo(args.input, args.variable, args.column, args.qa_value, args.thin, obsVar)
+    var = tempo(args.input, args.variable, args.column, args.qa_value, args.thin, args.version3, obsVar)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
