@@ -42,6 +42,8 @@ orbit_height = 829. # in km
 earth_radius = 6378.137 # in km, mean earth radius
 speed_light = 2.99792458E8
 frequency = speed_light*1.0E6/np.array(wavelength)
+deg2rad = np.pi/180.
+rad2deg = 180./np.pi
 
 # Date reference info
 iso8601_string = "seconds since 1970-01-01T00:00:00Z"
@@ -153,9 +155,8 @@ class viirs_l1b_rf(object):
             solar_aa = geo_ncd.groups['geolocation_data'].variables['solar_azimuth'][:].data.ravel()
             sensor_za = geo_ncd.groups['geolocation_data'].variables['sensor_zenith'][:].data.ravel()
             sensor_aa = geo_ncd.groups['geolocation_data'].variables['sensor_azimuth'][:].data.ravel()
-            pixel_sensor_distance = geo_ncd.groups['geolocation_data'].variables['range'][:].data.ravel()/1000.
-            sensor_va = np.arccos( ((earth_radius + orbit_height) ** 2 + pixel_sensor_distance ** 2 - earth_radius ** 2) /
-                                   (2 * (earth_radius + orbit_height) * pixel_sensor_distance ) ) * 180. / np.pi
+            sin_va = np.sin(sensor_za*deg2rad) * earth_radius / (earth_radius + orbit_height)
+            sensor_va = np.arcsin(sin_va) * rad2deg
 
             nlocs = lons.size
 
@@ -181,7 +182,9 @@ class viirs_l1b_rf(object):
                 err = obsgrp.variables[errname]
                 err.set_auto_scale(False)
 
-                vals[:, ichan] = obs[:].data.ravel()
+                # NASA VIIRS stored reflectance need to divide by 
+                # cosine of solar zenith angle to get true reflectance 
+                vals[:, ichan] = obs[:].data.ravel() / np.cos(solar_za * deg2rad)
                 qcfs[:, ichan] = qcf[:].data.ravel()
                 errs[:, ichan] = 1. + err.scale_factor * err[:].data.ravel() ** 2
 
