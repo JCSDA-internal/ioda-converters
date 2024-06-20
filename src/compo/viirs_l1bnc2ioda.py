@@ -176,7 +176,7 @@ class viirs_l1b_rf(object):
             # cosine of solar zenith angle to get true reflectance
             sec_term = 1.
             if self.divide_cos_solarza:
-                sec_term = np.cos(solar_za * deg2rad) ** -1
+                sec_term = 1. / np.cos(solar_za * deg2rad)
 
             ichan = 0
             for chan in channels:
