@@ -83,9 +83,10 @@ long_missing_value = iconv.get_default_fill_val(np.int64)
 
 
 class viirs_l1b_rf(object):
-    def __init__(self, filenames, thin):
+    def __init__(self, filenames, thin, apply_secterm):
         self.filenames = filenames
         self.thin = thin
+        self.divide_cos_solarza = apply_secterm
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -171,6 +172,12 @@ class viirs_l1b_rf(object):
                 orbit_ad[:] = 1
             self.varAttrs['satelliteAscendingFlag', metaDataName]['description'] = '0=descending, 1=ascending'
 
+            # NASA VIIRS stored reflectance need to divide by
+            # cosine of solar zenith angle to get true reflectance
+            sec_term = 1.
+            if self.divide_cos_solarza:
+                sec_term = np.cos(solar_za * deg2rad) ** -1
+
             ichan = 0
             for chan in channels:
                 obsname = 'M%2.2i' % (chan)
@@ -183,9 +190,7 @@ class viirs_l1b_rf(object):
                 err = obsgrp.variables[errname]
                 err.set_auto_scale(False)
 
-                # NASA VIIRS stored reflectance need to divide by
-                # cosine of solar zenith angle to get true reflectance
-                vals[:, ichan] = obs[:].data.ravel() / np.cos(solar_za * deg2rad)
+                vals[:, ichan] = obs[:].data.ravel() * sec_term
                 qcfs[:, ichan] = qcf[:].data.ravel()
                 errs[:, ichan] = 1. + err.scale_factor * err[:].data.ravel() ** 2
 
@@ -296,13 +301,21 @@ def main():
         help="percentage of random thinning fro 0.0 to 1.0. Zero indicates"
         " no thinning is performed. (default: %(default)s)",
         type=float, default=0.0)
+    parser.add_argument(
+        '-s', '--secterm',
+        help="multiply sec of solar zenith angle to get true reflectance (Y/N)",
+        type=str, default='N')
 
     args = parser.parse_args()
+
+    apply_secterm = False
+    if args.secterm == 'Y':
+        apply_secterm = True
 
     zipped_list = zip(sorted(args.obsinfo), sorted(args.geoinfo))
 
     # Read in the reflectance factor data
-    toa_rf = viirs_l1b_rf(zipped_list, args.thin)
+    toa_rf = viirs_l1b_rf(zipped_list, args.thin, apply_secterm)
 
     # write everything out (albedo)
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
