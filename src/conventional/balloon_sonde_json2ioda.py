@@ -47,7 +47,7 @@ obsvars = ['airTemperature',
            'windEastward',
            'windNorthward']
 obsvars_units = ['K', '1', 'm s-1', 'm s-1']
-obserrlist = [1.2, 20.0, 1.7, 1.7]
+obserrlist = [1.2, 0.2, 1.7, 1.7]
 obsvars_dtype = ['float',
                  'float',
                  'float',
@@ -179,6 +179,9 @@ def main(args):
 
         # convert temperature from Celsius to Kelvin
         airTemperature = [temp_i+273.15 if temp_i is not None else temp_i for temp_i in airTemperature]
+
+        # change units of relative humidity from percent to ratio
+        relativeHumidity = [rh_i/100 if rh_i is not None else rh_i for rh_i in relativeHumidity]
 
         # Make a list of lists to feed into dataframe
         data_lists = list(zip(height, relativeHumidity, latitude, longitude, stationIdentification, pressure,
