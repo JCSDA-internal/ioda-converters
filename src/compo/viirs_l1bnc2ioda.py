@@ -16,6 +16,9 @@ import os
 import pyiodaconv.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from pyiodaconv.orddicts import DefaultOrderedDict
+from pyiodaconv.def_jedi_utils import compute_scan_angle
+from pyiodaconv.def_jedi_utils import d2r as deg2rad
+from pyiodaconv.def_jedi_utils import iso8601_string, epoch
 
 os.environ["TZ"] = "UTC"
 
@@ -38,16 +41,9 @@ channels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 # VIIRS M-band 11 reflective channels central wavelength. Do not change list below.
 wavelength = [0.412, 0.445, 0.488, 0.555, 0.672, 0.746,
               0.865, 1.24, 1.378, 1.61, 2.25]
-orbit_height = 829.       # in km
-earth_radius = 6378.137   # in km, mean earth radius
+orbit_height = 829000.       # in meters
 speed_light = 2.99792458E8
 frequency = speed_light*1.0E6/np.array(wavelength)
-deg2rad = np.pi/180.
-rad2deg = 180./np.pi
-
-# Date reference info
-iso8601_string = "seconds since 1970-01-01T00:00:00Z"
-epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 # A dictionary of global attributes.  More filled in further down.
 AttrData = {
@@ -157,8 +153,7 @@ class viirs_l1b_rf(object):
             solar_aa = geo_ncd.groups['geolocation_data'].variables['solar_azimuth'][:].data.ravel()
             sensor_za = geo_ncd.groups['geolocation_data'].variables['sensor_zenith'][:].data.ravel()
             sensor_aa = geo_ncd.groups['geolocation_data'].variables['sensor_azimuth'][:].data.ravel()
-            sin_va = np.sin(sensor_za*deg2rad) * earth_radius / (earth_radius + orbit_height)
-            sensor_va = np.arcsin(sin_va) * rad2deg
+            sensor_va = compute_scan_angle(sensor_za, orbit_height, sensor_za)
 
             nlocs = lons.size
 
