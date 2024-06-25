@@ -302,7 +302,7 @@ def main():
         " no thinning is performed. (default: %(default)s)",
         type=float, default=0.0)
     parser.add_argument(
-        '-s', '--secterm',
+        '--secterm',
         help="multiply sec of solar zenith angle to get true reflectance (Y/N)",
         type=str, default='N')
 
