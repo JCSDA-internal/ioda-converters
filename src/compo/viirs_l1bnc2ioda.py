@@ -17,7 +17,6 @@ import pyiodaconv.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from pyiodaconv.orddicts import DefaultOrderedDict
 from pyiodaconv.def_jedi_utils import compute_scan_angle
-from pyiodaconv.def_jedi_utils import d2r as deg2rad
 from pyiodaconv.def_jedi_utils import iso8601_string, epoch
 
 os.environ["TZ"] = "UTC"
@@ -37,6 +36,7 @@ locationKeyList = [
 
 obsvars = ["albedo"]
 channels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+deg2rad = np.pi/180.
 
 # VIIRS M-band 11 reflective channels central wavelength. Do not change list below.
 wavelength = [0.412, 0.445, 0.488, 0.555, 0.672, 0.746,
@@ -153,7 +153,7 @@ class viirs_l1b_rf(object):
             solar_aa = geo_ncd.groups['geolocation_data'].variables['solar_azimuth'][:].data.ravel()
             sensor_za = geo_ncd.groups['geolocation_data'].variables['sensor_zenith'][:].data.ravel()
             sensor_aa = geo_ncd.groups['geolocation_data'].variables['sensor_azimuth'][:].data.ravel()
-            sensor_va = compute_scan_angle(sensor_za, orbit_height, sensor_za)
+            sensor_va = compute_scan_angle(sensor_za, np.full_like(sensor_za,orbit_height), sensor_za)
 
             nlocs = lons.size
 
@@ -258,7 +258,7 @@ class viirs_l1b_rf(object):
             self.varAttrs[(tmpvar, metaDataName)]['units'] = 'degrees'
 
         DimDict['Location'] = len(self.outdata[('latitude', metaDataName)])
-        DimDict['Channel'] = np.array(channels, dtype=np.int32)
+        DimDict['Channel'] = self.outdata[('sensorChannelNumber', metaDataName)]
         AttrData['sourceFiles'] = AttrData['sourceFiles']
         AttrData['datetimeRange'] = np.array([datetime.fromtimestamp(min_time).strftime("%Y-%m-%dT%H:%M:%SZ"),
                                               datetime.fromtimestamp(max_time).strftime("%Y-%m-%dT%H:%M:%SZ")], dtype=object)
