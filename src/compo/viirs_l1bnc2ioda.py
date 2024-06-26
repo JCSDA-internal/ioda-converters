@@ -298,7 +298,7 @@ def main():
         type=float, default=0.0)
     parser.add_argument(
         '--secterm',
-        help="multiply sec of solar zenith angle to get true reflectance (Y/N)",
+        help="presence of option will multiply secant of solar zenith angle to get true reflectance",
         action='store_true', default=False)
 
     args = parser.parse_args()
