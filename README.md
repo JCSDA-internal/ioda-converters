@@ -113,6 +113,30 @@ For method option (-m) of bias and uncertainty calculation (default/nesdis), dea
 
 The land converters include all converter scripts for snowpack, soil, vegeation, and the other surface related land variables.
 
+For OWP snow observations (snow_obs), the converter converts daily csv file to netcdf files with `owp_snow_obs.py`.
+```
+usage: owp_snow_obs.py [-h] -i INPUT [-o OUTPUT] [--thin_swe THIN_SWE]
+                       [--thin_depth THIN_DEPTH]
+                       [--thin_random_seed THIN_RANDOM_SEED] [--err_fn ERR_FN]
+optional arguments:
+  --thin_swe THIN_SWE   percentage of random thinning for SWE, from 0.0 to 1.0.
+                        Zero indicates no thinning is performed. (type: float,
+                        default: 0.0)
+  --thin_depth THIN_DEPTH
+                        percentage of random thinning for snow depth, from 0.0
+                        to 1.0. Zero indicates no thinning is performed. (type:
+                        float, default: 0.0)
+  --thin_random_seed THIN_RANDOM_SEED
+                        A random seed for reproducible random thinning. Default
+                        is total # seconds from 1970-01-01 to the day of the
+                        data provided. (type: int, default: None)
+  --err_fn ERR_FN       Name of error function to apply. The options are
+                        hardcoded in the module, currently:['dummy_error'].
+                        Default (none) uses ObsError column in the input file.
+                        (type: str, default: None)
+```
+
+
 For snow cover fraction(scf), IMS grib2 files are supported with `ims_scf2ioda.py`.
 ```
 Usage: ims_scf2ioda.py -i input_ims_file.grib2 -o output_ioda_file.nc -m maskout
@@ -120,6 +144,13 @@ Usage: ims_scf2ioda.py -i input_ims_file.grib2 -o output_ioda_file.nc -m maskout
 For -i you can specify an input file and the converter will write it to one output file. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values.
 
 
+For the processed imsfv3 snow depth and snow cover fraction, imsfv3 NetCDF file are supported with `imsfv3_scf2ioda.py.
+```
+Usage: imsfv3_scf2ioda.py -i input_imsfv3_file.nc -o output_ioda_file.nc
+```
+For -i you can specify an input file and the converter will write it to one output file when for -o you specify output ioda filename.
+
+ 
 For snow depth (snod), afwa grib1 files are supported with `afwa_snod2ioda.py`.
 ```
 Usage: afwa_snod2ioda.py -i input_afwa_file.grb -o output_ioda_file.nc -m maskout
@@ -136,17 +167,12 @@ Usage: ghcn_snod2ioda.py -i input_ghcn_file.csv -o output_ioda_file.nc -f ghcn_s
 In the test case, YYYYMMDD is set 20200228. For -i you can specify an input file and the converter will write it to one output file. For fix file option (-f), you can specify fix station list file which includes station ID, latitude, longitude, and elevation. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values.
 
 
-For surface volumetric soil moisture (ssm), SMAP NRT h5 files are supported with `smap_ssm2ioda.py`.
+For both SMAP surface volumetric soil moisture (ssm), both 9km and NRT h5 files are supported with `smap_ssm2ioda.py`.
 ```
 Usage: smap_ssm2ioda.py -i input_smap_file.h5 -o output_ioda_file.nc --maskMissing
 ```
 For -i you can specify an input file and the converter will write it to one output file. --maskMissing means to not write out missing values. It should be noted that SMAP NRT h5 filename contains date and time which has been transferred to the datetime in smap_ssm2ioda.py because the data in the file does not have date and time variables. The h5 file is read with the netCDF4 module rather than the h5py module generally used.
 
-For surface volumetric soil moisture (ssm), SMAP 9km h5 files are supported with `smap9km_ssm2ioda.py`.
-```
-Usage: smap9km_ssm2ioda.py -i input_smap9km_file.h5 -o output_ioda_file.nc --maskMissing
-```
-For -i you can specify an input file and the converter will write it to one output file. --maskMissin means to not write out missing values. The h5 file is read with the netCDF4 module rather than the h5py module generally used.
 
 For surface volumetric soil moisture (ssm), SMOS L2 NRT Netcdf files are supported with `smos_ssm2ioda.py`.
 ```
