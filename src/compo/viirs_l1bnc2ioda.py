@@ -168,9 +168,10 @@ class viirs_l1b_rf(object):
 
             # NASA VIIRS stored reflectance need to divide by
             # cosine of solar zenith angle to get true reflectance
-            sec_term = 1.
             if self.divide_cos_solarza:
                 sec_term = 1. / np.cos(solar_za * np.pi / 180.)
+            else:
+                sec_term = 1.
 
             ichan = 0
             for chan in channels:
