@@ -299,18 +299,14 @@ def main():
     parser.add_argument(
         '--secterm',
         help="multiply sec of solar zenith angle to get true reflectance (Y/N)",
-        type=str, default='N')
+        action='store_true', default=False)
 
     args = parser.parse_args()
-
-    apply_secterm = False
-    if args.secterm == 'Y':
-        apply_secterm = True
 
     zipped_list = zip(sorted(args.obsinfo), sorted(args.geoinfo))
 
     # Read in the reflectance factor data
-    toa_rf = viirs_l1b_rf(zipped_list, args.thin, apply_secterm)
+    toa_rf = viirs_l1b_rf(zipped_list, args.thin, args.secterm)
 
     # write everything out (albedo)
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
