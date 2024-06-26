@@ -36,7 +36,6 @@ locationKeyList = [
 
 obsvars = ["albedo"]
 channels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-deg2rad = np.pi/180.
 
 # VIIRS M-band 11 reflective channels central wavelength. Do not change list below.
 wavelength = [0.412, 0.445, 0.488, 0.555, 0.672, 0.746,
@@ -171,7 +170,7 @@ class viirs_l1b_rf(object):
             # cosine of solar zenith angle to get true reflectance
             sec_term = 1.
             if self.divide_cos_solarza:
-                sec_term = 1. / np.cos(solar_za * deg2rad)
+                sec_term = 1. / np.cos(solar_za * np.pi / 180.)
 
             ichan = 0
             for chan in channels:
