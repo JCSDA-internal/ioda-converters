@@ -16,6 +16,8 @@ import os
 import pyiodaconv.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from pyiodaconv.orddicts import DefaultOrderedDict
+from pyiodaconv.def_jedi_utils import compute_scan_angle
+from pyiodaconv.def_jedi_utils import iso8601_string, epoch
 
 os.environ["TZ"] = "UTC"
 
@@ -34,20 +36,14 @@ locationKeyList = [
 
 obsvars = ["albedo"]
 channels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+deg2rad = np.pi/180.
 
 # VIIRS M-band 11 reflective channels central wavelength. Do not change list below.
 wavelength = [0.412, 0.445, 0.488, 0.555, 0.672, 0.746,
               0.865, 1.24, 1.378, 1.61, 2.25]
-orbit_height = 829.       # in km
-earth_radius = 6378.137   # in km, mean earth radius
+orbit_height = 829000.       # in meters
 speed_light = 2.99792458E8
 frequency = speed_light*1.0E6/np.array(wavelength)
-deg2rad = np.pi/180.
-rad2deg = 180./np.pi
-
-# Date reference info
-iso8601_string = "seconds since 1970-01-01T00:00:00Z"
-epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 # A dictionary of global attributes.  More filled in further down.
 AttrData = {
@@ -157,8 +153,7 @@ class viirs_l1b_rf(object):
             solar_aa = geo_ncd.groups['geolocation_data'].variables['solar_azimuth'][:].data.ravel()
             sensor_za = geo_ncd.groups['geolocation_data'].variables['sensor_zenith'][:].data.ravel()
             sensor_aa = geo_ncd.groups['geolocation_data'].variables['sensor_azimuth'][:].data.ravel()
-            sin_va = np.sin(sensor_za*deg2rad) * earth_radius / (earth_radius + orbit_height)
-            sensor_va = np.arcsin(sin_va) * rad2deg
+            sensor_va = compute_scan_angle(sensor_za, np.full_like(sensor_za, orbit_height), sensor_za)
 
             nlocs = lons.size
 
@@ -263,7 +258,7 @@ class viirs_l1b_rf(object):
             self.varAttrs[(tmpvar, metaDataName)]['units'] = 'degrees'
 
         DimDict['Location'] = len(self.outdata[('latitude', metaDataName)])
-        DimDict['Channel'] = np.array(channels, dtype=np.int32)
+        DimDict['Channel'] = self.outdata[('sensorChannelNumber', metaDataName)]
         AttrData['sourceFiles'] = AttrData['sourceFiles']
         AttrData['datetimeRange'] = np.array([datetime.fromtimestamp(min_time).strftime("%Y-%m-%dT%H:%M:%SZ"),
                                               datetime.fromtimestamp(max_time).strftime("%Y-%m-%dT%H:%M:%SZ")], dtype=object)
@@ -304,18 +299,14 @@ def main():
     parser.add_argument(
         '--secterm',
         help="multiply sec of solar zenith angle to get true reflectance (Y/N)",
-        type=str, default='N')
+        action='store_true', default=False)
 
     args = parser.parse_args()
-
-    apply_secterm = False
-    if args.secterm == 'Y':
-        apply_secterm = True
 
     zipped_list = zip(sorted(args.obsinfo), sorted(args.geoinfo))
 
     # Read in the reflectance factor data
-    toa_rf = viirs_l1b_rf(zipped_list, args.thin, apply_secterm)
+    toa_rf = viirs_l1b_rf(zipped_list, args.thin, args.secterm)
 
     # write everything out (albedo)
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
