@@ -17,6 +17,7 @@ import datetime
 import time
 import read_cloudsat
 
+
 def main(args):
     # fname_in = ['2009212223327_17338_CS_2B-GEOPROF_GRANULE_P1_R05_E02_F00.hdf']
     fname_in = args.input
@@ -28,7 +29,7 @@ def main(args):
     cpr_obs = cpr_obs.transpose("Location", "channel")
 
     locid = (cpr_obs.obs.values < -100) | (cpr_obs.obs.values > 100) | np.isnan(cpr_obs.obs.values) | np.isinf(cpr_obs.obs.values)
-    locid = cpr_obs.Location.values[np.sum(locid,axis=1) == 0]
+    locid = cpr_obs.Location.values[np.sum(locid, axis=1) == 0]
     cpr_obs = cpr_obs.isel(Location=locid)
 
     nobs = cpr_obs.Location.size
@@ -38,7 +39,7 @@ def main(args):
     fill_value = 9.96921e+36
     fill_value_dbz = np.float32(-9999)
 
-    refl_dims = ('Location', 'Channel') 
+    refl_dims = ('Location', 'Channel')
     tmpMat = np.ones((nobs, nchan,), dtype=np.float32)
 
     # Create the netCDF4 dataset
@@ -69,18 +70,17 @@ def main(args):
 
         g = 'ObsValue'
         ds_g = ds.createGroup(g)
-        zvar =  ds_g.createVariable('ReflectivityAttenuated', np.float32, refl_dims, fill_value=fill_value_dbz, zlib=True)
+        zvar = ds_g.createVariable('ReflectivityAttenuated', np.float32, refl_dims, fill_value=fill_value_dbz, zlib=True)
         ds_g.variables['ReflectivityAttenuated'][:] = cpr_obs.obs.values.astype(np.float32)
         zvar.setncattr_string("units", str("dBz"))
-
 
         g = 'GsiHofX'
         ds_g = ds.createGroup(g)
         zvar = ds_g.createVariable('ReflectivityAttenuated', np.float32, refl_dims, fill_value=fill_value_dbz, zlib=True)
-        '''
-        ds_g.variables['ReflectivityAttenuated'][:] = cpr_sim.Reflectivity_Attenuated.values.astype(np.float32)
-        zvar.setncattr_string("units", str("dBz"))
-        '''
+        ###
+        # ds_g.variables['ReflectivityAttenuated'][:] = cpr_sim.Reflectivity_Attenuated.values.astype(np.float32)
+        # zvar.setncattr_string("units", str("dBz"))
+        ###
 
         g = 'ObsError'
         ds_g = ds.createGroup(g)
@@ -137,11 +137,11 @@ def main(args):
         ds_g.createVariable('sensorAzimuthAngle', np.float32, ('Location',), fill_value=fill_value)
         ds_g.createVariable('solarAzimuthAngle', np.float32, ('Location',), fill_value=fill_value)
         ds_g.createVariable('solarZenithAngle', np.float32, ('Location',), fill_value=fill_value)
-        #ds_g.createVariable('time', np.float32, ('Location',), fill_value=fill_value)
+        # ds_g.createVariable('time', np.float32, ('Location',), fill_value=fill_value)
         ds_g.createVariable('sequenceNumber', np.int32, ('Location',), fill_value=-2147483647)
 
-        ds_g.variables['sensorCentralFrequency'][:] = np.array([94.05]).astype(np.float32) #cpr_sim.Frequency.values.astype(np.float32)
-        ds_g.variables['sensorCentralWavenumber'][:] = np.array([3.1371]).astype(np.float32) #cpr_sim.Wavenumber.values.astype(np.float32)
+        ds_g.variables['sensorCentralFrequency'][:] = np.array([94.05]).astype(np.float32)    # cpr_sim.Frequency.values.astype(np.float32)
+        ds_g.variables['sensorCentralWavenumber'][:] = np.array([3.1371]).astype(np.float32)  # cpr_sim.Wavenumber.values.astype(np.float32)
         ds_g.variables['gsi_use_flag'][:] = np.array([1]).astype(np.int32)
         ds_g.variables['sensorPolarizationDirection'][:] = np.array([9]).astype(np.int32)
         ds_g.variables['latitude'][:] = cpr_obs.lat.values.astype(np.float32)
@@ -153,7 +153,7 @@ def main(args):
         ds_g.variables['sensorAzimuthAngle'][:] = cpr_obs.azimuth_angle.values.astype(np.float32)
         ds_g.variables['solarAzimuthAngle'][:] = np.zeros(nobs).astype(np.float32)
         ds_g.variables['solarZenithAngle'][:] = np.zeros(nobs).astype(np.float32)
-        #ds_g.variables['time'][:] = np.ones(nobs).astype(np.float32)
+        # ds_g.variables['time'][:] = np.ones(nobs).astype(np.float32)
         ds_g.variables['sequenceNumber'][:] = cpr_obs.sequenceNumber.values.astype(np.int32)
 
         ds_g.createVariable('height', np.float32, ('Location'), fill_value=fill_value)
