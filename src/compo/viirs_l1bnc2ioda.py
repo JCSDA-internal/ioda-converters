@@ -81,7 +81,7 @@ class viirs_l1b_rf(object):
     def __init__(self, filenames, thin, apply_secterm):
         self.filenames = filenames
         self.thin = thin
-        self.divide_cos_solarza = apply_secterm
+        self.apply_secterm = apply_secterm
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -166,12 +166,10 @@ class viirs_l1b_rf(object):
                 orbit_ad[:] = 1
             self.varAttrs['satelliteAscendingFlag', metaDataName]['description'] = '0=descending, 1=ascending'
 
-            # NASA VIIRS stored reflectance need to divide by
+            # NASA VIIRS apply secant or divide reflectance by
             # cosine of solar zenith angle to get true reflectance
-            if self.divide_cos_solarza:
-                sec_term = 1. / np.cos(solar_za * np.pi / 180.)
-            else:
-                sec_term = 1.
+            sec_term = 1. / np.cos(self.solar_za * np.pi / 180.) if (
+                self.apply_secterm and self.solar_za != 90.) else 1.
 
             ichan = 0
             for chan in channels:
