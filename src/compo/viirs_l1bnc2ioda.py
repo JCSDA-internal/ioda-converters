@@ -168,8 +168,11 @@ class viirs_l1b_rf(object):
 
             # NASA VIIRS apply secant or divide reflectance by
             # cosine of solar zenith angle to get true reflectance
-            sec_term = 1. / np.cos(self.solar_za * np.pi / 180.) if (
-                self.apply_secterm and self.solar_za != 90.) else 1.
+            if self.apply_secterm:
+                print(solar_za)
+                sec_term = 1. / np.cos(solar_za * np.pi / 180.)
+            else:
+                sec_term = 1.
 
             ichan = 0
             for chan in channels:
@@ -183,7 +186,7 @@ class viirs_l1b_rf(object):
                 err = obsgrp.variables[errname]
                 err.set_auto_scale(False)
 
-                vals[:, ichan] = obs[:].data.ravel() * sec_term
+                vals[:, ichan] = obs[:].data.ravel() * sec_term if self.apply_secterm else obs[:].data.ravel()
                 qcfs[:, ichan] = qcf[:].data.ravel()
                 errs[:, ichan] = 1. + err.scale_factor * err[:].data.ravel() ** 2
 
