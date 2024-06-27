@@ -169,7 +169,6 @@ class viirs_l1b_rf(object):
             # NASA VIIRS apply secant or divide reflectance by
             # cosine of solar zenith angle to get true reflectance
             if self.apply_secterm:
-                print(solar_za)
                 sec_term = 1. / np.cos(solar_za * np.pi / 180.)
             else:
                 sec_term = 1.
