@@ -1,5 +1,14 @@
-#!/home/imoradi/packages/anaconda3/bin/python3.4
-# 2023, Isaac Moradi
+#!/usr/bin/env python3
+
+#
+# (C) Copyright 2020-2024 UCAR
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+#
+#
+# contribution based on prototype by 2023, Isaac Moradi
+#
 
 import os
 import sys
@@ -9,11 +18,8 @@ import numpy as np
 import datetime
 import pdb
 import xarray as xr
-from pyiodaconv.def_jedi_utils import iso8601_string
-os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
+from pyiodaconv.def_jedi_utils import iso8601_string, epoch
 
-epoch = datetime.datetime.fromisoformat(iso8601_string[14:-1])
-        
 def read_cloudsat_hdf_file(fname):
     print(f"Reading {fname}")
     from pyhdf.SD import SD, SDC
@@ -195,5 +201,7 @@ def read_cloudsat(cs_fnames):
     lon = cs_data['lon'].values
     lon[lon < 0] = 360 + lon[lon < 0]
     cs_data['lon'].values = lon
+
+    cs_data["sequenceNumber"] = xr.DataArray(np.arange(cs_data.obs_id.size), cs_data.obs_id.coords)
             
     return cs_data
