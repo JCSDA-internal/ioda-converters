@@ -167,7 +167,7 @@ class viirs_l1b_rf(object):
             self.varAttrs['satelliteAscendingFlag', metaDataName]['description'] = '0=descending, 1=ascending'
 
             # secant of solar zenith angle to get true reflectance (apply_secterm option)
-            sec_term = 1. / np.cos(solar_za * np.pi / 180.)
+            sec_term = np.where(solar_za != 90, 1. / np.cos(solar_za * np.pi / 180.), 1.)
 
             ichan = 0
             for chan in channels:
