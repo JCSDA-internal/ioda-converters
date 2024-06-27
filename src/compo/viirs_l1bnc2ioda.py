@@ -166,12 +166,8 @@ class viirs_l1b_rf(object):
                 orbit_ad[:] = 1
             self.varAttrs['satelliteAscendingFlag', metaDataName]['description'] = '0=descending, 1=ascending'
 
-            # NASA VIIRS apply secant or divide reflectance by
-            # cosine of solar zenith angle to get true reflectance
-            if self.apply_secterm:
-                sec_term = 1. / np.cos(solar_za * np.pi / 180.)
-            else:
-                sec_term = 1.
+            # secant of solar zenith angle to get true reflectance (apply_secterm option)
+            sec_term = 1. / np.cos(solar_za * np.pi / 180.)
 
             ichan = 0
             for chan in channels:
@@ -185,6 +181,7 @@ class viirs_l1b_rf(object):
                 err = obsgrp.variables[errname]
                 err.set_auto_scale(False)
 
+                # NASA VIIRS apply secant if option enabled
                 vals[:, ichan] = obs[:].data.ravel() * sec_term if self.apply_secterm else obs[:].data.ravel()
                 qcfs[:, ichan] = qcf[:].data.ravel()
                 errs[:, ichan] = 1. + err.scale_factor * err[:].data.ravel() ** 2
