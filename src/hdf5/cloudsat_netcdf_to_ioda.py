@@ -12,7 +12,6 @@
 
 import sys
 import netCDF4 as nc
-import xarray as xr
 import numpy as np
 import datetime
 import time
