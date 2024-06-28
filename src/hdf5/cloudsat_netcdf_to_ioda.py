@@ -143,7 +143,6 @@ def import_obs_data(cpr_obs):
     obs_data[('solarZenithAngle', metaDataName)] = np.zeros(nobs).astype(np.float32)
     obs_data[('solarAzimuthAngle', metaDataName)] = np.zeros(nobs).astype(np.float32)
     obs_data[('sequenceNumber', metaDataName)] = cpr_obs.sequenceNumber.values.astype(np.int32)
-    # ?? ds_g.variables['sequenceNumber'][:] = cpr_obs["sequenceNumber"].values.astype(np.int32)
     obs_data[('dateTime', metaDataName)] = cpr_obs.epoch_time.values.astype(np.int64)
 
     obs_data[('sequenceNumber', metaDataName)] = cpr_obs.sequenceNumber.values.astype(np.int32)
