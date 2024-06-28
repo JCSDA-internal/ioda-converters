@@ -136,6 +136,7 @@ def import_obs_data(cpr_obs):
     obs_data[('sensorPolarizationDirection', metaDataName)] = np.array([9]).astype(np.int32)
     obs_data[('sensorScanPosition', metaDataName)] = cpr_obs.fov1.values.astype(np.int32)
     obs_data[('sensorChannelNumber', metaDataName)] = cpr_obs.channel.values.astype(np.int32)
+    # add satellite altitude (height in meters) and use compute_scan_angle function
     obs_data[('sensorViewAngle', metaDataName)] = cpr_obs.zenith_angle.values.astype(np.float32)
     obs_data[('sensorZenithAngle', metaDataName)] = cpr_obs.zenith_angle.values.astype(np.float32)
     obs_data[('sensorAzimuthAngle', metaDataName)] = cpr_obs.azimuth_angle.values.astype(np.float32)
