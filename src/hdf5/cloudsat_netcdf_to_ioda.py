@@ -157,10 +157,11 @@ def import_obs_data(cpr_obs):
 
 
 def init_obs_loc():
+    k = radarReflectivityAtt
     obs = {
-        ('ReflectivityAttenuated', "ObsValue"): [],
-        ('ReflectivityAttenuated', "ObsError"): [],
-        ('ReflectivityAttenuated', "PreQC"): [],
+        (k, "ObsValue"): [],
+        (k, "ObsError"): [],
+        (k, "PreQC"): [],
         ('satelliteIdentifier', metaDataName): [],
         ('sensorChannelNumber', metaDataName): [],
         ('latitude', metaDataName): [],
