@@ -15,7 +15,32 @@ import netCDF4 as nc
 import numpy as np
 import datetime
 import time
+
+import pyiodaconv.ioda_conv_engines as iconv
+from pyiodaconv.def_jedi_utils import epoch, iso8601_string
 import read_cloudsat
+
+float_missing_value = iconv.get_default_fill_val(np.float32)
+int_missing_value = iconv.get_default_fill_val(np.int32)
+long_missing_value = iconv.get_default_fill_val(np.int64)
+
+metaDataName = iconv.MetaDataName()
+obsValName = iconv.OvalName()
+
+# globals
+CLOUDSAT_WMO_sat_ID = 788
+
+GlobalAttrs = {
+    "platformCommonName": "CloudSat",
+    "platformLongDescription": "CloudSat reflectance",
+    "sensorCentralFrequency": "[94.05]"
+}
+
+locationKeyList = [
+    ("latitude", "float"),
+    ("longitude", "float"),
+    ("dateTime", "long"),
+]
 
 
 def main(args):
@@ -24,6 +49,22 @@ def main(args):
     fname_out = args.output
 
     cpr_obs = read_cloudsat.read_cloudsat(fname_in)
+    
+    obsData = get_obsData(cpr_obs)
+
+def get_obsData(cpr_obs):
+
+    # initialize
+    obsData = {}
+
+    # allocate space for output depending on which variables are to be saved
+    obsData = init_obs_loc()
+
+    # ideally an attribute from the file read
+    # example: cpr_obs.attrs['ShortName'].decode("utf-8")
+    WMO_sat_ID = get_WMO_satellite_ID('Cloudsat')
+
+    # appears to be observation cleansing and conditioning
     cpr_obs = cpr_obs.rename_vars({"elevation": "elevation1"})
     cpr_obs = cpr_obs.stack(Location=['obs_id', 'elevation']).reset_index("Location")
     cpr_obs = cpr_obs.transpose("Location", "channel")
@@ -32,140 +73,83 @@ def main(args):
     locid = cpr_obs.Location.values[np.sum(locid, axis=1) == 0]
     cpr_obs = cpr_obs.isel(Location=locid)
 
+    # now begin populating dictionary obsData to pass to IODA writer
     nobs = cpr_obs.Location.size
-    nchan = cpr_obs.channel.size
+    nchans = cpr_obs.channel.size
     records = np.unique(cpr_obs.sequenceNumber.values).flatten()
+    nrecords = np.int32(records.size)
 
-    fill_value = 9.96921e+36
-    fill_value_dbz = np.float32(-9999)
+    import pdb
+    pdb.set_trace()
+    sys.exit()
 
     refl_dims = ('Location', 'Channel')
-    tmpMat = np.ones((nobs, nchan,), dtype=np.float32)
 
-    # Create the netCDF4 dataset
-    with nc.Dataset(fname_out, 'w', format='NETCDF4', zlib=True) as ds:
-        ds.createDimension('nrecs', 1)
-        ds.createDimension('Channel', nchan)
-        ds.createDimension('Location', nobs)
 
-        ds.createVariable('Channel', np.int32, ('Channel',))
-        ds.createVariable('Location', np.float32, ('Location',))
-        ds.createVariable('nrecs', np.int32, ('nrecs',))
+    # ds_g.variables['height'][:] = cpr_obs.height.values.astype(np.float32)
+    # ds_g.variables['Layer'][:] = cpr_obs.elevation.values.astype(np.int32)
 
-        ds['nrecs'][:] = np.int32(records.size)
-        ds['Location'][:] = cpr_obs.Location.values.astype(np.int32)
-        ds['Channel'][:] = cpr_obs.channel.values.astype(np.int32)
+    obs_data[('latitude', metaDataName)] = cpr_obs.lat.values.astype(np.float32)
+    obs_data[('longitude', metaDataName)] = cpr_obs.lon.values.astype(np.float32)
+    obs_data[('sensorCentralFrequency', metaDataName)] = np.array([94.05]).astype(np.float32)    # cpr_sim.Frequency.values.astype(np.float32)
+    obs_data[('sensorCentralWavenumber', metaDataName)] = np.array([3.1371]).astype(np.float32)  # cpr_sim.Wavenumber.values.astype(np.float32)
+    obs_data[('sensorPolarizationDirection', metaDataName)] = np.array([9]).astype(np.int32)
+    obs_data[('sensorScanPosition', metaDataName)] = cpr_obs.fov1.values.astype(np.int32)
+    obs_data[('sensorChannelNumber', metaDataName)] = cpr_obs.channel.values.astype(np.int32)
+    obs_data[('sensorViewAngle', metaDataName)] = cpr_obs.zenith_angle.values.astype(np.float32)
+    obs_data[('sensorZenithAngle', metaDataName)] = cpr_obs.zenith_angle.values.astype(np.float32)
+    obs_data[('sensorAzimuthAngle', metaDataName)] = cpr_obs.azimuth_angle.values.astype(np.float32)
+    obs_data[('solarZenithAngle', metaDataName)] = np.zeros(nobs).astype(np.float32)
+    obs_data[('solarAzimuthAngle', metaDataName)] = np.zeros(nobs).astype(np.float32)
+    obs_data[('sequenceNumber', metaDataName)] = cpr_obs.sequenceNumber.values.astype(np.int32)
+        # ?? ds_g.variables['sequenceNumber'][:] = cpr_obs["sequenceNumber"].values.astype(np.int32)
+    obs_data[('dateTime', metaDataName)] = cpr_obs.epoch_time.values.astype(np.int64)
 
-        ds['Location'].setncattr("suggested_chunk_dim", 100)
-        ds['Channel'].setncattr("suggested_chunk_dim", 100)
+    obs_data[('sequenceNumber', metaDataName)] = cpr_obs.sequenceNumber.values.astype(np.int32)
+    k = 'ReflectivityAttenuated'
+    # have to reorder the channel axis to be last then merge ( nscans x nspots = nlocs )
+    obs_data[(k, "ObsValue")] = cpr_obs.obs.values.astype(np.float32)
+    obs_data[(k, "ObsError")] = np.full((nobs, nchans), 5.0, dtype='float32')
+    obs_data[(k, "PreQC")] = np.full((nobs, nchans), 0, dtype='int32')
 
-        ds.setncattr_string("_ioda_layout", "ObsGroup")
-        ds.setncattr("_ioda_layout_version", np.int32(0))
-        ds.setncattr("date_time", np.int32(2009113003))
-        ds.setncattr("satellite", "cloudsat")
-        ds.setncattr("sensor", "cpr")
-        ds.setncattr('history', 'Created by Isaac Moradi NASA/GMAO Sept 6, 2023')
 
-        # Groups ['GsiHofX', 'MetaData', 'ObsError', 'ObsValue', 'PreQC', 'RecMetaData']
+def init_obs_loc():
+    obs = {
+        ('ReflectivityAttenuated', "ObsValue"): [],
+        ('ReflectivityAttenuated', "ObsError"): [],
+        ('ReflectivityAttenuated', "PreQC"): [],
+        ('satelliteIdentifier', metaDataName): [],
+        ('sensorChannelNumber', metaDataName): [],
+        ('latitude', metaDataName): [],
+        ('longitude', metaDataName): [],
+        ('dateTime', metaDataName): [],
+        ('solarZenithAngle', metaDataName): [],
+        ('solarAzimuthAngle', metaDataName): [],
+        ('sensorZenithAngle', metaDataName): [],
+        ('sensorAzimuthAngle', metaDataName): [],
+#       ('sensorViewAngle', metaDataName): [],
+#       ('satelliteAscendingFlag', metaDataName): [],
+    }
 
-        g = 'ObsValue'
-        ds_g = ds.createGroup(g)
-        zvar = ds_g.createVariable('ReflectivityAttenuated', np.float32, refl_dims, fill_value=fill_value_dbz, zlib=True)
-        ds_g.variables['ReflectivityAttenuated'][:] = cpr_obs.obs.values.astype(np.float32)
-        zvar.setncattr_string("units", str("dBz"))
+    return obs
 
-        g = 'GsiHofX'
-        ds_g = ds.createGroup(g)
-        zvar = ds_g.createVariable('ReflectivityAttenuated', np.float32, refl_dims, fill_value=fill_value_dbz, zlib=True)
-        ###
-        # ds_g.variables['ReflectivityAttenuated'][:] = cpr_sim.Reflectivity_Attenuated.values.astype(np.float32)
-        # zvar.setncattr_string("units", str("dBz"))
-        ###
 
-        g = 'ObsError'
-        ds_g = ds.createGroup(g)
-        zvar = ds_g.createVariable('ReflectivityAttenuated', np.float32, refl_dims, fill_value=fill_value, zlib=True)
-        ds_g.variables['ReflectivityAttenuated'][:] = tmpMat.copy()
-        zvar.setncattr_string("units", str("dBz"))
+def get_WMO_satellite_ID(attrs_shortname):
 
-        g = 'PreQC'
-        ds_g = ds.createGroup(g)
-        zvar = ds_g.createVariable('ReflectivityAttenuated', np.float32, refl_dims, fill_value=fill_value, zlib=True)
-        ds_g.variables['ReflectivityAttenuated'][:] = tmpMat.copy()
-        zvar.setncattr_string("units", str("dBz"))
+    if 'CloudSat' in attrs_shortname:
+        WMO_sat_ID = CLOUDSAT_WMO_sat_ID
+    else:
+        WMO_sat_ID = -1
+        print("could not determine satellite from filename: %s" % attrs_shortname)
+        sys.exit()
 
-        g = "GsiBc"
-        ds_g = ds.createGroup(g)
-        zvar = ds_g.createVariable('ReflectivityAttenuated', np.float32, refl_dims, fill_value=fill_value, zlib=True)
-        ds_g.variables['ReflectivityAttenuated'][:] = tmpMat.copy()
-        zvar.setncattr_string("units", str("dBz"))
+    return WMO_sat_ID
 
-        g = "GsiHofXBc"
-        ds_g = ds.createGroup(g)
-        zvar = ds_g.createVariable('ReflectivityAttenuated', np.float32, refl_dims, fill_value=fill_value, zlib=True)
-        ds_g.variables['ReflectivityAttenuated'][:] = tmpMat.copy()
-        zvar.setncattr_string("units", str("dBz"))
 
-        g = "GsiObsBias"
-        ds_g = ds.createGroup(g)
-        zvar = ds_g.createVariable('ReflectivityAttenuated', np.float32, refl_dims, fill_value=fill_value, zlib=True)
-        ds_g.variables['ReflectivityAttenuated'][:] = tmpMat.copy()
-        zvar.setncattr_string("units", str("dBz"))
+def get_epoch_time(f):
 
-        # we don't need the channel element anymore
-        cpr_obs = cpr_obs.isel(channel=0)
-
-        g = 'MetaData'
-        ds_g = ds.createGroup(g)
-
-        unixtime = cpr_obs.epoch_time.values
-
-        varid = ds_g.createVariable('dateTime', np.int64, ('Location',))
-        ds_g.variables['dateTime'][:] = unixtime.astype(np.int64)
-        ds_g.variables['dateTime'].setncattr('units', 'seconds since 1970-01-01T00:00:00Z')
-
-        ds_g.createVariable('sensorCentralFrequency', np.float32, ('Channel',), fill_value=fill_value)
-        ds_g.createVariable('sensorCentralWavenumber', np.float32, ('Channel',), fill_value=fill_value)
-        ds_g.createVariable('gsi_use_flag', np.int32, ('Channel',), fill_value=-2147483647)
-        ds_g.createVariable('sensorPolarizationDirection', np.int32, ('Channel',), fill_value=-2147483647)
-        ds_g.createVariable('latitude', np.float32, ('Location',), fill_value=fill_value)
-        ds_g.createVariable('longitude', np.float32, ('Location',), fill_value=fill_value)
-        ds_g.createVariable('sensorScanPosition', np.int32, ('Location',), fill_value=-2147483647)
-        ds_g.createVariable('sensorChannelNumber', np.int32, ('Channel',), fill_value=-2147483647)
-        ds_g.createVariable('sensorViewAngle', np.float32, ('Location',), fill_value=fill_value)
-        ds_g.createVariable('sensorZenithAngle', np.float32, ('Location',), fill_value=fill_value)
-        ds_g.createVariable('sensorAzimuthAngle', np.float32, ('Location',), fill_value=fill_value)
-        ds_g.createVariable('solarAzimuthAngle', np.float32, ('Location',), fill_value=fill_value)
-        ds_g.createVariable('solarZenithAngle', np.float32, ('Location',), fill_value=fill_value)
-        # ds_g.createVariable('time', np.float32, ('Location',), fill_value=fill_value)
-        ds_g.createVariable('sequenceNumber', np.int32, ('Location',), fill_value=-2147483647)
-
-        ds_g.variables['sensorCentralFrequency'][:] = np.array([94.05]).astype(np.float32)    # cpr_sim.Frequency.values.astype(np.float32)
-        ds_g.variables['sensorCentralWavenumber'][:] = np.array([3.1371]).astype(np.float32)  # cpr_sim.Wavenumber.values.astype(np.float32)
-        ds_g.variables['gsi_use_flag'][:] = np.array([1]).astype(np.int32)
-        ds_g.variables['sensorPolarizationDirection'][:] = np.array([9]).astype(np.int32)
-        ds_g.variables['latitude'][:] = cpr_obs.lat.values.astype(np.float32)
-        ds_g.variables['longitude'][:] = cpr_obs.lon.values.astype(np.float32)
-        ds_g.variables['sensorScanPosition'][:] = cpr_obs.fov1.values.astype(np.int32)
-        ds_g.variables['sensorChannelNumber'][:] = cpr_obs.channel.values.astype(np.int32)
-        ds_g.variables['sensorViewAngle'][:] = cpr_obs.zenith_angle.values.astype(np.float32)
-        ds_g.variables['sensorZenithAngle'][:] = cpr_obs.zenith_angle.values.astype(np.float32)
-        ds_g.variables['sensorAzimuthAngle'][:] = cpr_obs.azimuth_angle.values.astype(np.float32)
-        ds_g.variables['solarAzimuthAngle'][:] = np.zeros(nobs).astype(np.float32)
-        ds_g.variables['solarZenithAngle'][:] = np.zeros(nobs).astype(np.float32)
-        # ds_g.variables['time'][:] = np.ones(nobs).astype(np.float32)
-        ds_g.variables['sequenceNumber'][:] = cpr_obs.sequenceNumber.values.astype(np.int32)
-
-        ds_g.createVariable('height', np.float32, ('Location'), fill_value=fill_value)
-        ds_g.createVariable('Layer', np.int32, ('Location',))
-        ds_g.variables['height'][:] = cpr_obs.height.values.astype(np.float32)
-        ds_g.variables['Layer'][:] = cpr_obs.elevation.values.astype(np.int32)
-
-        g = "RecMetaData"
-        ds_g = ds.createGroup(g)
-        ds_g.createVariable('sequenceNumber', np.int32, ('Location',))
-        ds_g.variables['sequenceNumber'][:] = cpr_obs["sequenceNumber"].values.astype(np.int32)
-
+    nbeam_pos = len(f['spots'])
+    # ugh this does not seem generic
 
 if __name__ == "__main__":
 
