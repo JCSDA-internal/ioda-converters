@@ -17,6 +17,8 @@ import datetime
 import time
 
 import pyiodaconv.ioda_conv_engines as iconv
+from pyiodaconv.orddicts import DefaultOrderedDict
+from pyiodaconv.def_jedi_utils import set_metadata_attributes, set_obspace_attributes
 from pyiodaconv.def_jedi_utils import epoch, iso8601_string
 import read_cloudsat
 
@@ -30,10 +32,13 @@ obsValName = iconv.OvalName()
 # globals
 CLOUDSAT_WMO_sat_ID = 788
 
+# parameter
+radarReflectivityAtt = 'ReflectivityAttenuated'
+
 GlobalAttrs = {
     "platformCommonName": "CloudSat",
     "platformLongDescription": "CloudSat reflectance",
-    "sensorCentralFrequency": "[94.05]"
+    "sensorCentralFrequency": "[94.05 GHz]"
 }
 
 locationKeyList = [
@@ -44,25 +49,62 @@ locationKeyList = [
 
 
 def main(args):
-    # fname_in = ['2009212223327_17338_CS_2B-GEOPROF_GRANULE_P1_R05_E02_F00.hdf']
-    fname_in = args.input
-    fname_out = args.output
 
-    cpr_obs = read_cloudsat.read_cloudsat(fname_in)
-    
-    obsData = get_obsData(cpr_obs)
+    # take a user input and call read_cloudsat decoder
+    # place this xarray into a dictionary and pass to IODA writer
 
-def get_obsData(cpr_obs):
+    # example: input_filename = ['2009212223327_17338_CS_2B-GEOPROF_GRANULE_P1_R05_E02_F00.hdf']
+    input_filename = args.input
+    output_filename = args.output
 
-    # initialize
-    obsData = {}
+    cpr_obs = read_cloudsat.read_cloudsat(input_filename)
+    obs_data = import_obs_data(cpr_obs)
 
-    # allocate space for output depending on which variables are to be saved
-    obsData = init_obs_loc()
+    nlocs_int = np.array(len(obs_data[('latitude', metaDataName)]), dtype='int64')
+    nlocs = nlocs_int.item()
+    nchans = len(obs_data[('sensorChannelNumber', metaDataName)])
+    # still need to add these metaData - TODO !
+    # ds_g.variables['height'][:] = cpr_obs.height.values.astype(np.float32)
+    # ds_g.variables['Layer'][:] = cpr_obs.elevation.values.astype(np.int32)
 
-    # ideally an attribute from the file read
-    # example: cpr_obs.attrs['ShortName'].decode("utf-8")
-    WMO_sat_ID = get_WMO_satellite_ID('Cloudsat')
+    # prepare global attributes we want to output in the file,
+    # in addition to the ones already loaded in from the input file
+    dtg = False  # pass a reference time for the observation such as to an NWP analysis
+    if dtg:
+        GlobalAttrs['datetimeReference'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
+    GlobalAttrs['converter'] = os.path.basename(__file__)
+
+    # set key for observable
+    k = radarReflectivityAtt
+
+    # pass parameters to the IODA writer
+    VarDims = {
+        k: ['Location', 'Channel'],
+        'sensorChannelNumber': ['Channel'],
+    }
+
+    DimDict = {
+        'Location': nlocs,
+        'Channel': obs_data[('sensorChannelNumber', metaDataName)],
+    }
+    writer = iconv.IodaWriter(output_filename, locationKeyList, DimDict)
+
+    VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+    set_obspace_attributes(VarAttrs)
+    set_metadata_attributes(VarAttrs)
+
+    VarAttrs[(k, 'ObsValue')]['_FillValue'] = float_missing_value
+    VarAttrs[(k, 'ObsError')]['_FillValue'] = float_missing_value
+    VarAttrs[(k, 'PreQC')]['_FillValue'] = int_missing_value
+    VarAttrs[(k, 'ObsValue')]['units'] = 'K'
+    VarAttrs[(k, 'ObsError')]['units'] = 'K'
+    # VarAttrs[(k, 'PreQC')]['units'] = 'unitless'
+
+    # final write to IODA file
+    writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
+
+
+def import_obs_data(cpr_obs):
 
     # appears to be observation cleansing and conditioning
     cpr_obs = cpr_obs.rename_vars({"elevation": "elevation1"})
@@ -72,25 +114,24 @@ def get_obsData(cpr_obs):
     locid = (cpr_obs.obs.values < -100) | (cpr_obs.obs.values > 100) | np.isnan(cpr_obs.obs.values) | np.isinf(cpr_obs.obs.values)
     locid = cpr_obs.Location.values[np.sum(locid, axis=1) == 0]
     cpr_obs = cpr_obs.isel(Location=locid)
+    # end conditioning and cleansing block
 
-    # now begin populating dictionary obsData to pass to IODA writer
+    # this function will map the cloud radar data in the cpr xarray
+    # into a dictionary to be passed to the IODA writer functions
     nobs = cpr_obs.Location.size
     nchans = cpr_obs.channel.size
-    records = np.unique(cpr_obs.sequenceNumber.values).flatten()
-    nrecords = np.int32(records.size)
 
-    import pdb
-    pdb.set_trace()
-    sys.exit()
+    # ideally an attribute from the file read in
+    # example: cpr_obs.attrs['ShortName'].decode("utf-8")
+    # here we are hardcoding to the function the name of the satellite
+    WMO_sat_ID = get_WMO_satellite_ID('CloudSat')
 
-    refl_dims = ('Location', 'Channel')
-
-
-    # ds_g.variables['height'][:] = cpr_obs.height.values.astype(np.float32)
-    # ds_g.variables['Layer'][:] = cpr_obs.elevation.values.astype(np.int32)
+    # allocate space for output depending on which variables are to be saved
+    obs_data = init_obs_loc()
 
     obs_data[('latitude', metaDataName)] = cpr_obs.lat.values.astype(np.float32)
     obs_data[('longitude', metaDataName)] = cpr_obs.lon.values.astype(np.float32)
+    obs_data[('satelliteIdentifier', metaDataName)] = np.full((nobs), WMO_sat_ID, dtype='int32')
     obs_data[('sensorCentralFrequency', metaDataName)] = np.array([94.05]).astype(np.float32)    # cpr_sim.Frequency.values.astype(np.float32)
     obs_data[('sensorCentralWavenumber', metaDataName)] = np.array([3.1371]).astype(np.float32)  # cpr_sim.Wavenumber.values.astype(np.float32)
     obs_data[('sensorPolarizationDirection', metaDataName)] = np.array([9]).astype(np.int32)
@@ -102,15 +143,17 @@ def get_obsData(cpr_obs):
     obs_data[('solarZenithAngle', metaDataName)] = np.zeros(nobs).astype(np.float32)
     obs_data[('solarAzimuthAngle', metaDataName)] = np.zeros(nobs).astype(np.float32)
     obs_data[('sequenceNumber', metaDataName)] = cpr_obs.sequenceNumber.values.astype(np.int32)
-        # ?? ds_g.variables['sequenceNumber'][:] = cpr_obs["sequenceNumber"].values.astype(np.int32)
+    # ?? ds_g.variables['sequenceNumber'][:] = cpr_obs["sequenceNumber"].values.astype(np.int32)
     obs_data[('dateTime', metaDataName)] = cpr_obs.epoch_time.values.astype(np.int64)
 
     obs_data[('sequenceNumber', metaDataName)] = cpr_obs.sequenceNumber.values.astype(np.int32)
-    k = 'ReflectivityAttenuated'
+    k = radarReflectivityAtt
     # have to reorder the channel axis to be last then merge ( nscans x nspots = nlocs )
     obs_data[(k, "ObsValue")] = cpr_obs.obs.values.astype(np.float32)
     obs_data[(k, "ObsError")] = np.full((nobs, nchans), 5.0, dtype='float32')
     obs_data[(k, "PreQC")] = np.full((nobs, nchans), 0, dtype='int32')
+
+    return obs_data
 
 
 def init_obs_loc():
@@ -127,8 +170,6 @@ def init_obs_loc():
         ('solarAzimuthAngle', metaDataName): [],
         ('sensorZenithAngle', metaDataName): [],
         ('sensorAzimuthAngle', metaDataName): [],
-#       ('sensorViewAngle', metaDataName): [],
-#       ('satelliteAscendingFlag', metaDataName): [],
     }
 
     return obs
@@ -145,11 +186,6 @@ def get_WMO_satellite_ID(attrs_shortname):
 
     return WMO_sat_ID
 
-
-def get_epoch_time(f):
-
-    nbeam_pos = len(f['spots'])
-    # ugh this does not seem generic
 
 if __name__ == "__main__":
 
