@@ -96,9 +96,8 @@ def main(args):
     VarAttrs[(k, 'ObsValue')]['_FillValue'] = float_missing_value
     VarAttrs[(k, 'ObsError')]['_FillValue'] = float_missing_value
     VarAttrs[(k, 'PreQC')]['_FillValue'] = int_missing_value
-    VarAttrs[(k, 'ObsValue')]['units'] = 'K'
-    VarAttrs[(k, 'ObsError')]['units'] = 'K'
-    # VarAttrs[(k, 'PreQC')]['units'] = 'unitless'
+    VarAttrs[(k, 'ObsValue')]['units'] = 'dBz'
+    VarAttrs[(k, 'ObsError')]['units'] = 'dBz'
 
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
