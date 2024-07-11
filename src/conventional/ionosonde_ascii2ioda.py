@@ -202,9 +202,8 @@ def read_file(file_name, data, qc_strict=True):
                 # If StopIteration is raised, break from the loop
                 break
 
-    for key in varDict.keys():
-        data[key] = np.append(data[key], local_data[key])
-    for key in meta_keys:
+    for key in set(varDict.keys()).union(meta_keys):
+        # data[key] = np.concatenate(data[key], local_data[key]) # why not and gotta be much better way
         data[key] = np.append(data[key], local_data[key])
 
     return data
