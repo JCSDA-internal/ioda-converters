@@ -123,7 +123,6 @@ class GMAOobs(object):
                 data[key_err][ind] = errors[ind]
                 self.present_vars.add(key)
 
-
         ncd.close()
 
         self.data = data
