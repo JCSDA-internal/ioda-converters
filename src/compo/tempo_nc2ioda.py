@@ -197,11 +197,15 @@ class tempo(object):
                 obs = np.ma.array(obs, mask=mask)
 
                 # error calculation:
-                err = ncd.groups['product'].variables[err_name+'_uncertainty'][:].ravel()
                 if self.v3:
-                    if self.columnType == "total" or self.columnType == "stratosphere":
-                        sys.exit("no error with total and strato NRT product")
+                    if self.columnType == "total":
+                        err = ncd.groups['support_data'].variables[err_name+'_uncertainty'][:].ravel()
+                    elif self.columnType == "troposphere":
+                        err = ncd.groups['product'].variables[err_name+'_uncertainty'][:].ravel()
+                    elif self.columnType == "stratosphere":
+                        sys.exit("no error with strato NRT (V3) product")
                 else:
+                    err = ncd.groups['product'].variables[err_name+'_uncertainty'][:].ravel()
                     err = err * conv * col_amf / tot_amf
 
                 err.mask = False
