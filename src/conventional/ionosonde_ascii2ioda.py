@@ -47,8 +47,8 @@ GlobalAttrs = {
     'converter': os.path.basename(__file__),
     'ioda_version': 2,
     'description': 'Ionosonde profiler',
-#   'source': 'Unknown',
 }
+#   'source': 'Unknown',  # is there network name?
 
 iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
 epoch = datetime.fromisoformat(iso8601_string[14:-1])
@@ -167,7 +167,8 @@ def main(args):
     for key in varDict.keys():
         variable = varDict[key][0]
         logging.info(f" the variable: {variable} will be placed into ioda_data")
-        if 'antennaMode' in key: continue
+        if 'antennaMode' in key:
+            continue
         ioda_data[(variable, obsValName)] = np.array(data[variable], dtype=np.float32)
         ioda_data[(variable, obsErrName)] = np.full(nlocs, 3.0, dtype=np.float32)
         ioda_data[(variable, qcName)] = np.full(nlocs, 2, dtype=np.int32)
@@ -236,10 +237,10 @@ def get_header(file_iterator, local_data):
             line = next(file_iterator)  # comment line
             try:
                 height, freq, f_conf, density, density_conf, ARTScale, Layer, POLAN, Mode, \
-                ARTver, POLver, ARTparm1, POLparm1, ARTparm2, POLparm2, Slope, POLANv = line.split()
+                    ARTver, POLver, ARTparm1, POLparm1, ARTparm2, POLparm2, Slope, POLANv = line.split()
 
             except ValueError:
-                    break
+                break
 
             local_data['latitude'] = np.append(local_data['latitude'], lat)
             local_data['longitude'] = np.append(local_data['longitude'], lon)
@@ -301,7 +302,7 @@ def get_layer(Layer):
         ionosphericLayer = 3
 
     return ionosphericLayer
-    
+
 
 def init_data_dict():
     local_data = {}              # Before assigning the output types into the above.
