@@ -5,7 +5,6 @@ import os
 import time
 from datetime import datetime
 import numpy as np
-import netCDF4 as nc
 import logging
 
 # These modules need the path to lib-python modules
@@ -14,23 +13,33 @@ from pyiodaconv.orddicts import DefaultOrderedDict
 
 os.environ["TZ"] = "UTC"
 
-varDict = {'frequency': ['frequency', 'm s-1'],                         # is this a chirp frequency output or observed
-           'f_conf': ['frequencyConfidence', 'fractional percent']}    # not sure
-           'density': ['FLayer', 'Unknown']}
-           'density_conf': ['FLayerConfidence', 'Unknown']}
-           'ARTIST': ['ionosondeScalingParameters', 'Unknown']}         # 3.71 F2 - this is something about how the values are calculated
-           'POLAN': ['antennaPolarization', 'Unknown']}                 # 3.91 F - more about sets of assumed parameters? antenna polarization?
+varDict = {'frequency': ['frequency', 'm s-1'],                                      # is this a chirp frequency output or observed
+           'frequencyConfidence': ['frequencyConfidence', 'fractional percent'],     # not sure
+           'electronDensity': ['electronDensity', 'Unknown'],
+           'electronDensityConfidence': ['electronDensityConfidence', 'Unknown'],
+           'ionosondeScalingParameters': ['ionosondeScalingParameters', 'Unknown'],   # 3.71 - this is something about how the values are calculated
+           'ionosphericLayer': ['ionosphericLayer', 'LayerName'],                     # F2   - this is the name of the layer
+           'antennaPolarization': ['antennaPolarization', 'Unknown'],                 # 3.91 - more about sets of assumed parameters? antenna polarization?
+           'antennaMode': ['antennaMode', 'Unknown']}                                 # F    - only have seen F and T
 
 locationKeyList = [("latitude", "float", "degrees_north"),
                    ("longitude", "float", "degrees_east"),
                    ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z"),
                    ("height", "float", "m"),
-                   ("hmf2", "float", "Unknown"),
-                   ("fof2", "float", "Unknown"),
-                   ("fof2Confidence", "float", "Unknown"),
-                   ("nmf2", "float", "Unknown"),
-                   ("nmf2Confidence", "float", "Unknown"),
-                   ("stationIdentifier", "integer", "")]
+                   ("hmF2", "float", "Unknown"),
+                   ("foF2", "float", "Unknown"),
+                   ("foF2Confidence", "float", "Unknown"),
+                   ("nmF2", "float", "Unknown"),
+                   ("nmF2Confidence", "float", "Unknown"),
+                   ("ARTVersion", "float", "Unknown"),
+                   ("POLVersion", "float", "Unknown"),
+                   ("ARTParameter1", "float", "Unknown"),
+                   ("POLParameter1", "float", "Unknown"),
+                   ("ARTParameter2", "float", "Unknown"),
+                   ("POLParameter2", "float", "Unknown"),
+                   ("POLSlope", "float", "Unknown"),
+                   ("POLANv", "integer", "Unknown"),
+                   ("stationIdentifier", "string", "")]
 
 meta_keys = [m_item[0] for m_item in locationKeyList]
 
@@ -49,44 +58,39 @@ obsValName = iconv.OvalName()
 obsErrName = iconv.OerrName()
 qcName = iconv.OqcName()
 
-float_missing_value = nc.default_fillvals['f4']
-int_missing_value = nc.default_fillvals['i4']
-double_missing_value = nc.default_fillvals['f8']
-long_missing_value = nc.default_fillvals['i8']
+float_missing_value = iconv.get_default_fill_val(np.float32)
+int_missing_value = iconv.get_default_fill_val(np.int32)
+long_missing_value = iconv.get_default_fill_val(np.int64)
 string_missing_value = '_'
 
 missing_vals = {'string': string_missing_value,
                 'integer': int_missing_value,
                 'long': long_missing_value,
-                'float': float_missing_value,
-                'double': double_missing_value}
+                'float': float_missing_value}
 dtypes = {'string': object,
           'integer': np.int32,
           'long': np.int64,
-          'float': np.float32,
-          'double': np.float64}
+          'float': np.float32}
 
 # variables in "raw" file
 known_var = {'date': ['dateTime', long_missing_value],
              'lat': ['latitude', float_missing_value],
              'lon': ['longitude', float_missing_value],
              'height': ['height', float_missing_value],
-             'station': ['stationIdentifier', int_missing_value],
              'freq': ['frequency', float_missing_value],
              'f_conf': ['frequencyConfidence', float_missing_value],
-             'density': ['FLayer', float_missing_value],
-             'density_conf': ['FLayerConfidence', float_missing_value],
+             'density': ['electronDensity', float_missing_value],
+             'density_conf': ['electronDensityConfidence', float_missing_value],
              'ARTIST': ['ionosondeScalingParameters', float_missing_value],
+             'Layer': ['ionosphericLayer', int_missing_value],
              'POLAN': ['antennaPolarization', float_missing_value],
-             'dir': ['direction', float_missing_value]}
+             'Mode': ['antennaMode', string_missing_value]}
 
 
 def main(args):
 
     file_names = args.input
     output_file = args.output
-    dtg = datetime.strptime(args.date, '%Y%m%d%H')
-    datetimeRef = dtg.isoformat() + "Z"
 
     start_time = time.time()
 
@@ -113,6 +117,9 @@ def main(args):
     if not data:
         logging.error("No data to write, stopping execution.")
         sys.exit()
+
+    dtg = datetime.fromtimestamp(data['dateTime'][0])
+    datetimeRef = dtg.isoformat() + "Z"
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
@@ -160,6 +167,7 @@ def main(args):
     for key in varDict.keys():
         variable = varDict[key][0]
         logging.info(f" the variable: {variable} will be placed into ioda_data")
+        if 'antennaMode' in key: continue
         ioda_data[(variable, obsValName)] = np.array(data[variable], dtype=np.float32)
         ioda_data[(variable, obsErrName)] = np.full(nlocs, 3.0, dtype=np.float32)
         ioda_data[(variable, qcName)] = np.full(nlocs, 2, dtype=np.int32)
@@ -173,81 +181,25 @@ def main(args):
     logging.info("--- {:9.4f} total seconds ---".format(time.time() - start_time))
 
 
-def read_file(file_name, data):
-    local_data = {}              # Before assigning the output types into the above.
-    for key in varDict.keys():
-        local_data[key] = []
-    for key in meta_keys:
-        local_data[key] = []
+def read_file(file_name, data, qc_strict=True):
 
-    with open(file_name, newline='') as f:
-        reader = csv.DictReader(f, skipinitialspace=True, delimiter=' ')
-        keyerr = False  # no key errors in file
+    local_data = init_data_dict()
 
-        unk_freq = []   # list of unknown frequencies in file
-        unk_sat = []    # list of unknown satellites in file
+    # Open the file
+    with open(file_name, 'r') as file:
+        # Create an iterator from the file object
+        file_iterator = iter(file)
 
-        for row in reader:
+        local_data, header_read = get_header(file_iterator, local_data)
+
+        while header_read and True:
             try:
-                dtg = datetime.strptime(f"{row['day']} {row['hms']}", '%Y%m%d %H%M')
-                time_offset = np.int64(round((dtg - epoch).total_seconds()))
-                local_data['dateTime'] = np.append(local_data['dateTime'], time_offset)
-                local_data['longitude'] = np.append(local_data['longitude'], float(row['lon'])*-1.0)
-                local_data['latitude'] = np.append(local_data['latitude'], float(row['lat']))
-
-                pres = float(row['pre'])*100.
-                local_data['pressure'] = np.append(local_data['pressure'], pres)
-
-                wdir = float(row['dir'])*1.0
-                wspd = float(row['spd'])*1.0
-                if (wdir >= 0 and wdir <= 360 and wspd >= 0 and wspd < 300):
-                    uwnd, vwnd = meteo_utils.meteo_utils().dir_speed_2_uv(wdir, wspd)
-                else:
-                    uwnd = float_missing_value
-                    vwnd = float_missing_value
-
-                local_data['windEastward'] = np.append(local_data['windEastward'], uwnd)
-                local_data['windNorthward'] = np.append(local_data['windNorthward'], vwnd)
-
-                if row['type'] in known_freq.keys():
-                    freq = known_freq[row['type']]
-                else:
-                    freq = float_missing_value
-                    unk_freq.append(row['type'])
-                local_data['sensorCentralFrequency'] = np.append(local_data['sensorCentralFrequency'], freq)
-
-                if row['sat'] in known_sat.keys():
-                    satid = known_sat[row['sat']]
-                else:
-                    satid = int_missing_value
-                    unk_sat.append(row['sat'])
-
-                local_data['satelliteIdentifier'] = np.append(local_data['satelliteIdentifier'], satid)
-                local_data['sensorZenithAngle'] = np.append(local_data['sensorZenithAngle'], float(row['rff']))
-                local_data['windTrackingCorrelation'] = np.append(local_data['windTrackingCorrelation'], float(row['qi']))
-                local_data['windHeightAssignMethod'] = np.append(local_data['windHeightAssignMethod'], int(row['int']))
-
-            except KeyError as e:
-                if not keyerr:
-                    logging.warning(file_name + ' is missing variable ' + e.args[0])
-                keyerr = True
-
-                if (e.args[0] == 'dir') or (e.args[0] == 'spd'):
-                    local_data['windEastward'] = np.append(local_data['windEastward'], float_missing_value)
-                    local_data['windNorthward'] = np.append(local_data['windNorthward'], float_missing_value)
-                else:
-                    local_data[known_var[e.args[0]][0]] = np.append(local_data[known_var[e.args[0]][0]], known_var[e.args[0]][1])
-
-        for f in unk_freq:
-            logging.warning(file_name + ' contains unknown frequency ' + f)
-
-        for s in unk_sat:
-            logging.warning(file_name + ' contains unknown satellite ID ' + s)
-
-        if len(row.keys()) > len(known_var.keys()):
-            for k in row.keys():
-                if k not in known_var.keys():
-                    logging.warning(file_name + ' contains unknown variable ' + k)
+                # Get the next line from the iterator
+                line = next(file_iterator)
+                local_data = populate_obsValue(line, local_data)
+            except StopIteration:
+                # If StopIteration is raised, break from the loop
+                break
 
     for key in varDict.keys():
         data[key] = np.append(data[key], local_data[key])
@@ -255,6 +207,109 @@ def read_file(file_name, data):
         data[key] = np.append(data[key], local_data[key])
 
     return data
+
+
+def get_header(file_iterator, local_data):
+    #####################################################
+    # get header (4 lines with the first having data too)
+    #####################################################
+    header_read = False
+    while True:
+        try:
+            line = next(file_iterator)  # comment line
+            # read in large pile of MetaData
+            line = next(file_iterator)
+            try:
+                hmf2, fof2, conf_fof2, nmf2, conf_nmf2, lat, lon, qual, launchID, _, _, software, version = line.split()
+            except ValueError:
+                break
+
+            # get station ID?
+            stationID, launchTime = launchID.split('_')
+
+            # dateTime
+            dtg = datetime.strptime(f"{launchTime}", '%Y%j%H%M%S')
+            dateTime = np.int64(round((dtg - epoch).total_seconds()))
+
+            line = next(file_iterator)  # comment line
+            # read first line of data and remaining MetaData
+            line = next(file_iterator)  # comment line
+            try:
+                height, freq, f_conf, density, density_conf, ARTScale, Layer, POLAN, Mode, \
+                ARTver, POLver, ARTparm1, POLparm1, ARTparm2, POLparm2, Slope, POLANv = line.split()
+
+            except ValueError:
+                    break
+
+            local_data['latitude'] = np.append(local_data['latitude'], lat)
+            local_data['longitude'] = np.append(local_data['longitude'], lon)
+            local_data['dateTime'] = np.append(local_data['dateTime'], dateTime)
+            local_data['stationIdentifier'] = np.append(local_data['stationIdentifier'], stationID)
+            local_data['hmF2'] = np.append(local_data['hmF2'], hmf2)
+            local_data['foF2'] = np.append(local_data['foF2'], fof2)
+            local_data['nmF2'] = np.append(local_data['nmF2'], nmf2)
+            local_data['foF2Confidence'] = np.append(local_data['foF2Confidence'], conf_fof2)
+            local_data['nmF2Confidence'] = np.append(local_data['nmF2Confidence'], conf_nmf2)
+            local_data['ARTVersion'] = np.append(local_data['ARTVersion'], ARTver)
+            local_data['POLVersion'] = np.append(local_data['POLVersion'], POLver)
+            local_data['ARTParameter1'] = np.append(local_data['ARTParameter1'], ARTparm1)
+            local_data['POLParameter1'] = np.append(local_data['POLParameter1'], POLparm1)
+            local_data['ARTParameter2'] = np.append(local_data['ARTParameter2'], ARTparm2)
+            local_data['POLParameter2'] = np.append(local_data['POLParameter2'], POLparm2)
+            local_data['POLSlope'] = np.append(local_data['POLSlope'], Slope)
+            local_data['POLANv'] = np.append(local_data['POLANv'], POLANv)
+
+            local_data = populate_obsValue(line, local_data)
+
+            header_read = True
+        except StopIteration:
+            # If StopIteration is raised, break from the loop
+            break
+
+    return local_data, header_read
+
+
+def populate_obsValue(line, local_data):
+    # if can correctly parse all fields populate local_data else do nothing
+    try:
+        height, freq, f_conf, density, density_conf, ARTScale, Layer, POLAN, Mode = line.split()
+        ionosphericLayer = get_layer(Layer)
+        local_data['height'] = np.append(local_data['height'], height)
+        local_data['frequency'] = np.append(local_data['frequency'], freq)
+        local_data['frequencyConfidence'] = np.append(local_data['frequencyConfidence'], f_conf)
+        local_data['electronDensity'] = np.append(local_data['electronDensity'], density)
+        local_data['electronDensityConfidence'] = np.append(local_data['electronDensityConfidence'], density_conf)
+        local_data['ionosondeScalingParameters'] = np.append(local_data['ionosondeScalingParameters'], ARTScale)
+        local_data['ionosphericLayer'] = np.append(local_data['ionosphericLayer'], ionosphericLayer)
+        local_data['antennaPolarization'] = np.append(local_data['antennaPolarization'], POLAN)
+        local_data['antennaMode'] = np.append(local_data['antennaMode'], Mode)
+    except ValueError:
+        pass
+
+    return local_data
+
+
+def get_layer(Layer):
+    ionosphericLayer = int_missing_value
+    if 'F1' in Layer:
+        ionosphericLayer = 1
+    elif 'F2' in Layer:
+        ionosphericLayer = 2
+    elif 'E0' in Layer:
+        ionosphericLayer = 0
+    elif 'T' in Layer:
+        ionosphericLayer = 3
+
+    return ionosphericLayer
+    
+
+def init_data_dict():
+    local_data = {}              # Before assigning the output types into the above.
+    for key in varDict.keys():
+        local_data[key] = []
+    for key in meta_keys:
+        local_data[key] = []
+    return local_data
 
 
 if __name__ == "__main__":
@@ -273,9 +328,6 @@ if __name__ == "__main__":
     required.add_argument('-o', '--output',
                           action='store', default=None, required=True,
                           help='output file')
-    required.add_argument('-d', '--date',
-                          action='store',
-                          help='date reference string (YYYYMMDDHH)')
 
     parser.set_defaults(debug=False)
     parser.set_defaults(verbose=False)
