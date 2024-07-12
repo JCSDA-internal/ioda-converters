@@ -70,18 +70,6 @@ dtypes = {'string': object,
           'long': np.int64,
           'float': np.float32}
 
-# variables in "raw" file
-known_var = {'date': ['dateTime', long_missing_value],
-             'lat': ['latitude', float_missing_value],
-             'lon': ['longitude', float_missing_value],
-             'height': ['height', float_missing_value],
-             'freq': ['frequency', float_missing_value],
-             'f_conf': ['frequencyConfidence', float_missing_value],
-             'density': ['electronDensity', float_missing_value],
-             'density_conf': ['electronDensityConfidence', float_missing_value],
-             'ionosondeScalingParameter': ['ionosondeScalingParameter', float_missing_value],
-             'Layer': ['ionosphericLayer', int_missing_value]}
-
 
 def main(args):
 
@@ -165,7 +153,7 @@ def main(args):
     writer = iconv.IodaWriter(output_file, locationKeyList, DimDict)
     writer.BuildIoda(ioda_data, varDims, varAttrs, GlobalAttrs)
 
-    logging.info("--- {:9.4f} total seconds ---".format(time.time() - start_time))
+    logging.info("--- {:9.4g} total seconds ---".format(time.time() - start_time))
 
 
 def read_file(file_name, data, qc_strict=True, model='ART'):
