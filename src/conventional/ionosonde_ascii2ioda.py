@@ -13,19 +13,19 @@ from pyiodaconv.orddicts import DefaultOrderedDict
 
 os.environ["TZ"] = "UTC"
 
-varDict = {'frequency': ['frequency', 'm s-1'],                                         # chirp frequency output in MHz
-           'frequencyConfidence': ['frequencyConfidence', 'fractional percent'],        # half-width of freq?
-           'electronDensity': ['electronDensity', 'number / m^3'],                      # number per volume
-           'electronDensityConfidence': ['electronDensityConfidence', 'number / m^3'],  # uncertainty in number per volume
-           'ionosondeScalingParameter': ['ionosondeScalingParameter', 'Unknown'],       # 3.71 - this is something about how the values are calculated
-           'ionosphericLayer': ['ionosphericLayer', 'IonosphericLayer']}                # F2   - this is the name of the layer
-#          'polanLayer': ['polanLayer', 'Unknown']}                                     # F    - only have seen F and T (combine with header information)
-#          'polanScalingPArameter': ['polanScalingParameter', 'Unknown'],               # 3.91 - more about sets of assumed parameters? antenna polarization?
+# these are the unique values in the raw input file
+varDict = {'frequency': ['frequency', "float", 'm s-1'],                                         # chirp frequency output in MHz
+           'frequencyConfidence': ['frequencyConfidence', "float", 'fractional percent'],        # half-width of freq?
+           'height': ['height', "float", "m"],                                                   # range or radar chirp
+           'electronDensity': ['electronDensity', "float", 'number / m^3'],                      # number per volume
+           'electronDensityConfidence': ['electronDensityConfidence', "float", 'number / m^3'],  # uncertainty in number per volume
+           'ionosondeScalingParameter': ['ionosondeScalingParameter', "float", 'Unknown'],       # 3.71 - this is something about how the values are calculated
+           'ionosphericLayer': ['ionosphericLayer', "integer", 'IonosphericLayer']}              # F2   - this is the name of the layer
 
+# these are the MetaData common to each input
 locationKeyList = [("latitude", "float", "degrees_north"),
                    ("longitude", "float", "degrees_east"),
                    ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z"),
-                   ("height", "float", "m"),                 # range or radar chirp
                    ("hmF2", "float", "Unknown"),             # height of F2 layer
                    ("foF2", "float", "Unknown"),             # freq of F2 (in MHz)
                    ("foF2Confidence", "float", "Unknown"),   # bandwidth?
@@ -79,13 +79,7 @@ def main(args):
 
     start_time = time.time()
 
-    ioda_data = {}         # The final outputs.
-    data = {}              # Before assigning the output types into the above.
-    for key in varDict.keys():
-        data[key] = []
-    for key in meta_keys:
-        data[key] = []
-
+    data = init_data_dict()
     for fname in file_names:
         logging.info(f"Reading file:  {fname}")
         data = read_file(fname, data, model=ionospheric_model)
@@ -104,7 +98,7 @@ def main(args):
         'datetimeReference': datetimeRef
     }
 
-    nlocs = len(data['dateTime'])
+    nlocs = len(data['height'])
     logging.info(f" found a total of {nlocs} observations")
     DimDict = {'Location': nlocs}
 
@@ -117,35 +111,59 @@ def main(args):
 
     # Set units of the MetaData variables and all _FillValues.
     for key in meta_keys:
-        dtypestr = locationKeyList[meta_keys.index(key)][1]
+        dtype = locationKeyList[meta_keys.index(key)][1]
         if locationKeyList[meta_keys.index(key)][2]:
             varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
-        varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtypestr]
+        varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtype]
+    for key in varDict.keys():
+        if 'electronDensity' in key:
+            continue
+        dtype = varDict[key][1]
+        units = varDict[key][2]
+        if units:
+            varAttrs[(key, metaDataName)]['units'] = units
+        varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtype]
 
     # Set units and FillValue attributes for groups associated with observed variable.
-    for key in varDict.keys():
+    for key in ['electronDensity']:
         variable = varDict[key][0]
-        units = varDict[key][1]
+        dtype = varDict[key][1]
+        units = varDict[key][2]
         varAttrs[(variable, obsValName)]['units'] = units
         varAttrs[(variable, obsErrName)]['units'] = units
         varAttrs[(variable, obsValName)]['coordinates'] = 'longitude latitude'
         varAttrs[(variable, obsErrName)]['coordinates'] = 'longitude latitude'
         varAttrs[(variable, qcName)]['coordinates'] = 'longitude latitude'
-        varAttrs[(variable, obsValName)]['_FillValue'] = float_missing_value
-        varAttrs[(variable, obsErrName)]['_FillValue'] = float_missing_value
+        varAttrs[(variable, obsValName)]['_FillValue'] = missing_vals[dtype]
+        varAttrs[(variable, obsErrName)]['_FillValue'] = missing_vals[dtype]
         varAttrs[(variable, qcName)]['_FillValue'] = int_missing_value
 
     # Fill the final IODA data:  MetaData then ObsValues, ObsErrors, and QC
-    for key in meta_keys:
-        dtypestr = locationKeyList[meta_keys.index(key)][1]
-        ioda_data[(key, metaDataName)] = np.array(data[key], dtype=dtypes[dtypestr])
+    ioda_data = {}
 
+    # repeat these MetaData by nlocs
+    for key in meta_keys:
+        dtype = locationKeyList[meta_keys.index(key)][1]
+        ioda_data[(key, metaDataName)] = np.full(nlocs, data[key], dtype=dtypes[dtype])
     for key in varDict.keys():
         variable = varDict[key][0]
-        logging.info(f" the variable: {variable} will be placed into ioda_data")
-        ioda_data[(variable, obsValName)] = np.array(data[variable], dtype=np.float32)
-        ioda_data[(variable, obsErrName)] = np.full(nlocs, 3.0, dtype=np.float32)
-        ioda_data[(variable, qcName)] = np.full(nlocs, 2, dtype=np.int32)
+        dtype = varDict[key][1]
+        if 'electronDensity' not in key:
+            logging.info(f" the variable: {variable} will be placed into MetaData of ioda_data")
+            # these MetaData are arrays nlocs long already
+            ioda_data[(key, metaDataName)] = np.array(data[variable], dtype=dtypes[dtype])
+        else:
+            # this MetaData (electronDensityConfidence) is used as the ObsError
+            if 'electronDensityConfidence' in key:
+                continue
+            variable = varDict[key][0]
+            logging.info(f" the variable: {variable} will be placed into ObsValue of ioda_data")
+            ioda_data[(variable, obsValName)] = np.array(data[variable], dtype=np.float32)
+            ioda_data[(variable, obsErrName)] = np.array(data['electronDensityConfidence'], dtype=np.float32)
+            ioda_data[(variable, qcName)] = np.full(nlocs, 0, dtype=np.int32)  # how to interpret AQI ?
+
+    # remove polanLayer model MetaData if POL model is used this info is in ('Layer', 'MetaData')
+    ioda_data.pop(('polanLayer', 'MetaData'))
 
     logging.debug("Writing file: " + output_file)
 
@@ -318,9 +336,7 @@ def get_layer(Layer, polanLayer=1, model='ART'):
 
 def init_data_dict():
     local_data = {}              # Before assigning the output types into the above.
-    for key in varDict.keys():
-        local_data[key] = []
-    for key in meta_keys:
+    for key in set(varDict.keys()).union(meta_keys):
         local_data[key] = []
     return local_data
 
