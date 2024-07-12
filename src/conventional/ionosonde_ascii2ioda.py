@@ -31,7 +31,7 @@ locationKeyList = [("latitude", "float", "degrees_north"),
                    ("foF2Confidence", "float", "Unknown"),   # bandwidth?
                    ("nmF2", "float", "Unknown"),             # number density at hmF2
                    ("nmF2Confidence", "float", "Unknown"),
-                   ("qualityIndex", "integer", "" ),         # quality index
+                   ("qualityIndex", "integer", ""),          # quality index
                    ("IonosphericModelVersion", "float", "Unknown"),       # (ARTIST or POLAN) software version
                    ("IonosphericModelParameter1", "float", "Unknown"),   # (ARTIST or POLAN) parameter
                    ("IonosphericModelParameter2", "float", "Unknown"),
@@ -276,8 +276,8 @@ def populate_obsValue(line, local_data, model='ART'):
     # get the electron density as a funtion of height/range and chirp frequency
     # if can correctly parse all fields populate local_data else do nothing
     # ObsValue data row (example)
-    # height    freq  f_conf      density density_conf  ARTIST   POLAN     
-    # 186.00  -99.00  -99.00  -0.9900E+02  -0.9900E+02  0.00 c   2.04 F    
+    # height    freq  f_conf      density density_conf  ARTIST   POLAN
+    # 186.00  -99.00  -99.00  -0.9900E+02  -0.9900E+02  0.00 c   2.04 F
 
     try:
         height, freq, f_conf, density, density_conf, ARTScale, Layer, POLAN, polanLayer = line.split()
