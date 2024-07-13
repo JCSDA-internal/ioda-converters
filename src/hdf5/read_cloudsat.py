@@ -77,6 +77,9 @@ def read_cloudsat_hdf_file(fname):
     xid = vs.find('start_time')
     start_time = np.array(vs.attach(xid)[:]).flatten()
     start_time = datetime.datetime.strptime(start_time[0], '%Y%m%d%H%M%S')
+    print(f"StartTime orig {start_time}")
+    start_time = datetime.datetime(2022, 2, 16, start_time.hour, start_time.minute, start_time.second)
+    print(f"StartTime new {start_time}")
 
     xid = vs.find('Latitude')
     latid = vs.attach(xid)
