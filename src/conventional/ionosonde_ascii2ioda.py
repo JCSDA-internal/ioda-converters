@@ -240,7 +240,7 @@ def get_header(file_iterator, local_data, model='ART'):
             # read first line of data and remaining MetaData
             line = next(file_iterator)  # comment line
             try:
-                height, freq, f_conf, density, density_conf, ARTScale, Layer, POLAN, Mode, \
+                height, freq, f_conf, density, density_conf, ARTScale, Layer, polanScale, polanLayer, \
                     ARTver, POLver, ARTparm1, POLparm1, ARTparm2, POLparm2, Slope, POLANL = line.split()
 
             except ValueError:
@@ -256,18 +256,21 @@ def get_header(file_iterator, local_data, model='ART'):
             local_data['foF2Confidence'] = np.append(local_data['foF2Confidence'], conf_fof2)
             local_data['nmF2Confidence'] = np.append(local_data['nmF2Confidence'], conf_nmf2)
             local_data['qualityIndex'] = np.append(local_data['qualityIndex'], qualityIndex)
-            local_data['IonosphericModelVersion'] = np.append(local_data['IonosphericModelVersion'], ARTver)
-            local_data['IonosphericModelParameter1'] = np.append(local_data['IonosphericModelParameter1'], ARTparm1)
-            local_data['IonosphericModelParameter2'] = np.append(local_data['IonosphericModelParameter2'], ARTparm2)
-            local_data['Slope'] = np.append(local_data['Slope'], Slope)
-            local_data['polanLayer'] = np.append(local_data['polanLayer'], POLANL)  # removed from final IODA file
-
-            # if 'POLAN' model overwrite these metaData with POLAN values
+            # if 'POLAN' model use POLAN values
             if 'POL' in model:
                 local_data['IonosphericModelVersion'] = np.append(local_data['IonosphericModelVersion'], POLver)
                 local_data['IonosphericModelParameter1'] = np.append(local_data['IonosphericModelParameter1'], POLparm1)
                 local_data['IonosphericModelParameter2'] = np.append(local_data['IonosphericModelParameter2'], POLparm2)
-
+            elif 'ART' in model:
+                local_data['IonosphericModelVersion'] = np.append(local_data['IonosphericModelVersion'], ARTver)
+                local_data['IonosphericModelParameter1'] = np.append(local_data['IonosphericModelParameter1'], ARTparm1)
+                local_data['IonosphericModelParameter2'] = np.append(local_data['IonosphericModelParameter2'], ARTparm2)
+            else:
+                logging.error("Unknown model should be one of: [ART, POL]")
+                break
+            local_data['Slope'] = np.append(local_data['Slope'], Slope)
+            local_data['polanLayer'] = np.append(local_data['polanLayer'], POLANL)  # removed from final IODA file
+            # populate the first row of ObsValues
             local_data = populate_obsValue(line, local_data, model=model)
 
             header_read = True
@@ -296,10 +299,10 @@ def populate_obsValue(line, local_data, model='ART'):
         local_data['ionosondeScalingParameter'] = np.append(local_data['ionosondeScalingParameter'], ARTScale)
         # the ionospheric layer/region is dependent on the model selected
         if 'POL' in model:
-            ionosphericLayer = get_layer(Layer, polanLayer=local_data['polanLayer'], model=model)
+            ionosphericLayer = get_layer(polanLayer, polanLayer=local_data['polanLayer'][0], model=model)
         else:
-            ionosphericLayer = get_layer(polanLayer, model=model)
-        local_data['ionosphericLayer'] = np.append(local_data['ionosphericLayer'], ionosphericLayer)
+            ionosphericLayer = get_layer(Layer, model=model)
+        local_data['ionosphericLayer'].append(ionosphericLayer)
     except ValueError:
         pass
 
@@ -316,10 +319,12 @@ def get_layer(Layer, polanLayer=1, model='ART'):
                 ionosphericLayer = 1
             elif 'F2' in Layer:
                 ionosphericLayer = 2
-            elif 'E0' in Layer:
+            elif 'E' in Layer:
                 ionosphericLayer = 0
             elif 'T' in Layer:
                 ionosphericLayer = 3
+            elif 'V' in Layer:
+                ionosphericLayer = 4
         case 'POL':
             # here assuming number in header if F-Layer for POL
             # do not know if E layer is every provided
@@ -330,6 +335,8 @@ def get_layer(Layer, polanLayer=1, model='ART'):
                 ionosphericLayer = 0
             elif 'T' in Layer:
                 ionosphericLayer = 3
+            elif 'V' in Layer:
+                ionosphericLayer = 4
 
     return ionosphericLayer
 
