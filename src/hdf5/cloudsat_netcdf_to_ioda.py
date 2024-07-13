@@ -142,6 +142,8 @@ def import_obs_data(cpr_obs):
     obs_data[('sensorAzimuthAngle', metaDataName)] = cpr_obs.azimuth_angle.values.astype(np.float32)
     obs_data[('solarZenithAngle', metaDataName)] = np.zeros(nobs).astype(np.float32)
     obs_data[('solarAzimuthAngle', metaDataName)] = np.zeros(nobs).astype(np.float32)
+    obs_data[('height', metaDataName)] = cpr_obs.height.values.astype(np.float32)
+    obs_data[('Layer', metaDataName)] = cpr_obs.elevation.values.astype(np.float32)
     obs_data[('sequenceNumber', metaDataName)] = cpr_obs.sequenceNumber.values.astype(np.int32)
     obs_data[('dateTime', metaDataName)] = cpr_obs.epoch_time.values.astype(np.int64)
 
@@ -170,6 +172,8 @@ def init_obs_loc():
         ('solarAzimuthAngle', metaDataName): [],
         ('sensorZenithAngle', metaDataName): [],
         ('sensorAzimuthAngle', metaDataName): [],
+        ('height', metaDataName): [],
+        ('Layer', metaDataName): [],
     }
 
     return obs
