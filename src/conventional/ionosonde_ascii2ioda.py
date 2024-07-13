@@ -160,7 +160,9 @@ def main(args):
             logging.info(f" the variable: {variable} will be placed into ObsValue of ioda_data")
             ioda_data[(variable, obsValName)] = np.array(data[variable], dtype=np.float32)
             ioda_data[(variable, obsErrName)] = np.array(data['electronDensityConfidence'], dtype=np.float32)
-            ioda_data[(variable, qcName)] = np.full(nlocs, 0, dtype=np.int32)  # how to interpret AQI ?
+            qc_array_hack = np.where(
+                (data['electronDensity'].astype(float) < 0) | (data['height'].astype(float) < 0) | (data['frequency'].astype(float) < 0), 1, 0)
+            ioda_data[(variable, qcName)] = np.array(qc_array_hack, dtype=np.int32)  # how to interpret AQI ?
 
     # remove polanLayer model MetaData if POL model is used this info is in ('Layer', 'MetaData')
     ioda_data.pop(('polanLayer', 'MetaData'))
