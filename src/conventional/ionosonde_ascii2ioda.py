@@ -82,7 +82,7 @@ def main(args):
     data = init_data_dict()
     for fname in file_names:
         logging.info(f"Reading file:  {fname}")
-        data = read_file(fname, data, model=ionospheric_model)
+        data = read_file(fname, data, model=ionospheric_model, qc_strict=args.qc_strict)
 
     if not data:
         logging.error("No data to write, stopping execution.")
@@ -160,8 +160,7 @@ def main(args):
             logging.info(f" the variable: {variable} will be placed into ObsValue of ioda_data")
             ioda_data[(variable, obsValName)] = np.array(data[variable], dtype=np.float32)
             ioda_data[(variable, obsErrName)] = np.array(data['electronDensityConfidence'], dtype=np.float32)
-            qc_array_hack = np.where(
-                (data['electronDensity'].astype(float) < 0) | (data['height'].astype(float) < 0) | (data['frequency'].astype(float) < 0), 1, 0)
+            qc_array_hack = apply_gross_quality_control(data, qc_strict=args.qc_strict)
             ioda_data[(variable, qcName)] = np.array(qc_array_hack, dtype=np.int32)  # how to interpret AQI ?
 
     # remove polanLayer model MetaData if POL model is used this info is in ('Layer', 'MetaData')
@@ -328,8 +327,8 @@ def get_layer(Layer, polanLayer=1, model='ART'):
             elif 'V' in Layer:
                 ionosphericLayer = 4
         case 'POL':
-            # here assuming number in header if F-Layer for POL
-            # do not know if E layer is every provided
+            # here assuming number in header is the F-Layer for POL
+            # do not know if E layer is ever provided
             # do not know what T means
             if 'F' in Layer:
                 ionosphericLayer = polanLayer
@@ -341,6 +340,23 @@ def get_layer(Layer, polanLayer=1, model='ART'):
                 ionosphericLayer = 4
 
     return ionosphericLayer
+
+
+def apply_gross_quality_control(data, qc_strict=False):
+    # if strict quality-control is requested
+    # apply using simple physical reality check on variables
+
+    # initialize returned variable
+    qc_array_hack = np.zeros_like(data['electronDensity'], dtype=np.int32)
+    # is requested apply check
+    if qc_strict:
+        qc_array_hack = np.where(
+            (data['electronDensity'].astype(float) < 0) |
+            (data['height'].astype(float) < 0) |
+            (data['frequency'].astype(float) < 0),
+            1,
+            0)
+    return qc_array_hack
 
 
 def init_data_dict():
@@ -370,11 +386,13 @@ if __name__ == "__main__":
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument('--debug', action='store_true', default=False,
                           help='enable debug messages')
-    optional.add_argument('--verbose', action='store_true', default=False,
-                          help='enable verbose debug messages')
     optional.add_argument('--ionospheric-model', default='ART',
                           choices=['ART', 'POL'], dest='model',
                           help='ionospheric model options: ART or POL')
+    optional.add_argument('--quality-control', default=False, dest='qc_strict',
+                          help='ionospheric model options: ART or POL')
+    optional.add_argument('--verbose', action='store_true', default=False,
+                          help='enable verbose debug messages')
 
     args = parser.parse_args()
 
