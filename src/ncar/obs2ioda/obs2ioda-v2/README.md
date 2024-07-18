@@ -92,12 +92,12 @@ Example output files:
 
 ## Converting Himawari Standard Data (HSD) FLDK files
 ```
-Usage: obs2ioda-v2.x -i input_dir -ahi -t YYYYMMDDHHNN [-s 3]
+Usage: obs2ioda-v2.x -i input_dir -ahi -t YYYYMMDDHHNN [-s 1]
 ```
 
 Input files are a list of Himawari Standard Data, e.g. HS_H08_20200815_0000_B14_FLDK_R20_S0210.DAT in the input_dir.  
 Minute must be specified in the time (-t) option.  
-Number of pixels to skip is optional.
+Number of pixels to skip must be specified in the (-s) option. The default value of 1 means no pixels will be skipped. 
 
 ## Notes
 * The output prefix (before _obs) is defined in define_mod.f90
