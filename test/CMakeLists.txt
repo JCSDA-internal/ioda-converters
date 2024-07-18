@@ -1379,6 +1379,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_j1_l1b_albedo
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/viirs_l1bnc2ioda.py
                           -i testinput/viirs_j1_l1b_albedo_obsval_202108050600.nc
                           -g testinput/viirs_j1_l1b_albedo_geoloc_202108050600.nc
+                          --secterm
                           -o testrun/viirs_j1_l1b_albedo_2021080506.nc"
                           viirs_j1_l1b_albedo_2021080506.nc ${IODA_CONV_COMP_TOL})
 
