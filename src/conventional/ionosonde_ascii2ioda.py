@@ -163,7 +163,7 @@ def main(args):
             qc_array_hack = apply_gross_quality_control(data, qc_strict=args.qc_strict)
             ioda_data[(variable, qcName)] = np.array(qc_array_hack, dtype=np.int32)  # how to interpret AQI ?
 
-    # remove polanLayer model MetaData if POL model is used this info is in ('Layer', 'MetaData')
+    # remove polanLayer MetaData if POL model is used this info is used to create ('Layer', 'MetaData')
     ioda_data.pop(('polanLayer', 'MetaData'))
 
     logging.debug("Writing file: " + output_file)
@@ -311,7 +311,11 @@ def populate_obsValue(line, local_data, model='ART'):
 
 
 def get_layer(Layer, polanLayer=1, model='ART'):
-    # depending on use of 'ART' or 'POL' set ionosphieric layer/region
+    # this routine should define a consistent naming for the ionospheric region
+    # a conversation is needed with an ionosonde expert to define this
+    # a table representation of the layers may be beneficial to avoid storing strings
+
+    # depending on use of 'ART' or 'POL' set ionospheric layer/region
     ionosphericLayer = int_missing_value
     match model:
         case 'ART':
@@ -351,9 +355,9 @@ def apply_gross_quality_control(data, qc_strict=False):
     # is requested apply check
     if qc_strict:
         qc_array_hack = np.where(
-            (data['electronDensity'].astype(float) < 0) |
-            (data['height'].astype(float) < 0) |
-            (data['frequency'].astype(float) < 0),
+            (data['electronDensity'].astype(float) < 0)
+            | (data['height'].astype(float) < 0)
+            | (data['frequency'].astype(float) < 0),
             1,
             0)
     return qc_array_hack
