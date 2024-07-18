@@ -31,13 +31,13 @@ ppbv2molmol = 1e-9
 pptv2molmol = 1e-12
 
 # {'iodaName' : ['obsName', 'iodaUnit', 'obsToIodaUnivConv']
-obsvars = {'nitrogendioxideInsitu' : ['NO2_ACES','mol mol-1', ppbv2molmol],
-           'carbonmonoxideInsitu' : ['CO_ppb', 'mol mol-1', ppbv2molmol],
-           'ozoneInsitu' : ['O3_CL', 'mol mole-1', ppbv2molmol],
-           'formaldehydeInsitu' : ['CH2O_ISAF', 'mol mol-1', pptv2molmol],
-           'airTemperature'  : ['T', 'K', 1],
-           'windEastward'  : ['U', 'm s-1', 1],
-           'windNorthward' : ['V', 'm s-1', 1]}
+obsvars = {'nitrogendioxideInsitu': ['NO2_ACES', 'mol mol-1', ppbv2molmol],
+           'carbonmonoxideInsitu': ['CO_ppb', 'mol mol-1', ppbv2molmol],
+           'ozoneInsitu': ['O3_CL', 'mol mole-1', ppbv2molmol],
+           'formaldehydeInsitu': ['CH2O_ISAF', 'mol mol-1', pptv2molmol],
+           'airTemperature': ['T', 'K', 1],
+           'windEastward': ['U', 'm s-1', 1],
+           'windNorthward': ['V', 'm s-1', 1]}
 
 
 class icartt(object):
@@ -48,7 +48,6 @@ class icartt(object):
         self.make_dictionaries()      # Set up variable names for IODA
         self.DimDict = {}
         self.read()    # Read data from file
-
 
     def read(self):
 
@@ -62,10 +61,9 @@ class icartt(object):
             except Exception:
                 raise Exception('Unknown error opening %s' % self.filename)
 
-
             # Read global attributes
             self.AttrData['platform'] = dsFlight.attrs['PLATFORM']
-            self.AttrData['description'] = dsFlight.attrs['RA'] # can be anything
+            self.AttrData['description'] = dsFlight.attrs['RA']
 
             # Read lat lon
             lats = dsFlight['Latitude'].values
@@ -73,21 +71,20 @@ class icartt(object):
 
             lats = lats.astype(np.float32)
             lons = lons.astype(np.float32)
-            
-            # Read time and conver to ioda time format
 
+            # Read time and conver to ioda time format
             # sec since SDATE
             stime = dsFlight['iWAS_Start_UTC'].values
             sdate_str = dsFlight.attrs['SDATE']
             sdate = pd.to_datetime(sdate_str, format='%Y, %m, %d')
             epoch = pd.Timestamp('1970-01-01T00:00:00Z').tz_convert(None)
             seconds_difference = (sdate - epoch).total_seconds()
-            
+
             adjusted_stime = stime + seconds_difference
             datetimes = pd.to_datetime(adjusted_stime, unit='s', origin=epoch)
             times = datetimes.strftime('%Y-%m-%dT%H:%M:%SZ')
 
-            pressure = dsFlight['P'] * HPA2PA # hPa to Pa
+            pressure = dsFlight['P'] * HPA2PA  # hPa to Pa
             pressure = pressure.astype(np.float32)
             nlocs = pressure.shape[0]
 
@@ -126,7 +123,6 @@ class icartt(object):
                 self.outData[('longitude', 'MetaData')] = np.concatenate(
                     (self.outData[('longitude', 'MetaData')], lons[flag]))
 
-
                 for var in self.obsvars:
                     self.outData[(var, 'valKey')] = np.concatenate(
                         (self.outData[(var, 'valKey')], times[flag]))
@@ -134,8 +130,7 @@ class icartt(object):
             first = False
 
         self.DimDict['Location'] = len(self.outData[('dateTime', 'MetaData')])
-        self.AttrData['Location'] = np.int32(self.DimDict['Location']) 
-
+        self.AttrData['Location'] = np.int32(self.DimDict['Location'])
 
     def make_dictionaries(self):
         """
@@ -157,7 +152,7 @@ class icartt(object):
 
     def make_AttrData(self):
         """
-        Make a dictionary of AttrData based on obsvars 
+        Make a dictionary of AttrData based on obsvars
         """
         AttrData = {
             'converter': os.path.basename(__file__),
@@ -180,9 +175,10 @@ class icartt(object):
         """
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         for item in self.obsvars:
-            self.varAttrs[item, iconv.OvalName()]['units'] =  self.obsvars[item][1]
-            self.varAttrs[item, iconv.OerrName()]['units'] =  self.obsvars[item][1]
+            self.varAttrs[item, iconv.OvalName()]['units'] = self.obsvars[item][1]
+            self.varAttrs[item, iconv.OerrName()]['units'] = self.obsvars[item][1]
             self.varAttrs[item, iconv.OqcName()]['units'] = 'unitless'
+
 
 def get_parser():
     """
@@ -231,6 +227,7 @@ def get_parser():
         type=float, default=0.0)
 
     return parser
+
 
 def main():
 
