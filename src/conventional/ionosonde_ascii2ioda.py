@@ -389,8 +389,9 @@ if __name__ == "__main__":
     optional.add_argument('--ionospheric-model', default='ART',
                           choices=['ART', 'POL'], dest='model',
                           help='ionospheric model options: ART or POL')
-    optional.add_argument('--quality-control', default=False, dest='qc_strict',
-                          help='ionospheric model options: ART or POL')
+    optional.add_argument('--quality-control', action='store_true',
+                          default=False, dest='qc_strict',
+                          help='add PreQC values')
     optional.add_argument('--verbose', action='store_true', default=False,
                           help='enable verbose debug messages')
 
