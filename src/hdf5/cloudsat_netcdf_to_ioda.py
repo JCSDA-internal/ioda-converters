@@ -21,6 +21,7 @@ from pyiodaconv.orddicts import DefaultOrderedDict
 from pyiodaconv.def_jedi_utils import set_metadata_attributes, set_obspace_attributes
 from pyiodaconv.def_jedi_utils import epoch, iso8601_string
 import read_cloudsat
+import read_dpr_gpm
 
 float_missing_value = iconv.get_default_fill_val(np.float32)
 int_missing_value = iconv.get_default_fill_val(np.int32)
@@ -31,15 +32,10 @@ obsValName = iconv.OvalName()
 
 # globals
 CLOUDSAT_WMO_sat_ID = 788
+GPM_WMO_sat_ID = 288
 
 # parameter
 radarReflectivityAtt = 'ReflectivityAttenuated'
-
-GlobalAttrs = {
-    "platformCommonName": "CloudSat",
-    "platformLongDescription": "CloudSat reflectance",
-    "sensorCentralFrequency": "[94.05 GHz]"
-}
 
 locationKeyList = [
     ("latitude", "float"),
@@ -47,6 +43,7 @@ locationKeyList = [
     ("dateTime", "long"),
 ]
 
+GlobalAttrs = {}
 
 def main(args):
 
@@ -55,9 +52,19 @@ def main(args):
 
     # example: input_filename = ['2009212223327_17338_CS_2B-GEOPROF_GRANULE_P1_R05_E02_F00.hdf']
     input_filename = args.input
+    sensor_name = args.sensor_name
     output_filename = args.output
 
-    cpr_obs = read_cloudsat.read_cloudsat(input_filename)
+    if 'cpr' in sensor_name:
+        cpr_obs = read_cloudsat.read_cloudsat(input_filename)
+    elif 'dpr' in sensor_name:
+        cpr_obs = read_dpr_gpm.read_dpr_gpm(input_filename)
+
+    sensor_upper = sensor_name.replace("_"," ").upper()
+    GlobalAttrs["platformCommonName"] = sensor_upper
+    GlobalAttrs["platformLongDescription"] =  f"{sensor_upper} Attenuated Reflectivity"
+    GlobalAttrs["sensorCentralFrequency"] = str(cpr_obs.centerFreq.values)
+
     obs_data = import_obs_data(cpr_obs)
 
     nlocs_int = np.array(len(obs_data[('latitude', metaDataName)]), dtype='int64')
@@ -81,6 +88,8 @@ def main(args):
     VarDims = {
         k: ['Location', 'Channel'],
         'sensorChannelNumber': ['Channel'],
+        'sensorCentralFrequency': ['Channel'],
+        'sensorCentralWavenumber': ['Channel'],
     }
 
     DimDict = {
@@ -131,8 +140,8 @@ def import_obs_data(cpr_obs):
     obs_data[('latitude', metaDataName)] = cpr_obs.lat.values.astype(np.float32)
     obs_data[('longitude', metaDataName)] = cpr_obs.lon.values.astype(np.float32)
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nobs), WMO_sat_ID, dtype='int32')
-    obs_data[('sensorCentralFrequency', metaDataName)] = np.array([94.05]).astype(np.float32)    # cpr_sim.Frequency.values.astype(np.float32)
-    obs_data[('sensorCentralWavenumber', metaDataName)] = np.array([3.1371]).astype(np.float32)  # cpr_sim.Wavenumber.values.astype(np.float32)
+    obs_data[('sensorCentralFrequency', metaDataName)] = cpr_obs.centerFreq.values.astype(np.float32)    
+    obs_data[('sensorCentralWavenumber', metaDataName)] =  cpr_obs.centerWN.values.astype(np.float32)  
     obs_data[('sensorPolarizationDirection', metaDataName)] = np.array([9]).astype(np.int32)
     obs_data[('sensorScanPosition', metaDataName)] = cpr_obs.fov1.values.astype(np.int32)
     obs_data[('sensorChannelNumber', metaDataName)] = cpr_obs.channel.values.astype(np.int32)
@@ -183,6 +192,8 @@ def get_WMO_satellite_ID(attrs_shortname):
 
     if 'CloudSat' in attrs_shortname:
         WMO_sat_ID = CLOUDSAT_WMO_sat_ID
+    elif 'GPM' in attrs_shortname:
+        WMO_sat_ID = GPM_WMO_sat_ID
     else:
         WMO_sat_ID = -1
         print("could not determine satellite from filename: %s" % attrs_shortname)
@@ -207,6 +218,10 @@ if __name__ == "__main__":
         '-i', '--input',
         help="path of satellite observation input file(s)",
         type=str, nargs='+', required=True)
+    required.add_argument(
+        '-s', '--sensor_name',
+        help="name of sensor and satellite in CRTM format like dpr_gpm",
+        type=str, required=True)
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
         '-o', '--output',
