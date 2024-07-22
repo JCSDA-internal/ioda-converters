@@ -11,7 +11,6 @@ import sys
 import argparse
 import netCDF4 as nc
 import numpy as np
-import pandas as pd
 from datetime import datetime, timedelta
 import os
 from pathlib import Path
@@ -23,6 +22,7 @@ from numpy import log as ln
 import pyiodaconv.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from pyiodaconv.orddicts import DefaultOrderedDict
+from pyiodaconv.def_jedi_utils import epoch
 
 
 # constants
@@ -76,13 +76,11 @@ class icartt(object):
             # sec since SDATE
             stime = dsFlight['iWAS_Start_UTC'].values
             sdate_str = dsFlight.attrs['SDATE']
-            sdate = pd.to_datetime(sdate_str, format='%Y, %m, %d')
-            epoch = pd.Timestamp('1970-01-01T00:00:00Z').tz_convert(None)
+            sdate = datetime.strptime(sdate_str, '%Y, %m, %d')
             seconds_difference = (sdate - epoch).total_seconds()
 
             adjusted_stime = stime + seconds_difference
-            datetimes = pd.to_datetime(adjusted_stime, unit='s', origin=epoch)
-            times = datetimes.strftime('%Y-%m-%dT%H:%M:%SZ')
+            times = stime + seconds_difference
 
             pressure = dsFlight['P'] * HPA2PA  # hPa to Pa
             pressure = pressure.astype(np.float32)
