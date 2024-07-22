@@ -236,7 +236,7 @@ def main():
         ("latitude", "float", "degrees_north"),
         ("longitude", "float", "degrees_east"),
         ("pressure", "float", "Pa"),
-        ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z"),
+        ("dateTime", "long", iso8601_string),
     ]
 
     varDims = {}
