@@ -10,17 +10,15 @@
 import numpy as np
 import pyiodaconv.ioda_conv_engines as iconv
 import time
-from datetime import datetime, timezone
+from datetime import datetime
 
 metaDataName = iconv.MetaDataName()
 obsValName = iconv.OvalName()
 obsErrName = iconv.OerrName()
 qcName = iconv.OqcName()
 
-# Define metaData and ensure epoch object is in UTC
 iso8601_string = "seconds since 1970-01-01T00:00:00Z"
 epoch = datetime.fromisoformat(iso8601_string[14:-1])
-epoch = epoch.replace(tzinfo=timezone.utc)
 
 ioda_float_type = 'float32'
 ioda_int_type = 'int32'
