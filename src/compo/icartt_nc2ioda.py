@@ -22,7 +22,7 @@ from numpy import log as ln
 import pyiodaconv.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from pyiodaconv.orddicts import DefaultOrderedDict
-from pyiodaconv.def_jedi_utils import epoch
+from pyiodaconv.def_jedi_utils import epoch, iso8601_string
 
 
 # constants
