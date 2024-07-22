@@ -30,6 +30,8 @@ HPA2PA = 1E2
 ppbv2molmol = 1e-9
 pptv2molmol = 1e-12
 
+float_missing_value = iconv.get_default_fill_val(np.float32)
+
 # {'iodaName' : ['obsName', 'iodaUnit', 'obsToIodaUnivConv']
 obsvars = {'nitrogendioxideInsitu': ['NO2_ACES', 'mol mol-1', ppbv2molmol],
            'carbonmonoxideInsitu': ['CO_ppb', 'mol mol-1', ppbv2molmol],
@@ -72,7 +74,7 @@ class icartt(object):
             lats = lats.astype(np.float32)
             lons = lons.astype(np.float32)
 
-            # Read time and conver to ioda time format
+            # Read time and convert to ioda time format
             # sec since SDATE
             stime = dsFlight['iWAS_Start_UTC'].values
             sdate_str = dsFlight.attrs['SDATE']
@@ -88,8 +90,9 @@ class icartt(object):
 
             data = {}
             for var in self.obsvars:
-                print(var)
-                data[var] = (dsFlight[self.obsvars[var][0]] * self.obsvars[var][2]).astype(np.float32)
+                var_data = (dsFlight[self.obsvars[var][0]] * self.obsvars[var][2])
+                var_data = np.where(np.isnan(var_data), float_missing_value, var_data)
+                data[var] = var_data.astype(np.float32)
 
             # set flag
             flag = np.full((nlocs), True)
@@ -188,7 +191,7 @@ def get_parser():
     # get command line arguments
     parser = argparse.ArgumentParser(
         description=(
-            'Reads TROPESS CO netCDF files provided by NASA ??'
+            'Reads icartt_nc files'
             'and converts into IODA formatted output files. Multiple'
             'files are able to be concatenated.'),
         formatter_class=argparse.RawDescriptionHelpFormatter
@@ -198,7 +201,7 @@ def get_parser():
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
         '-i', '--input',
-        help="path of TROPESS L2 CO observation netCDF input file(s)",
+        help="path of icartt_nc observation netCDF input file(s)",
         type=str,
         nargs='+',
         required=True)
