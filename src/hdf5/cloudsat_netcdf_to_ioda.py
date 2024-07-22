@@ -60,18 +60,9 @@ def main(args):
     cpr_obs = read_cloudsat.read_cloudsat(input_filename)
     obs_data = import_obs_data(cpr_obs)
 
-    nlocs_int = np.array(len(obs_data[('latitude', metaDataName)]), dtype='int64')
-    nlocs = nlocs_int.item()
-    nchans = len(obs_data[('sensorChannelNumber', metaDataName)])
-    # still need to add these metaData - TODO !
-    # ds_g.variables['height'][:] = cpr_obs.height.values.astype(np.float32)
-    # ds_g.variables['Layer'][:] = cpr_obs.elevation.values.astype(np.int32)
-
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
-    dtg = False  # pass a reference time for the observation such as to an NWP analysis
-    if dtg:
-        GlobalAttrs['datetimeReference'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
+    # GlobalAttrs['datetimeReference'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
     GlobalAttrs['converter'] = os.path.basename(__file__)
 
     # set key for observable
@@ -83,6 +74,8 @@ def main(args):
         'sensorChannelNumber': ['Channel'],
     }
 
+    # TODO error trap on creating total location value
+    nlocs = np.int64(len(obs_data[('latitude', metaDataName)]))
     DimDict = {
         'Location': nlocs,
         'Channel': obs_data[('sensorChannelNumber', metaDataName)],
@@ -212,11 +205,6 @@ if __name__ == "__main__":
         '-o', '--output',
         help='path to output ioda file',
         type=str, default=os.path.join(os.getcwd(), 'output.nc4'))
-    optional.add_argument(
-        '-d', '--date',
-        metavar="YYYYMMDDHH",
-        help="base date for the center of the window",
-        type=str, default=None)
 
     args = parser.parse_args()
 
