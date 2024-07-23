@@ -100,7 +100,6 @@ def read_dpr_hdf_file(fname):
     dprdata['obs_measured'] =  xr_data['FS/PRE/zFactorMeasured'] #"nscan,nray=nfov,nbin=nelev,nfreq=nchan"
     dprdata['obs'] =  xr_data['FS/SLV/zFactorFinal'] #"nscan,nray=nfov,nbin=nelev,nfreq=nchan"
     dprdata['obs'].values[dprdata['obs'].values < -100] = np.nan
-    dprdata['precipWater'] = xr_data['FS/SLV/precipWater']
     dprdata['zenith_angle'] = xr_data['FS/PRE/localZenithAngle'] #   nscan,nray=nfov,nfreq=nchan    
     dprdata['azimuth_angle'] = dprdata['zenith_angle'].copy() * 0
     dprdata['centerFreq'] = xr.DataArray(np.array([13.6, 35.5]), dims={"nfreq": 2}) # GHz
@@ -113,22 +112,44 @@ def read_dpr_hdf_file(fname):
     return dprdata
 
 
-def read_dpr_gpm(dpr_fnames):
+def read_dpr_gpm(dpr_fnames, 
+                 dpr_dir=[], 
+                 dt_start=datetime.datetime(1900,1,1), 
+                 dt_end=datetime.datetime(2100,1,1)):
+
+    if len(dpr_fnames) == 0:
+       # files are partitioned into almost two hours period
+       dt_start1 = dt_start - datetime.timedelta(hours=2)
+       dt_end1 = dt_end + datetime.timedelta(hours=2)
+       dt_range = pd.date_range(dt_start1, dt_end1, freq="1H")
+       dpr_fnames = []
+       for idt in dt_range:
+           #2A.GPM.DPR.V9-20211125.20170907-S075404-E092639.020033.V07A.HDF5                                   
+           file_pattern = '*.%s*.HDF5'%idt.strftime('%Y%m%d-S%H')
+           for dir,_,_ in os.walk(dpr_dir):
+               dpr_fnames.extend(glob(os.path.join(dir,file_pattern))) 
+
+    if not dpr_fnames:
+        return []
+
+    # limit data so that dt_start <= date <= dt_end
+    dt_start = round((dt_start - epoch).total_seconds())
+    dt_end = round((dt_end - epoch).total_seconds())
 
     for f in dpr_fnames:
         dpr_data = read_dpr_hdf_file(f)
+        logid = (dpr_data.epoch_time.values >= dt_start) & (dpr_data.epoch_time.values < dt_end)
+        if np.sum(logid) == 0: continue
+        scanid = np.arange(dpr_data.scanline.size)[logid]
+        dpr_data = dpr_data.isel(scanline = scanid)
 
-        if 'dpr_data1' not in vars():  # not defined yet
+        if not 'dpr_data1' in vars():  # not defined yet
             dpr_data1 = dpr_data
         else:
-            # common keys
-            for k in (dpr_data.keys() & dpr_data1.keys()):
-                dpr_data1[k] = np.append(dpr_data1[k], dpr_data[k], axis=0)
+            dpr_data1 = xr.concat([dpr_data, dpr_data1], dim='scanline')
 
     if 'dpr_data1' not in vars():
         return []
-
-
 
     # combine geovar is used to combine DPR with precipitation retrievals from DPR
     dpr_data1 = dpr_data1.stack(obs_id=('scanline', 'fov')).reset_index('obs_id')

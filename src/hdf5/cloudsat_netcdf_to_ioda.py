@@ -13,7 +13,7 @@
 import sys
 import netCDF4 as nc
 import numpy as np
-import datetime
+from datetime import datetime
 import time
 
 import pyiodaconv.ioda_conv_engines as iconv
@@ -51,14 +51,21 @@ def main(args):
     # place this xarray into a dictionary and pass to IODA writer
 
     # example: input_filename = ['2009212223327_17338_CS_2B-GEOPROF_GRANULE_P1_R05_E02_F00.hdf']
-    input_filename = args.input
     sensor_name = args.sensor_name
+    input_filename = args.input_files
+    input_dir = args.input_dir
     output_filename = args.output
+    start_date = datetime.strptime(args.start_date, "%Y%m%d%H")
+    end_date = datetime.strptime(args.end_date, "%Y%m%d%H")
+ 
+    if input_filename is None:
+       input_filename = []
 
     if 'cpr' in sensor_name:
         cpr_obs = read_cloudsat.read_cloudsat(input_filename)
     elif 'dpr' in sensor_name:
-        cpr_obs = read_dpr_gpm.read_dpr_gpm(input_filename)
+        cpr_obs = read_dpr_gpm.read_dpr_gpm(input_filename, dpr_dir=input_dir, 
+                                            dt_start=start_date, dt_end=end_date)
 
     sensor_upper = sensor_name.replace("_"," ").upper()
     GlobalAttrs["platformCommonName"] = sensor_upper
@@ -215,23 +222,32 @@ if __name__ == "__main__":
 
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
-        '-i', '--input',
-        help="path of satellite observation input file(s)",
-        type=str, nargs='+', required=True)
-    required.add_argument(
-        '-s', '--sensor_name',
+        '-i', '--sensor_name',
         help="name of sensor and satellite in CRTM format like dpr_gpm",
         type=str, required=True)
     optional = parser.add_argument_group(title='optional arguments')
+    required.add_argument(
+        '-f', '--input_files',
+        help="path of satellite observation input file(s)",
+        type=str, nargs='+')
+    required.add_argument(
+        '-d', '--input_dir',
+        help="path of satellite observations - only directory",
+        type=str)
     optional.add_argument(
         '-o', '--output',
         help='path to output ioda file',
         type=str, default=os.path.join(os.getcwd(), 'output.nc4'))
     optional.add_argument(
-        '-d', '--date',
+        '-s', '--start_date',
         metavar="YYYYMMDDHH",
-        help="base date for the center of the window",
-        type=str, default=None)
+        help="date/time for the start of the window",
+        type=str, default="1900010100")
+    optional.add_argument(
+        '-e', '--end_date',
+        metavar="YYYYMMDDHH",
+        help="date/time for the end of the window",
+        type=str, default="2100123123")
 
     args = parser.parse_args()
 
