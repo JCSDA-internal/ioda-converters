@@ -14,29 +14,29 @@ from pyiodaconv.orddicts import DefaultOrderedDict
 os.environ["TZ"] = "UTC"
 
 # these are the unique values in the raw input file
-varDict = {'frequency': ['frequency', "float", 'm s-1'],                                         # chirp frequency output in MHz
-           'frequencyConfidence': ['frequencyConfidence', "float", 'fractional percent'],        # half-width of freq?
-           'height': ['height', "float", "m"],                                                   # range or radar chirp
-           'electronDensity': ['electronDensity', "float", 'number / m^3'],                      # number per volume
-           'electronDensityConfidence': ['electronDensityConfidence', "float", 'number / m^3'],  # uncertainty in number per volume
-           'ionosondeScalingParameter': ['ionosondeScalingParameter', "float", 'Unknown'],       # 3.71 - this is something about how the values are calculated
-           'ionosphericLayer': ['ionosphericLayer', "integer", 'IonosphericLayer']}              # F2   - this is the name of the layer
+varDict = {'criticalFrequency': ['criticalFrequency', "float", 'm s-1'],
+           'criticalFrequencyConfidence': ['criticalFrequencyConfidence', "float", 'fractional percent'],
+           'height': ['height', "float", "m"],
+           'electronDensity': ['electronDensity', "float", 'number / m^3'],
+           'electronDensityConfidence': ['electronDensityConfidence', "float", 'number / m^3'],
+#          'ionosondeScalingParameter': ['ionosondeScalingParameter', "float", 'Unknown'],       # 3.71 - this is something about how the values are calculated
+           'ionosphericLayer': ['ionosphericLayer', "integer", 'IonosphericLayer']}              # F2   - this is index for layer (E=0; F1=1; F2=2)
 
 # these are the MetaData common to each input
 locationKeyList = [("latitude", "float", "degrees_north"),
                    ("longitude", "float", "degrees_east"),
                    ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z"),
-                   ("hmF2", "float", "Unknown"),             # height of F2 layer
-                   ("foF2", "float", "Unknown"),             # freq of F2 (in MHz)
-                   ("foF2Confidence", "float", "Unknown"),   # bandwidth?
-                   ("nmF2", "float", "Unknown"),             # number density at hmF2
-                   ("nmF2Confidence", "float", "Unknown"),
-                   ("qualityIndex", "integer", ""),          # quality index
-                   ("IonosphericModelVersion", "float", "Unknown"),       # (ARTIST or POLAN) software version
-                   ("IonosphericModelParameter1", "float", "Unknown"),   # (ARTIST or POLAN) parameter
-                   ("IonosphericModelParameter2", "float", "Unknown"),
-                   ("polanLayer", "integer", "Unknown"),     # will be removed needed to interpret POLAN model if selected
-                   ("Slope", "float", "Unknown"),
+                   ("hmF2", "float", "height of the F2 peak electron density"),
+                   ("foF2", "float", "critical plasma frequency of F2 region"),
+                   ("foF2Uncertainty", "float", "uncertainty of the critical plasma frequency of F2 region"),
+                   ("nmF2", "float", "peak electron density in F2 region"),
+                   ("nmF2Uncertainty", "float", "uncertainty in the peak electron density in F2 region"),
+#                  ("qualityIndex", "integer", ""),          # quality index
+#                  ("IonosphericModelVersion", "float", "Unknown"),       # (ARTIST or POLAN) software version
+#                  ("IonosphericModelParameter1", "float", "Unknown"),   # (ARTIST or POLAN) parameter
+#                  ("IonosphericModelParameter2", "float", "Unknown"),
+#                  ("polanLayer", "integer", "Unknown"),     # will be removed needed to interpret POLAN model if selected
+#                  ("Slope", "float", "Unknown"),
                    ("stationIdentifier", "string", "")]
 
 meta_keys = [m_item[0] for m_item in locationKeyList]
@@ -80,11 +80,11 @@ def main(args):
     start_time = time.time()
 
     data = init_data_dict()
+    any_data = False
     for fname in file_names:
         logging.info(f"Reading file:  {fname}")
-        data = read_file(fname, data, model=ionospheric_model, qc_strict=args.qc_strict)
-
-    if not data:
+        data, any_data = read_file(fname, data, any_data, model=ionospheric_model, qc_strict=args.qc_strict)
+    if not any_data:
         logging.error("No data to write, stopping execution.")
         sys.exit()
 
@@ -163,8 +163,8 @@ def main(args):
             qc_array_hack = apply_gross_quality_control(data, qc_strict=args.qc_strict)
             ioda_data[(variable, qcName)] = np.array(qc_array_hack, dtype=np.int32)  # how to interpret AQI ?
 
-    # remove polanLayer MetaData if POL model is used this info is used to create ('Layer', 'MetaData')
-    ioda_data.pop(('polanLayer', 'MetaData'))
+#   # remove polanLayer MetaData if POL model is used this info is used to create ('Layer', 'MetaData')
+#   ioda_data.pop(('polanLayer', 'MetaData'))
 
     logging.debug("Writing file: " + output_file)
 
@@ -175,7 +175,7 @@ def main(args):
     logging.info("--- {:9.4g} total seconds ---".format(time.time() - start_time))
 
 
-def read_file(file_name, data, qc_strict=True, model='ART'):
+def read_file(file_name, data, any_data, qc_strict=True, model='ART'):
 
     local_data = init_data_dict()
 
@@ -185,6 +185,7 @@ def read_file(file_name, data, qc_strict=True, model='ART'):
         file_iterator = iter(file)
 
         local_data, header_read = get_header(file_iterator, local_data, model=model)
+        logging.debug(f'header was read w/o error: {header_read}')
 
         while header_read and True:
             try:
@@ -195,11 +196,15 @@ def read_file(file_name, data, qc_strict=True, model='ART'):
                 # If StopIteration is raised, break from the loop
                 break
 
-    for key in set(varDict.keys()).union(meta_keys):
-        # data[key] = np.concatenate(data[key], local_data[key]) # why not and gotta be much better way
-        data[key] = np.append(data[key], local_data[key])
+    # if the header was not sucessfully read do nothing
+    if header_read:
+        for key in set(varDict.keys()).union(meta_keys):
+            # data[key] = np.concatenate(data[key], local_data[key]) # why not and gotta be much better way
+            data[key] = np.append(data[key], local_data[key])
 
-    return data
+    any_data = any_data or header_read
+
+    return data, any_data
 
 
 def get_header(file_iterator, local_data, model='ART'):
@@ -213,6 +218,8 @@ def get_header(file_iterator, local_data, model='ART'):
 
     # extended metaData in 2nd line (example)
     # AQI=3 AL945_2020275000730 Problem Flags.................. qualscan V2009.10
+
+    # DB049_2020296024502 Problem Flags.Check  1 failed.  qualscan V2009.10
 
     # final metaData is appended at end of the first data row (example)
     # ART   POL   ART   POL   ART   POL Slope POLAN 1/2
@@ -254,23 +261,23 @@ def get_header(file_iterator, local_data, model='ART'):
             local_data['hmF2'] = np.append(local_data['hmF2'], hmf2)
             local_data['foF2'] = np.append(local_data['foF2'], fof2)
             local_data['nmF2'] = np.append(local_data['nmF2'], nmf2)
-            local_data['foF2Confidence'] = np.append(local_data['foF2Confidence'], conf_fof2)
-            local_data['nmF2Confidence'] = np.append(local_data['nmF2Confidence'], conf_nmf2)
-            local_data['qualityIndex'] = np.append(local_data['qualityIndex'], qualityIndex)
+            local_data['foF2Uncertainty'] = np.append(local_data['foF2Uncertainty'], conf_fof2)
+            local_data['nmF2Uncertainty'] = np.append(local_data['nmF2Uncertainty'], conf_nmf2)
+#           local_data['qualityIndex'] = np.append(local_data['qualityIndex'], qualityIndex)
             # if 'POLAN' model use POLAN values
-            if 'POL' in model:
-                local_data['IonosphericModelVersion'] = np.append(local_data['IonosphericModelVersion'], POLver)
-                local_data['IonosphericModelParameter1'] = np.append(local_data['IonosphericModelParameter1'], POLparm1)
-                local_data['IonosphericModelParameter2'] = np.append(local_data['IonosphericModelParameter2'], POLparm2)
-            elif 'ART' in model:
-                local_data['IonosphericModelVersion'] = np.append(local_data['IonosphericModelVersion'], ARTver)
-                local_data['IonosphericModelParameter1'] = np.append(local_data['IonosphericModelParameter1'], ARTparm1)
-                local_data['IonosphericModelParameter2'] = np.append(local_data['IonosphericModelParameter2'], ARTparm2)
-            else:
-                logging.error("Unknown model should be one of: [ART, POL]")
-                break
-            local_data['Slope'] = np.append(local_data['Slope'], Slope)
-            local_data['polanLayer'] = np.append(local_data['polanLayer'], POLANL)  # removed from final IODA file
+#           if 'POL' in model:
+#               local_data['IonosphericModelVersion'] = np.append(local_data['IonosphericModelVersion'], POLver)
+#               local_data['IonosphericModelParameter1'] = np.append(local_data['IonosphericModelParameter1'], POLparm1)
+#               local_data['IonosphericModelParameter2'] = np.append(local_data['IonosphericModelParameter2'], POLparm2)
+#           elif 'ART' in model:
+#               local_data['IonosphericModelVersion'] = np.append(local_data['IonosphericModelVersion'], ARTver)
+#               local_data['IonosphericModelParameter1'] = np.append(local_data['IonosphericModelParameter1'], ARTparm1)
+#               local_data['IonosphericModelParameter2'] = np.append(local_data['IonosphericModelParameter2'], ARTparm2)
+#           else:
+#               logging.error("Unknown model should be one of: [ART, POL]")
+#               break
+#           local_data['Slope'] = np.append(local_data['Slope'], Slope)
+#           local_data['polanLayer'] = np.append(local_data['polanLayer'], POLANL)  # removed from final IODA file
             # populate the first row of ObsValues
             local_data = populate_obsValue(line, local_data, model=model)
 
@@ -283,7 +290,7 @@ def get_header(file_iterator, local_data, model='ART'):
 
 
 def populate_obsValue(line, local_data, model='ART'):
-    # get the electron density as a funtion of height/range and chirp frequency
+    # get the electron density as a funtion of height/range and critical frequency
     # if can correctly parse all fields populate local_data else do nothing
     # ObsValue data row (example)
     # height    freq  f_conf      density density_conf  ARTIST   POLAN
@@ -293,16 +300,13 @@ def populate_obsValue(line, local_data, model='ART'):
         height, freq, f_conf, density, density_conf, ARTScale, Layer, POLAN, polanLayer = line.split()
 
         local_data['height'] = np.append(local_data['height'], height)
-        local_data['frequency'] = np.append(local_data['frequency'], freq)
-        local_data['frequencyConfidence'] = np.append(local_data['frequencyConfidence'], f_conf)
+        local_data['criticalFrequency'] = np.append(local_data['criticalFrequency'], freq)
+        local_data['criticalFrequencyConfidence'] = np.append(local_data['criticalFrequencyConfidence'], f_conf)
         local_data['electronDensity'] = np.append(local_data['electronDensity'], density)
         local_data['electronDensityConfidence'] = np.append(local_data['electronDensityConfidence'], density_conf)
-        local_data['ionosondeScalingParameter'] = np.append(local_data['ionosondeScalingParameter'], ARTScale)
-        # the ionospheric layer/region is dependent on the model selected
-        if 'POL' in model:
-            ionosphericLayer = get_layer(polanLayer, polanLayer=local_data['polanLayer'][0], model=model)
-        else:
-            ionosphericLayer = get_layer(Layer, model=model)
+#       local_data['ionosondeScalingParameter'] = np.append(local_data['ionosondeScalingParameter'], ARTScale)
+#       # the ionospheric layer/region is dependent on the model selected
+        ionosphericLayer = get_layer(Layer, model=model)
         local_data['ionosphericLayer'].append(ionosphericLayer)
     except ValueError:
         pass
@@ -310,9 +314,8 @@ def populate_obsValue(line, local_data, model='ART'):
     return local_data
 
 
-def get_layer(Layer, polanLayer=1, model='ART'):
+def get_layer(Layer, model='ART'):
     # this routine should define a consistent naming for the ionospheric region
-    # a conversation is needed with an ionosonde expert to define this
     # a table representation of the layers may be beneficial to avoid storing strings
 
     # depending on use of 'ART' or 'POL' set ionospheric layer/region
@@ -335,7 +338,7 @@ def get_layer(Layer, polanLayer=1, model='ART'):
             # do not know if E layer is ever provided
             # do not know what T means
             if 'F' in Layer:
-                ionosphericLayer = polanLayer
+                ionosphericLayer = 2
             elif 'E' in Layer:
                 ionosphericLayer = 0
             elif 'T' in Layer:
@@ -357,7 +360,7 @@ def apply_gross_quality_control(data, qc_strict=False):
         qc_array_hack = np.where(
             (data['electronDensity'].astype(float) < 0)
             | (data['height'].astype(float) < 0)
-            | (data['frequency'].astype(float) < 0),
+            | (data['criticalFrequency'].astype(float) < 0),
             1,
             0)
     return qc_array_hack
