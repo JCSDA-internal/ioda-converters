@@ -1226,6 +1226,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_satbias_viirs_aod
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_icartt
                   TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
