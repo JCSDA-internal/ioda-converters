@@ -10,6 +10,7 @@ import logging
 # These modules need the path to lib-python modules
 import pyiodaconv.ioda_conv_engines as iconv
 from pyiodaconv.orddicts import DefaultOrderedDict
+from pyiodaconv.def_jedi_utils import iso8601_string, epoch
 
 os.environ["TZ"] = "UTC"
 
@@ -40,9 +41,6 @@ GlobalAttrs = {
     'description': 'Ionosonde profiler',
 }
 #   'source': 'Unknown',  # is there network name?
-
-iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
-epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 metaDataName = iconv.MetaDataName()
 obsValName = iconv.OvalName()
