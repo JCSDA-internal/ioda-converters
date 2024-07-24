@@ -77,6 +77,8 @@ class tropomi(object):
             times = np.empty_like(qa_value, dtype=object)
             qa_value = qa_value.ravel()
             nlevs = ncd.groups['PRODUCT'].dimensions['layer'].size
+            cf_value = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].groups['DETAILED_RESULTS'].\
+                variables['cloud_fraction_crb_nitrogendioxide_window'][:].ravel()
 
             # adding ability to pre filter the data using the qa value
             # and also perform thinning using random uniform draw
@@ -140,6 +142,7 @@ class tropomi(object):
                 self.outdata[('latitude', 'MetaData')] = lats[flg]
                 self.outdata[('longitude', 'MetaData')] = lons[flg]
                 self.outdata[('quality_assurance_value', 'MetaData')] = qa_value[flg]
+                self.outdata[('cloud_fraction', 'MetaData')] = cf_value[flg]
 
                 self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = avg_kernel[flg]
                 self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = preslv[flg]
@@ -153,6 +156,8 @@ class tropomi(object):
                     self.outdata[('longitude', 'MetaData')], lons[flg]))
                 self.outdata[('quality_assurance_value', 'MetaData')] = np.concatenate((
                     self.outdata[('quality_assurance_value', 'MetaData')], qa_value[flg]))
+                self.outdata[('cloud_fraction', 'MetaData')] = np.concatenate((
+                    self.outdata[('cloud_fraction', 'MetaData')], cf_value[flg]))
 
                 self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = np.concatenate((
                     self.outdata[('averagingKernel', 'RetrievalAncillaryData')], avg_kernel[flg]))
