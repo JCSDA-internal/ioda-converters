@@ -38,8 +38,8 @@ GlobalAttrs = {
     'converter': os.path.basename(__file__),
     'ioda_version': 3,
     'description': 'Ionosonde profiler',
+    'source': 'GlobalIonosphereRadioObservatory',
 }
-#   'source': 'Unknown',  # is there network name?
 
 metaDataName = iconv.MetaDataName()
 obsValName = iconv.OvalName()
