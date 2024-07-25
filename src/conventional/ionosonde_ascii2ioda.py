@@ -349,8 +349,8 @@ if __name__ == "__main__":
                           default=False, dest='qc_strict',
                           help='add PreQC values')
     optional.add_argument('--recordnumber',
-        help=' optional starting record number to associate with profile ',
-        type=int, default=1)
+                          type=int, default=1,
+                          help=' optional starting record number to associate with profile ')
     optional.add_argument('--verbose', action='store_true', default=False,
                           help='enable verbose debug messages')
 
