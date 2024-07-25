@@ -30,6 +30,7 @@ locationKeyList = [("latitude", "float", "degrees_north"),
                    ("foF2Uncertainty", "float", "uncertainty of the critical plasma frequency of F2 region"),
                    ("nmF2", "float", "peak electron density in F2 region"),
                    ("nmF2Uncertainty", "float", "uncertainty in the peak electron density in F2 region"),
+                   ("sequenceNumber", "integer", "record for use to identify and group edp profile"),
                    ("stationIdentifier", "string", "")]
 
 meta_keys = [m_item[0] for m_item in locationKeyList]
@@ -70,9 +71,10 @@ def main(args):
 
     data = None
     any_data = False
+    recordNumber = args.recordnumber
     for fname in file_names:
         logging.info(f"Reading file:  {fname}")
-        file_data, any_data = read_file(fname, any_data, qc_strict=args.qc_strict)
+        file_data, any_data = read_file(fname, recordNumber, any_data, qc_strict=args.qc_strict)
         # if there is data do something
         if file_data:
             # first successful read
@@ -83,6 +85,7 @@ def main(args):
                 for key in set(varDict.keys()).union(meta_keys):
                     # data[key] = np.concatenate(data[key], file_data[key]) # why not and gotta be much better way
                     data[key] = np.append(data[key], file_data[key])
+            recordNumber += 1
 
     # if all files have no data
     if not any_data:
@@ -171,7 +174,7 @@ def main(args):
     logging.info("--- {:9.4g} total seconds ---".format(time.time() - start_time))
 
 
-def read_file(file_name, any_data, qc_strict=True):
+def read_file(file_name, recordNumber, any_data, qc_strict=True):
 
     local_data = init_data_dict()
 
@@ -180,7 +183,7 @@ def read_file(file_name, any_data, qc_strict=True):
         # Create an iterator from the file object
         file_iterator = iter(file)
 
-        local_data, header_read = get_header(file_iterator, local_data)
+        local_data, header_read = get_header(file_iterator, local_data, recordNumber)
         logging.debug(f'header was read w/o error: {header_read}')
 
         while header_read and True:
@@ -209,7 +212,7 @@ def read_file(file_name, any_data, qc_strict=True):
     return local_data, any_data
 
 
-def get_header(file_iterator, local_data):
+def get_header(file_iterator, local_data, recordNumber):
     #####################################################
     # get header (4 lines with the first having data too)
     #####################################################
@@ -265,6 +268,7 @@ def get_header(file_iterator, local_data):
             local_data['nmF2'] = np.append(local_data['nmF2'], nmf2)
             local_data['foF2Uncertainty'] = np.append(local_data['foF2Uncertainty'], conf_fof2)
             local_data['nmF2Uncertainty'] = np.append(local_data['nmF2Uncertainty'], conf_nmf2)
+            local_data['sequenceNumber'] = np.append(local_data['sequenceNumber'], recordNumber)
             # populate the first row of ObsValues
             local_data = populate_obsValue(line, local_data)
 
@@ -344,6 +348,9 @@ if __name__ == "__main__":
     optional.add_argument('--quality-control', action='store_true',
                           default=False, dest='qc_strict',
                           help='add PreQC values')
+    optional.add_argument('--recordnumber',
+        help=' optional starting record number to associate with profile ',
+        type=int, default=1)
     optional.add_argument('--verbose', action='store_true', default=False,
                           help='enable verbose debug messages')
 
