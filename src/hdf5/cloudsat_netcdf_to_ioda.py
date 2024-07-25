@@ -45,6 +45,7 @@ locationKeyList = [
 
 GlobalAttrs = {}
 
+
 def main(args):
 
     # take a user input and call read_cloudsat decoder
@@ -57,19 +58,19 @@ def main(args):
     output_filename = args.output
     start_date = datetime.strptime(args.start_date, "%Y%m%d%H")
     end_date = datetime.strptime(args.end_date, "%Y%m%d%H")
- 
+
     if input_filename is None:
-       input_filename = []
+        input_filename = []
 
     if 'cpr' in sensor_name:
         cpr_obs = read_cloudsat.read_cloudsat(input_filename)
     elif 'dpr' in sensor_name:
-        cpr_obs = read_dpr_gpm.read_dpr_gpm(input_filename, dpr_dir=input_dir, 
+        cpr_obs = read_dpr_gpm.read_dpr_gpm(input_filename, dpr_dir=input_dir,
                                             dt_start=start_date, dt_end=end_date)
 
-    sensor_upper = sensor_name.replace("_"," ").upper()
+    sensor_upper = sensor_name.replace("_", " ").upper()
     GlobalAttrs["platformCommonName"] = sensor_upper
-    GlobalAttrs["platformLongDescription"] =  f"{sensor_upper} Attenuated Reflectivity"
+    GlobalAttrs["platformLongDescription"] = f"{sensor_upper} Attenuated Reflectivity"
     GlobalAttrs["sensorCentralFrequency"] = str(cpr_obs.centerFreq.values)
 
     obs_data = import_obs_data(cpr_obs)
@@ -147,8 +148,8 @@ def import_obs_data(cpr_obs):
     obs_data[('latitude', metaDataName)] = cpr_obs.lat.values.astype(np.float32)
     obs_data[('longitude', metaDataName)] = cpr_obs.lon.values.astype(np.float32)
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nobs), WMO_sat_ID, dtype='int32')
-    obs_data[('sensorCentralFrequency', metaDataName)] = cpr_obs.centerFreq.values.astype(np.float32)    
-    obs_data[('sensorCentralWavenumber', metaDataName)] =  cpr_obs.centerWN.values.astype(np.float32)  
+    obs_data[('sensorCentralFrequency', metaDataName)] = cpr_obs.centerFreq.values.astype(np.float32)
+    obs_data[('sensorCentralWavenumber', metaDataName)] = cpr_obs.centerWN.values.astype(np.float32)
     obs_data[('sensorPolarizationDirection', metaDataName)] = np.array([9]).astype(np.int32)
     obs_data[('sensorScanPosition', metaDataName)] = cpr_obs.fov1.values.astype(np.int32)
     obs_data[('sensorChannelNumber', metaDataName)] = cpr_obs.channel.values.astype(np.int32)
