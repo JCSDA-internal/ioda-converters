@@ -77,7 +77,6 @@ def read_cloudsat_hdf_file(fname):
     xid = vs.find('start_time')
     start_time = np.array(vs.attach(xid)[:]).flatten()
     start_time = datetime.datetime.strptime(start_time[0], '%Y%m%d%H%M%S')
-    #start_time = datetime.datetime(2022, 2, 16, start_time.hour, start_time.minute, start_time.second)
 
     xid = vs.find('Latitude')
     latid = vs.attach(xid)
@@ -181,8 +180,8 @@ def read_cloudsat(cs_fnames):
     cs_data['obs_id'] = xr.DataArray(obs_id, dims={'obs_id': obs_id})
     cs_data['channel'] = xr.DataArray(channel, dims={'channel': channel})
     cs_data['elevation'] = xr.DataArray(elevation, dims={'elevation': elevation})
-    cs_data['centerFreq'] = xr.DataArray(np.array([94.05]), dims={"channel": 1}) # GHz
-    cs_data['centerWN'] = xr.DataArray(np.array([3.1371]),  dims={"channel": 1}) # 1/cm
+    cs_data['centerFreq'] = xr.DataArray(np.array([94.05]), dims={"channel": 1})  # GHz
+    cs_data['centerWN'] = xr.DataArray(np.array([3.1371]), dims={"channel": 1})   # 1/cm
 
     for k in cs_data1:
         if (k == 'obs') or (k == 'height'):
