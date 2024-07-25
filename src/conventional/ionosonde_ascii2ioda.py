@@ -19,8 +19,7 @@ varDict = {'criticalFrequency': ['criticalFrequency', "float", 'm s-1'],
            'criticalFrequencyConfidence': ['criticalFrequencyConfidence', "float", 'fractional percent'],
            'height': ['height', "float", "m"],
            'electronDensity': ['electronDensity', "float", 'number / m^3'],
-           'electronDensityConfidence': ['electronDensityConfidence', "float", 'number / m^3'],
-           'ionosphericLayer': ['ionosphericLayer', "integer", 'IonosphericLayer']}              # F2   - this is index for layer (E=0; F1=1; F2=2)
+           'electronDensityConfidence': ['electronDensityConfidence', "float", 'number / m^3']}
 
 # these are the MetaData common to each input
 locationKeyList = [("latitude", "float", "degrees_north"),
@@ -66,15 +65,26 @@ def main(args):
 
     file_names = args.input
     output_file = args.output
-    ionospheric_model = args.model
 
     start_time = time.time()
 
-    data = init_data_dict()
+    data = None
     any_data = False
     for fname in file_names:
         logging.info(f"Reading file:  {fname}")
-        data, any_data = read_file(fname, data, any_data, model=ionospheric_model, qc_strict=args.qc_strict)
+        file_data, any_data = read_file(fname, any_data, qc_strict=args.qc_strict)
+        # if there is data do something
+        if file_data:
+            # first successful read
+            if not data:
+                data = file_data
+            # subsequent successful read
+            else:
+                for key in set(varDict.keys()).union(meta_keys):
+                    # data[key] = np.concatenate(data[key], file_data[key]) # why not and gotta be much better way
+                    data[key] = np.append(data[key], file_data[key])
+
+    # if all files have no data
     if not any_data:
         logging.error("No data to write, stopping execution.")
         sys.exit()
@@ -132,10 +142,10 @@ def main(args):
     # Fill the final IODA data:  MetaData then ObsValues, ObsErrors, and QC
     ioda_data = {}
 
-    # repeat these MetaData by nlocs
+#   should populate ioda_data directly rather than creating another copy
     for key in meta_keys:
         dtype = locationKeyList[meta_keys.index(key)][1]
-        ioda_data[(key, metaDataName)] = np.full(nlocs, data[key], dtype=dtypes[dtype])
+        ioda_data[(key, metaDataName)] = np.array(data[key], dtype=dtypes[dtype])
     for key in varDict.keys():
         variable = varDict[key][0]
         dtype = varDict[key][1]
@@ -144,9 +154,7 @@ def main(args):
             # these MetaData are arrays nlocs long already
             ioda_data[(key, metaDataName)] = np.array(data[variable], dtype=dtypes[dtype])
         else:
-            # this MetaData (electronDensityConfidence) is used as the ObsError
-            if 'electronDensityConfidence' in key:
-                continue
+            # (electronDensityConfidence) is used as the ObsError
             variable = varDict[key][0]
             logging.info(f" the variable: {variable} will be placed into ObsValue of ioda_data")
             ioda_data[(variable, obsValName)] = np.array(data[variable], dtype=np.float32)
@@ -163,7 +171,7 @@ def main(args):
     logging.info("--- {:9.4g} total seconds ---".format(time.time() - start_time))
 
 
-def read_file(file_name, data, any_data, qc_strict=True, model='ART'):
+def read_file(file_name, any_data, qc_strict=True):
 
     local_data = init_data_dict()
 
@@ -172,30 +180,36 @@ def read_file(file_name, data, any_data, qc_strict=True, model='ART'):
         # Create an iterator from the file object
         file_iterator = iter(file)
 
-        local_data, header_read = get_header(file_iterator, local_data, model=model)
+        local_data, header_read = get_header(file_iterator, local_data)
         logging.debug(f'header was read w/o error: {header_read}')
 
         while header_read and True:
             try:
                 # Get the next line from the iterator
                 line = next(file_iterator)
-                local_data = populate_obsValue(line, local_data, model=model)
+                local_data = populate_obsValue(line, local_data)
             except StopIteration:
                 # If StopIteration is raised, break from the loop
                 break
 
-    # if the header was not sucessfully read do nothing
-    if header_read:
-        for key in set(varDict.keys()).union(meta_keys):
-            # data[key] = np.concatenate(data[key], local_data[key]) # why not and gotta be much better way
-            data[key] = np.append(data[key], local_data[key])
-
+    # has any data been read at any point
     any_data = any_data or header_read
 
-    return data, any_data
+    # repeat all the metaData values
+    if header_read:
+        nlocs = len(local_data['height'])
+        for key in meta_keys:
+            dtype = locationKeyList[meta_keys.index(key)][1]
+            local_data[key] = np.full(nlocs, local_data[key], dtype=dtypes[dtype])
+
+    # if the header was not sucessfully read return nothing
+    if not header_read:
+        local_data = None
+
+    return local_data, any_data
 
 
-def get_header(file_iterator, local_data, model='ART'):
+def get_header(file_iterator, local_data):
     #####################################################
     # get header (4 lines with the first having data too)
     #####################################################
@@ -252,7 +266,7 @@ def get_header(file_iterator, local_data, model='ART'):
             local_data['foF2Uncertainty'] = np.append(local_data['foF2Uncertainty'], conf_fof2)
             local_data['nmF2Uncertainty'] = np.append(local_data['nmF2Uncertainty'], conf_nmf2)
             # populate the first row of ObsValues
-            local_data = populate_obsValue(line, local_data, model=model)
+            local_data = populate_obsValue(line, local_data)
 
             header_read = True
         except StopIteration:
@@ -262,7 +276,7 @@ def get_header(file_iterator, local_data, model='ART'):
     return local_data, header_read
 
 
-def populate_obsValue(line, local_data, model='ART'):
+def populate_obsValue(line, local_data):
     # get the electron density as a funtion of height/range and critical frequency
     # if can correctly parse all fields populate local_data else do nothing
     # ObsValue data row (example)
@@ -277,48 +291,10 @@ def populate_obsValue(line, local_data, model='ART'):
         local_data['criticalFrequencyConfidence'] = np.append(local_data['criticalFrequencyConfidence'], f_conf)
         local_data['electronDensity'] = np.append(local_data['electronDensity'], density)
         local_data['electronDensityConfidence'] = np.append(local_data['electronDensityConfidence'], density_conf)
-#       # the ionospheric layer/region is dependent on the model selected
-        ionosphericLayer = get_layer(Layer, model=model)
-        local_data['ionosphericLayer'].append(ionosphericLayer)
     except ValueError:
         pass
 
     return local_data
-
-
-def get_layer(Layer, model='ART'):
-    # this routine should define a consistent naming for the ionospheric region
-    # a table representation of the layers may be beneficial to avoid storing strings
-
-    # depending on use of 'ART' or 'POL' set ionospheric layer/region
-    ionosphericLayer = int_missing_value
-    match model:
-        case 'ART':
-            # do not know what T means
-            if 'F1' in Layer:
-                ionosphericLayer = 1
-            elif 'F2' in Layer:
-                ionosphericLayer = 2
-            elif 'E' in Layer:
-                ionosphericLayer = 0
-            elif 'T' in Layer:
-                ionosphericLayer = 3
-            elif 'V' in Layer:
-                ionosphericLayer = 4
-        case 'POL':
-            # here assuming number in header is the F-Layer for POL
-            # do not know if E layer is ever provided
-            # do not know what T means
-            if 'F' in Layer:
-                ionosphericLayer = 2
-            elif 'E' in Layer:
-                ionosphericLayer = 0
-            elif 'T' in Layer:
-                ionosphericLayer = 3
-            elif 'V' in Layer:
-                ionosphericLayer = 4
-
-    return ionosphericLayer
 
 
 def apply_gross_quality_control(data, qc_strict=False):
@@ -365,9 +341,6 @@ if __name__ == "__main__":
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument('--debug', action='store_true', default=False,
                           help='enable debug messages')
-    optional.add_argument('--ionospheric-model', default='ART',
-                          choices=['ART', 'POL'], dest='model',
-                          help='ionospheric model options: ART or POL')
     optional.add_argument('--quality-control', action='store_true',
                           default=False, dest='qc_strict',
                           help='add PreQC values')
