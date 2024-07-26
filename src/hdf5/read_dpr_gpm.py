@@ -1,23 +1,25 @@
-# This reader can be used to read combined Ku/Ka band reflectivites
-# and format them in xarray format
-# Isaac Moradi, April 10, 2023
+#!/usr/bin/env python3
+
+#
+# (C) Copyright 2020-2024 UCAR
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+#
+#
+# contribution based on prototype by 2023, Isaac Moradi
+#
 
 import os
 from glob import glob
 import sys
-import copy
 
 import numpy as np
-import scipy as sp
-import scipy.io as sio
-import datetime, time
-import pdb
-import pandas as pd
+import datetime
 import xarray as xr
 import h5py
 from collections import OrderedDict
-from scipy.interpolate import interp1d
-from pyiodaconv.def_jedi_utils import iso8601_string, epoch
+from pyiodaconv.def_jedi_utils import epoch
 
 os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
 
@@ -35,9 +37,7 @@ class H5ls:
         # we have no return so that the visit function is recursive
 
 
-# https://hdfeos.org/zoo/OTHER/2010128055614_21420_CS_2B-GEOPROF_GRANULE_P_R04_E03.hdf.py
 def read_dpr_hdf_file(fname):
-    from scipy import interpolate
 
     print(fname)
     df = h5py.File(fname)
@@ -110,14 +110,14 @@ def read_dpr_hdf_file(fname):
 
 def read_dpr_gpm(dpr_fnames,
                  dpr_dir=[],
-                 dt_start=datetime.datetime(1900, 1, 1),
-                 dt_end=datetime.datetime(2100, 1, 1)):
+                 dt_start=datetime.datetime(2014, 4, 1),
+                 dt_end=datetime.datetime(2030, 1, 1)):
 
     if len(dpr_fnames) == 0:
         # files are partitioned into almost two hours period
-        dt_start1 = dt_start - datetime.timedelta(hours=2)
+        dt_start1 = dt_start - datetime.timedelta(hours=3)
         dt_end1 = dt_end + datetime.timedelta(hours=2)
-        dt_range = pd.date_range(dt_start1, dt_end1, freq="1H")
+        dt_range = [dt_start1 + datetime.timedelta(hours=x) for x in range(int((dt_end1 - dt_start1).total_seconds() // 3600) + 1)]
         dpr_fnames = []
         for idt in dt_range:
             # 2A.GPM.DPR.V9-20211125.20170907-S075404-E092639.020033.V07A.HDF5
@@ -126,7 +126,7 @@ def read_dpr_gpm(dpr_fnames,
                 dpr_fnames.extend(glob(os.path.join(dir, file_pattern)))
 
     if not dpr_fnames:
-        return []
+        return None
 
     # limit data so that dt_start <= date <= dt_end
     dt_start = round((dt_start - epoch).total_seconds())
