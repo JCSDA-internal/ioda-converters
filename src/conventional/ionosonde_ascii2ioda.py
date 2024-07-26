@@ -129,12 +129,13 @@ def main(args):
         varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtype]
 
     # Set units and FillValue attributes for groups associated with observed variable.
-    for key in ['electronDensity']:
+    for key in ['electronDensity', 'criticalFrequency']:
         variable = varDict[key][0]
         dtype = varDict[key][1]
         units = varDict[key][2]
+        unitsErr = varDict[key+'Confidence'][2]
         varAttrs[(variable, obsValName)]['units'] = units
-        varAttrs[(variable, obsErrName)]['units'] = units
+        varAttrs[(variable, obsErrName)]['units'] = unitsErr
         varAttrs[(variable, obsValName)]['coordinates'] = 'longitude latitude'
         varAttrs[(variable, obsErrName)]['coordinates'] = 'longitude latitude'
         varAttrs[(variable, qcName)]['coordinates'] = 'longitude latitude'
@@ -152,16 +153,16 @@ def main(args):
     for key in varDict.keys():
         variable = varDict[key][0]
         dtype = varDict[key][1]
-        if 'electronDensity' not in key:
+        if 'electronDensity' not in key and 'criticalFrequency' not in key:
             logging.info(f" the variable: {variable} will be placed into MetaData of ioda_data")
             # these MetaData are arrays nlocs long already
             ioda_data[(key, metaDataName)] = np.array(data[variable], dtype=dtypes[dtype])
-        else:
+        elif 'Confidence' not in key:
             # (electronDensityConfidence) is used as the ObsError
             variable = varDict[key][0]
             logging.info(f" the variable: {variable} will be placed into ObsValue of ioda_data")
             ioda_data[(variable, obsValName)] = np.array(data[variable], dtype=np.float32)
-            ioda_data[(variable, obsErrName)] = np.array(data['electronDensityConfidence'], dtype=np.float32)
+            ioda_data[(variable, obsErrName)] = np.array(data[variable+'Confidence'], dtype=np.float32)
             qc_array_hack = apply_gross_quality_control(data, qc_strict=args.qc_strict)
             ioda_data[(variable, qcName)] = np.array(qc_array_hack, dtype=np.int32)  # how to interpret AQI ?
 
