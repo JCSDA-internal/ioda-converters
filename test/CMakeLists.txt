@@ -47,7 +47,6 @@ list( APPEND test_input
   testinput/tropess_cris_co.nc
   testinput/modis_aod.hdf
   testinput/2020100106_metars_small.csv
-  testinput/afwa_snod_24km.grib
   testinput/singleob.yaml
   testinput/ghcn_20200228.csv
   testinput/SMAP_L2_SM_P_NRT_24342_A_20190822T224858_N16023_002.h5
@@ -139,7 +138,6 @@ list( APPEND test_output
   testoutput/modis_aod.nc
   testoutput/imssnow_scf.nc
   testoutput/2020100106_metars_small.nc
-  testoutput/afwa_snod.nc
   testoutput/singleob.nc
   testoutput/ghcn_snod_20200228.nc
   testoutput/smap_ssm.nc
@@ -2218,20 +2216,6 @@ endif()
 # =============================================================================
 # Land product converters
 #==============================================================================
-
-if( iodaconv_pygrib_ENABLED )
-  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_afwa_snod
-                    TYPE    SCRIPT
-                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
-                    COMMAND bash
-                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                            netcdf
-                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/afwa_snod2ioda.py
-                            -i testinput/afwa_snod_24km.grib
-                            -o testrun/afwa_snod.nc
-                            -m maskout"
-                            afwa_snod.nc ${IODA_CONV_COMP_TOL})
-endif()
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ghcn_snod
                   TYPE    SCRIPT
