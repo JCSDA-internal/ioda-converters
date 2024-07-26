@@ -166,7 +166,7 @@ def read_cloudsat(cs_fnames):
                 cs_data1[k] = np.append(cs_data1[k], cs_data[k], axis=0)
 
     if 'cs_data1' not in vars():
-        return []
+        return None
 
     # create xarray dataset
     nobs = cs_data1['obs'].shape[0]
