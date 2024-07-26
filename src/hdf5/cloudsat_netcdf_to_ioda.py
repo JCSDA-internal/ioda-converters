@@ -14,12 +14,12 @@ import sys
 import netCDF4 as nc
 import numpy as np
 from datetime import datetime
-import time
 
 import pyiodaconv.ioda_conv_engines as iconv
 from pyiodaconv.orddicts import DefaultOrderedDict
 from pyiodaconv.def_jedi_utils import set_metadata_attributes, set_obspace_attributes
 from pyiodaconv.def_jedi_utils import epoch, iso8601_string
+from pyiodaconv.def_jedi_utils import record_time
 import read_cloudsat
 import read_dpr_gpm
 
@@ -48,6 +48,9 @@ GlobalAttrs = {}
 
 def main(args):
 
+    # start timer
+    tic = record_time()
+
     # take a user input and call read_cloudsat decoder
     # place this xarray into a dictionary and pass to IODA writer
 
@@ -68,6 +71,13 @@ def main(args):
         cpr_obs = read_dpr_gpm.read_dpr_gpm(input_filename, dpr_dir=input_dir,
                                             dt_start=start_date, dt_end=end_date)
 
+    # report time
+    toc = record_time(tic=tic)
+
+    if not cpr_obs:
+        print(f'no observations found exiting')
+        sys.exit()
+
     sensor_upper = sensor_name.replace("_", " ").upper()
     GlobalAttrs["platformCommonName"] = sensor_upper
     GlobalAttrs["platformLongDescription"] = f"{sensor_upper} Attenuated Reflectivity"
@@ -78,9 +88,6 @@ def main(args):
     nlocs_int = np.array(len(obs_data[('latitude', metaDataName)]), dtype='int64')
     nlocs = nlocs_int.item()
     nchans = len(obs_data[('sensorChannelNumber', metaDataName)])
-    # still need to add these metaData - TODO !
-    # ds_g.variables['height'][:] = cpr_obs.height.values.astype(np.float32)
-    # ds_g.variables['Layer'][:] = cpr_obs.elevation.values.astype(np.int32)
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
@@ -118,6 +125,9 @@ def main(args):
 
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
+
+    # report time
+    toc = record_time(tic=tic)
 
 
 def import_obs_data(cpr_obs):
@@ -226,7 +236,6 @@ if __name__ == "__main__":
         '-i', '--sensor_name',
         help="name of sensor and satellite in CRTM format like dpr_gpm",
         type=str, required=True)
-    optional = parser.add_argument_group(title='optional arguments')
     required.add_argument(
         '-f', '--input_files',
         help="path of satellite observation input file(s)",
@@ -235,6 +244,7 @@ if __name__ == "__main__":
         '-d', '--input_dir',
         help="path of satellite observations - only directory",
         type=str)
+    optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
         '-o', '--output',
         help='path to output ioda file',
