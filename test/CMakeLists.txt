@@ -136,7 +136,6 @@ list( APPEND test_output
   testoutput/mopitt_co.nc
   testoutput/tropess_cris_co.nc
   testoutput/modis_aod.nc
-  testoutput/imssnow_scf.nc
   testoutput/2020100106_metars_small.nc
   testoutput/singleob.nc
   testoutput/ghcn_snod_20200228.nc
