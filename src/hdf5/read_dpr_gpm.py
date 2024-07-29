@@ -15,7 +15,7 @@ from glob import glob
 import sys
 
 import numpy as np
-import datetime
+from datetime import datetime, timezone
 import xarray as xr
 import h5py
 from collections import OrderedDict
@@ -77,13 +77,14 @@ def read_dpr_hdf_file(fname):
 
     epoch_time = np.zeros(xr_data.nscan.size)
     for iscan in xr_data.nscan.values:
-        time1 = datetime.datetime(xr_data['FS/ScanTime/Year'].values[iscan],
+        time1 = datetime(xr_data['FS/ScanTime/Year'].values[iscan],
                                   xr_data['FS/ScanTime/Month'].values[iscan],
                                   xr_data['FS/ScanTime/DayOfMonth'].values[iscan],
                                   xr_data['FS/ScanTime/Hour'].values[iscan],
                                   xr_data['FS/ScanTime/Minute'].values[iscan],
                                   xr_data['FS/ScanTime/Second'].values[iscan],
                                   xr_data['FS/ScanTime/MilliSecond'].values[iscan])
+        time1 = time1.replace(tzinfo=timezone.utc)
         epoch_time[iscan] = round((time1 - epoch).total_seconds())
 
     # build output dictionary
@@ -108,37 +109,10 @@ def read_dpr_hdf_file(fname):
     return dprdata
 
 
-def read_dpr_gpm(dpr_fnames,
-                 dpr_dir=[],
-                 dt_start=datetime.datetime(2014, 4, 1),
-                 dt_end=datetime.datetime(2030, 1, 1)):
-
-    if len(dpr_fnames) == 0:
-        # files are partitioned into almost two hours period
-        dt_start1 = dt_start - datetime.timedelta(hours=3)
-        dt_end1 = dt_end + datetime.timedelta(hours=2)
-        dt_range = [dt_start1 + datetime.timedelta(hours=x) for x in range(int((dt_end1 - dt_start1).total_seconds() // 3600) + 1)]
-        dpr_fnames = []
-        for idt in dt_range:
-            # 2A.GPM.DPR.V9-20211125.20170907-S075404-E092639.020033.V07A.HDF5
-            file_pattern = '*.%s*.HDF5' % idt.strftime('%Y%m%d-S%H')
-            for dir, _, _ in os.walk(dpr_dir):
-                dpr_fnames.extend(glob(os.path.join(dir, file_pattern)))
-
-    if not dpr_fnames:
-        return None
-
-    # limit data so that dt_start <= date <= dt_end
-    dt_start = round((dt_start - epoch).total_seconds())
-    dt_end = round((dt_end - epoch).total_seconds())
+def read_dpr_gpm(dpr_fnames):
 
     for f in dpr_fnames:
         dpr_data = read_dpr_hdf_file(f)
-        logid = (dpr_data.epoch_time.values >= dt_start) & (dpr_data.epoch_time.values < dt_end)
-        if np.sum(logid) == 0:
-            continue
-        scanid = np.arange(dpr_data.scanline.size)[logid]
-        dpr_data = dpr_data.isel(scanline=scanid)
 
         if 'dpr_data1' not in vars():  # not defined yet
             dpr_data1 = dpr_data

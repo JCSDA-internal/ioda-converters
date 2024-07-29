@@ -55,35 +55,39 @@ def main(args):
     # place this xarray into a dictionary and pass to IODA writer
 
     # example: input_filename = ['2009212223327_17338_CS_2B-GEOPROF_GRANULE_P1_R05_E02_F00.hdf']
-    sensor_name = args.sensor_name
     input_filename = args.input_files
-    input_dir = args.input_dir
     output_filename = args.output
-    start_date = datetime.strptime(args.start_date, "%Y%m%d%H")
-    end_date = datetime.strptime(args.end_date, "%Y%m%d%H")
 
     if input_filename is None:
-        input_filename = []
+        print(f'no observation files provided exiting')
+        sys.exit()
 
-    if 'cpr' in sensor_name:
-        cpr_obs = read_cloudsat.read_cloudsat(input_filename)
-    elif 'dpr' in sensor_name:
-        cpr_obs = read_dpr_gpm.read_dpr_gpm(input_filename, dpr_dir=input_dir,
-                                            dt_start=start_date, dt_end=end_date)
+    try:
+        file_obs_data = read_cloudsat.read_cloudsat(input_filename)
+        sensor_name = 'CloudSat'
+    except:
+        file_obs_data = None
+
+    if not file_obs_data:
+        try:
+            file_obs_data = read_dpr_gpm.read_dpr_gpm(input_filename)
+            sensor_name = 'GPM-DPR'
+        except:
+            file_obs_data = None
 
     # report time
     toc = record_time(tic=tic)
 
-    if not cpr_obs:
+    if not file_obs_data:
         print(f'no observations found exiting')
         sys.exit()
 
     sensor_upper = sensor_name.replace("_", " ").upper()
     GlobalAttrs["platformCommonName"] = sensor_upper
     GlobalAttrs["platformLongDescription"] = f"{sensor_upper} Attenuated Reflectivity"
-    GlobalAttrs["sensorCentralFrequency"] = str(cpr_obs.centerFreq.values)
+    GlobalAttrs["sensorCentralFrequency"] = str(file_obs_data.centerFreq.values)
 
-    obs_data = import_obs_data(cpr_obs)
+    obs_data = import_obs_data(file_obs_data, sensor_name)
 
     nlocs_int = np.array(len(obs_data[('latitude', metaDataName)]), dtype='int64')
     nlocs = nlocs_int.item()
@@ -130,54 +134,54 @@ def main(args):
     toc = record_time(tic=tic)
 
 
-def import_obs_data(cpr_obs):
+def import_obs_data(file_obs_data, sensor_name):
 
     # appears to be observation cleansing and conditioning
-    cpr_obs = cpr_obs.rename_vars({"elevation": "elevation1"})
-    cpr_obs = cpr_obs.stack(Location=['obs_id', 'elevation']).reset_index("Location")
-    cpr_obs = cpr_obs.transpose("Location", "channel")
+    file_obs_data = file_obs_data.rename_vars({"elevation": "elevation1"})
+    file_obs_data = file_obs_data.stack(Location=['obs_id', 'elevation']).reset_index("Location")
+    file_obs_data = file_obs_data.transpose("Location", "channel")
 
-    locid = (cpr_obs.obs.values < -100) | (cpr_obs.obs.values > 100) | np.isnan(cpr_obs.obs.values) | np.isinf(cpr_obs.obs.values)
-    locid = cpr_obs.Location.values[np.sum(locid, axis=1) == 0]
-    cpr_obs = cpr_obs.isel(Location=locid)
+    locid = (file_obs_data.obs.values < -100) | (file_obs_data.obs.values > 100) | np.isnan(file_obs_data.obs.values) | np.isinf(file_obs_data.obs.values)
+    locid = file_obs_data.Location.values[np.sum(locid, axis=1) == 0]
+    file_obs_data = file_obs_data.isel(Location=locid)
     # end conditioning and cleansing block
 
     # this function will map the cloud radar data in the cpr xarray
     # into a dictionary to be passed to the IODA writer functions
-    nobs = cpr_obs.Location.size
-    nchans = cpr_obs.channel.size
+    nobs = file_obs_data.Location.size
+    nchans = file_obs_data.channel.size
 
     # ideally an attribute from the file read in
-    # example: cpr_obs.attrs['ShortName'].decode("utf-8")
+    # example: file_obs_data.attrs['ShortName'].decode("utf-8")
     # here we are hardcoding to the function the name of the satellite
-    WMO_sat_ID = get_WMO_satellite_ID('CloudSat')
+    WMO_sat_ID = get_WMO_satellite_ID(sensor_name)
 
     # allocate space for output depending on which variables are to be saved
     obs_data = init_obs_loc()
 
-    obs_data[('latitude', metaDataName)] = cpr_obs.lat.values.astype(np.float32)
-    obs_data[('longitude', metaDataName)] = cpr_obs.lon.values.astype(np.float32)
+    obs_data[('latitude', metaDataName)] = file_obs_data.lat.values.astype(np.float32)
+    obs_data[('longitude', metaDataName)] = file_obs_data.lon.values.astype(np.float32)
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nobs), WMO_sat_ID, dtype='int32')
-    obs_data[('sensorCentralFrequency', metaDataName)] = cpr_obs.centerFreq.values.astype(np.float32)
-    obs_data[('sensorCentralWavenumber', metaDataName)] = cpr_obs.centerWN.values.astype(np.float32)
+    obs_data[('sensorCentralFrequency', metaDataName)] = file_obs_data.centerFreq.values.astype(np.float32)
+    obs_data[('sensorCentralWavenumber', metaDataName)] = file_obs_data.centerWN.values.astype(np.float32)
     obs_data[('sensorPolarizationDirection', metaDataName)] = np.array([9]).astype(np.int32)
-    obs_data[('sensorScanPosition', metaDataName)] = cpr_obs.fov1.values.astype(np.int32)
-    obs_data[('sensorChannelNumber', metaDataName)] = cpr_obs.channel.values.astype(np.int32)
+    obs_data[('sensorScanPosition', metaDataName)] = file_obs_data.fov1.values.astype(np.int32)
+    obs_data[('sensorChannelNumber', metaDataName)] = file_obs_data.channel.values.astype(np.int32)
     # add satellite altitude (height in meters) and use compute_scan_angle function
-    obs_data[('sensorViewAngle', metaDataName)] = cpr_obs.zenith_angle.values.astype(np.float32)
-    obs_data[('sensorZenithAngle', metaDataName)] = cpr_obs.zenith_angle.values.astype(np.float32)
-    obs_data[('sensorAzimuthAngle', metaDataName)] = cpr_obs.azimuth_angle.values.astype(np.float32)
+    obs_data[('sensorViewAngle', metaDataName)] = file_obs_data.zenith_angle.values.astype(np.float32)
+    obs_data[('sensorZenithAngle', metaDataName)] = file_obs_data.zenith_angle.values.astype(np.float32)
+    obs_data[('sensorAzimuthAngle', metaDataName)] = file_obs_data.azimuth_angle.values.astype(np.float32)
     obs_data[('solarZenithAngle', metaDataName)] = np.zeros(nobs).astype(np.float32)
     obs_data[('solarAzimuthAngle', metaDataName)] = np.zeros(nobs).astype(np.float32)
-    obs_data[('height', metaDataName)] = cpr_obs.height.values.astype(np.float32)
-    obs_data[('Layer', metaDataName)] = cpr_obs.elevation1.values.astype(np.float32)
-    obs_data[('sequenceNumber', metaDataName)] = cpr_obs.sequenceNumber.values.astype(np.int32)
-    obs_data[('dateTime', metaDataName)] = cpr_obs.epoch_time.values.astype(np.int64)
+    obs_data[('height', metaDataName)] = file_obs_data.height.values.astype(np.float32)
+    obs_data[('Layer', metaDataName)] = file_obs_data.elevation1.values.astype(np.float32)
+    obs_data[('sequenceNumber', metaDataName)] = file_obs_data.sequenceNumber.values.astype(np.int32)
+    obs_data[('dateTime', metaDataName)] = file_obs_data.epoch_time.values.astype(np.int64)
 
-    obs_data[('sequenceNumber', metaDataName)] = cpr_obs.sequenceNumber.values.astype(np.int32)
+    obs_data[('sequenceNumber', metaDataName)] = file_obs_data.sequenceNumber.values.astype(np.int32)
     k = radarReflectivityAtt
     # have to reorder the channel axis to be last then merge ( nscans x nspots = nlocs )
-    obs_data[(k, "ObsValue")] = cpr_obs.obs.values.astype(np.float32)
+    obs_data[(k, "ObsValue")] = file_obs_data.obs.values.astype(np.float32)
     obs_data[(k, "ObsError")] = np.full((nobs, nchans), 5.0, dtype='float32')
     obs_data[(k, "PreQC")] = np.full((nobs, nchans), 0, dtype='int32')
 
@@ -233,32 +237,14 @@ if __name__ == "__main__":
 
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
-        '-i', '--sensor_name',
-        help="name of sensor and satellite in CRTM format like dpr_gpm",
-        type=str, required=True)
-    required.add_argument(
         '-f', '--input_files',
         help="path of satellite observation input file(s)",
         type=str, nargs='+')
-    required.add_argument(
-        '-d', '--input_dir',
-        help="path of satellite observations - only directory",
-        type=str)
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
         '-o', '--output',
         help='path to output ioda file',
         type=str, default=os.path.join(os.getcwd(), 'output.nc4'))
-    optional.add_argument(
-        '-s', '--start_date',
-        metavar="YYYYMMDDHH",
-        help="date/time for the start of the window",
-        type=str, default="1900010100")
-    optional.add_argument(
-        '-e', '--end_date',
-        metavar="YYYYMMDDHH",
-        help="date/time for the end of the window",
-        type=str, default="2100123123")
 
     args = parser.parse_args()
 
