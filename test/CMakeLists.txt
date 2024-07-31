@@ -50,6 +50,7 @@ list( APPEND test_input
   testinput/singleob.yaml
   testinput/ghcn_20200228.csv
   testinput/SMAP_L2_SM_P_NRT_24342_A_20190822T224858_N16023_002.h5
+  testinput/AL945_2020277203000.EDP
   testinput/smos_l2nrt_ssm.nc
   testinput/ascat_ssm.nc
   testinput/SM_REPR_MIR_OSUDP2_20100601T000131_20100601T001849_662_120_1.nc
@@ -139,6 +140,7 @@ list( APPEND test_output
   testoutput/2020100106_metars_small.nc
   testoutput/singleob.nc
   testoutput/ghcn_snod_20200228.nc
+  testoutput/ionosonde_edp_20201003T203000Z.nc4
   testoutput/smap_ssm.nc
   testoutput/smap_nrt_ssm.nc
   testoutput/smos_ssm.nc
@@ -2229,6 +2231,17 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ghcn_snod
                           -d 2020022818
                           -m maskout"
                           ghcn_snod_20200228.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ionosonde_edp
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/ionosonde_ascii2ioda.py
+                            -i testinput/AL945_2020277203000.EDP
+                            -o testrun/ionosonde_edp_20201003T203000Z.nc4"
+                            ionosonde_edp_20201003T203000Z.nc4 ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap_nrt_ssm
                     TYPE    SCRIPT
