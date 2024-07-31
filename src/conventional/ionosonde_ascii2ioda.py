@@ -248,8 +248,8 @@ def get_header(file_iterator, local_data, recordNumber):
 
             # dateTime
             dtg = datetime.strptime(f"{launchTime}", '%Y%j%H%M%S')
+            dtg = dtg.replace(tzinfo=timezone.utc)
             dateTime = np.int64(round((dtg - epoch).total_seconds()))
-
             line = next(file_iterator)  # comment line
             # read first line of data and remaining MetaData
             line = next(file_iterator)  # comment line
