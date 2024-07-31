@@ -20,6 +20,7 @@ from pyiodaconv.orddicts import DefaultOrderedDict
 from pyiodaconv.def_jedi_utils import set_metadata_attributes, set_obspace_attributes
 from pyiodaconv.def_jedi_utils import epoch, iso8601_string
 from pyiodaconv.def_jedi_utils import record_time
+from pyiodaconv.def_jedi_utils import concat_obs_dict
 from read_cloudsat import read_cloudsat, is_hdf4
 from read_dpr_gpm import read_dpr_gpm, is_hdf5
 
@@ -61,6 +62,7 @@ def main(args):
         print(f'no observation files provided exiting')
         sys.exit()
 
+    all_obs_data = {}
     for input_filename in args.input_files:
 
         file_is_hdf4 = is_hdf4(input_filename)
@@ -71,6 +73,10 @@ def main(args):
         elif file_is_hdf5 and not file_is_hdf4:
             file_obs_data = read_dpr_gpm(input_filename)
             sensor_name = 'GPM-DPR'
+            if all_obs_data:
+                concat_obs_dict(all_obs_data, file_obs_data)
+            else:
+                all_obs_data = file_obs_data
 
     # report time
     toc = record_time(tic=tic)
@@ -84,7 +90,7 @@ def main(args):
     GlobalAttrs["platformLongDescription"] = f"{sensor_upper} Attenuated Reflectivity"
     GlobalAttrs["sensorCentralFrequency"] = str(file_obs_data.centerFreq.values)
 
-    obs_data = import_obs_data(file_obs_data, sensor_name)
+    obs_data = populate_obs_data(all_obs_data, sensor_name)
 
     nlocs_int = np.array(len(obs_data[('latitude', metaDataName)]), dtype='int64')
     nlocs = nlocs_int.item()
@@ -131,7 +137,7 @@ def main(args):
     toc = record_time(tic=tic)
 
 
-def import_obs_data(file_obs_data, sensor_name):
+def populate_obs_data(file_obs_data, sensor_name):
 
     # appears to be observation cleansing and conditioning
     file_obs_data = file_obs_data.rename_vars({"elevation": "elevation1"})
