@@ -11,7 +11,7 @@ import sys
 import argparse
 import netCDF4 as nc
 import numpy as np
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 import os
 from pathlib import Path
 
@@ -79,6 +79,7 @@ class icartt(object):
             stime = dsFlight['iWAS_Start_UTC'].values
             sdate_str = dsFlight.attrs['SDATE']
             sdate = datetime.strptime(sdate_str, '%Y, %m, %d')
+            sdate = sdate.replace(tzinfo=timezone.utc)
             seconds_difference = (sdate - epoch).total_seconds()
 
             adjusted_stime = stime + seconds_difference
