@@ -20,8 +20,8 @@ from pyiodaconv.orddicts import DefaultOrderedDict
 from pyiodaconv.def_jedi_utils import set_metadata_attributes, set_obspace_attributes
 from pyiodaconv.def_jedi_utils import epoch, iso8601_string
 from pyiodaconv.def_jedi_utils import record_time
-import read_cloudsat
-import read_dpr_gpm
+from read_cloudsat import read_cloudsat, is_hdf4
+from read_dpr_gpm import read_dpr_gpm, is_hdf5
 
 float_missing_value = iconv.get_default_fill_val(np.float32)
 int_missing_value = iconv.get_default_fill_val(np.int32)
@@ -55,25 +55,22 @@ def main(args):
     # place this xarray into a dictionary and pass to IODA writer
 
     # example: input_filename = ['2009212223327_17338_CS_2B-GEOPROF_GRANULE_P1_R05_E02_F00.hdf']
-    input_filename = args.input_files
     output_filename = args.output
 
-    if input_filename is None:
+    if args.input_files is None:
         print(f'no observation files provided exiting')
         sys.exit()
 
-    try:
-        file_obs_data = read_cloudsat.read_cloudsat(input_filename)
-        sensor_name = 'CloudSat'
-    except:
-        file_obs_data = None
+    for input_filename in args.input_files:
 
-    if not file_obs_data:
-        try:
-            file_obs_data = read_dpr_gpm.read_dpr_gpm(input_filename)
+        file_is_hdf4 = is_hdf4(input_filename)
+        file_is_hdf5 = is_hdf5(input_filename)
+        if file_is_hdf4 and not file_is_hdf5:
+            file_obs_data = read_cloudsat(input_filename)
+            sensor_name = 'CloudSat'
+        elif file_is_hdf5 and not file_is_hdf4:
+            file_obs_data = read_dpr_gpm(input_filename)
             sensor_name = 'GPM-DPR'
-        except:
-            file_obs_data = None
 
     # report time
     toc = record_time(tic=tic)

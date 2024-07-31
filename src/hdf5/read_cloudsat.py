@@ -21,6 +21,17 @@ import xarray as xr
 from pyiodaconv.def_jedi_utils import iso8601_string, epoch
 
 
+def is_hdf4(fname):
+    # return a True if file is hdf4
+    from pyhdf.SD import SD, HDF4Error
+    try:
+        file = SD(fname)
+        file.end()  # Ensuring the file is properly closed
+        return True
+    except HDF4Error:
+        return False
+
+
 def read_cloudsat_hdf_file(fname):
     print(f"Reading {fname}")
     from pyhdf.SD import SD, SDC
@@ -154,20 +165,10 @@ def read_cloudsat_hdf_file(fname):
     return csdata
 
 
-def read_cloudsat(cs_fnames):
+def read_cloudsat(fname):
 
-    for f in cs_fnames:
-        cs_data = read_cloudsat_hdf_file(f)
-
-        if 'cs_data1' not in vars():  # not defined yet
-            cs_data1 = cs_data
-        else:
-            # common keys
-            for k in (cs_data.keys() & cs_data1.keys()):
-                cs_data1[k] = np.append(cs_data1[k], cs_data[k], axis=0)
-
-    if 'cs_data1' not in vars():
-        return None
+    cs_data = read_cloudsat_hdf_file(fname)
+    cs_data1 = cs_data
 
     # create xarray dataset
     nobs = cs_data1['obs'].shape[0]

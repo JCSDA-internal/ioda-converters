@@ -37,6 +37,15 @@ class H5ls:
         # we have no return so that the visit function is recursive
 
 
+def is_hdf5(fname):
+    # return True if file is hdf5
+    try:
+        with h5py.File(fname, 'r'):
+            return True
+    except OSError:
+        return False
+
+
 def read_dpr_hdf_file(fname):
 
     print(fname)
@@ -109,28 +118,19 @@ def read_dpr_hdf_file(fname):
     return dprdata
 
 
-def read_dpr_gpm(dpr_fnames):
+def read_dpr_gpm(fname):
 
-    for f in dpr_fnames:
-        dpr_data = read_dpr_hdf_file(f)
-
-        if 'dpr_data1' not in vars():  # not defined yet
-            dpr_data1 = dpr_data
-        else:
-            dpr_data1 = xr.concat([dpr_data, dpr_data1], dim='scanline')
-
-    if 'dpr_data1' not in vars():
-        return []
+    dpr_data = read_dpr_hdf_file(fname)
 
     # combine geovar is used to combine DPR with precipitation retrievals from DPR
-    dpr_data1 = dpr_data1.stack(obs_id=('scanline', 'fov')).reset_index('obs_id')
-    dpr_data1 = dpr_data1.transpose('obs_id', 'channel', 'elevation')
+    dpr_data = dpr_data.stack(obs_id=('scanline', 'fov')).reset_index('obs_id')
+    dpr_data = dpr_data.transpose('obs_id', 'channel', 'elevation')
 
     # convert to jd/lev/lat/lon
-    lon = dpr_data1['lon'].values
+    lon = dpr_data['lon'].values
     lon[lon < 0] = 360 + lon[lon < 0]
-    dpr_data1['lon'].values = lon
+    dpr_data['lon'].values = lon
 
-    dpr_data1["sequenceNumber"] = xr.DataArray(np.arange(dpr_data1.obs_id.size), dpr_data1.obs_id.coords)
+    dpr_data["sequenceNumber"] = xr.DataArray(np.arange(dpr_data.obs_id.size), dpr_data.obs_id.coords)
 
-    return dpr_data1
+    return dpr_data
