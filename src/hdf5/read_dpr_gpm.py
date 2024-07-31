@@ -87,12 +87,12 @@ def read_dpr_hdf_file(fname):
     epoch_time = np.zeros(xr_data.nscan.size)
     for iscan in xr_data.nscan.values:
         time1 = datetime(xr_data['FS/ScanTime/Year'].values[iscan],
-                                  xr_data['FS/ScanTime/Month'].values[iscan],
-                                  xr_data['FS/ScanTime/DayOfMonth'].values[iscan],
-                                  xr_data['FS/ScanTime/Hour'].values[iscan],
-                                  xr_data['FS/ScanTime/Minute'].values[iscan],
-                                  xr_data['FS/ScanTime/Second'].values[iscan],
-                                  xr_data['FS/ScanTime/MilliSecond'].values[iscan])
+                         xr_data['FS/ScanTime/Month'].values[iscan],
+                         xr_data['FS/ScanTime/DayOfMonth'].values[iscan],
+                         xr_data['FS/ScanTime/Hour'].values[iscan],
+                         xr_data['FS/ScanTime/Minute'].values[iscan],
+                         xr_data['FS/ScanTime/Second'].values[iscan],
+                         xr_data['FS/ScanTime/MilliSecond'].values[iscan])
         time1 = time1.replace(tzinfo=timezone.utc)
         epoch_time[iscan] = round((time1 - epoch).total_seconds())
 
