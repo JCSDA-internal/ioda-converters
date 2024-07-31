@@ -8,7 +8,7 @@
 #
 
 import argparse
-from datetime import datetime
+from datetime import datetime, timezone
 import netCDF4 as nc
 import numpy as np
 import os
@@ -134,8 +134,10 @@ class viirs_l1b_rf(object):
             self.ascend_or_descend = gatts["startDirection"]
             # Special time consideration. Get min/max of all times being converted for output attribute data.
             this_starttime = datetime.strptime(gatts["time_coverage_start"], '%Y-%m-%dT%H:%M:%S.000Z')
+            this_starttime = this_starttime.replace(tzinfo=timezone.utc)
             s_time = round((this_starttime - epoch).total_seconds())
             this_endtime = datetime.strptime(gatts["time_coverage_end"], '%Y-%m-%dT%H:%M:%S.000Z')
+            this_endtime = this_endtime.replace(tzinfo=timezone.utc)
             e_time = round((this_endtime - epoch).total_seconds())
             min_time = min(s_time, min_time)
             max_time = max(e_time, max_time)
