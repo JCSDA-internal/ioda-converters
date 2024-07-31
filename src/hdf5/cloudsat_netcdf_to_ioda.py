@@ -13,6 +13,7 @@
 import sys
 import netCDF4 as nc
 import numpy as np
+import xarray as xr
 from datetime import datetime
 
 import pyiodaconv.ioda_conv_engines as iconv
@@ -20,7 +21,6 @@ from pyiodaconv.orddicts import DefaultOrderedDict
 from pyiodaconv.def_jedi_utils import set_metadata_attributes, set_obspace_attributes
 from pyiodaconv.def_jedi_utils import epoch, iso8601_string
 from pyiodaconv.def_jedi_utils import record_time
-from pyiodaconv.def_jedi_utils import concat_obs_dict
 from read_cloudsat import read_cloudsat, is_hdf4
 from read_dpr_gpm import read_dpr_gpm, is_hdf5
 
@@ -70,11 +70,14 @@ def main(args):
         if file_is_hdf4 and not file_is_hdf5:
             file_obs_data = read_cloudsat(input_filename)
             sensor_name = 'CloudSat'
+            # common keys
+            for k in (file_obs_data.keys() & all_obs_data.keys()):
+                all_obs_data[k] = np.append(all_obs_data[k], file_obs_data[k], axis=0)
         elif file_is_hdf5 and not file_is_hdf4:
             file_obs_data = read_dpr_gpm(input_filename)
             sensor_name = 'GPM-DPR'
             if all_obs_data:
-                concat_obs_dict(all_obs_data, file_obs_data)
+                all_obs_data = xr.concat([file_obs_data, all_obs_data], dim='scanline')
             else:
                 all_obs_data = file_obs_data
 
