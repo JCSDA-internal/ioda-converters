@@ -62,7 +62,11 @@ def main(args):
         print(f'no observation files provided exiting')
         sys.exit()
 
-    all_obs_data = {}
+    if len(args.input_files) > 1:
+        print(f'please provide unique input files associated to a unique output file')
+        print(f'   ... TBD multiple input files to a single output file')
+        sys.exit()
+
     for input_filename in args.input_files:
 
         file_is_hdf4 = is_hdf4(input_filename)
@@ -70,16 +74,9 @@ def main(args):
         if file_is_hdf4 and not file_is_hdf5:
             file_obs_data = read_cloudsat(input_filename)
             sensor_name = 'CloudSat'
-            # common keys
-            for k in (file_obs_data.keys() & all_obs_data.keys()):
-                all_obs_data[k] = np.append(all_obs_data[k], file_obs_data[k], axis=0)
         elif file_is_hdf5 and not file_is_hdf4:
             file_obs_data = read_dpr_gpm(input_filename)
             sensor_name = 'GPM-DPR'
-            if all_obs_data:
-                all_obs_data = xr.concat([file_obs_data, all_obs_data], dim='scanline')
-            else:
-                all_obs_data = file_obs_data
 
     # report time
     toc = record_time(tic=tic)
@@ -93,7 +90,7 @@ def main(args):
     GlobalAttrs["platformLongDescription"] = f"{sensor_upper} Attenuated Reflectivity"
     GlobalAttrs["sensorCentralFrequency"] = str(file_obs_data.centerFreq.values)
 
-    obs_data = populate_obs_data(all_obs_data, sensor_name)
+    obs_data = populate_obs_data(file_obs_data, sensor_name)
 
     nlocs_int = np.array(len(obs_data[('latitude', metaDataName)]), dtype='int64')
     nlocs = nlocs_int.item()
