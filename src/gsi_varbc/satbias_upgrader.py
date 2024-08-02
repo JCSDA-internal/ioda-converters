@@ -74,11 +74,12 @@ def satbias_upgrader(infile, outfile):
             temp = pred.split('_')
             if temp[0].lower() not in do_not_disturb:
                 idorder = temp.index('order') if "order" in temp else None
+                # Create the new predictor variable with the desired format
                 predOut = temp[0] + ''.join(ele.title() for ele in temp[1:idorder]) + \
                     ('_' + temp[idorder] + '_' + temp[idorder + 1]
                      if idorder is not None else '')
             else:
-                predOut = pred
+                predOut = pred  # Leave the predictor unchanged if it's in do_not_disturb
 
             # Replace strings using dictionary
             for key, value in replace_dict.items():
@@ -95,11 +96,12 @@ def satbias_upgrader(infile, outfile):
             temp = pred.split('_')
             if temp[0].lower() not in do_not_disturb:
                 idorder = temp.index('order') if "order" in temp else None
+                # Create the new predictor variable with the desired format
                 predOut = temp[0] + ''.join(ele.title() for ele in temp[1:idorder]) + \
                     ('_' + temp[idorder] + '_' + temp[idorder + 1]
                      if idorder is not None else '')
             else:
-                predOut = pred
+                predOut = pred # Leave the predictor unchanged if it's in do_not_disturb
 
             # Replace strings using dictionary
             for key, value in replace_dict.items():
