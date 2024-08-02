@@ -62,7 +62,9 @@ def satbias_upgrader(infile, outfile):
         'cloudLiquidWater': 'cloudWaterContent',
         'orbitalAngle': 'satelliteOrbitalAngle',
         'emissivity': 'emissivityJacobian',
-        'Legendre': 'legendre'
+        'Legendre': 'legendre',
+        'thickness850300hPa: 'thickness_850_300hPa',
+        'thickness20050hPa': 'thickness_200_50hPa'
     }
 
     if 'bias_coefficients' in oldnc.variables.keys():
