@@ -118,7 +118,7 @@ def read_dpr_hdf_file(fname):
     return dprdata
 
 
-def read_dpr_gpm(fname):
+def read_dpr_gpm(fname, seqNumber_offset=None):
 
     dpr_data = read_dpr_hdf_file(fname)
 
@@ -131,6 +131,12 @@ def read_dpr_gpm(fname):
     lon[lon < 0] = 360 + lon[lon < 0]
     dpr_data['lon'].values = lon
 
-    dpr_data["sequenceNumber"] = xr.DataArray(np.arange(dpr_data.obs_id.size), dpr_data.obs_id.coords)
+    atime = np.min(dpr_data['epoch_time'])
+    atime_obj = datetime.utcfromtimestamp(atime.item())
+    # this will use hour and minute to offset files in serial processing
+    if not seqNumber_offset:
+        seqNumber_offset = 100000*np.int(atime_obj.strftime('%H%M'))
+
+    dpr_data["sequenceNumber"] = xr.DataArray(seqNumber_offset + np.arange(dpr_data.obs_id.size), dpr_data.obs_id.coords)
 
     return dpr_data
