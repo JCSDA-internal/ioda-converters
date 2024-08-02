@@ -62,7 +62,7 @@ def satbias_upgrader(infile, outfile):
         'cloudLiquidWater': 'cloudWaterContent',
         'orbitalAngle': 'satelliteOrbitalAngle',
         'emissivity': 'emissivityJacobian',
-        'Legendre': 'legendre' 
+        'Legendre': 'legendre'
     }
     # variable names that should not change
     do_not_disturb = ['thickness']
