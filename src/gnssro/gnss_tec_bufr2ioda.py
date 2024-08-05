@@ -80,8 +80,8 @@ def main(args):
         locationKeyList.append((k, v))
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-    VarAttrs[('totalElectronContent', 'ObsValue')]['units'] = 'Unknown'
-    VarAttrs[('totalElectronContent', 'ObsError')]['units'] = 'Unknown'
+    VarAttrs[('totalElectronContent', 'ObsValue')]['units'] = 'TECU'
+    VarAttrs[('totalElectronContent', 'ObsError')]['units'] = 'TECU'
     VarAttrs[('elevationAngleGNSS', 'MetaData')]['units'] = 'degree'
     VarAttrs[('latitude', 'MetaData')]['units'] = 'degree'
     VarAttrs[('longitude', 'MetaData')]['units'] = 'degree'
@@ -159,6 +159,7 @@ def get_obs_data(ifile, get_obs_data_args):
     # ds.variables.keys()
     # ['time', 'TEC', 'S4', 'elevation', 'caL1_SNR', 'pL2_SNR', 'x_LEO', 'y_LEO', 'z_LEO', 'x_GPS', 'y_GPS', 'z_GPS']
     # ds.ncattrs()
+    # example: ds.variables['TEC'].getncattr('units')
 
     profile_meta_data = get_meta_data(ds)
     for k in profile_meta_data.keys():

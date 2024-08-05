@@ -8,7 +8,7 @@
 import argparse
 import numpy as np
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timezone
 from dateutil.parser import parse
 
 import pyiodaconv.ioda_conv_engines as iconv
@@ -103,6 +103,7 @@ class ghcn(object):
         # select data which matches the Start date
         startdate = self.date
         valid_date = datetime.strptime(startdate, "%Y%m%d%H")
+        valid_date = valid_date.replace(tzinfo=timezone.utc)
         select_date = valid_date.strftime('%Y%m%d')
         new_date = parse(select_date).date()
         df30 = df30[df30["DATETIME"] == new_date]
@@ -167,6 +168,7 @@ class ghcn(object):
 
         # get datetime from input
         my_date = datetime.strptime(startdate, "%Y%m%d%H")
+        my_date = my_date.replace(tzinfo=timezone.utc)
         epoch_time = np.int64(get_epoch_time(my_date))
 
         # vals[vals >= 0.0] *= 0.001      # mm to meters
