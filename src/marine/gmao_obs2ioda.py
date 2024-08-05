@@ -15,13 +15,15 @@ for the full list. Hence, GMAO class reads the input data and creates an object
 that contains with observations that are present in the input file. The IODA class
 then reads the GMAO object, applies a simple filter, and creates the IODA file.
 
-PreQC is set to 0 for all observations!
+PreQC is set to 0 for all observations, all input data is vetted by ODAS scripts
+before being converted to IODA format.
 
 """
 
 from __future__ import print_function
 
 import os
+import sys
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import netCDF4 as nc
 import numpy as np
@@ -77,30 +79,37 @@ dtypes = {'integer': np.int32,
 
 class GMAOobs(object):
 
-    def __init__(self, filename, date):
+    def __init__(self, filename):
 
         self.filename = filename
-        self.date = date
         self.present_vars = set()
 
         # Read GMAO data
-        self._read(self.date)
+        self._read()
 
         return
 
-    def _read(self, date):
-
-        self.date = date
+    def _read(self):
 
         data = {}
-
         ncd = nc.Dataset(self.filename)
-
         nobs = len(ncd.dimensions['nobs'])
         data['nobs'] = nobs
 
-        # The input file(s) contain no date information, so take it from command line info.
-        data['dateTime'] = np.full(nobs, np.int64(round((self.date - epoch).total_seconds())))
+        # The input file(s) must contain date information, fail if it does not
+        if 'date_time' not in ncd.variables:
+            print('date_time not found in %s' % self.filename)
+            sys.exit(1)
+        data['date_time'] = ncd.variables['date_time'][:].data
+        data['dateTime'] = np.empty(data['nobs'], dtype=np.int64)
+
+        # Convert date_time input format to seconds since epoch
+        for n in range(data['nobs']):
+            dtg_str = str(data['date_time'][n])
+            dtg = datetime.strptime(dtg_str, '%Y%m%d%H')
+
+            time_offset = np.int64(round((dtg - epoch).total_seconds()))
+            data['dateTime'][n] = time_offset
 
         data['longitude'] = ncd.variables['lon'][:].data
         data['latitude'] = ncd.variables['lat'][:].data
@@ -108,6 +117,7 @@ class GMAOobs(object):
         types = ncd.variables['typ'][:].data
         values = ncd.variables['value'][:].data
         values[np.isnan(values)] = float_missing_value
+
         errors = ncd.variables['oerr'][:].data
 
         for key in varDict.keys():
@@ -122,7 +132,6 @@ class GMAOobs(object):
                 data[key_var][ind] = values[ind]
                 data[key_err][ind] = errors[ind]
                 self.present_vars.add(key)
-
         ncd.close()
 
         self.data = data
@@ -132,17 +141,11 @@ class GMAOobs(object):
 
 class IODA(object):
 
-    def __init__(self, files_input, filename, date, obsList):
+    def __init__(self, files_input, filename, obsList):
         self.files_input = files_input
         self.filename = filename
-        self.date = date
 
-        GlobalAttrs = {
-            'converter': os.path.basename(__file__),
-            'ioda_version': 3,
-            'sourceFiles': ", ".join(self.files_input),
-            'description': "GMAO Ocean Observations"
-        }
+        GlobalAttrs = {}
 
         # This creates a `DefaultOrderedDict` where each new key accessed that doesn't
         # already exist in the dictionary will be automatically associated with a new `DefaultOrderedDict`
@@ -193,7 +196,7 @@ class IODA(object):
             fill_value = missing_vals[dtypestr]
             data[(key, metaDataName)] = np.full(totalObs, fill_value, dtype=dtypes[dtypestr])
 
-        print(f"Present variable(s) and their attribute(s) in this input: {presentVarDict}")
+        print(f"Present variable(s) and their attribute(s) in this input: \n{presentVarDict}")
 
         # Prefill data with missing values
         # QC (preQC) value is zero for now (assume all data is good!)
@@ -219,8 +222,9 @@ class IODA(object):
                 key_err = var_name + "_errs"
 
                 if not np.all(obs.data[key_var] == float_missing_value):
-                    varVals = np.array(obs.data[key_var], dtype=dtypes['float'])
-                    errVals = np.array(obs.data[key_err], dtype=dtypes['float'])
+                    # Ensure empty values values in masked arrays are filled with missing values
+                    varVals = obs.data[key_var].filled(float_missing_value).astype(dtypes['float'])
+                    errVals = obs.data[key_err].filled(float_missing_value).astype(dtypes['float'])
 
                     # Keep the indices of the values that are outside of the acceptable range
                     exclude = (varVals <= min_val) | (varVals >= max_val)
@@ -257,34 +261,18 @@ def main():
     parser.add_argument(
         '-o', '--output', help='template name of the output IODA file (one per type)',
         type=str, required=True)
-    parser.add_argument(
-        '-d', '--date', help='datetime at the middle of the window', metavar='YYYYMMDDHH',
-        type=str, required=True)
-    parser.add_argument(
-        '--inputdates', help='dates of the input GMAO ocean obs file(s)',
-        type=str, nargs='+', required=False, metavar='YYYYMMDDHH')
 
     args = parser.parse_args()
 
     fList = args.input
-    dList = args.inputdates
     foutput = args.output
-    fdate = datetime.strptime(args.date, '%Y%m%d%H')
 
-    if dList:
-        assert len(dList) == len(fList)
-        dList = [datetime.strptime(d, '%Y%m%d%H') for d in dList]
-    else:
-        dList = [fdate] * len(fList)
-
+    # obsList contains all the input GMAO obs abjects
     obsList = []
-    for fname, idate in zip(fList, dList):
-        if not os.path.isfile(fname):
-            parser.error('Input (-i option) file: ', fname, ' does not exist')
+    for fname in fList:
+        obsList.append(GMAOobs(fname))
 
-        obsList.append(GMAOobs(fname, idate))
-
-    IODA(fList, foutput, fdate, obsList)
+    IODA(fList, foutput, obsList)
 
 
 if __name__ == '__main__':
