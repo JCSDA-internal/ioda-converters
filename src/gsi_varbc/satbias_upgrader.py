@@ -101,7 +101,7 @@ def satbias_upgrader(infile, outfile):
                     ('_' + temp[idorder] + '_' + temp[idorder + 1]
                      if idorder is not None else '')
             else:
-                predOut = pred # Leave the predictor unchanged if it's in do_not_disturb
+                predOut = pred  # Leave the predictor unchanged if it's in do_not_disturb
 
             # Replace strings using dictionary
             for key, value in replace_dict.items():
