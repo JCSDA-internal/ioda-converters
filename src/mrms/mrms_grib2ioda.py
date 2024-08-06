@@ -216,8 +216,10 @@ def read_grib(input_file, obsvars, min_dbz):
             t = eccodes.codes_get(gid, "dataTime")
             if t > 2359:
                 logging.debug(f"DEBUG: dataTime is more than 4 digits, adjusting")
-                t = t/100
-            dt = datetime.strptime(str(d)+str(t), "%Y%m%d%H%M")
+                str_t = str(int(t/100))
+            else:
+                str_t = "{:04d}".format(t)
+            dt = datetime.strptime(str(d)+str_t, "%Y%m%d%H%M")
             logging.debug(f"DEBUG: date info: {d} {t}Z")
 
             ni = eccodes.codes_get(gid, "Ni")
