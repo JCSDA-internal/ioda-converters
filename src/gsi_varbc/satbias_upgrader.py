@@ -55,7 +55,7 @@ def satbias_upgrader(infile, outfile):
             "numberObservationsUsed", "i4", ("Record", dimname))
         nobs_assim_out[0, :] = nobs_assim_in
 
-    # loop through predictors and create predictor variables
+    # variable names that should be replaced
     replace_dict = {
         'scanAngle': 'sensorScanAngle',
         'zenithAngle': 'sensorZenithAngle',
@@ -64,15 +64,22 @@ def satbias_upgrader(infile, outfile):
         'emissivity': 'emissivityJacobian',
         'Legendre': 'legendre'
     }
+    # variable names that should not change
+    do_not_disturb = ['thickness']
 
+    # loop through predictors and create predictor variables
     if 'bias_coefficients' in oldnc.variables.keys():
         bias_coeff = oldnc.variables['bias_coefficients'][:]
         for i, pred in enumerate(predictors):
             temp = pred.split('_')
-            idorder = temp.index('order') if "order" in temp else None
-            predOut = temp[0] + ''.join(ele.title() for ele in temp[1:idorder]) + \
-                ('_' + temp[idorder] + '_' + temp[idorder + 1]
-                 if idorder is not None else '')
+            if temp[0].lower() not in do_not_disturb:
+                idorder = temp.index('order') if "order" in temp else None
+                # Create the new predictor variable with the desired format
+                predOut = temp[0] + ''.join(ele.title() for ele in temp[1:idorder]) + \
+                    ('_' + temp[idorder] + '_' + temp[idorder + 1]
+                     if idorder is not None else '')
+            else:
+                predOut = pred  # Leave the predictor unchanged if it's in do_not_disturb
 
             # Replace strings using dictionary
             for key, value in replace_dict.items():
@@ -87,10 +94,14 @@ def satbias_upgrader(infile, outfile):
         bias_coeff_err = oldnc.variables['bias_coeff_errors'][:]
         for i, pred in enumerate(predictors):
             temp = pred.split('_')
-            idorder = temp.index('order') if "order" in temp else None
-            predOut = temp[0] + ''.join(ele.title() for ele in temp[1:idorder]) + \
-                ('_' + temp[idorder] + '_' + temp[idorder + 1]
-                 if idorder is not None else '')
+            if temp[0].lower() not in do_not_disturb:
+                idorder = temp.index('order') if "order" in temp else None
+                # Create the new predictor variable with the desired format
+                predOut = temp[0] + ''.join(ele.title() for ele in temp[1:idorder]) + \
+                    ('_' + temp[idorder] + '_' + temp[idorder + 1]
+                     if idorder is not None else '')
+            else:
+                predOut = pred  # Leave the predictor unchanged if it's in do_not_disturb
 
             # Replace strings using dictionary
             for key, value in replace_dict.items():
