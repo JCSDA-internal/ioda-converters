@@ -42,7 +42,7 @@ varDict = {
     5522: ['sss', 'seaSurfaceSalinity', 'PSU', 0.0, 50.0],
     5525: ['sst', 'seaSurfaceTemperature', 'C', -2.0, 52.0],
     5526: ['adt', 'absoluteDynamicTopography', 'm', -4.0, 4.0],
-    5351: ['adt', 'absoluteDynamicTopography', 'm', -4.0, 4.0],   # not used
+    5351: ['adt', 'absoluteDynamicTopography', 'm', -4.0, 4.0],
     6000: ['frac', 'seaIceFraction', '1', 0.0, 1.0],
     6001: ['thick', 'iceThickness', 'm', 0.001, 5000.0],
 }
@@ -199,7 +199,7 @@ class IODA(object):
         print(f"Present variable(s) and their attribute(s) in this input: \n{presentVarDict}")
 
         # Prefill data with missing values
-        # QC (preQC) value is zero for now (assume all data is good!)
+        # QC (preQC) value is zero for now (we assume all ODAS data is good)
         for key, (_, variable, _, _, _) in presentVarDict.items():
             data[(variable, obsValName)] = np.full(totalObs, float_missing_value, dtype=dtypes['float'])
             data[(variable, obsErrName)] = np.full(totalObs, float_missing_value, dtype=dtypes['float'])
@@ -233,6 +233,9 @@ class IODA(object):
 
                     data[(variable, obsValName)][current_index:end_index] = varVals
                     data[(variable, obsErrName)][current_index:end_index] = errVals
+                    # Replace the QC values with the preQC value 12 if the value is outside of the acceptable range
+                    data[(variable, qcName)][current_index:end_index] = \
+                        np.where(exclude, 12, data[(variable, qcName)][current_index:end_index])
 
             current_index = end_index
 
