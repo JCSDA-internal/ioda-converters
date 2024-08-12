@@ -12,6 +12,7 @@ import pyiodaconv.ioda_conv_engines as iconv
 import pyiodaconv.ioda_conv_ncio as iconio
 from collections import defaultdict, OrderedDict
 from pyiodaconv.orddicts import DefaultOrderedDict
+from pyiodaconv.def_jedi_utils import iso8601_string, epoch
 
 os.environ["TZ"] = "UTC"
 
@@ -22,11 +23,12 @@ varDict = {'PM2.5': ['particulatematter2p5Surface', 'mg m-3'],
            'OZONE': ['ozoneSurface', 'ppmV'],
            'NO2': ['nitrogendioxideSurface', 'ppmV'],
            'CO': ['carbonmonoxideSurface', 'ppmV'],
+           'SO2': ['sulfurdioxideSurface', 'ppmV'],
            }
 
 locationKeyList = [("latitude", "float", "degrees_north"),
                    ("longitude", "float", "degrees_east"),
-                   ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z"),
+                   ("dateTime", "long", iso8601_string),
                    ("stationElevation", "float", "m"),
                    ("height", "float", "m"),
                    ("stationIdentification", "string", ""),
@@ -40,8 +42,8 @@ GlobalAttrs = {'converter': os.path.basename(__file__),
                'description': 'AIRNow data (converted from text/csv to IODA',
                'source': 'Unknown (ftp)'}
 
-iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
-epoch = datetime.fromisoformat(iso8601_string[14:-1])
+#iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
+#epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
 metaDataName = iconv.MetaDataName()
 obsValName = iconv.OvalName()
@@ -172,14 +174,13 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     print('infile=', args.input, args.sitefile)
-    f = add_data(args.input, args.sitefile, args.fulllist).drop_duplicates(subset=['PM2.5', 'OZONE', 'NO2', 'CO', 'siteid', 'latitude', 'longitude'])
-    print(f.shape)
+    f = add_data(args.input, args.sitefile, args.fulllist).drop_duplicates(
+             subset=['PM2.5', 'OZONE', 'NO2', 'CO', 'SO2', 'siteid', 'latitude', 'longitude'])
 
     f3 = f.dropna(subset=['PM2.5'], how='any').reset_index()
     nlocs, columns = f3.shape
-    print(f3.shape)
 
-    dt = f3.time[1].to_pydatetime()
+    dt = f3.time[1].tz_localize('UTC').to_pydatetime()
     time_offset = round((dt - epoch).total_seconds())
 
     if args.fulllist:
@@ -209,7 +210,7 @@ if __name__ == '__main__':
     for n, key in enumerate(varDict.keys()):
         if key in ['PM2.5', 'CO']:
             data[varDict[key][0]] = np.array(f3[key].fillna(float_missing_value))
-        elif key in ['OZONE', 'NO2']:
+        elif key in ['OZONE', 'NO2', 'SO2']:
             data[varDict[key][0]] = np.array((f3[key]/1000).fillna(float_missing_value))
 
     DimDict = {'Location': nlocs}
