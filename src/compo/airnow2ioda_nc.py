@@ -19,14 +19,20 @@ os.environ["TZ"] = "UTC"
 # First is the incoming variable name followed by list of IODA outgoing name and units.
 
 varDict = {'PM2.5': ['particulatematter2p5Surface', 'mg m-3'],
-           'OZONE': ['ozoneSurface', 'ppmV']}
+           'OZONE': ['ozoneSurface', 'ppmV'],
+           'NO2': ['nitrogendioxideSurface', 'ppmV'],
+           'CO': ['carbonmonoxideSurface', 'ppmV'],
+           }
 
 locationKeyList = [("latitude", "float", "degrees_north"),
                    ("longitude", "float", "degrees_east"),
                    ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z"),
                    ("stationElevation", "float", "m"),
                    ("height", "float", "m"),
-                   ("stationIdentification", "string", "")]
+                   ("stationIdentification", "string", ""),
+                   #("surfaceQualifier", "integer", ""),
+                   ]
+
 meta_keys = [m_item[0] for m_item in locationKeyList]
 
 GlobalAttrs = {'converter': os.path.basename(__file__),
@@ -59,18 +65,27 @@ dtypes = {'string': object,
           'float': np.float32,
           'double': np.float64}
 
+def read_monitor_file(sitefile, isfull):
 
-def read_monitor_file(sitefile=None):
+    if isfull:
+        tmpdf = pd.read_csv(sitefile) 
+        tmpdf = tmpdf[['stat_id', 'lat', 'lon', 'elevation', 'loc_setting']]
+        tmpdf['loc_type'] = np.nan
+        for n, loc_type in enumerate(['UNKNOWN', 'RURAL', 'SUBURBAN', 'URBAN AND CENTER CITY']):
+            type_filter = tmpdf['loc_setting']==loc_type
+            tmpdf.loc[type_filter,'loc_type'].loc[type_filter] = n
+        airnow = tmpdf.rename(columns={'stat_id':'siteid', 'lat':'latitude', 'lon':'longitude'})
+    else:
+        colsinuse = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
+        airnow = pd.read_csv(sitefile, delimiter='|', header=None,
+                             usecols=colsinuse, dtype={0: str}, encoding="ISO-8859-1")
+        airnow.columns = [
+            'siteid', 'Site_Code', 'Site_Name', 'Status', 'Agency',
+            'Agency_Name', 'EPA_region', 'latitude', 'longitude', 'Elevation',
+            'GMT_Offset', 'Country_Code', 'CMSA_Code', 'CMSA_Name', 'MSA_Code',
+            'MSA_Name', 'state_Code', 'state_Name', 'County_Code',
+            'County_Name', 'City_Code']
 
-    colsinuse = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
-    airnow = pd.read_csv(sitefile, delimiter='|', header=None,
-                         usecols=colsinuse, dtype={0: str}, encoding="ISO-8859-1")
-    airnow.columns = [
-        'siteid', 'Site_Code', 'Site_Name', 'Status', 'Agency',
-        'Agency_Name', 'EPA_region', 'latitude', 'longitude', 'Elevation',
-        'GMT_Offset', 'Country_Code', 'CMSA_Code', 'CMSA_Name', 'MSA_Code',
-        'MSA_Name', 'state_Code', 'state_Name', 'County_Code',
-        'County_Name', 'City_Code']
     airnow['airnow_flag'] = 'AIRNOW'
     airnow.columns = [i.lower() for i in airnow.columns]
     return airnow
@@ -103,7 +118,7 @@ def long_to_wide(df):
     return merge(w, df, on=['siteid', 'time'])
 
 
-def add_data(infile, sitefile):
+def add_data(infile, sitefile, isfull):
     df = pd.read_csv(infile, delimiter='|',
                      header=None,
                      on_bad_lines='warn',
@@ -120,7 +135,7 @@ def add_data(infile, sitefile):
     df.drop(['date'], axis=1, inplace=True)
     df['time_local'] = df.time + pd.to_timedelta(df.utcoffset, unit='H')
 
-    monitor_df = read_monitor_file(sitefile)
+    monitor_df = read_monitor_file(sitefile, isfull)
     df = pd.merge(df, monitor_df, on='siteid')
     df.drop_duplicates(inplace=True)
     df = filter_bad_values(df)
@@ -147,19 +162,29 @@ if __name__ == '__main__':
         help="path of AIRNow site list file",
         type=str, required=True)
     required.add_argument(
+        '--fulllist',
+        help="define this if sitefile is a full list",
+        action='store_true', default=False)
+    required.add_argument(
         '-o', '--output',
         help="path of IODA output file",
         type=str, required=True)
 
     args = parser.parse_args()
     print('infile=', args.input, args.sitefile)
-    f = add_data(args.input, args.sitefile).drop_duplicates(subset=['PM2.5', 'OZONE', 'siteid', 'latitude', 'longitude'])
+    f = add_data(args.input, args.sitefile, args.fulllist).drop_duplicates(subset=['PM2.5', 'OZONE', 'NO2', 'CO', 'siteid', 'latitude', 'longitude'])
+    print(f.shape)
 
     f3 = f.dropna(subset=['PM2.5'], how='any').reset_index()
     nlocs, columns = f3.shape
+    print(f3.shape)
 
     dt = f3.time[1].to_pydatetime()
     time_offset = round((dt - epoch).total_seconds())
+
+    if args.fulllist:
+        locationKeyList.append(("surfaceQualifier", "integer", ""))
+        meta_keys.append("surfaceQualifier")
 
     ioda_data = {}         # The final outputs.
     data = {}              # Before assigning the output types into the above.
@@ -178,16 +203,14 @@ if __name__ == '__main__':
     for n in range(nlocs):
         data['height'][n] = data['height'][n] + 10.0   # 10 meters above stationElevation
 
-    for n, key in enumerate(varDict.keys()):
-        if n == 0:
-            key1 = key
-            var1 = varDict[key][0]
-        elif n == 1:
-            key2 = key
-            var2 = varDict[key][0]
+    if args.fulllist:
+        data['surfaceQualifier'] = np.array(f3['loc_type'], dtype=np.int32)
 
-    data[var1] = np.array(f3[key1].fillna(float_missing_value))
-    data[var2] = np.array((f3[key2]/1000).fillna(float_missing_value))
+    for n, key in enumerate(varDict.keys()):
+        if key in ['PM2.5', 'CO']:
+            data[varDict[key][0]] = np.array(f3[key].fillna(float_missing_value))
+        elif key in ['OZONE', 'NO2']:
+            data[varDict[key][0]] = np.array((f3[key]/1000).fillna(float_missing_value))
 
     DimDict = {'Location': nlocs}
 
