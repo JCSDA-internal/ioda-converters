@@ -32,7 +32,6 @@ locationKeyList = [("latitude", "float", "degrees_north"),
                    ("stationElevation", "float", "m"),
                    ("height", "float", "m"),
                    ("stationIdentification", "string", ""),
-                   #("surfaceQualifier", "integer", ""),
                    ]
 
 meta_keys = [m_item[0] for m_item in locationKeyList]
@@ -40,7 +39,9 @@ meta_keys = [m_item[0] for m_item in locationKeyList]
 GlobalAttrs = {'converter': os.path.basename(__file__),
                'ioda_version': 2,
                'description': 'AIRNow data (converted from text/csv to IODA',
-               'source': 'Unknown (ftp)'}
+               'source': 'https://files.airnowtech.org/?prefix=airnow/',
+               'sourceFiles': '',
+               }
 
 #iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
 #epoch = datetime.fromisoformat(iso8601_string[14:-1])
@@ -68,7 +69,6 @@ dtypes = {'string': object,
           'double': np.float64}
 
 def read_monitor_file(sitefile, isfull):
-
     if isfull:
         tmpdf = pd.read_csv(sitefile) 
         tmpdf = tmpdf[['stat_id', 'lat', 'lon', 'elevation', 'loc_setting']]
@@ -150,7 +150,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
         description=(
-            'Reads single AIRNow text file '
+            'Reads multiple AIRNow text files '
             ' and converts into IODA formatted output files.')
     )
 
@@ -158,7 +158,7 @@ if __name__ == '__main__':
     required.add_argument(
         '-i', '--input',
         help="path of AIRNow text input file",
-        type=str, required=True)
+        type=str, nargs='+', required=True)
     required.add_argument(
         '-s', '--sitefile',
         help="path of AIRNow site list file",
@@ -173,47 +173,62 @@ if __name__ == '__main__':
         type=str, required=True)
 
     args = parser.parse_args()
-    print('infile=', args.input, args.sitefile)
-    f = add_data(args.input, args.sitefile, args.fulllist).drop_duplicates(
-             subset=['PM2.5', 'OZONE', 'NO2', 'CO', 'SO2', 'siteid', 'latitude', 'longitude'])
-
-    f3 = f.dropna(subset=['PM2.5'], how='any').reset_index()
-    nlocs, columns = f3.shape
-
-    dt = f3.time[1].tz_localize('UTC').to_pydatetime()
-    time_offset = round((dt - epoch).total_seconds())
 
     if args.fulllist:
         locationKeyList.append(("surfaceQualifier", "integer", ""))
         meta_keys.append("surfaceQualifier")
 
-    ioda_data = {}         # The final outputs.
-    data = {}              # Before assigning the output types into the above.
+    print('sitefile=', args.sitefile)
+
+    # Initialze local data array
+    data = {}
     for key in varDict.keys():
         data[key] = []
+        if key in ['PM2.5', 'OZONE', 'NO2', 'CO', 'SO2']:
+            data[varDict[key][0]] = []
     for key in meta_keys:
         data[key] = []
 
-    # Fill the temporary data arrays from input file column data
-    data['stationIdentification'] = np.full(nlocs, f3.siteid, dtype='S20')
-    data['dateTime'] = np.full(nlocs, np.int64(time_offset))
-    data['latitude'] = np.array(f3['latitude'])
-    data['longitude'] = np.array(f3['longitude'])
-    data['stationElevation'] = np.array(f3['elevation'])
-    data['height'] = np.array(f3['elevation'])
-    for n in range(nlocs):
-        data['height'][n] = data['height'][n] + 10.0   # 10 meters above stationElevation
+    total_locs = 0
+    for infile in args.input:
+        print('Processing infile=', infile)
 
-    if args.fulllist:
-        data['surfaceQualifier'] = np.array(f3['loc_type'], dtype=np.int32)
+        f = add_data(infile, args.sitefile, args.fulllist).drop_duplicates(
+             subset=['PM2.5', 'OZONE', 'NO2', 'CO', 'SO2', 'siteid', 'latitude', 'longitude'])
 
-    for n, key in enumerate(varDict.keys()):
-        if key in ['PM2.5', 'CO']:
-            data[varDict[key][0]] = np.array(f3[key].fillna(float_missing_value))
-        elif key in ['OZONE', 'NO2', 'SO2']:
-            data[varDict[key][0]] = np.array((f3[key]/1000).fillna(float_missing_value))
+        f3 = f.dropna(subset=['PM2.5'], how='any').reset_index()
+        nlocs, columns = f3.shape
 
-    DimDict = {'Location': nlocs}
+        dt = f3.time[1].tz_localize('UTC').to_pydatetime()
+        time_offset = round((dt - epoch).total_seconds())
+
+        # Fill the temporary data arrays from input file column data
+        data['stationIdentification'] = np.append(data['stationIdentification'],
+                                                  np.full(nlocs, f3.siteid, dtype='S20'))
+        data['dateTime'] = np.append(data['dateTime'], np.full(nlocs, np.int64(time_offset)))
+        data['latitude'] = np.append(data['latitude'], np.array(f3['latitude']))
+        data['longitude'] = np.append(data['longitude'], np.array(f3['longitude']))
+        data['stationElevation'] = np.append(data['stationElevation'], np.array(f3['elevation']))
+        data['height'] = np.append(data['height'], np.array(f3['elevation']) + 10.0)
+
+        if args.fulllist:
+            data['surfaceQualifier'] = np.append(data['surfaceQualifier'], 
+                                                 np.array(f3['loc_type'], dtype=np.int32))
+
+        GlobalAttrs['sourceFiles'] += str(infile.split('/')[-1]) + ", "
+
+        for key in varDict.keys():
+            if key in ['PM2.5', 'CO']:
+                data[varDict[key][0]] = np.append(data[varDict[key][0]],
+                                                  np.array(f3[key].fillna(float_missing_value)))
+            elif key in ['OZONE', 'NO2', 'SO2']:
+                data[varDict[key][0]] = np.append(data[varDict[key][0]],
+                                                  np.array((f3[key]/1000).fillna(float_missing_value)))
+
+        total_locs += nlocs
+
+    ioda_data = {}         # The final outputs.
+    DimDict = {'Location': total_locs}
 
     varDims = {}
     for key in varDict.keys():
