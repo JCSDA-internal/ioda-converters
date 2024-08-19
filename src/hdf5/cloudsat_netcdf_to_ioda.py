@@ -10,6 +10,7 @@
 # contribution based on prototype by 2023, Isaac Moradi
 #
 
+import os
 import sys
 import netCDF4 as nc
 import numpy as np
@@ -49,13 +50,12 @@ GlobalAttrs = {}
 
 def main(args):
 
+    # take a user input and call decoder assume cloudsat hdf4 and GPM DPR hdf5
+    # read_cloudsat and read_dpr_gpm return an xarray
+    # place into a dictionary and pass to IODA writer
+
     # start timer
     tic = record_time()
-
-    # take a user input and call read_cloudsat decoder
-    # place this xarray into a dictionary and pass to IODA writer
-
-    # example: input_filename = ['2009212223327_17338_CS_2B-GEOPROF_GRANULE_P1_R05_E02_F00.hdf']
     output_filename = args.output
 
     if args.input_files is None:
@@ -69,8 +69,12 @@ def main(args):
 
     for input_filename in args.input_files:
 
+        if not os.path.isfile(input_filename):
+            print(f"'{input_filename}' does not exist or is not a file.")
+            sys.exit()
         file_is_hdf4 = is_hdf4(input_filename)
         file_is_hdf5 = is_hdf5(input_filename)
+        file_obs_data = None
         if file_is_hdf4 and not file_is_hdf5:
             file_obs_data = read_cloudsat(input_filename)
             sensor_name = 'CloudSat'
@@ -230,7 +234,6 @@ def get_WMO_satellite_ID(attrs_shortname):
 if __name__ == "__main__":
 
     import argparse
-    import os
     parser = argparse.ArgumentParser(
         description=(
             'Reads the satellite data '

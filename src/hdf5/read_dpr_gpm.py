@@ -131,6 +131,9 @@ def read_dpr_gpm(fname, seqNumber_offset=None):
     lon[lon < 0] = 360 + lon[lon < 0]
     dpr_data['lon'].values = lon
 
+    # increment channel coordinate to start at 1
+    dpr_data = dpr_data.assign_coords(channel=dpr_data['channel'] + 1)
+
     atime = np.min(dpr_data['epoch_time'])
     atime_obj = datetime.utcfromtimestamp(atime.item())
     # this will use hour and minute to offset files in serial processing
