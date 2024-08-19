@@ -17,6 +17,7 @@ list( APPEND test_input
   testinput/gds2_sst_l2p.nc
   testinput/gds2_sst_l3u.nc
   testinput/giirs_fy4a-test.nc
+  testinput/gmao_argo.nc
   testinput/godae_prof.bin
   testinput/godae_ship.bin
   testinput/godae_trak.bin
@@ -107,6 +108,7 @@ list( APPEND test_output
   testoutput/gds2_sst_l3u.nc
   testoutput/giirs_fy4a_obs_2017030208.nc4
   testoutput/giirs_ssec_ioda.nc4
+  testoutput/gmao_argo.nc
   testoutput/godae_prof.nc
   testoutput/godae_ship.nc
   testoutput/godae_trak.nc
@@ -591,6 +593,17 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_rads_adt
                           -o testrun/rads_adt.nc
                           -d 2018041512"
                           rads_adt.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gmao_argo
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/gmao_obs2ioda.py
+                          -i testinput/gmao_argo.nc
+                          -o testrun/gmao_argo.nc"
+                          godae_prof.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_godae_prof
                   TYPE    SCRIPT
