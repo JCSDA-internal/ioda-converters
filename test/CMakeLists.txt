@@ -603,7 +603,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gmao_argo
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/gmao_obs2ioda.py
                           -i testinput/gmao_argo.nc
                           -o testrun/gmao_argo.nc"
-                          godae_prof.nc ${IODA_CONV_COMP_TOL})
+                          gmao_argo.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_godae_prof
                   TYPE    SCRIPT
