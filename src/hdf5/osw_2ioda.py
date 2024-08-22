@@ -52,7 +52,7 @@ MetaDataKeyList = [
 meta_keys = [m_item[0] for m_item in MetaDataKeyList]
 
 # The outgoing IODA variables (ObsValues), their units, and assigned constant ObsError.
-obsvars = ['windSpeed','windSpeed'+obsErrName, 'windSpeed'+obsQcName]
+obsvars = ['windSpeed', 'windSpeed'+obsErrName, 'windSpeed'+obsQcName]
 obsvars_units = 'm s-1'
 obsvars_dtype = 'float'
 
@@ -128,7 +128,7 @@ def main(args):
         file_cnt += 1
 
     # Add 0s for wind components to be able to assign obsError
-    obsvars_0s = ['windEastward','windNorthward']
+    obsvars_0s = ['windEastward', 'windNorthward']
     obs_data[obsvars_0s[0]] = 0.
     obs_data[obsvars_0s[1]] = 0.
     obs_data[obsvars_0s[0]+obsQcName] = 0.
@@ -141,7 +141,7 @@ def main(args):
     obs_data[iodavar].fillna(missing_vals[obsvars_dtype], inplace=True)
 
     # find where windSpeed is missing and set the components to missing as well
-    mask = obs_data['windSpeed']==missing_vals[obsvars_dtype]
+    mask = obs_data['windSpeed'] == missing_vals[obsvars_dtype]
     obs_data[obsvars_0s[0]].mask(mask.values, missing_vals[obsvars_dtype], inplace=True)
     obs_data[obsvars_0s[1]].mask(mask.values, missing_vals[obsvars_dtype], inplace=True)
 
@@ -165,19 +165,19 @@ def main(args):
     varDict = defaultdict(lambda: DefaultOrderedDict(dict))
     varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
-    obsvars_0s.insert(0,obsvars[0])
+    obsvars_0s.insert(0, obsvars[0])
     obsvars_ttl = obsvars_0s
     # Set coordinates and units of the ObsValues.
     for iodavar in obsvars_ttl:
-    # set the obs space attributes
-      varDict[iodavar]['valKey'] = iodavar, obsValName
-      varDict[iodavar]['errKey'] = iodavar, obsErrName
-      varDict[iodavar]['qcKey'] = iodavar, obsQcName
-      varAttrs[iodavar, obsValName]['coordinates'] = 'longitude latitude'
-      varAttrs[iodavar, obsErrName]['coordinates'] = 'longitude latitude'
-      varAttrs[iodavar, obsQcName]['coordinates'] = 'longitude latitude'
-      varAttrs[iodavar, obsValName]['units'] = obsvars_units
-      varAttrs[iodavar, obsErrName]['units'] = obsvars_units
+        # set the obs space attributes
+        varDict[iodavar]['valKey'] = iodavar, obsValName
+        varDict[iodavar]['errKey'] = iodavar, obsErrName
+        varDict[iodavar]['qcKey'] = iodavar, obsQcName
+        varAttrs[iodavar, obsValName]['coordinates'] = 'longitude latitude'
+        varAttrs[iodavar, obsErrName]['coordinates'] = 'longitude latitude'
+        varAttrs[iodavar, obsQcName]['coordinates'] = 'longitude latitude'
+        varAttrs[iodavar, obsValName]['units'] = obsvars_units
+        varAttrs[iodavar, obsErrName]['units'] = obsvars_units
 
     # Set units of the MetaData variables and all _FillValues.
     for key in meta_keys:
@@ -189,11 +189,11 @@ def main(args):
 
     # Transfer from the 1-D data vectors and ensure output data (ioda_data) types using numpy.
     for iodavar in obsvars_ttl:
-    #iodavar = obsvars[0]
-      ioda_data[(iodavar, obsValName)] = np.array(obs_data[iodavar], dtype=np.float32)
-      ioda_data[(iodavar, obsQcName)] = np.array(obs_data[iodavar+obsQcName], dtype=np.int32)
-      if iodavar=='windSpeed':
-          ioda_data[(iodavar, obsErrName)] = np.array(obs_data[iodavar+obsErrName], dtype=np.float32)
+        #iodavar = obsvars[0]
+        ioda_data[(iodavar, obsValName)] = np.array(obs_data[iodavar], dtype=np.float32)
+        ioda_data[(iodavar, obsQcName)] = np.array(obs_data[iodavar+obsQcName], dtype=np.int32)
+        if iodavar=='windSpeed':
+            ioda_data[(iodavar, obsErrName)] = np.array(obs_data[iodavar+obsErrName], dtype=np.float32)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output_file, MetaDataKeyList, DimDict)
