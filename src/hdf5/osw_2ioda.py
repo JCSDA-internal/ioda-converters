@@ -189,10 +189,9 @@ def main(args):
 
     # Transfer from the 1-D data vectors and ensure output data (ioda_data) types using numpy.
     for iodavar in obsvars_ttl:
-        #iodavar = obsvars[0]
         ioda_data[(iodavar, obsValName)] = np.array(obs_data[iodavar], dtype=np.float32)
         ioda_data[(iodavar, obsQcName)] = np.array(obs_data[iodavar+obsQcName], dtype=np.int32)
-        if iodavar=='windSpeed':
+        if iodavar == 'windSpeed':
             ioda_data[(iodavar, obsErrName)] = np.array(obs_data[iodavar+obsErrName], dtype=np.float32)
 
     # setup the IODA writer
