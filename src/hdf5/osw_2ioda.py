@@ -166,9 +166,8 @@ def main(args):
     varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
     obsvars_0s.insert(0, obsvars[0])
-    obsvars_ttl = obsvars_0s
     # Set coordinates and units of the ObsValues.
-    for iodavar in obsvars_ttl:
+    for iodavar in obsvars_0s:
         # set the obs space attributes
         varDict[iodavar]['valKey'] = iodavar, obsValName
         varDict[iodavar]['errKey'] = iodavar, obsErrName
@@ -188,7 +187,7 @@ def main(args):
         ioda_data[(key, metaDataName)] = np.array(obs_data[key], dtype=dtypes[dtypestr])
 
     # Transfer from the 1-D data vectors and ensure output data (ioda_data) types using numpy.
-    for iodavar in obsvars_ttl:
+    for iodavar in obsvars_0s:
         ioda_data[(iodavar, obsValName)] = np.array(obs_data[iodavar], dtype=np.float32)
         ioda_data[(iodavar, obsQcName)] = np.array(obs_data[iodavar+obsQcName], dtype=np.int32)
         if iodavar == 'windSpeed':
