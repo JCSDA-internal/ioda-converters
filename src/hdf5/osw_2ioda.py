@@ -131,8 +131,8 @@ def main(args):
     obsvars_0s = ['windEastward', 'windNorthward']
     obs_data[obsvars_0s[0]] = 0.
     obs_data[obsvars_0s[1]] = 0.
-    obs_data[obsvars_0s[0]+obsQcName] = 0.
-    obs_data[obsvars_0s[1]+obsQcName] = 0.
+    obs_data[obsvars_0s[0]+obsQcName] = 0
+    obs_data[obsvars_0s[1]+obsQcName] = 0
 
     # replace missing values
     for MetaDataKey in MetaDataKeyList:
