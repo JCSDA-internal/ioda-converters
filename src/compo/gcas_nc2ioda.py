@@ -105,6 +105,7 @@ class gcas(object):
             # Read time and convert to ioda time format
             obs_time = dsFlight['time'].values
             time = np.repeat(obs_time,len(xtrack))
+
             times = (time - np.datetime64(epoch)) / np.timedelta64(1, 's')
  
             if (self.column.strip() == 'total'):
@@ -129,15 +130,10 @@ class gcas(object):
             qa = np.full((nlocs), 0)
 
             # date range to fit DA window
-            wbegin = datetime.strptime(self.time_range[0], "%Y%m%d%H")
-            wend = datetime.strptime(self.time_range[1], "%Y%m%d%H")
-            time = time.astype('datetime64[ns]')
-            print(time)
-            print(wbegin)
-
+            wbegin = np.datetime64(datetime.strptime(self.time_range[0], "%Y%m%d%H"))
+            wend = np.datetime64(datetime.strptime(self.time_range[1], "%Y%m%d%H"))
             flag = np.where((time >= wbegin) & (time <= wend), 1, 0)
-
-            print(flags)
+            flag = flag.astype(bool)
 
             # ---- Write Metadata and data
             if first:
