@@ -1245,7 +1245,8 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_icartt
                           netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/icartt_nc2ioda.py
                           -i testinput/icartt_DC8_20230627_RA.nc
-                          -o testrun/ioda_icartt_DC8_20230627_RA.nc"
+                          -o testrun/ioda_icartt_DC8_20230627_RA.nc
+                          -r 2023062715 2023062721"
                           ioda_icartt_DC8_20230627_RA.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gcas
