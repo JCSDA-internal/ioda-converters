@@ -41,6 +41,7 @@ VarDims = {
 iso8601_string = 'seconds since 1970-01-01T00:00:00Z'
 epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
+
 class madis(object):
     def __init__(self, filename, mask):
         self.filename = filename
@@ -73,8 +74,8 @@ class madis(object):
         elvs = ncd.variables['elevation'][:]
         qflg = ncd.variables['snowDepthQCR'][:]
         obst = ncd.variables['observationTime'][:]
-        sids = nc.chartostring(ncd.variables['stationId'][:,:])
-    
+        sids = nc.chartostring(ncd.variables['stationId'][:, :])
+
         sites = np.empty_like(vals, dtype=object)
         for i in range(len(vals[:])):
             sites[i] = sids[i]
@@ -119,7 +120,9 @@ class madis(object):
 
         for iodavar in ['totalSnowDepth']:
             self.outdata[self.varDict[iodavar]['valKey']] = vals
+            self.varAttrs[self.varDict[iodavar]['valKey']]['_FillValue'] = _FillValue
             self.outdata[self.varDict[iodavar]['errKey']] = errs
+            self.varAttrs[self.varDict[iodavar]['errKey']]['_FillValue'] = _FillValue
             self.outdata[self.varDict[iodavar]['qcKey']] = qflg
 
         DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
@@ -151,7 +154,7 @@ def main():
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
-    #exit()
+    # exit()
     # write everything out
     writer.BuildIoda(snod.outdata, VarDims, snod.varAttrs, AttrData)
 
