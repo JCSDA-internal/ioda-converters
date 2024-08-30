@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Read airnow text data file and convert to IODA netcdf
-import os
+import os, sys
 from datetime import datetime
 from pathlib import Path
 import netCDF4 as nc
@@ -43,9 +43,6 @@ GlobalAttrs = {'converter': os.path.basename(__file__),
                'sourceFiles': '',
                }
 
-#iso8601_string = locationKeyList[meta_keys.index('dateTime')][2]
-#epoch = datetime.fromisoformat(iso8601_string[14:-1])
-
 metaDataName = iconv.MetaDataName()
 obsValName = iconv.OvalName()
 obsErrName = iconv.OerrName()
@@ -68,15 +65,16 @@ dtypes = {'string': object,
           'float': np.float32,
           'double': np.float64}
 
-def read_monitor_file(sitefile, isfull):
-    if isfull:
-        tmpdf = pd.read_csv(sitefile) 
+
+def read_monitor_file(sitefile, is_epa):
+    if is_epa:
+        tmpdf = pd.read_csv(sitefile)
         tmpdf = tmpdf[['stat_id', 'lat', 'lon', 'elevation', 'loc_setting']]
         tmpdf['loc_type'] = np.nan
         for n, loc_type in enumerate(['UNKNOWN', 'RURAL', 'SUBURBAN', 'URBAN AND CENTER CITY']):
-            type_filter = tmpdf['loc_setting']==loc_type
-            tmpdf.loc[type_filter,'loc_type'].loc[type_filter] = n
-        airnow = tmpdf.rename(columns={'stat_id':'siteid', 'lat':'latitude', 'lon':'longitude'})
+            type_filter = (tmpdf['loc_setting'] == loc_type)
+            tmpdf.loc[type_filter, 'loc_type'].loc[type_filter] = n
+        airnow = tmpdf.rename(columns={'stat_id': 'siteid', 'lat': 'latitude', 'lon': 'longitude'})
     else:
         colsinuse = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
         airnow = pd.read_csv(sitefile, delimiter='|', header=None,
@@ -164,19 +162,27 @@ if __name__ == '__main__':
         help="path of AIRNow site list file",
         type=str, required=True)
     required.add_argument(
-        '--fulllist',
-        help="define this if sitefile is a full list",
+        '--epa_list',
+        help="define this if sitefile contains land use information from EPA",
         action='store_true', default=False)
     required.add_argument(
         '-o', '--output',
         help="path of IODA output file",
         type=str, required=True)
 
+    optional = parser.add_argument_group(title='optional arguments')
+    optional.add_argument(
+        '-r', '--time_range',
+        help="extract a date range to fit the data assimilation window"
+        "format -r YYYYMMDDHH YYYYMMDDHH",
+        type=str, metavar=('begindate', 'enddate'), nargs=2,
+        default=('1970010100', '2170010100'))
+
     args = parser.parse_args()
 
-    if args.fulllist:
-        locationKeyList.append(("surfaceQualifier", "integer", ""))
-        meta_keys.append("surfaceQualifier")
+    if args.epa_list:
+        locationKeyList.append(("airqualityClassification", "integer", ""))
+        meta_keys.append("airqualityClassification")
 
     print('sitefile=', args.sitefile)
 
@@ -189,31 +195,44 @@ if __name__ == '__main__':
     for key in meta_keys:
         data[key] = []
 
+    # date range to fit DA window
+    date_start = datetime.strptime(args.time_range[0], "%Y%m%d%H")
+    date_end = datetime.strptime(args.time_range[1], "%Y%m%d%H")
+
     total_locs = 0
     for infile in args.input:
         print('Processing infile=', infile)
 
-        f = add_data(infile, args.sitefile, args.fulllist).drop_duplicates(
-             subset=['PM2.5', 'OZONE', 'NO2', 'CO', 'SO2', 'siteid', 'latitude', 'longitude'])
+        f = add_data(infile, args.sitefile, args.epa_list).drop_duplicates(
+            subset=['PM2.5', 'OZONE', 'NO2', 'CO', 'SO2', 'siteid', 'latitude', 'longitude'])
+        f2 = f.dropna(subset=['PM2.5'], how='any').reset_index()
 
-        f3 = f.dropna(subset=['PM2.5'], how='any').reset_index()
+        time_filter = (f2['time'] >= date_start) & (f2['time'] <= date_end)
+
+        if not any(time_filter):
+            print(f'  Skipping {infile}: no data within the time range')
+            continue
+
+        f3 = f2.loc[time_filter, :]
+
         nlocs, columns = f3.shape
 
-        dt = f3.time[1].tz_localize('UTC').to_pydatetime()
-        time_offset = round((dt - epoch).total_seconds())
+        f3['time'] = f3['time'].dt.tz_localize('UTC')
+        f3['time'] = f3['time'].dt.to_pydatetime()
+        time_offset = round((f3['time'] - epoch).dt.total_seconds())
 
         # Fill the temporary data arrays from input file column data
         data['stationIdentification'] = np.append(data['stationIdentification'],
                                                   np.full(nlocs, f3.siteid, dtype='S20'))
-        data['dateTime'] = np.append(data['dateTime'], np.full(nlocs, np.int64(time_offset)))
+        data['dateTime'] = np.append(data['dateTime'], np.int64(time_offset))
         data['latitude'] = np.append(data['latitude'], np.array(f3['latitude']))
         data['longitude'] = np.append(data['longitude'], np.array(f3['longitude']))
         data['stationElevation'] = np.append(data['stationElevation'], np.array(f3['elevation']))
         data['height'] = np.append(data['height'], np.array(f3['elevation']) + 10.0)
 
-        if args.fulllist:
-            data['surfaceQualifier'] = np.append(data['surfaceQualifier'], 
-                                                 np.array(f3['loc_type'], dtype=np.int32))
+        if args.epa_list:
+            data['airqualityClassification'] = np.append(data['airqualityClassification'],
+                                                         np.array(f3['loc_type'], dtype=np.int32))
 
         GlobalAttrs['sourceFiles'] += str(infile.split('/')[-1]) + ", "
 

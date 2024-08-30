@@ -55,6 +55,7 @@ list( APPEND test_input
   testinput/ascat_ssm.nc
   testinput/SM_REPR_MIR_OSUDP2_20100601T000131_20100601T001849_662_120_1.nc
   testinput/airnow_sites.dat
+  testinput/airnow_sites_epalist_20240716.csv
   testinput/airnow_2020081306.dat
   testinput/aeronet_aod.dat
   testinput/dt_global_twosat_phy_l4_20190101_vDT2021.nc
@@ -147,6 +148,7 @@ list( APPEND test_output
   testoutput/ascat_ssm.nc
   testoutput/smos_sss_l2.nc
   testoutput/airnow_2020081306.nc
+  testoutput/airnow_2020081306_epalist.nc
   testoutput/aeronet_aod.nc
   testoutput/ioda_dt_global_twosat_phy_l4_20190101_vDT2021.nc
   testoutput/ioda_global_vavh_l3_rt_s3a_20210930T18.nc
@@ -1340,7 +1342,19 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_airnow
                           -i testinput/airnow_2020081306.dat
                           -s testinput/airnow_sites.dat
                           -o testrun/airnow_2020081306.nc"
-                          airnow_2020081306.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_airnow_epalist
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/airnow2ioda_nc.py
+                          -i testinput/airnow_2020081306.dat
+                          -s testinput/airnow_sites_epalist_20240716.csv
+			  --epa_list
+                          -o testrun/airnow_2020081306_epalist.nc"
+                          airnow_2020081306_epalist.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_co_total
                   TYPE    SCRIPT
