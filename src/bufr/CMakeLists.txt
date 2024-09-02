@@ -125,6 +125,8 @@ if ( iodaconv_bufr_query_ENABLED )
 
   add_library( ${PROJECT_NAME}::ingester ALIAS ingester)
 
+  set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH}:${CMAKE_BINARY_DIR}/lib64")
   ecbuild_add_executable( TARGET  bufr2ioda.x
                           SOURCES bufr2ioda.cpp
                           LIBS    ingester )
