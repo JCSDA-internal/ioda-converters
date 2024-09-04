@@ -205,6 +205,7 @@ def main(args):
     # report time
     toc = record_time(tic=tic)
 
+
 def get_data_source(afile):
     if 'title' in afile.attrs.keys() and 'CYGNSS' in afile.attrs['title'].decode('UTF-8'):
         return 'CYGNSS'
