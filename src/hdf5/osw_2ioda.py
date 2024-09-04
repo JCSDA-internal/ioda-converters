@@ -23,6 +23,7 @@ import numpy as np
 import pyiodaconv.ioda_conv_engines as iconv
 from pyiodaconv.orddicts import DefaultOrderedDict
 from pyiodaconv.def_jedi_utils import int_missing_value, long_missing_value, float_missing_value
+from pyiodaconv.def_jedi_utils import record_time
 from collections import defaultdict
 
 # Globals
@@ -53,6 +54,8 @@ meta_keys = [m_item[0] for m_item in MetaDataKeyList]
 
 # The outgoing IODA variables (ObsValues), their units, and assigned constant ObsError.
 obsvars = ['windSpeed', 'windSpeed'+obsErrName, 'windSpeed'+obsQcName]
+# Add wind components to be able to assign obsError with dummy values
+obsvars_dummy = ['windEastward', 'windNorthward']
 obsvars_units = 'm s-1'
 obsvars_dtype = 'float'
 
@@ -83,6 +86,8 @@ def main(args):
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.ERROR)
+
+    tic = record_time()
 
     # Loop through input files and concatenate into dataframe
     file_cnt = 0
@@ -127,12 +132,11 @@ def main(args):
         # count files
         file_cnt += 1
 
-    # Add 0s for wind components to be able to assign obsError
-    obsvars_0s = ['windEastward', 'windNorthward']
-    obs_data[obsvars_0s[0]] = 0.
-    obs_data[obsvars_0s[1]] = 0.
-    obs_data[obsvars_0s[0]+obsQcName] = 0
-    obs_data[obsvars_0s[1]+obsQcName] = 0
+#   a value of 0. is set. Using missing value triggers UFO rejection
+    obs_data[obsvars_dummy[0]] = 0.
+    obs_data[obsvars_dummy[1]] = 0.
+    obs_data[obsvars_dummy[0]+obsQcName] = 0
+    obs_data[obsvars_dummy[1]+obsQcName] = 0
 
     # replace missing values
     for MetaDataKey in MetaDataKeyList:
@@ -142,8 +146,8 @@ def main(args):
 
     # find where windSpeed is missing and set the components to missing as well
     mask = obs_data['windSpeed'] == missing_vals[obsvars_dtype]
-    obs_data[obsvars_0s[0]].mask(mask.values, missing_vals[obsvars_dtype], inplace=True)
-    obs_data[obsvars_0s[1]].mask(mask.values, missing_vals[obsvars_dtype], inplace=True)
+    obs_data[obsvars_dummy[0]].mask(mask.values, missing_vals[obsvars_dtype], inplace=True)
+    obs_data[obsvars_dummy[1]].mask(mask.values, missing_vals[obsvars_dtype], inplace=True)
 
     # sort by instrument and then time
     if args.sort:
@@ -165,9 +169,9 @@ def main(args):
     varDict = defaultdict(lambda: DefaultOrderedDict(dict))
     varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
-    obsvars_0s.insert(0, obsvars[0])
+    obsvars_dummy.insert(0, obsvars[0])
     # Set coordinates and units of the ObsValues.
-    for iodavar in obsvars_0s:
+    for iodavar in obsvars_dummy:
         # set the obs space attributes
         varDict[iodavar]['valKey'] = iodavar, obsValName
         varDict[iodavar]['errKey'] = iodavar, obsErrName
@@ -187,7 +191,7 @@ def main(args):
         ioda_data[(key, metaDataName)] = np.array(obs_data[key], dtype=dtypes[dtypestr])
 
     # Transfer from the 1-D data vectors and ensure output data (ioda_data) types using numpy.
-    for iodavar in obsvars_0s:
+    for iodavar in obsvars_dummy:
         ioda_data[(iodavar, obsValName)] = np.array(obs_data[iodavar], dtype=np.float32)
         ioda_data[(iodavar, obsQcName)] = np.array(obs_data[iodavar+obsQcName], dtype=np.int32)
         if iodavar == 'windSpeed':
@@ -198,6 +202,8 @@ def main(args):
     # write everything out
     writer.BuildIoda(ioda_data, VarDims, varAttrs, GlobalAttrs)
 
+    # report time
+    toc = record_time(tic=tic)
 
 def get_data_source(afile):
     if 'title' in afile.attrs.keys() and 'CYGNSS' in afile.attrs['title'].decode('UTF-8'):
