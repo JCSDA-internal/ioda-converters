@@ -101,7 +101,7 @@ class icartt(object):
             obs_error = np.full((nlocs), 0.0).astype(np.float32)
             qa = np.full((nlocs), 0)
 
-           # date range to fit DA window
+            # date range to fit DA window
             wbegin = np.datetime64(datetime.strptime(self.time_range[0], "%Y%m%d%H"))
             wend = np.datetime64(datetime.strptime(self.time_range[1], "%Y%m%d%H"))
             flag = np.where((stime >= wbegin) & (stime <= wend), 1, 0)
@@ -232,6 +232,7 @@ def get_parser():
         default=('1970010100', '2170010100'))
 
     return parser
+
 
 def main():
 
