@@ -106,7 +106,7 @@ class gcas(object):
             obs_time = dsFlight['time'].values
             time = np.repeat(obs_time, len(xtrack))
 
-            times = (time - np.datetime64(epoch)) / np.timedelta64(1, 's')
+            times = (time - np.datetime64(epoch.strftime("%Y-%m-%dT%H:%M:%S"))) / np.timedelta64(1, 's')
 
             if (self.column.strip() == 'total'):
                 var_data_below = dsFlight['no2_vertical_column_below_aircraft'].values.flatten()

@@ -35,7 +35,7 @@ float_missing_value = iconv.get_default_fill_val(np.float32)
 # {'iodaName' : ['obsName', 'iodaUnit', 'obsToIodaUnivConv']
 obsvars = {'nitrogendioxideInsitu': ['NO2_ACES', 'mol mol-1', ppbv2molmol],
            'carbonmonoxideInsitu': ['CO_ppb', 'mol mol-1', ppbv2molmol],
-           'ozoneInsitu': ['O3_CL', 'mol mole-1', ppbv2molmol],
+           'ozoneInsitu': ['O3_CL', 'mol mol-1', ppbv2molmol],
            'formaldehydeInsitu': ['CH2O_ISAF', 'mol mol-1', pptv2molmol],
            'airTemperature': ['T', 'K', 1],
            'windEastward': ['U', 'm s-1', 1],
@@ -83,8 +83,8 @@ class icartt(object):
             sdate = sdate.replace(tzinfo=timezone.utc)
             seconds_difference = (sdate - epoch).total_seconds()
 
-            adjusted_stime = stime + seconds_difference
             times = stime + seconds_difference
+            stime_datetime = np.datetime64(epoch.strftime("%Y-%m-%dT%H:%M:%S")) + np.timedelta64(int(seconds_difference), 's') + stime.astype('timedelta64[s]')
 
             pressure = dsFlight['P'] * HPA2PA  # hPa to Pa
             pressure = pressure.astype(np.float32)
@@ -104,7 +104,7 @@ class icartt(object):
             # date range to fit DA window
             wbegin = np.datetime64(datetime.strptime(self.time_range[0], "%Y%m%d%H"))
             wend = np.datetime64(datetime.strptime(self.time_range[1], "%Y%m%d%H"))
-            flag = np.where((stime >= wbegin) & (stime <= wend), 1, 0)
+            flag = np.where((stime_datetime >= wbegin) & (stime_datetime <= wend), 1, 0)
             flag = flag.astype(bool)
 
             # ---- Write Metadata and data
