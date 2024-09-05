@@ -93,8 +93,7 @@ class madis(object):
         qflg = qflg.astype('int32')
 
         # use maskout options
-        if self.mask == "maskout":
-
+        if self.mask:
             with np.errstate(invalid='ignore'):
                 mask = (vals >= 0.0) & (vals < 2000.0)
             vals = vals[mask]
@@ -146,10 +145,9 @@ def main():
                         help="name of ioda output file",
                         type=str, required=True)
     optional = parser.add_argument_group(title='optional arguments')
-    optional.add_argument(
-        '-m', '--mask',
-        help="maskout missing values: maskout/default, default=none",
-        type=str, required=True)
+    optional.add_argument('--maskMissing', dest='mask',
+                          help="switch to mask missing values: default=False",
+                          default=False, action='store_true', required=False)
 
     args = parser.parse_args()
 
