@@ -13,6 +13,7 @@ from datetime import datetime
 
 import pyiodaconv.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
+from pyiodaconv.def_jedi_utils import iso8601_string
 from pyiodaconv.orddicts import DefaultOrderedDict
 
 os.environ["TZ"] = "UTC"
@@ -38,8 +39,9 @@ VarDims = {
     'totalSnowDepth': ['Location'],
 }
 
-iso8601_string = 'seconds since 1970-01-01T00:00:00Z'
-epoch = datetime.fromisoformat(iso8601_string[14:-1])
+float_missing_value = iconv.get_default_fill_val(np.float32)
+int_missing_value = iconv.get_default_fill_val(np.int32)
+long_missing_value = iconv.get_default_fill_val(np.int64)
 
 
 class madis(object):
@@ -117,12 +119,14 @@ class madis(object):
         self.outdata[('longitude', 'MetaData')] = lons
         self.outdata[('stationElevation', 'MetaData')] = elvs
         self.varAttrs[('stationElevation', 'MetaData')]['units'] = 'm'
+        # self.varAttrs[('dateTime', 'MetaData')]['units'] = iso8601_string
+        self.varAttrs[('dateTime', 'MetaData')]['_FillValue'] = long_missing_value
 
         for iodavar in ['totalSnowDepth']:
             self.outdata[self.varDict[iodavar]['valKey']] = vals
-            self.varAttrs[self.varDict[iodavar]['valKey']]['_FillValue'] = _FillValue
+            self.varAttrs[self.varDict[iodavar]['valKey']]['_FillValue'] = float_missing_value
             self.outdata[self.varDict[iodavar]['errKey']] = errs
-            self.varAttrs[self.varDict[iodavar]['errKey']]['_FillValue'] = _FillValue
+            self.varAttrs[self.varDict[iodavar]['errKey']]['_FillValue'] = float_missing_value
             self.outdata[self.varDict[iodavar]['qcKey']] = qflg
 
         DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
