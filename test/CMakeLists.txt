@@ -2348,8 +2348,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_madis_snod
                             netcdf
                             "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/madis_snow2ioda.py
                             -i testinput/madis_2021010100.nc
-                            -o testrun/madis_snod_2021010100.nc
-                            -m default"
+                            -o testrun/madis_snod_2021010100.nc"
                             madis_snod_2021010100.nc ${IODA_CONV_COMP_TOL})
 
 #######################################################
