@@ -29,11 +29,12 @@ observations:
             query: "*/STSN"
 
           heightOfStation:
-            query: "*/GNSSRPSQ/ELEV"
+            query: "*/SELV"
 
           # ObsValue
           precipitableWater:
             query: "*/TPWT"
+            type: float
 
     ioda:
       backend: netcdf
@@ -66,9 +67,9 @@ observations:
           longName: "Longitude"
           units: "degree_east"
 
-        - name: "MetaData/stationName"
+        - name: "MetaData/stationIdentification"
           source: variables/stationName
-          longName: "Station Name"
+          longName: "Station Identification"
 
         - name: "MetaData/heightOfStation"
           source: variables/heightOfStation
@@ -79,4 +80,4 @@ observations:
         - name: "ObsValue/precipitableWater"
           source: variables/precipitableWater
           longName: "GPS IPW"
-          units: "KG/(METER**2)"
+          units: "kg m-2"
