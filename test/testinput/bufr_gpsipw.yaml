@@ -6,7 +6,7 @@
 observations:
   - obs space:
       name: bufr
-      obsdatain: "./testinput/gdas.20240806t00z.gpsipw.tm00.bufr_d.nr"
+      obsdatain: "./testinput/obs.20240806T00Z.ipw_gnssgb.ncep.bufr"
 
       exports:
         variables:
@@ -38,7 +38,7 @@ observations:
 
     ioda:
       backend: netcdf
-      obsdataout: "./testrun/20240806T00Z_ipw_gnssgb_ncep.nc"
+      obsdataout: "./testrun/20240805T00Z_PT1M_ipw_gnssgb_ncep.nc"
 
       globals:
         - name: "platformCommonName"
