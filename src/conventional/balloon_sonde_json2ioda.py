@@ -47,7 +47,7 @@ obsvars = ['airTemperature',
            'windEastward',
            'windNorthward']
 obsvars_units = ['K', '1', 'm s-1', 'm s-1']
-obserrlist = [1.2, 20.0, 1.7, 1.7]
+obserrlist = [1.2, 0.2, 1.7, 1.7]
 obsvars_dtype = ['float',
                  'float',
                  'float',
@@ -124,12 +124,20 @@ def main(args):
         file = json.load(open(file_name))
 
         if file_cnt == 0:
+            observation_keys = file['observations'][0].keys()
+            if 'speed_u' in observation_keys:
+                speed_eastward = 'speed_u'
+                speed_northward = 'speed_v'
+                observation_keys = [x for x in observation_keys if x not in ['speed_x', 'speed_y']]
+            else:
+                speed_eastward = 'speed_y'
+                speed_northward = 'speed_x'
             # Create data frame to store each file's Meta Dataa
             df_metaData_files = pd.DataFrame(columns=file.keys())
             df_metaData_files.drop(['observations'], axis=1, inplace=True)
 
             # Create data frame to store all observation data
-            obs_data = pd.DataFrame(columns=file['observations'][0].keys())
+            obs_data = pd.DataFrame(columns=observation_keys)
             obs_data['releaseTime'] = None
             obs_data['stationElevation'] = None
 
@@ -137,8 +145,8 @@ def main(args):
             obs_data.drop(['id', 'mission_id'], axis=1, inplace=True)
 
             # Rename variables to IODA variables
-            obs_data.rename(columns={'speed_x': 'windEastward',
-                                     'speed_y': 'windNorthward',
+            obs_data.rename(columns={speed_eastward: 'windEastward',
+                                     speed_northward: 'windNorthward',
                                      'altitude': 'height',
                                      'mission_name': 'stationIdentification',
                                      'humidity': 'relativeHumidity',
@@ -155,12 +163,8 @@ def main(args):
         stationIdentification = [file['observations'][ii]['mission_name'] for ii in range(len(file['observations']))]
         pressure = [file['observations'][ii]['pressure'] for ii in range(len(file['observations']))]
         # Check the speed variables available and handle accordingly (data changed in March 2024)
-        if 'speed_u' in file['observations'][0].keys():
-            windEastward = [file['observations'][ii]['speed_u'] for ii in range(len(file['observations']))]
-            windNorthward = [file['observations'][ii]['speed_v'] for ii in range(len(file['observations']))]
-        else:
-            windEastward = [file['observations'][ii]['speed_y'] for ii in range(len(file['observations']))]
-            windNorthward = [file['observations'][ii]['speed_x'] for ii in range(len(file['observations']))]
+        windEastward = [file['observations'][ii][speed_eastward] for ii in range(len(file['observations']))]
+        windNorthward = [file['observations'][ii][speed_northward] for ii in range(len(file['observations']))]
         airTemperature = [file['observations'][ii]['temperature'] for ii in range(len(file['observations']))]
         dateTime = [file['observations'][ii]['timestamp'] for ii in range(len(file['observations']))]  # datetime
 
@@ -175,6 +179,9 @@ def main(args):
 
         # convert temperature from Celsius to Kelvin
         airTemperature = [temp_i+273.15 if temp_i is not None else temp_i for temp_i in airTemperature]
+
+        # change units of relative humidity from percent to ratio
+        relativeHumidity = [rh_i/100 if rh_i is not None else rh_i for rh_i in relativeHumidity]
 
         # Make a list of lists to feed into dataframe
         data_lists = list(zip(height, relativeHumidity, latitude, longitude, stationIdentification, pressure,
