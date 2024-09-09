@@ -9,15 +9,18 @@
 
 cmake_minimum_required( VERSION 3.12 )
 
-find_package( ecbuild 3 REQUIRED HINTS ${CMAKE_CURENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../ecbuild )
 
 project( iodaconv VERSION 0.0.1 LANGUAGES CXX Fortran )
+list( APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake )
+set( INSTALL_LIB_DIR lib ) # For uniformity across JCSDA packages
 
+find_package( ecbuild 3 REQUIRED HINTS ${CMAKE_CURENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../ecbuild )
 if( ecbuild_VERSION VERSION_LESS 3.4 )
   include(GNUInstallDirs)
 endif()
+include( ecbuild_system NO_POLICY_SCOPE )
+ecbuild_declare_project()
 
-list( APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake )
 
 include( iodaconv_extra_macros )
 include( iodaconv_compiler_flags )
@@ -88,7 +91,7 @@ endif()
 find_package( gsl-lite HINTS $ENV{gsl_lite_DIR} )
 find_package( MPI )
 
-find_package( ioda QUIET )
+find_package( ioda REQUIRED QUIET )
 
 find_package( bufr 12.0.1 QUIET )
 find_package( NetCDF QUIET COMPONENTS Fortran )
