@@ -318,6 +318,7 @@ if( iodaconv_bufr_query_ENABLED )
     testinput/rtma_ADPUPA.prepbufr
     testinput/bufr_ncep_rtma_adpupa.yaml
     testinput/rtma.t00z.adpupa.tm00.bufr_d
+    testinput/bufr_gpsipw.yaml
     testinput/obs.20240806T00Z.ipw_gnssgb.ncep.bufr
   )
 
