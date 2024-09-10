@@ -19,7 +19,7 @@ from collections import defaultdict, OrderedDict
 from pyiodaconv.orddicts import DefaultOrderedDict
 
 
-def get_confidence_qc_mask(qfarr, aerosol_type, conf_lvl='MedHigh'):
+def flag_by_confidence_lvl(qfarr, aerosol_type, conf_lvl='MedHigh',print_diag=False):
 
     # ADP smoke confidence is defined in (counting from 0) bit 2-3, dust in bit 4-5
     # input array contains decimal representations of the binary values
@@ -43,24 +43,25 @@ def get_confidence_qc_mask(qfarr, aerosol_type, conf_lvl='MedHigh'):
     conf = np.mod(rhtrim, 4)  # trim off all except the 2 least significant bits of the remaining value; this gives the value what we want
 
     if conf_lvl == 'MedHigh':
-        conf_mask = np.logical_or(conf == 0, conf == 2)
+        inv_conf_mask = np.logical_or(conf == 0, conf == 2)
     elif conf_lvl == 'High':
-        conf_mask = conf == 0
+        inv_conf_mask = conf == 0
     elif conf_lvl == 'Med':
-        conf_mask = conf == 2
+        inv_conf_mask = conf == 2
     elif conf_lvl == 'Low':
-        conf_mask = conf == 1
+        inv_conf_mask = conf == 1
     else:
         print(f'ERROR: No configuration for confidence level {conf_lvl}')
 
-    # diagnostic test printout
-    # binary output needs converted to twos complement to directly check negative values
-    #  for i,val in enumerate(conf_mask):
-    #      qfarr_i = int(qfarr[i])
-    #      conf_i = int(conf[i])
-    #      #use bitmasks to convert bin() output for negative vals to two's complement
-    #      print(f'{i} Orig dvalue: {qfarr_i} Orig bvalue: {bin(qfarr_i & 0b11111111)}  {aerosol_type} bvalue: {bin(conf_i & 0b11)} mask_value: {val}')
-    return conf_mask  # true elements here are values we want to keep (invert for an actual mask)
+    if print_diag:
+       for i,val in enumerate(conf_mask):
+          qfarr_i = int(qfarr[i])
+          conf_i = int(conf[i])
+          # use bitmasks to convert bin() output for negative vals to two's complement
+          print(f'{i} Orig dvalue: {qfarr_i} Orig bvalue: {bin(qfarr_i & 0b11111111)}  {aerosol_type} bvalue:'
+                 '{bin(conf_i & 0b11)} mask_value: {val}')
+
+    return inv_conf_mask  # true elements here are values we want to keep (invert for an actual mask)
 
 
 locationKeyList = [
@@ -230,8 +231,8 @@ class AOD(object):
                 # As above, in the confidence masks, med-high confidence is marked by True mask elements,
                 # due to the line conf_mask = np.logical_or(conf == 0, conf == 2) in the get functions,
                 # so invert the masks the same as above
-                conf_mask_smoke = np.logical_not(get_confidence_qc_mask(qcflag, 'Smoke', self.adp_qc_lvl))
-                conf_mask_dust = np.logical_not(get_confidence_qc_mask(qcflag, 'Dust', self.adp_qc_lvl))
+                conf_mask_smoke = np.logical_not(flag_by_confidence_lvl(qcflag, 'Smoke', self.adp_qc_lvl))
+                conf_mask_dust = np.logical_not(flag_by_confidence_lvl(qcflag, 'Dust', self.adp_qc_lvl))
 
                 ncd_adp.close()
 
