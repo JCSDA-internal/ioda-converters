@@ -107,7 +107,7 @@ class AOD(object):
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        if self.adp_mask:
+        if self.adp_mask is not None:
             self.outdata_smoke = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
             self.outdata_dust = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self._read()
@@ -137,7 +137,7 @@ class AOD(object):
             self.outdata[self.varDict[iodavar]['errKey']] = np.array([], dtype=np.float32)
             self.outdata[self.varDict[iodavar]['qcKey']] = np.array([], dtype=np.int32)
 
-        if self.adp_mask:
+        if self.adp_mask is not None:
             self.outdata_smoke[('latitude', metaDataName)] = np.array([], dtype=np.float32)
             self.outdata_smoke[('longitude', metaDataName)] = np.array([], dtype=np.float32)
             self.outdata_smoke[('dateTime', metaDataName)] = np.array([], dtype=object)
@@ -154,8 +154,9 @@ class AOD(object):
                 self.outdata_dust[self.varDict[iodavar]['errKey']] = np.array([], dtype=np.float32)
                 self.outdata_dust[self.varDict[iodavar]['qcKey']] = np.array([], dtype=np.int32)
 
-        # loop through input filenamess
-        for f in self.filenames:
+        # loop through input filenames
+        # both filenames and corresponding adp_mask filename(s) need to be lists, i believe
+        for n, f in enumerate(self.filenames):
             try:
                 ncd = nc.Dataset(f, 'r')
             except FileNotFoundError:
@@ -190,28 +191,18 @@ class AOD(object):
             ncd.close()
 
             # apply ADP mask if indicated by user
-            if self.adp_mask:
+            if self.adp_mask is not None:
 
-                # Set path and filename of adp data corresponding to aod data
-                # Note: this works for the directory structure that exists for these on hera
-                # another approach would be to have the masked output filenames specified as a CLI argument
-
-                # the creation time can differ between the AOD and ADP filenames,
-                # break up fname and reconstruct it from pieces after using glob to get corresponding ADP fname
-                adp_fn_ctime_to_end = f.replace('aod', 'adp').replace("JRR-AOD", "JRR-ADP").split('_')[-1]
-                adp_fn_before_ctime = f.replace('aod', 'adp').replace("JRR-AOD", "JRR-ADP")[:-19]
-                adp_fn = glob.glob(adp_fn_before_ctime+'*')
-                if len(adp_fn) == 1:
-                    adp_fn = adp_fn[0]
-                    print(f'Found ADP file: {adp_fn}')
-                elif len(adp_fn) > 1:
-                    print(f'AOD file: {f}')
-                    print(f'ADP files: {adp_fn}')
-                    print(f'ERROR: Too many ADP files found for AOD file, skipping granule.')
+                # Check if ADP file start/end times match AOD file (creation time can differ slightly)
+                # Using negative indexing makes the paths irrelevant for the comparison
+                if self.adp_mask[n][-53:-20] != f[-53:-20]:
+                    print(f'ADP data file {adp_fn[n]} start and end times do not match those of AOD file {f}')
+                    print(f'Continuing to next AOD and ADP file (or ending)')
                     continue
 
+                # open ADP file corresponding to AOD file.
                 try:
-                    ncd_adp = nc.Dataset(adp_fn, 'r')
+                    ncd_adp = nc.Dataset(adp_fn[n], 'r')
                 except FileNotFoundError:
                     # this will skip creating output for both the AOD and ADP at the selected time;
                     # however, that should be fine, as when this code runs we are interested only in
@@ -264,7 +255,7 @@ class AOD(object):
                 qcall = qcall[mask]
                 obs_time = obs_time[mask]
 
-                if self.adp_mask:
+                if self.adp_mask is not None:
 
                     mask_smoke = np.logical_not(vals_smoke.mask)
                     vals_smoke = vals_smoke[mask_smoke]
@@ -296,7 +287,7 @@ class AOD(object):
                 qcall = qcall[mask_thin]
                 obs_time = obs_time[mask_thin]
 
-                if self.adp_mask:
+                if self.adp_mask is not None:
 
                     # switch smoke and dust to just use mask_thin if moved above maskout block
                     mask_thin_smoke = np.random.uniform(size=len(lons_smoke)) > self.thin
@@ -325,7 +316,7 @@ class AOD(object):
                 errs[qcpath % 4 == 2] = 0.0550472 + 0.299558*vals[qcpath % 4 == 2]   # over bright land
 
                 # also need to make these changes for smoke and dust filtered arrays if smoke and dust filtering indicated by user
-                if self.adp_mask:
+                if self.adp_mask is not None:
                     errs_smoke = 0.111431 + 0.128699*vals_smoke    # over land (dark)
                     errs_smoke[qcpath_smoke % 2 == 1] = 0.00784394 + 0.219923*vals_smoke[qcpath_smoke % 2 == 1]  # over ocean
                     errs_smoke[qcpath_smoke % 4 == 2] = 0.0550472 + 0.299558*vals_smoke[qcpath_smoke % 4 == 2]   # over bright land
@@ -348,7 +339,7 @@ class AOD(object):
                 self.outdata[self.varDict[iodavar]['qcKey']] = np.append(
                     self.outdata[self.varDict[iodavar]['qcKey']], np.array(qcall, dtype=np.int32))
 
-            if self.adp_mask:
+            if self.adp_mask is not None:
 
                 self.outdata_smoke[('latitude', metaDataName)] = np.append(
                     self.outdata_smoke[('latitude', metaDataName)], np.array(lats_smoke, dtype=np.float32))
@@ -383,7 +374,7 @@ class AOD(object):
         DimDict['Location'] = len(self.outdata[('latitude', metaDataName)])
         DimDict['Channel'] = np.array(channels)
 
-        if self.adp_mask:
+        if self.adp_mask is not None:
             DimDict_smoke['Location'] = len(self.outdata_smoke[('latitude', metaDataName)])
             DimDict_smoke['Channel'] = np.array(channels)
             DimDict_dust['Location'] = len(self.outdata_dust[('latitude', metaDataName)])
@@ -421,9 +412,9 @@ def main():
         type=float, default=0.0)
     parser.add_argument(
         '--adp_mask',
-        help="activate ADP-based separation of smoke and dust affected obs from full AOD dataset",
-        action='store_true',
-        default=False)
+        help="""activate ADP-based separation of smoke and dust affected obs from full AOD dataset and specify the path of ADP
+              file(s). ADP files should each correspond to an AOD file specified with -i or --input""",
+        type=str, required=False)
     parser.add_argument(
         '--adp_qc_lvl',
         help="set ADP QC confidence level for smoke and dust obs, use 'low','med', 'medhigh',or 'high': default='medhigh'",
