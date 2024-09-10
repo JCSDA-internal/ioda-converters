@@ -18,28 +18,29 @@ import pyiodaconv.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from pyiodaconv.orddicts import DefaultOrderedDict
 
-def get_confidence_qc_mask(qfarr,aerosol_type,conf_lvl='MedHigh'):
 
-    #ADP smoke confidence is defined in (counting from 0) bit 2-3, dust in bit 4-5
-    #input array contains decimal representations of the binary values
-    #10 (2 in base10) is medium confidence and 00 (0 in base10) is high confidence
-    #01 (1 in base10) is low confidence and 11 (3 in base10) is missing/bad data
+def get_confidence_qc_mask(qfarr, aerosol_type, conf_lvl='MedHigh'):
+
+    # ADP smoke confidence is defined in (counting from 0) bit 2-3, dust in bit 4-5
+    # input array contains decimal representations of the binary values
+    # 10 (2 in base10) is medium confidence and 00 (0 in base10) is high confidence
+    # 01 (1 in base10) is low confidence and 11 (3 in base10) is missing/bad data
 
     if conf_lvl == 'med' or conf_lvl == 'medhigh':
-      conf_lvl = 'MedHigh'
+        conf_lvl = 'MedHigh'
     if conf_lvl == 'low':
-      conf_lvl = 'Low'
+        conf_lvl = 'Low'
     if conf_lvl == 'high':
-      conf_lvl ='High'
+        conf_lvl = 'High'
 
     if aerosol_type == 'Smoke':
-        rhtrim = np.floor(qfarr/4) #trim off the 2 least significant bits
+        rhtrim = np.floor(qfarr/4)  # trim off the 2 least significant bits
     elif aerosol_type == 'Dust':
-        rhtrim = np.floor(qfarr/16) #trim off the 4 least significant bits
+        rhtrim = np.floor(qfarr/16)  # trim off the 4 least significant bits
     else:
         print(f'ERROR: aerosol_type {aerosol_type} not valid')
 
-    conf = np.mod(rhtrim,4) #trim off all except the 2 least significant bits of the remaining value; this gives the value what we want
+    conf = np.mod(rhtrim, 4)  # trim off all except the 2 least significant bits of the remaining value; this gives the value what we want
 
     if conf_lvl == 'MedHigh':
         conf_mask = np.logical_or(conf == 0, conf == 2)
@@ -52,15 +53,14 @@ def get_confidence_qc_mask(qfarr,aerosol_type,conf_lvl='MedHigh'):
     else:
         print(f'ERROR: No configuration for confidence level {conf_lvl}')
 
-    #diagnostic test printout
-    #binary output needs converted to twos complement to directly check negative values
-    # for i,val in enumerate(conf_mask):
-    #     qfarr_i = int(qfarr[i])
-    #     conf_i = int(conf[i])
-    #     #use bitmasks to convert bin() output for negative vals to two's complement
-    #     print(f'{i} Orig dvalue: {qfarr_i} Orig bvalue: {bin(qfarr_i & 0b11111111)}  {aerosol_type} bvalue: {bin(conf_i & 0b11)} mask_value: {val}')
-    return conf_mask #true elements here are values we want to keep (invert for an actual mask)
-
+    # diagnostic test printout
+    # binary output needs converted to twos complement to directly check negative values
+    #  for i,val in enumerate(conf_mask):
+    #      qfarr_i = int(qfarr[i])
+    #      conf_i = int(conf[i])
+    #      #use bitmasks to convert bin() output for negative vals to two's complement
+    #      print(f'{i} Orig dvalue: {qfarr_i} Orig bvalue: {bin(qfarr_i & 0b11111111)}  {aerosol_type} bvalue: {bin(conf_i & 0b11)} mask_value: {val}')
+    return conf_mask  # true elements here are values we want to keep (invert for an actual mask)
 
 
 locationKeyList = [
@@ -102,7 +102,7 @@ class AOD(object):
         self.adp_mask = adp_mask
         self.adp_qc_lvl = adp_qc_lvl
         if self.adp_qc_lvl is None:
-          self.adp_qc_lvl = 'MedHigh' #default to including Medium and High Confidence obs based on ADP data
+            self.adp_qc_lvl = 'MedHigh'  # default to including Medium and High Confidence obs based on ADP data
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -110,7 +110,6 @@ class AOD(object):
             self.outdata_smoke = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
             self.outdata_dust = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self._read()
-
 
     def _read(self):
 
@@ -189,71 +188,71 @@ class AOD(object):
 
             ncd.close()
 
-            #apply ADP mask if indicated by user
+            # apply ADP mask if indicated by user
             if self.adp_mask:
 
-                #Set path and filename of adp data corresponding to aod data
-                #Note: this works for the directory structure that exists for these on hera
-                #another approach would be to have the masked output filenames specified as a CLI argument
+                # Set path and filename of adp data corresponding to aod data
+                # Note: this works for the directory structure that exists for these on hera
+                # another approach would be to have the masked output filenames specified as a CLI argument
 
-                #the creation time can differ between the AOD and ADP filenames,
-                #break up fname and reconstruct it from pieces after using glob to get corresponding ADP fname
-                adp_fn_ctime_to_end =  f.replace('aod', 'adp').replace("JRR-AOD", "JRR-ADP").split('_')[-1]
-                adp_fn_before_ctime =  f.replace('aod', 'adp').replace("JRR-AOD", "JRR-ADP")[:-19]
+                # the creation time can differ between the AOD and ADP filenames,
+                # break up fname and reconstruct it from pieces after using glob to get corresponding ADP fname
+                adp_fn_ctime_to_end = f.replace('aod', 'adp').replace("JRR-AOD", "JRR-ADP").split('_')[-1]
+                adp_fn_before_ctime = f.replace('aod', 'adp').replace("JRR-AOD", "JRR-ADP")[:-19]
                 adp_fn = glob.glob(adp_fn_before_ctime+'*')
-                if len(adp_fn)==1:
-                  adp_fn = adp_fn[0]
-                  print(f'Found ADP file: {adp_fn}')
-                elif len(adp_fn)>1:
-                  print(f'AOD file: {f}')
-                  print(f'ADP files: {adp_fn}')
-                  print(f'ERROR: Too many ADP files found for AOD file, skipping granule.')
-                  continue
+                if len(adp_fn) == 1:
+                    adp_fn = adp_fn[0]
+                    print(f'Found ADP file: {adp_fn}')
+                elif len(adp_fn) > 1:
+                    print(f'AOD file: {f}')
+                    print(f'ADP files: {adp_fn}')
+                    print(f'ERROR: Too many ADP files found for AOD file, skipping granule.')
+                    continue
 
                 try:
                     ncd_adp = nc.Dataset(adp_fn, 'r')
                 except FileNotFoundError:
-                    #this will skip creating output for both the AOD and ADP at the selected time;
-                    #however, that should be fine, as when this code runs we are interested only in
-                    #the ADP-filtered output rather than the full AOD output.
+                    # this will skip creating output for both the AOD and ADP at the selected time;
+                    # however, that should be fine, as when this code runs we are interested only in
+                    # the ADP-filtered output rather than the full AOD output.
                     print(f'ADP data file {adp_fn} not found, continuing to next AOD file on list (or ending).')
                     continue
 
-                #Get ADP smoke/dust masks
-                #These are 1=True=Smoke/Dust and 0=False=No Smoke/Dust. The 1 values are the ones
-                #we want to *keep*, so to mask out all the non-smoke/non-dust values below,
-                #invert the mask elements here
+                # Get ADP smoke/dust masks
+                # These are 1=True=Smoke/Dust and 0=False=No Smoke/Dust. The 1 values are the ones
+                # we want to *keep*, so to mask out all the non-smoke/non-dust values below,
+                # invert the mask elements here
                 adpmasksmoke = np.logical_not(ncd_adp.variables['Smoke'][:].ravel().astype(bool))
                 adpmaskdust = np.logical_not(ncd_adp.variables['Dust'][:].ravel().astype(bool))
 
-                qcflag = ncd_adp.variables['QC_Flag'][:,:].ravel()
+                qcflag = ncd_adp.variables['QC_Flag'][:, :].ravel()
 
-                #As above, in the confidence masks, med-high confidence is marked by True mask elements,
-                #due to the line conf_mask = np.logical_or(conf == 0, conf == 2) in the get functions,
-                #so invert the masks the same as above
-                conf_mask_smoke = np.logical_not(get_confidence_qc_mask(qcflag,'Smoke',self.adp_qc_lvl))
-                conf_mask_dust = np.logical_not(get_confidence_qc_mask(qcflag,'Dust',self.adp_qc_lvl))
+                # As above, in the confidence masks, med-high confidence is marked by True mask elements,
+                # due to the line conf_mask = np.logical_or(conf == 0, conf == 2) in the get functions,
+                # so invert the masks the same as above
+                conf_mask_smoke = np.logical_not(get_confidence_qc_mask(qcflag, 'Smoke', self.adp_qc_lvl))
+                conf_mask_dust = np.logical_not(get_confidence_qc_mask(qcflag, 'Dust', self.adp_qc_lvl))
 
                 ncd_adp.close()
 
-                #apply masks from ADP data including QC masks
-                vals_smoke = np.ma.masked_where(np.logical_or(adpmasksmoke,conf_mask_smoke),vals)
-                lons_smoke = np.ma.masked_where(np.logical_or(adpmasksmoke,conf_mask_smoke),lons)
-                lats_smoke = np.ma.masked_where(np.logical_or(adpmasksmoke,conf_mask_smoke),lats)
-                errs_smoke = np.ma.masked_where(np.logical_or(adpmasksmoke,conf_mask_smoke),errs)
-                qcpath_smoke = np.ma.masked_where(np.logical_or(adpmasksmoke,conf_mask_smoke),qcpath)
-                qcall_smoke = np.ma.masked_where(np.logical_or(adpmasksmoke,conf_mask_smoke),qcall)
-                obs_time_smoke = np.ma.masked_where(np.logical_or(adpmasksmoke,conf_mask_smoke),obs_time)
+                # apply masks from ADP data including QC masks
+                vals_smoke = np.ma.masked_where(np.logical_or(adpmasksmoke, conf_mask_smoke), vals)
+                lons_smoke = np.ma.masked_where(np.logical_or(adpmasksmoke, conf_mask_smoke), lons)
+                lats_smoke = np.ma.masked_where(np.logical_or(adpmasksmoke, conf_mask_smoke), lats)
+                errs_smoke = np.ma.masked_where(np.logical_or(adpmasksmoke, conf_mask_smoke), errs)
+                qcpath_smoke = np.ma.masked_where(np.logical_or(adpmasksmoke, conf_mask_smoke), qcpath)
+                qcall_smoke = np.ma.masked_where(np.logical_or(adpmasksmoke, conf_mask_smoke), qcall)
+                obs_time_smoke = np.ma.masked_where(np.logical_or(adpmasksmoke, conf_mask_smoke), obs_time)
 
-                vals_dust = np.ma.masked_where(np.logical_or(adpmaskdust,conf_mask_dust),vals)
-                lons_dust = np.ma.masked_where(np.logical_or(adpmaskdust,conf_mask_dust),lons)
-                lats_dust = np.ma.masked_where(np.logical_or(adpmaskdust,conf_mask_dust),lats)
-                errs_dust = np.ma.masked_where(np.logical_or(adpmaskdust,conf_mask_dust),errs)
-                qcpath_dust = np.ma.masked_where(np.logical_or(adpmaskdust,conf_mask_dust),qcpath)
-                qcall_dust = np.ma.masked_where(np.logical_or(adpmaskdust,conf_mask_dust),qcall)
-                obs_time_dust = np.ma.masked_where(np.logical_or(adpmaskdust,conf_mask_dust),obs_time)
+                vals_dust = np.ma.masked_where(np.logical_or(adpmaskdust, conf_mask_dust), vals)
+                lons_dust = np.ma.masked_where(np.logical_or(adpmaskdust, conf_mask_dust), lons)
+                lats_dust = np.ma.masked_where(np.logical_or(adpmaskdust, conf_mask_dust), lats)
+                errs_dust = np.ma.masked_where(np.logical_or(adpmaskdust, conf_mask_dust), errs)
+                qcpath_dust = np.ma.masked_where(np.logical_or(adpmaskdust, conf_mask_dust), qcpath)
+                qcall_dust = np.ma.masked_where(np.logical_or(adpmaskdust, conf_mask_dust), qcall)
+                obs_time_dust = np.ma.masked_where(np.logical_or(adpmaskdust, conf_mask_dust), obs_time)
 
-            #Remove masked elements if 'maskout' is indictated
+            # Remove masked elements if 'maskout' is indictated
             if self.mask == 'maskout':
                 mask = np.logical_not(vals.mask)
                 vals = vals[mask]
@@ -284,8 +283,7 @@ class AOD(object):
                     qcall_dust = qcall_dust[mask_dust]
                     obs_time_dust = obs_time_dust[mask_dust]
 
-
-            #Apply thinning mask
+            # Apply thinning mask
             if self.thin > 0.0:
 
                 mask_thin = np.random.uniform(size=len(lons)) > self.thin
@@ -299,7 +297,7 @@ class AOD(object):
 
                 if self.adp_mask:
 
-                    #switch smoke and dust to just use mask_thin if moved above maskout block
+                    # switch smoke and dust to just use mask_thin if moved above maskout block
                     mask_thin_smoke = np.random.uniform(size=len(lons_smoke)) > self.thin
                     vals_smoke = vals_smoke[mask_thin_smoke]
                     lons_smoke = lons_smoke[mask_thin_smoke]
@@ -325,7 +323,7 @@ class AOD(object):
                 errs[qcpath % 2 == 1] = 0.00784394 + 0.219923*vals[qcpath % 2 == 1]  # over ocean
                 errs[qcpath % 4 == 2] = 0.0550472 + 0.299558*vals[qcpath % 4 == 2]   # over bright land
 
-                #also need to make these changes for smoke and dust filtered arrays if smoke and dust filtering indicated by user
+                # also need to make these changes for smoke and dust filtered arrays if smoke and dust filtering indicated by user
                 if self.adp_mask:
                     errs_smoke = 0.111431 + 0.128699*vals_smoke    # over land (dark)
                     errs_smoke[qcpath_smoke % 2 == 1] = 0.00784394 + 0.219923*vals_smoke[qcpath_smoke % 2 == 1]  # over ocean
@@ -351,13 +349,19 @@ class AOD(object):
 
             if self.adp_mask:
 
-                self.outdata_smoke[('latitude', metaDataName)] = np.append(self.outdata_smoke[('latitude', metaDataName)], np.array(lats_smoke, dtype=np.float32))
-                self.outdata_smoke[('longitude', metaDataName)] = np.append(self.outdata_smoke[('longitude', metaDataName)], np.array(lons_smoke, dtype=np.float32))
-                self.outdata_smoke[('dateTime', metaDataName)] = np.append(self.outdata_smoke[('dateTime', metaDataName)], np.array(obs_time_smoke, dtype=object))
+                self.outdata_smoke[('latitude', metaDataName)] = np.append(
+                    self.outdata_smoke[('latitude', metaDataName)], np.array(lats_smoke, dtype=np.float32))
+                self.outdata_smoke[('longitude', metaDataName)] = np.append(
+                    self.outdata_smoke[('longitude', metaDataName)], np.array(lons_smoke, dtype=np.float32))
+                self.outdata_smoke[('dateTime', metaDataName)] = np.append(
+                    self.outdata_smoke[('dateTime', metaDataName)], np.array(obs_time_smoke, dtype=object))
 
-                self.outdata_dust[('latitude', metaDataName)] = np.append(self.outdata_dust[('latitude', metaDataName)], np.array(lats_dust, dtype=np.float32))
-                self.outdata_dust[('longitude', metaDataName)] = np.append(self.outdata_dust[('longitude', metaDataName)], np.array(lons_dust, dtype=np.float32))
-                self.outdata_dust[('dateTime', metaDataName)] = np.append(self.outdata_dust[('dateTime', metaDataName)], np.array(obs_time_dust, dtype=object))
+                self.outdata_dust[('latitude', metaDataName)] = np.append(
+                    self.outdata_dust[('latitude', metaDataName)], np.array(lats_dust, dtype=np.float32))
+                self.outdata_dust[('longitude', metaDataName)] = np.append(
+                    self.outdata_dust[('longitude', metaDataName)], np.array(lons_dust, dtype=np.float32))
+                self.outdata_dust[('dateTime', metaDataName)] = np.append(
+                    self.outdata_dust[('dateTime', metaDataName)], np.array(obs_time_dust, dtype=object))
 
                 for iodavar in obsvars:
 
@@ -375,14 +379,13 @@ class AOD(object):
                     self.outdata_dust[self.varDict[iodavar]['qcKey']] = np.append(
                         self.outdata_dust[self.varDict[iodavar]['qcKey']], np.array(qcall_dust, dtype=np.int32))
 
-
-        DimDict['Location'] = len(self.outdata[('latitude', metaDataName)]) 
+        DimDict['Location'] = len(self.outdata[('latitude', metaDataName)])
         DimDict['Channel'] = np.array(channels)
 
         if self.adp_mask:
-            DimDict_smoke['Location'] = len(self.outdata_smoke[('latitude', metaDataName)]) 
+            DimDict_smoke['Location'] = len(self.outdata_smoke[('latitude', metaDataName)])
             DimDict_smoke['Channel'] = np.array(channels)
-            DimDict_dust['Location'] = len(self.outdata_dust[('latitude', metaDataName)]) 
+            DimDict_dust['Location'] = len(self.outdata_dust[('latitude', metaDataName)])
             DimDict_dust['Channel'] = np.array(channels)
 
 
@@ -416,14 +419,14 @@ def main():
         " no thinning is performed. (default: %(default)s)",
         type=float, default=0.0)
     parser.add_argument(
-	'--adp_mask',
-	help="activate ADP-based separation of smoke and dust affected obs from full AOD dataset",
-	action='store_true',
-	default=False)
+        '--adp_mask',
+        help="activate ADP-based separation of smoke and dust affected obs from full AOD dataset",
+        action='store_true',
+        default=False)
     parser.add_argument(
-	'--adp_qc_lvl',
-	help="set ADP QC confidence level for smoke and dust obs, use 'low','med', 'medhigh',or 'high': default='medhigh'",
-	type=str, required=False)
+        '--adp_qc_lvl',
+        help="set ADP QC confidence level for smoke and dust obs, use 'low','med', 'medhigh',or 'high': default='medhigh'",
+        type=str, required=False)
 
     args = parser.parse_args()
 
@@ -445,9 +448,9 @@ def main():
     else:
         orig_pn = os.path.dirname(args.output)
         orig_fn = os.path.basename(args.output)
-        smoke_fn =  orig_fn.split('.')[0] + '_smoke' + '.' + '.'.join(orig_fn.split('.')[1:])
+        smoke_fn = orig_fn.split('.')[0] + '_smoke' + '.' + '.'.join(orig_fn.split('.')[1:])
         smoke_fullpath = os.path.join(orig_pn, smoke_fn)
-        dust_fn =  orig_fn.split('.')[0] + '_dust' + '.' + '.'.join(orig_fn.split('.')[1:])
+        dust_fn = orig_fn.split('.')[0] + '_dust' + '.' + '.'.join(orig_fn.split('.')[1:])
         dust_fullpath = os.path.join(orig_pn, dust_fn)
 
         try:
@@ -470,6 +473,7 @@ def main():
             print(f"Dust AOD ({DimDict_dust['Location']} obs) written to: {dust_fullpath}")
         except IndexError:
             print('viirs_aod2ioda.py: No obs to write for dust-filtered AOD at this time')
+
 
 if __name__ == '__main__':
     main()
