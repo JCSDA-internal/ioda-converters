@@ -449,9 +449,9 @@ def main():
     else:
         orig_pn = os.path.dirname(args.output)
         orig_fn = os.path.basename(args.output)
-        smoke_fn = orig_fn.split('.')[0] + '_smoke' + '.' + '.'.join(orig_fn.split('.')[1:])
+        smoke_fn = os.path.splitext(orig_fn)[0] + '_smoke' + os.path.splitext(orig_fn)[-1]
         smoke_fullpath = os.path.join(orig_pn, smoke_fn)
-        dust_fn = orig_fn.split('.')[0] + '_dust' + '.' + '.'.join(orig_fn.split('.')[1:])
+        dust_fn = os.path.splitext(orig_fn)[0] + '_dust' + os.path.splitext(orig_fn)[-1]
         dust_fullpath = os.path.join(orig_pn, dust_fn)
 
         try:
