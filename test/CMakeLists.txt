@@ -95,6 +95,7 @@ list( APPEND test_input
   testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t180544_small.h5
   testinput/viirs_j1_l1b_albedo_geoloc_202108050600.nc
   testinput/viirs_j1_l1b_albedo_obsval_202108050600.nc
+  testinput/madis_2021010100.nc
 )
 
 list( APPEND test_output
@@ -183,6 +184,7 @@ list( APPEND test_output
   testoutput/omps_o3_nm.nc
   testoutput/viirs_j1_l1b_albedo_2021080506.nc
   testoutput/imsfv3grid_scf.nc
+  testoutput/madis_snod_2021010100.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -318,6 +320,8 @@ if( iodaconv_bufr_query_ENABLED )
     testinput/rtma_ADPUPA.prepbufr
     testinput/bufr_ncep_rtma_adpupa.yaml
     testinput/rtma.t00z.adpupa.tm00.bufr_d
+    testinput/bufr_gpsipw.yaml
+    testinput/obs.20240806T00Z.ipw_gnssgb.ncep.bufr
   )
 
   list( APPEND test_output
@@ -384,6 +388,7 @@ if( iodaconv_bufr_query_ENABLED )
     testoutput/rtma_ru.t0000z.aircar_NC004004.tm00.nc
     testoutput/gdas.t00z.rtma_adpupa.prepbufr.nc
     testoutput/rtma.t00z.adpupa.tm00.nc
+    testoutput/20240806T00Z_PT1M_ipw_gnssgb_ncep.nc
   )
 endif()
 
@@ -1851,6 +1856,15 @@ if(iodaconv_bufr_query_ENABLED)
                             rtma.t00z.adpupa.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_gpsipw
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_gpsipw.yaml"
+                            20240806T00Z_PT1M_ipw_gnssgb_ncep.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
 #  FIXME: Greg Thompson
 #  ecbuild_add_test( TARGET  test_iodaconv_bufr_aircar
 #                    TYPE    SCRIPT
@@ -2354,6 +2368,17 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_imsfv3grid_scf
                             -i testinput/nc_input_IMSscf.20230501.oro_C48.nc
                             -o testrun/imsfv3grid_scf.nc"
                             imsfv3grid_scf.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_madis_snod
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/madis_snow2ioda.py
+                            -i testinput/madis_2021010100.nc
+                            -o testrun/madis_snod_2021010100.nc"
+                            madis_snod_2021010100.nc ${IODA_CONV_COMP_TOL})
 
 #######################################################
 # Auto-generated tests for ioda file validation
