@@ -196,18 +196,23 @@ class AOD(object):
                 # Check if ADP file start/end times match AOD file (creation time can differ slightly)
                 # Using negative indexing makes the paths irrelevant for the comparison
                 if self.adp_mask[n][-53:-20] != f[-53:-20]:
-                    print(f'ADP data file {adp_fn[n]} start and end times do not match those of AOD file {f}')
+                    print(f'ADP data file {self.adp_mask[n]} start and end times do not match those of AOD file {f}')
                     print(f'Continuing to next AOD and ADP file (or ending)')
                     continue
 
+                print('Processing the following AOD and ADP files:')
+                print(f)
+                print(self.adp_mask[n])
+                print()
+
                 # open ADP file corresponding to AOD file.
                 try:
-                    ncd_adp = nc.Dataset(adp_fn[n], 'r')
+                    ncd_adp = nc.Dataset(self.adp_mask[n], 'r')
                 except FileNotFoundError:
                     # this will skip creating output for both the AOD and ADP at the selected time;
                     # however, that should be fine, as when this code runs we are interested only in
                     # the ADP-filtered output rather than the full AOD output.
-                    print(f'ADP data file {adp_fn} not found, continuing to next AOD file on list (or ending).')
+                    print(f'ADP data file {self.adp_mask[n]} not found, continuing to next AOD file on list (or ending).')
                     continue
 
                 # Get ADP smoke/dust masks
@@ -414,7 +419,7 @@ def main():
         '--adp_mask',
         help="""activate ADP-based separation of smoke and dust affected obs from full AOD dataset and specify the path of ADP
               file(s). ADP files should each correspond to an AOD file specified with -i or --input""",
-        type=str, required=False)
+        type=str, nargs='+', required=False)
     parser.add_argument(
         '--adp_qc_lvl',
         help="set ADP QC confidence level for smoke and dust obs, use 'low','med', 'medhigh',or 'high': default='medhigh'",
