@@ -95,15 +95,15 @@ long_missing_value = nc.default_fillvals['i8']
 
 
 class AOD(object):
-    def __init__(self, filenames, method, mask, thin, adp_mask, adp_qc_lvl):
+    def __init__(self, filenames, method, mask, thin, adp_mask, adp_conf_lvl):
         self.filenames = filenames
         self.mask = mask
         self.method = method
         self.thin = thin
         self.adp_mask = adp_mask
-        self.adp_qc_lvl = adp_qc_lvl
-        if self.adp_qc_lvl is None:
-            self.adp_qc_lvl = 'MedHigh'  # default to including Medium and High Confidence obs based on ADP data
+        self.adp_conf_lvl = adp_conf_lvl
+        if self.adp_conf_lvl is None:
+            self.adp_conf_lvl = 'MedHigh'  # default to including Medium and High Confidence obs based on ADP data
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -227,8 +227,8 @@ class AOD(object):
                 # As above, in the confidence masks, med-high confidence is marked by True mask elements,
                 # due to the line conf_mask = np.logical_or(conf == 0, conf == 2) in the get functions,
                 # so invert the masks the same as above
-                conf_mask_smoke = np.logical_not(flag_by_confidence_lvl(qcflag, 'Smoke', self.adp_qc_lvl))
-                conf_mask_dust = np.logical_not(flag_by_confidence_lvl(qcflag, 'Dust', self.adp_qc_lvl))
+                conf_mask_smoke = np.logical_not(flag_by_confidence_lvl(qcflag, 'Smoke', self.adp_conf_lvl))
+                conf_mask_dust = np.logical_not(flag_by_confidence_lvl(qcflag, 'Dust', self.adp_conf_lvl))
 
                 ncd_adp.close()
 
@@ -390,21 +390,23 @@ def main():
 
     # get command line arguments
     parser = argparse.ArgumentParser(
-        description=('Read VIIRS aerosol optical depth file(s) and Converter'
-                     ' of native NetCDF format for observations of optical'
+        description=('Read VIIRS aerosol optical depth file(s) and convert'
+                     ' native NetCDF format for observations of optical'
                      ' depth from VIIRS AOD550 to IODA-V2 netCDF format.')
     )
     parser.add_argument(
         '-i', '--input',
-        help="path of viirs aod input file(s)",
+        help="path of viirs AOD input file(s)",
         type=str, nargs='+', required=True)
     parser.add_argument(
         '-o', '--output',
-        help="name of base ioda-v2 output file; smoke and dust files will add '_smoke' or '_dust' suffix",
+        help="""name of base IODA-V2 output file; if ADP smoke and dust processing is activated, smoke and dust filenames
+              will have '_smoke' or '_dust' added either before the filetype suffix or, if there is no suffix, at the end
+              of the filename""",
         type=str, required=True)
     parser.add_argument(
         '-m', '--method',
-        help="calculation error method: nesdis/default, default=none",
+        help="obs error calculation method: nesdis/default, default=none",
         type=str, required=True)
     parser.add_argument(
         '-k', '--mask',
@@ -417,19 +419,19 @@ def main():
         type=float, default=0.0)
     parser.add_argument(
         '--adp_mask',
-        help="""activate ADP-based separation of smoke and dust affected obs from full AOD dataset and specify the path of ADP
-              file(s). ADP files should each correspond to an AOD file specified with -i or --input""",
+        help="""activate ADP-based separation of smoke and dust affected obs from full AOD dataset and specify the path of
+              ADP input file(s). ADP files should each correspond to an AOD file specified with -i or --input""",
         type=str, nargs='+', required=False)
     parser.add_argument(
-        '--adp_qc_lvl',
-        help="set ADP QC confidence level for smoke and dust obs, use 'low','med', 'medhigh',or 'high': default='medhigh'",
+        '--adp_conf_lvl',
+        help="set ADP confidence level(s) of smoke and dust obs to keep; use 'low', 'med', 'medhigh', or 'high': default='medhigh'",
         type=str, required=False)
 
     args = parser.parse_args()
 
     # setup the IODA writer
     # Read in the AOD data and perform requested processing
-    aod = AOD(args.input, args.method, args.mask, args.thin, args.adp_mask, args.adp_qc_lvl)
+    aod = AOD(args.input, args.method, args.mask, args.thin, args.adp_mask, args.adp_conf_lvl)
 
     # Write everything out. Use try-except because if all obs are filtered out of
     # one of the datasets due to either masking or thinning or a combination, an IndexError will be thrown
