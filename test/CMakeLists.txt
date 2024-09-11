@@ -318,6 +318,8 @@ if( iodaconv_bufr_query_ENABLED )
     testinput/rtma_ADPUPA.prepbufr
     testinput/bufr_ncep_rtma_adpupa.yaml
     testinput/rtma.t00z.adpupa.tm00.bufr_d
+    testinput/bufr_gpsipw.yaml
+    testinput/obs.20240806T00Z.ipw_gnssgb.ncep.bufr
   )
 
   list( APPEND test_output
@@ -384,6 +386,7 @@ if( iodaconv_bufr_query_ENABLED )
     testoutput/rtma_ru.t0000z.aircar_NC004004.tm00.nc
     testoutput/gdas.t00z.rtma_adpupa.prepbufr.nc
     testoutput/rtma.t00z.adpupa.tm00.nc
+    testoutput/20240806T00Z_PT1M_ipw_gnssgb_ncep.nc
   )
 endif()
 
@@ -1834,6 +1837,15 @@ if(iodaconv_bufr_query_ENABLED)
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_rtma_adpupa.yaml"
                             rtma.t00z.adpupa.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_gpsipw
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_gpsipw.yaml"
+                            20240806T00Z_PT1M_ipw_gnssgb_ncep.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
 #  FIXME: Greg Thompson
