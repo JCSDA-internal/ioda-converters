@@ -19,7 +19,7 @@ from collections import defaultdict, OrderedDict
 from pyiodaconv.orddicts import DefaultOrderedDict
 
 
-def flag_by_confidence_lvl(qfarr, aerosol_type, conf_lvl='MedHigh',print_diag=False):
+def flag_by_confidence_lvl(qfarr, aerosol_type, conf_lvl='MedHigh', print_diag=False):
 
     # ADP smoke confidence is defined in (counting from 0) bit 2-3, dust in bit 4-5
     # input array contains decimal representations of the binary values
@@ -54,12 +54,12 @@ def flag_by_confidence_lvl(qfarr, aerosol_type, conf_lvl='MedHigh',print_diag=Fa
         print(f'ERROR: No configuration for confidence level {conf_lvl}')
 
     if print_diag:
-       for i,val in enumerate(conf_mask):
-          qfarr_i = int(qfarr[i])
-          conf_i = int(conf[i])
-          # use bitmasks to convert bin() output for negative vals to two's complement
-          print(f'{i} Orig dvalue: {qfarr_i} Orig bvalue: {bin(qfarr_i & 0b11111111)}  {aerosol_type} bvalue:'
-                 '{bin(conf_i & 0b11)} mask_value: {val}')
+        for i, val in enumerate(conf_mask):
+            qfarr_i = int(qfarr[i])
+            conf_i = int(conf[i])
+            # use bitmasks to convert bin() output for negative vals to two's complement
+            print(f'{i} Orig dvalue: {qfarr_i} Orig bvalue: {bin(qfarr_i & 0b11111111)}  {aerosol_type} bvalue:'
+                  '{bin(conf_i & 0b11)} mask_value: {val}')
 
     return inv_conf_mask  # true elements here are values we want to keep (invert for an actual mask)
 
