@@ -13,7 +13,6 @@ import netCDF4 as nc
 import numpy as np
 import os
 
-import glob
 import pyiodaconv.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from pyiodaconv.orddicts import DefaultOrderedDict
