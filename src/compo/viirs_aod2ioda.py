@@ -27,10 +27,8 @@ def flag_by_confidence_lvl(qfarr, aerosol_type, conf_lvl='MedHigh', print_diag=F
 
     if conf_lvl == 'med' or conf_lvl == 'medhigh':
         conf_lvl = 'MedHigh'
-    if conf_lvl == 'low':
-        conf_lvl = 'Low'
-    if conf_lvl == 'high':
-        conf_lvl = 'High'
+    else:
+        conf_lvl = conf_lvl.title()
 
     if aerosol_type == 'Smoke':
         rhtrim = np.floor(qfarr/4)  # trim off the 2 least significant bits
