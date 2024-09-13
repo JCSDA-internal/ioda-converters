@@ -1360,6 +1360,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_airnow
                           -i testinput/airnow_2020081306.dat
                           -s testinput/airnow_sites.dat
                           -o testrun/airnow_2020081306.nc"
+                          airnow_2020081306.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_airnow_epalist
                   TYPE    SCRIPT
