@@ -1,8 +1,11 @@
-input coeff file: testinput/gdas.t18z.abias_air
+#input coeff file: testinput/gdas.t18z.abias_air  # ORIG
+#input coeff file: /scratch1/NCEPDEV/da/Cory.R.Martin/UFO_eval/data/para/output_ufo_eval_aug2021/2021080100/gdas.20210731/18/atmos/gdas.t18z.abias_air   # HERA
+input coeff file: /work2/noaa/da/nesposito/aircraft_bias_file/output_ufo_eval_aug2021/2021080100/gdas.20210731/18/atmos/gdas.t18z.abias_air # ORION/HERCULES
 default predictors: &default_preds
 - constant
 - aircraftAscentRate
 - aircraftAscentRate_order_2
 output:
-- output file: testrun/varbc/acft_out.nc4
+#- output file: testrun/varbc/acft_out.nc4 #ORIG
+- output file: testrun/varbc/aircraft_bias_20210731T18Z.nc4
   predictors: *default_preds

@@ -400,7 +400,7 @@ if (iodaconv_gsi_varbc_ENABLED )
     testoutput/varbc/satbias_gmi_gpm.nc4
     testoutput/varbc/satbias_ssmis_f16.nc4
     testoutput/varbc/viirs_bias.nc
-    testoutput/varbc/acft_out.nc4
+    testoutput/varbc/aircraft_bias_20210731T18Z.nc4
   )
 endif()
 
@@ -2181,7 +2181,7 @@ if( iodaconv_gsi_varbc_ENABLED )
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/acftbias2ioda.x testinput/acftbias_converter.yaml"
-                            varbc/acft_out.nc4 ${IODA_CONV_COMP_TOL_ZERO}
+                            varbc/aircraft_bias_20210731T18Z.nc4 ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS acftbias2ioda.x )
 endif()
 
