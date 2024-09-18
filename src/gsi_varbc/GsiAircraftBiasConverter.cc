@@ -51,7 +51,7 @@ ioda::ObsGroup makeObsBiasObject(ioda::Group &empty_base_object,
   /// Create list of variables
   std::vector<std::string> varlist;
   varlist.push_back("airTemperature");
-  ioda::Variable variableVar = ogrp.vars.createWithScales<std::string>("Variables",
+  ioda::Variable variableVar = ogrp.vars.createWithScales<std::string>("VariableIDs",
                                      {ogrp.vars["Variable"]});
   variableVar.write(varlist);
 
