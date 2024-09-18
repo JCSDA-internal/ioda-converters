@@ -1,4 +1,5 @@
 list(APPEND programs
+  icartt_nc2ioda.py
   ompsnm_o3_nc2ioda.py
   ompsnm_o3_nc2ioda.py
   omi_o3_nc2ioda.py
