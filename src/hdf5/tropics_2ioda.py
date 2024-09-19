@@ -300,7 +300,6 @@ def set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data, 
 
     tb_key = 'brightnessTemperature'
     good = (obs_data[(tb_key, obsValName)][:, 0] != float_missing_value) & \
-        (obs_data[(tb_key, obsValName)][:, 1] != float_missing_value) & \
         (obs_data[(tb_key, obsValName)][:, 8] != float_missing_value) & \
         (obs_data[(tb_key, obsValName)][:, 11] != float_missing_value)
     for k in obs_data:
