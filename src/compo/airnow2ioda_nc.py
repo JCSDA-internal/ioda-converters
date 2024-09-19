@@ -188,8 +188,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.epa_list:
-        locationKeyList.append(("airqualityClassification", "integer", ""))
-        meta_keys.append("airqualityClassification")
+        locationKeyList.append(("airQualityClassification", "integer", ""))
+        meta_keys.append("airQualityClassification")
 
     print('sitefile=', args.sitefile)
 
@@ -238,7 +238,7 @@ if __name__ == '__main__':
         data['height'] = np.append(data['height'], np.array(f3['elevation']) + 10.0)
 
         if args.epa_list:
-            data['airqualityClassification'] = np.append(data['airqualityClassification'],
+            data['airQualityClassification'] = np.append(data['airQualityClassification'],
                                                          np.array(f3['loc_type'], dtype=np.int32))
 
         GlobalAttrs['sourceFiles'] += str(infile.split('/')[-1]) + ", "
