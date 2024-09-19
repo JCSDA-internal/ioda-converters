@@ -8,7 +8,7 @@
 #
 # Read airnow text data file and convert to IODA netcdf
 
-import os, sys
+import os
 from datetime import datetime
 from pathlib import Path
 import netCDF4 as nc
