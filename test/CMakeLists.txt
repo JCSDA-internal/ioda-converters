@@ -42,6 +42,7 @@ list( APPEND test_input
   testinput/wrfdadiags_goes-16-abi_2018041500.nc
   testinput/b001xx007.20200310.bufr
   testinput/icartt_DC8_20230627_RA.nc
+  testinput/GCAS_NO2_20230802.nc
   testinput/viirs_aod.nc
   testinput/tropomi_no2.nc
   testinput/mopitt_co.he5
@@ -134,6 +135,7 @@ list( APPEND test_output
   testoutput/abi_g16_obs_2018041500.nc4
   testoutput/ioda.NC001007.2020031012.nc
   testoutput/ioda_icartt_DC8_20230627_RA.nc
+  testoutput/ioda_GCAS_NO2_20230802.nc
   testoutput/viirs_aod.nc
   testoutput/viirs_bias.nc
   testoutput/tropomi_no2_total.nc
@@ -1250,8 +1252,23 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_icartt
                           netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/icartt_nc2ioda.py
                           -i testinput/icartt_DC8_20230627_RA.nc
-                          -o testrun/ioda_icartt_DC8_20230627_RA.nc"
+                          -o testrun/ioda_icartt_DC8_20230627_RA.nc
+                          -r 2023062715 2023062721"
                           ioda_icartt_DC8_20230627_RA.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gcas
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/gcas_nc2ioda.py
+                          -i testinput/GCAS_NO2_20230802.nc
+                          -o testrun/ioda_GCAS_NO2_20230802.nc
+                          -c tropo
+                          -r 2023080215 2023080321"
+                          ioda_GCAS_NO2_20230802.nc ${IODA_CONV_COMP_TOL})
+
 
 foreach (coltype total tropo)
         ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2_${coltype}
