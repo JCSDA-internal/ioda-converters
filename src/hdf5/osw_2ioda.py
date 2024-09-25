@@ -56,6 +56,8 @@ meta_keys = [m_item[0] for m_item in MetaDataKeyList]
 obsvars = ['windSpeed', 'windSpeed'+obsErrName, 'windSpeed'+obsQcName]
 # Add wind components to be able to assign obsError with dummy values
 obsvars_dummy = ['windEastward', 'windNorthward']
+# List of the observables
+obsvars_list = [obsvars[0]] + obsvars_dummy
 obsvars_units = 'm s-1'
 obsvars_dtype = 'float'
 
@@ -133,10 +135,9 @@ def main(args):
         file_cnt += 1
 
 #   a value of 0. is set. Using missing value triggers UFO rejection
-    obs_data[obsvars_dummy[0]] = 0.
-    obs_data[obsvars_dummy[1]] = 0.
-    obs_data[obsvars_dummy[0]+obsQcName] = 0
-    obs_data[obsvars_dummy[1]+obsQcName] = 0
+    for iodavar in obsvars_dummy:
+        obs_data[iodavar] = 0.
+        obs_data[iodavar+obsQcName] = 0
 
     # replace missing values
     for MetaDataKey in MetaDataKeyList:
@@ -146,8 +147,8 @@ def main(args):
 
     # find where windSpeed is missing and set the components to missing as well
     mask = obs_data['windSpeed'] == missing_vals[obsvars_dtype]
-    obs_data[obsvars_dummy[0]].mask(mask.values, missing_vals[obsvars_dtype], inplace=True)
-    obs_data[obsvars_dummy[1]].mask(mask.values, missing_vals[obsvars_dtype], inplace=True)
+    for iodavar in obsvars_dummy:
+        obs_data[iodavar].mask(mask.values, missing_vals[obsvars_dtype], inplace=True)
 
     # sort by instrument and then time
     if args.sort:
@@ -169,9 +170,8 @@ def main(args):
     varDict = defaultdict(lambda: DefaultOrderedDict(dict))
     varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
-    obsvars_dummy.insert(0, obsvars[0])
     # Set coordinates and units of the ObsValues.
-    for iodavar in obsvars_dummy:
+    for iodavar in obsvars_list:
         # set the obs space attributes
         varDict[iodavar]['valKey'] = iodavar, obsValName
         varDict[iodavar]['errKey'] = iodavar, obsErrName
@@ -191,7 +191,7 @@ def main(args):
         ioda_data[(key, metaDataName)] = np.array(obs_data[key], dtype=dtypes[dtypestr])
 
     # Transfer from the 1-D data vectors and ensure output data (ioda_data) types using numpy.
-    for iodavar in obsvars_dummy:
+    for iodavar in obsvars_list:
         ioda_data[(iodavar, obsValName)] = np.array(obs_data[iodavar], dtype=np.float32)
         ioda_data[(iodavar, obsQcName)] = np.array(obs_data[iodavar+obsQcName], dtype=np.int32)
         if iodavar == 'windSpeed':
