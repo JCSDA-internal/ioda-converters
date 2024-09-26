@@ -970,7 +970,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_dpr_gpm
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/cloudsat_netcdf_to_ioda.py
-                          -i testinput/gpm_dpr_20240401-S105223-E122536.sample.hdf5
+                          -f testinput/gpm_dpr_20240401-S105223-E122536.sample.hdf5
                           -o testrun/20240401T105230_PT1M_dpr_gpm.nc"
                           20240401T105230_PT1M_dpr_gpm.nc ${IODA_CONV_COMP_TOL_ZERO})
 
