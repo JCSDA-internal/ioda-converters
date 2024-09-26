@@ -35,7 +35,7 @@ float_missing_value = iconv.get_default_fill_val(np.float32)
 # {'iodaName' : ['obsName', 'iodaUnit', 'obsToIodaUnivConv']
 obsvars = {'nitrogendioxideInsitu': ['NO2_ACES', 'mol mol-1', ppbv2molmol],
            'carbonmonoxideInsitu': ['CO_ppb', 'mol mol-1', ppbv2molmol],
-           'ozoneInsitu': ['O3_CL', 'mol mole-1', ppbv2molmol],
+           'ozoneInsitu': ['O3_CL', 'mol mol-1', ppbv2molmol],
            'formaldehydeInsitu': ['CH2O_ISAF', 'mol mol-1', pptv2molmol],
            'airTemperature': ['T', 'K', 1],
            'windEastward': ['U', 'm s-1', 1],
@@ -44,9 +44,10 @@ obsvars = {'nitrogendioxideInsitu': ['NO2_ACES', 'mol mol-1', ppbv2molmol],
 
 class icartt(object):
 
-    def __init__(self, filenames):
+    def __init__(self, filenames, time_range):
 
         self.filenames = filenames
+        self.time_range = time_range
         self.make_dictionaries()      # Set up variable names for IODA
         self.DimDict = {}
         self.read()    # Read data from file
@@ -82,8 +83,8 @@ class icartt(object):
             sdate = sdate.replace(tzinfo=timezone.utc)
             seconds_difference = (sdate - epoch).total_seconds()
 
-            adjusted_stime = stime + seconds_difference
             times = stime + seconds_difference
+            stime_datetime = np.datetime64(epoch.strftime("%Y-%m-%dT%H:%M:%S")) + np.timedelta64(int(seconds_difference), 's') + stime.astype('timedelta64[s]')
 
             pressure = dsFlight['P'] * HPA2PA  # hPa to Pa
             pressure = pressure.astype(np.float32)
@@ -99,6 +100,12 @@ class icartt(object):
             flag = np.full((nlocs), True)
             obs_error = np.full((nlocs), 0.0).astype(np.float32)
             qa = np.full((nlocs), 0)
+
+            # date range to fit DA window
+            wbegin = np.datetime64(datetime.strptime(self.time_range[0], "%Y%m%d%H"))
+            wend = np.datetime64(datetime.strptime(self.time_range[1], "%Y%m%d%H"))
+            flag = np.where((stime_datetime >= wbegin) & (stime_datetime <= wend), 1, 0)
+            flag = flag.astype(bool)
 
             # ---- Write Metadata and data
             if first:
@@ -128,6 +135,10 @@ class icartt(object):
                 for var in self.obsvars:
                     self.outData[(var, 'valKey')] = np.concatenate(
                         (self.outData[(var, 'valKey')], times[flag]))
+                self.outData[(var_name, 'errKey')] = np.concatenate(
+                    (self.outData[(var_name, 'errKey')], times[flag]))
+                self.outData[(var_name, 'qcKey')] = np.concatenate(
+                    (self.outData[(var_name, 'qcKey')], times[flag]))
 
             first = False
 
@@ -214,19 +225,11 @@ def get_parser():
 
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
-        "--levs", '--levels',
-        help="User levels. [default: %(default)s] ",
-        dest="userLevels",
-        required=False,
-        type=int,
-        nargs='+',
-        default=[0, 4])
-
-    optional.add_argument(
-        '-n', '--thin',
-        help="percentage of random thinning from 0.0 to 1.0. Zero indicates"
-        " no thinning is performed. (default: %(default)s)",
-        type=float, default=0.0)
+        '-r', '--time_range',
+        help="extract a date range to fit the data assimilation window"
+        "format -r YYYYMMDDHH YYYYMMDDHH",
+        type=str, metavar=('begindate', 'enddate'), nargs=2,
+        default=('1970010100', '2170010100'))
 
     return parser
 
@@ -250,7 +253,7 @@ def main():
     args = parser.parse_args()
 
     # Read in the flight data
-    flightData = icartt(args.input)
+    flightData = icartt(args.input, args.time_range)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, flightData.DimDict)
