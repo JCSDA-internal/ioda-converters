@@ -94,6 +94,7 @@ list( APPEND test_input
   testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t180544_small.h5
   testinput/viirs_j1_l1b_albedo_geoloc_202108050600.nc
   testinput/viirs_j1_l1b_albedo_obsval_202108050600.nc
+  testinput/gpm_dpr_20240401-S105223-E122536.sample.hdf5
 )
 
 list( APPEND test_output
@@ -181,6 +182,7 @@ list( APPEND test_output
   testoutput/omps_o3_nm.nc
   testoutput/viirs_j1_l1b_albedo_2021080506.nc
   testoutput/imsfv3grid_scf.nc
+  testoutput/20240401T105230_PT1M_dpr_gpm.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -952,6 +954,18 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mrms
                           -o testrun/mrms_reflectivity_Z1500m.nc"
                           mrms_reflectivity_Z1500m.nc ${IODA_CONV_COMP_TOL_ZERO})
 
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_dpr_gpm
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/cloudsat_netcdf_to_ioda.py
+                          -i testinput/gpm_dpr_20240401-S105223-E122536.sample.hdf5
+                          -o testrun/20240401T105230_PT1M_dpr_gpm.nc"
+                          20240401T105230_PT1M_dpr_gpm.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+#===============================================================================
 #===============================================================================
 # MISC converters
 #===============================================================================
