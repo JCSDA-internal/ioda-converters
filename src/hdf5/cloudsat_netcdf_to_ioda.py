@@ -171,7 +171,7 @@ def populate_obs_data(file_obs_data, sensor_name):
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nobs), WMO_sat_ID, dtype='int32')
     obs_data[('sensorCentralFrequency', metaDataName)] = file_obs_data.centerFreq.values.astype(np.float32)
     obs_data[('sensorCentralWavenumber', metaDataName)] = file_obs_data.centerWN.values.astype(np.float32)
-    obs_data[('sensorPolarizationDirection', metaDataName)] = np.array([9]).astype(np.int32)
+    obs_data[('sensorPolarizationDirection', metaDataName)] = np.full((nobs), 9, dtype='int32')
     obs_data[('sensorScanPosition', metaDataName)] = file_obs_data.fov1.values.astype(np.int32)
     obs_data[('sensorChannelNumber', metaDataName)] = file_obs_data.channel.values.astype(np.int32)
     # add satellite altitude (height in meters) and use compute_scan_angle function
