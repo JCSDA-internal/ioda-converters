@@ -214,14 +214,14 @@ def get_data_source(afile):
     elif 'constellation' in afile.attrs.keys() and "spire" in afile.attrs['constellation'].decode('UTF-8'):
         return 'Spire'
     elif 'title' in afile.attrs.keys() and 'SPIRE' in afile.attrs['title'].decode('UTF-8'):
-        return 'SPIRE'
+        return 'Spire-L2'
     else:
         # throw error
         pass
 
 
 def get_reference_time(afile, osw_source):
-    if osw_source in ('CYGNSS') or 'SPIRE' in osw_source:
+    if osw_source in ('CYGNSS') or 'Spire-L2' in osw_source:
         dat_ref = afile['sample_time'].attrs['units'].decode('UTF-8').split('since ')[-1]
         dat_ref = datetime.strptime(dat_ref, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc).timestamp()
     elif osw_source in ('Muon'):
@@ -240,7 +240,7 @@ def get_reference_time(afile, osw_source):
 def get_data_from_file(afile, col_names, osw_source, file_name):
 
     # Pull each data type (variable) and create a list
-    if osw_source == 'CYGNSS' or osw_source == 'SPIRE':
+    if osw_source == 'CYGNSS' or osw_source == 'Spire-L2':
         latitude = [v for v in afile['lat']]
         longitude = [v for v in afile['lon']]
         dateTime = [int(v) for v in afile['sample_time']]  # datetime with different ref time
@@ -303,7 +303,7 @@ def adjust_dateTime(obs_DF, dat_ref):
 
 
 def adjust_longitude(obs_DF, osw_source):
-    if osw_source in ('CYGNSS', 'SPIRE', 'Spire'):
+    if osw_source in ('CYGNSS', 'Spire', 'Spire-L2'):
         mask = obs_DF['longitude'] > 180
         obs_DF.loc[mask, 'longitude'] = obs_DF['longitude'].loc[mask].values - 360
     return obs_DF
@@ -314,13 +314,13 @@ def add_long_description(osw_source):
     # Add some additional information to platformLongDescription global attribute
     long_description = ''
     if osw_source == 'CYGNSS':
-        long_description = 'OSW derived from CYGNSS GNSS-R recievers.'
+        long_description = 'OSW derived from CYGNSS GNSS-R receivers.'
     elif osw_source == 'Muon':
-        long_description = 'Proxy Muon OSW data derived from CYGNSS GNSS-R recievers.'
+        long_description = 'Proxy Muon OSW data derived from CYGNSS GNSS-R receivers.'
     elif osw_source == 'Spire':
-        long_description = 'OSW derived from Spire GNSS-R recievers.'
-    elif osw_source == 'SPIRE':
-        long_description = 'NOAA Level-2 OSW from Spire GNSS-R recievers.'
+        long_description = 'OSW derived from Spire GNSS-R receivers.'
+    elif osw_source == 'Spire-L2':
+        long_description = 'NOAA Level-2 OSW from Spire GNSS-R receivers.'
     return long_description
 
 
