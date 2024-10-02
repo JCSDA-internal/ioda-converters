@@ -303,9 +303,7 @@ def adjust_dateTime(obs_DF, dat_ref):
 
 
 def adjust_longitude(obs_DF, osw_source):
-    if osw_source in ('CYGNSS', 'Spire', 'Spire-L2'):
-        mask = obs_DF['longitude'] > 180
-        obs_DF.loc[mask, 'longitude'] = obs_DF['longitude'].loc[mask].values - 360
+    obs_DF.loc[obs_DF['longitude'] > 180, 'longitude'] -= 360
     return obs_DF
 
 
