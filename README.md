@@ -108,6 +108,12 @@ Usage: <converter.py> -i INPUT_FILE(S) -o OUTPUT_FILE -m nesdis -k maskout -t 0.
 ```
 For method option (-m) of bias and uncertainty calculation (default/nesdis), deafult means to set bias and uncertainty as 0.0 and nesdis means to use NESDIS bias and uncertainty calculation method. For maskout option (-k) default/maskout, default means to keep all missing values and maskout means to not write out missing values. For thinning option, the value should be within 0.0 and 1.0 depending how much data will be thinned, and 0.0 means without any thining.
 
+The AOD converter normally produces a single IODA output file, but it can also produce two additional output files, one containing only smoke-affected obs and one containing only dust-affected obs. This functionality uses flagging in the Aerosol Data Product (ADP) files created as companion datasets for the native AOD550 observation files. To activate the smoke and dust processing, use the --adp_mask flag followed by the ADP file(s) that correspond to the AOD file(s) specified with -i.
+
+```
+Usage (with smoke and dust processing): <converter.py> -i AOD_INPUT_FILE(S) --adp_mask ADP_INPUT_FILE(S) --adp_conf_lvl 'medhigh' -o OUTPUT_FILE -m nesdis -k maskout -t 0.0
+```
+The ADP files contain a confidence level for the smoke and dust flagging. The confidence level of the smoke- and dust-affected obs retained in the smoke and dust IODA output files can be specified using --adp_conf_lvl [level], where level can be "low", "med", "medhigh", or "high". The default is "medhigh".
 
 ## land
 
