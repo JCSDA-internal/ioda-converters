@@ -101,6 +101,12 @@ dtypes = {'string': object,
           'float': np.float32,
           'double': np.float64}
 
+# obs_data keys needs to be in the specific order of the variables above
+column_keys = ['height', 'relativeHumidity', 'latitude', 'longitude',
+               'stationIdentification', 'pressure', 'specificHumidity',
+               'windEastward', 'windNorthward', 'airTemperature',
+               'dateTime', 'releaseTime', 'stationElevation']
+
 
 def main(args):
 
@@ -118,6 +124,7 @@ def main(args):
     """
     # Loop through input files and concatenate into dataframe
     file_cnt = 0
+    compute_specificHumidity = False
     for file_name in args.file_names:
         # check if file exists
         if not os.path.isfile(file_name):
@@ -143,7 +150,15 @@ def main(args):
             obs_data = pd.DataFrame(columns=observation_keys)
             obs_data['releaseTime'] = None
             obs_data['stationElevation'] = None
-            obs_data['specificHumidity'] = None
+            if 'specific_humidity' not in observation_keys:
+                compute_specificHumidity = True
+
+            if compute_specificHumidity:
+                # add blank column for specificHumidity
+                obs_data['specificHumidity'] = None
+            else:
+                # rename vendor provided specific_humidity
+                obs_data.rename(columns={'specific_humidity': 'specificHumidity'}, inplace=True)
 
             # Remove data not needed for IODA
             obs_data.drop(['id', 'mission_id'], axis=1, inplace=True)
@@ -156,6 +171,8 @@ def main(args):
                                      'humidity': 'relativeHumidity',
                                      'temperature': 'airTemperature',
                                      'timestamp': 'dateTime'}, inplace=True)
+            # reorder to ensure proper order required for append
+            obs_data = obs_data[column_keys]
         # Fill out each file's meta data
         df_metaData_files.loc[file_cnt] = [file[key] for key in df_metaData_files.keys()]
 
@@ -184,19 +201,30 @@ def main(args):
         # change units of relative humidity from percent to ratio
         relativeHumidity = [rh_i/100 if rh_i is not None else rh_i for rh_i in relativeHumidity]
 
-        # compute the specific humidity (RH in fractional, pressure in Pa, T in Celcius)
-        specificHumidity = compute_q(relativeHumidity, pressure, airTemperature)
+        if compute_specificHumidity:
+            # compute the specific humidity (RH in fractional, pressure in Pa, T in Celcius)
+            specificHumidity = compute_q(relativeHumidity, pressure, airTemperature)
+        else:
+            specificHumidity = [obs['specific_humidity']/1.e6 if obs['specific_humidity'] is not None else None for obs in file['observations']]
 
         # convert temperature from Celsius to Kelvin
         airTemperature = [temp_i+273.15 if temp_i is not None else temp_i for temp_i in airTemperature]
 
         # Make a list of lists to feed into dataframe
-        data_lists = list(zip(height, relativeHumidity, latitude, longitude, stationIdentification, pressure,
-                              windEastward, windNorthward, airTemperature, dateTime, releaseTime, stationElevation,
-                              specificHumidity))
+        data_lists = list(zip(height, relativeHumidity, latitude, longitude,
+                              stationIdentification, pressure, specificHumidity,
+                              windEastward, windNorthward, airTemperature,
+                              dateTime, releaseTime, stationElevation))
 
-        # All observation data for this file to append to the master dataframe
-        obs_data_append = pd.DataFrame(data_lists, columns=obs_data.keys())
+        # data_lists has an specific order that needs to match the obs_data column_keys
+        if column_keys == list(obs_data):
+            # All observation data for this file to append to the master dataframe
+            obs_data_append = pd.DataFrame(data_lists, columns=obs_data.keys())
+        else:
+            logging.error(f' the list of variables in obs_data: {obs_data.keys()}')
+            logging.error(f' must match exact ordered list: {column_keys}')
+            import sys
+            sys.exit()
 
         # Append to data frame containing all timestamp data
         obs_data = pd.concat([obs_data, obs_data_append], ignore_index=True)
