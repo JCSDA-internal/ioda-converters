@@ -205,7 +205,7 @@ def main(args):
             # compute the specific humidity (RH in fractional, pressure in Pa, T in Celcius)
             specificHumidity = compute_q(relativeHumidity, pressure, airTemperature)
         else:
-            specificHumidity = [obs['specific_humidity']/1.e6 if obs['specific_humidity'] is not None else None for obs in file['observations']]
+            specificHumidity = [obs['specific_humidity']/1.e4 if obs['specific_humidity'] is not None else None for obs in file['observations']]
 
         # convert temperature from Celsius to Kelvin
         airTemperature = [temp_i+273.15 if temp_i is not None else temp_i for temp_i in airTemperature]
@@ -358,7 +358,7 @@ def compute_q(relativeHumidity, pressure, airTemperature):
             # Calculate specific humidity
             q_val = 0.622 * e / (p - 0.378 * e)
 
-            q.append(q_val)
+            q.append(q_val*100.)  # not sure why scaling needed
         else:
             # Optionally, append None or some default value
             q.append(None)
