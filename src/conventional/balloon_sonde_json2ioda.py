@@ -44,11 +44,13 @@ meta_keys = [m_item[0] for m_item in MetaDataKeyList]
 # The outgoing IODA variables (ObsValues), their units, and assigned constant ObsError.
 obsvars = ['airTemperature',
            'relativeHumidity',
+           'specificHumidity',
            'windEastward',
            'windNorthward']
-obsvars_units = ['K', '1', 'm s-1', 'm s-1']
-obserrlist = [1.2, 0.2, 1.7, 1.7]
+obsvars_units = ['K', '1', 'kg kg-1', 'm s-1', 'm s-1']
+obserrlist = [1.2, 0.2, 0.001, 1.7, 1.7]
 obsvars_dtype = ['float',
+                 'float',
                  'float',
                  'float',
                  'float']
@@ -57,6 +59,7 @@ obsvars_dtype = ['float',
 VarDims = {
     'airTemperature': ['Location'],
     'relativeHumidity': ['Location'],
+    'specificHumidity': ['Location'],
     'windEastward': ['Location'],
     'windNorthward': ['Location']
 }
@@ -98,6 +101,12 @@ dtypes = {'string': object,
           'float': np.float32,
           'double': np.float64}
 
+# obs_data keys needs to be in the specific order of the variables above
+column_keys = ['height', 'relativeHumidity', 'latitude', 'longitude',
+               'stationIdentification', 'pressure', 'specificHumidity',
+               'windEastward', 'windNorthward', 'airTemperature',
+               'dateTime', 'releaseTime', 'stationElevation']
+
 
 def main(args):
 
@@ -115,6 +124,7 @@ def main(args):
     """
     # Loop through input files and concatenate into dataframe
     file_cnt = 0
+    compute_specificHumidity = False
     for file_name in args.file_names:
         # check if file exists
         if not os.path.isfile(file_name):
@@ -140,6 +150,15 @@ def main(args):
             obs_data = pd.DataFrame(columns=observation_keys)
             obs_data['releaseTime'] = None
             obs_data['stationElevation'] = None
+            if 'specific_humidity' not in observation_keys:
+                compute_specificHumidity = True
+
+            if compute_specificHumidity:
+                # add blank column for specificHumidity
+                obs_data['specificHumidity'] = None
+            else:
+                # rename vendor provided specific_humidity
+                obs_data.rename(columns={'specific_humidity': 'specificHumidity'}, inplace=True)
 
             # Remove data not needed for IODA
             obs_data.drop(['id', 'mission_id'], axis=1, inplace=True)
@@ -152,21 +171,23 @@ def main(args):
                                      'humidity': 'relativeHumidity',
                                      'temperature': 'airTemperature',
                                      'timestamp': 'dateTime'}, inplace=True)
+            # reorder to ensure proper order required for append
+            obs_data = obs_data[column_keys]
         # Fill out each file's meta data
         df_metaData_files.loc[file_cnt] = [file[key] for key in df_metaData_files.keys()]
 
         # Pull each data type (variable) and create a list
-        height = [file['observations'][ii]['altitude'] for ii in range(len(file['observations']))]  # geometric height
-        relativeHumidity = [file['observations'][ii]['humidity'] for ii in range(len(file['observations']))]
-        latitude = [file['observations'][ii]['latitude'] for ii in range(len(file['observations']))]
-        longitude = [file['observations'][ii]['longitude'] for ii in range(len(file['observations']))]
-        stationIdentification = [file['observations'][ii]['mission_name'] for ii in range(len(file['observations']))]
-        pressure = [file['observations'][ii]['pressure'] for ii in range(len(file['observations']))]
+        height = [obs['altitude'] for obs in file['observations']]  # geometric height
+        relativeHumidity = [obs['humidity'] for obs in file['observations']]
+        latitude = [obs['latitude'] for obs in file['observations']]
+        longitude = [obs['longitude'] for obs in file['observations']]
+        stationIdentification = [obs['mission_name'] for obs in file['observations']]
+        pressure = [obs['pressure'] for obs in file['observations']]
         # Check the speed variables available and handle accordingly (data changed in March 2024)
-        windEastward = [file['observations'][ii][speed_eastward] for ii in range(len(file['observations']))]
-        windNorthward = [file['observations'][ii][speed_northward] for ii in range(len(file['observations']))]
-        airTemperature = [file['observations'][ii]['temperature'] for ii in range(len(file['observations']))]
-        dateTime = [file['observations'][ii]['timestamp'] for ii in range(len(file['observations']))]  # datetime
+        windEastward = [obs[speed_eastward] for obs in file['observations']]
+        windNorthward = [obs[speed_northward] for obs in file['observations']]
+        airTemperature = [obs['temperature'] for obs in file['observations']]
+        dateTime = [obs['timestamp'] for obs in file['observations']]
 
         # List of release time (earliest time in file. this needs to be updated to be earliest time for each instrument, since the file can have multiple)
         releaseTime = [min(dateTime)]*len(height)
@@ -177,18 +198,33 @@ def main(args):
         # convert pressure to Pascals from Hectopascals
         pressure = [press_i*100 if press_i is not None else press_i for press_i in pressure]
 
-        # convert temperature from Celsius to Kelvin
-        airTemperature = [temp_i+273.15 if temp_i is not None else temp_i for temp_i in airTemperature]
-
         # change units of relative humidity from percent to ratio
         relativeHumidity = [rh_i/100 if rh_i is not None else rh_i for rh_i in relativeHumidity]
 
-        # Make a list of lists to feed into dataframe
-        data_lists = list(zip(height, relativeHumidity, latitude, longitude, stationIdentification, pressure,
-                              windEastward, windNorthward, airTemperature, dateTime, releaseTime, stationElevation))
+        if compute_specificHumidity:
+            # compute the specific humidity (RH in fractional, pressure in Pa, T in Celcius)
+            specificHumidity = compute_q(relativeHumidity, pressure, airTemperature)
+        else:
+            specificHumidity = [obs['specific_humidity']/1.e4 if obs['specific_humidity'] is not None else None for obs in file['observations']]
 
-        # All observation data for this file to append to the master dataframe
-        obs_data_append = pd.DataFrame(data_lists, columns=obs_data.keys())
+        # convert temperature from Celsius to Kelvin
+        airTemperature = [temp_i+273.15 if temp_i is not None else temp_i for temp_i in airTemperature]
+
+        # Make a list of lists to feed into dataframe
+        data_lists = list(zip(height, relativeHumidity, latitude, longitude,
+                              stationIdentification, pressure, specificHumidity,
+                              windEastward, windNorthward, airTemperature,
+                              dateTime, releaseTime, stationElevation))
+
+        # data_lists has an specific order that needs to match the obs_data column_keys
+        if column_keys == list(obs_data):
+            # All observation data for this file to append to the master dataframe
+            obs_data_append = pd.DataFrame(data_lists, columns=obs_data.keys())
+        else:
+            logging.error(f' the list of variables in obs_data: {obs_data.keys()}')
+            logging.error(f' must match exact ordered list: {column_keys}')
+            import sys
+            sys.exit()
 
         # Append to data frame containing all timestamp data
         obs_data = pd.concat([obs_data, obs_data_append], ignore_index=True)
@@ -260,6 +296,73 @@ def main(args):
     writer = iconv.IodaWriter(args.output_file, MetaDataKeyList, DimDict)
     # write everything out
     writer.BuildIoda(ioda_data, VarDims, varAttrs, AttrData)
+
+
+def svpw(t_):
+    # vendor specific equation for saturation vapor pressure with respect to water
+    # input temperature assumed Celcius
+    t = t_ + 273.15
+    h = [-0.58002206e4, 0.13914993e1, -0.48640239e-1, 0.41764768e-4, -0.14452093e-7, 0.65459673e1]
+    r = 0
+    for i in range(-1, 4):
+        r += h[i+1] * t**i
+    r += h[-1] * np.log(t)
+    return np.exp(r)
+
+
+def svpi(t_):
+    # vendor specific equation for saturation vapor pressure with respect to ice
+    # input temperature assumed Celcius
+    t = t_ + 273.15
+    h = [-0.56745359e4, 0.63925247e1, -0.96778430e-2, 0.62215701e-6, 0.20747825e-8, -0.94840240e-12, 0.41635019e1]
+    r = 0
+    for i in range(0, 6):
+        r += h[i] * t**(i-1)
+    r += h[-1] * np.log(t)
+    return np.exp(r)
+
+
+def svp(t):
+    # input temperature in Celcius
+    # output saturation vapor pressure
+    if not t:
+        return None
+    elif t >= 0:
+        return svpw(t)
+    elif t <= -23:
+        return svpi(t)
+    else:
+        ei = svpi(t)
+        ew = svpw(t)
+        return ei + (ew - ei)*((t-(-23))/(23))**2
+
+
+def compute_q(relativeHumidity, pressure, airTemperature):
+    # compute specific humidity getting saturation vapor pressure based on temperature
+    #
+    # output: specific humidity (q) in kg kg-1
+    # from
+    # input: relativeHumidity (fractional), pressure (Pa) and airTemperature (Celcius)
+    #
+    # formula:
+    # q = (0.622 * relativeHumidity * es) / (pressure - 0.378 * relativeHumidity * es)
+    #
+
+    es = [svp(t) for t in airTemperature]
+    q = []
+    for rh, es_value, p in zip(relativeHumidity, es, pressure):
+        if rh is not None and es_value is not None and p is not None:
+            # Calculate actual vapor pressure
+            e = rh * es_value
+
+            # Calculate specific humidity
+            q_val = 0.622 * e / (p - 0.378 * e)
+
+            q.append(q_val*100.)  # not sure why scaling needed
+        else:
+            # Optionally, append None or some default value
+            q.append(None)
+    return q
 
 
 if __name__ == "__main__":
