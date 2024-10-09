@@ -10,6 +10,7 @@ list(APPEND programs
   omi_o3_nc2ioda.py
   ompsnm_o3_nc2ioda.py
   omps_o3_nm_h52ioda.py
+  pandora_2ioda.py
   tempo_nc2ioda.py
   tropess_co_nc2ioda.py
   tropomi_no2_co_nc2ioda.py

@@ -31,6 +31,7 @@ MBAR2PA = 1E2
 
 float_missing_value = iconv.get_default_fill_val(np.float32)
 
+
 class pandora(object):
 
     def __init__(self, filenames, time_range):
@@ -39,7 +40,6 @@ class pandora(object):
         self.make_dictionaries()      # Set up variable names for IODA
         self.DimDict = {}
         self.read()    # Read data from file
-
 
     def read(self):
 
@@ -50,22 +50,21 @@ class pandora(object):
             # Read station lat lon
             with open(filename, 'r', encoding='ISO-8859-1') as file:
                 content = file.read()
-            
+
             latitude = re.search(r"Location latitude \[deg\]:\s*([-\d.]+)", content)
             longitude = re.search(r"Location longitude \[deg\]:\s*([-\d.]+)", content)
             lat = float(latitude.group(1))
             lon = float(longitude.group(1))
-            
+
             # Separate the tabular section of pandora txt file or the 3rd section
             sections = content.split('---------------------------------------------------------------------------------------')
 
             if len(sections) >= 3:
                 table_content = sections[2].strip()
-                # Rows do not have the same number of columms 
+                # Rows do not have the same number of columms
                 # because of optional columns at the end of some rows
                 # Find max num of cols and pad rows with missing columns with NaN
                 lines = table_content.split('\n')
-                
                 rows = []
                 # except for datetime convert to float
                 for line in lines:
@@ -76,17 +75,17 @@ class pandora(object):
                         except ValueError:
                             row.append(value)
                     rows.append(row)
-                
-                max_columns = max(len(row) for row in rows) 
+
+                max_columns = max(len(row) for row in rows)
                 padded_rows = [row + [np.nan] * (max_columns - len(row)) for row in rows]
                 data = np.array(padded_rows, dtype=object)
             else:
                 print("The input file is not in the standard format")
 
-            times = data[:,0]
-            no2 = data[:,38] # no2 total column amount [mole/m2]
-            no2_unc = data[:,42] #  Total uncertainty of nitrogen dioxide total vertical column amount [moles per square meter]
-            surf_p = data[:,11]*MBAR2PA  # climatological station pressure [mbar]
+            times = data[:, 0]
+            no2 = data[:, 38]  # no2 total column amount [mole/m2]
+            no2_unc = data[:, 42]  # Total uncertainty of nitrogen dioxide total vertical column amount [moles per square meter]
+            surf_p = data[:, 11]*MBAR2PA  # climatological station pressure [mbar]
             nlocs = len(times)
 
             lats = np.full(nlocs, lat)
@@ -97,24 +96,22 @@ class pandora(object):
 
             # 2 vertice: surface pressure and top (0)
             num_vert = 2
-            pressure_vertice = np.zeros([nlocs,num_vert], dtype=np.float32)
+            pressure_vertice = np.zeros([nlocs, num_vert], dtype=np.float32)
             pressure_vertice[:, 1] = surf_p
-
 
             # set flag
             flag = np.full((nlocs), True)
-            #obs_error = np.full((nlocs), 0.0).astype(np.float32)
             obs_error = no2_unc.astype(np.float32)
             qa = np.full((nlocs), 0)
 
             # date range to fit DA window
             time = np.array([datetime.strptime(date, '%Y%m%dT%H%M%S.%fZ') for date in times])
-            iodatime = np.array([date.strftime('%Y-%m-%dT%H:%M:%SZ') for date in time],dtype='object')
+            iodatime = np.array([date.strftime('%Y-%m-%dT%H:%M:%SZ') for date in time], dtype='object')
 
             wbegin = np.datetime64(datetime.strptime(self.time_range[0], "%Y%m%d%H"))
             wend = np.datetime64(datetime.strptime(self.time_range[1], "%Y%m%d%H"))
             flag_time = np.where((time >= wbegin) & (time <= wend), 1, 0)
-            flag_neg = np.where(no2>0, 1, 0)
+            flag_neg = np.where(no2 > 0, 1, 0)
             flag = np.logical_and(flag_time, flag_neg)
 
             flag = flag.astype(bool)
@@ -213,6 +210,7 @@ class pandora(object):
             self.varAttrs[item, iconv.OvalName()]['units'] = 'mol m-2'
             self.varAttrs[item, iconv.OerrName()]['units'] = 'mol m-2'
             self.varAttrs[item, iconv.OqcName()]['units'] = 'unitless'
+
 
 def get_parser():
     """
