@@ -40,7 +40,7 @@ conf_targets_deps( "${programs}"
 
 install( PROGRAMS ${install_bin_python_scripts_deps} DESTINATION ${CMAKE_INSTALL_BINDIR} )
 
-install( FILES ${pyiodaconv_scripts_deps} DESTINATION $(PYIOODACONV_INSTALL_LIBDIR) )
+install( FILES ${pyiodaconv_scripts_deps} DESTINATION ${PYIODACONV_INSTALL_LIBDIR} )
 
 ecbuild_add_test( TARGET  ${PROJECT_NAME}_lib-python_coding_norms
                   TYPE    SCRIPT
