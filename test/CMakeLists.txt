@@ -17,6 +17,7 @@ list( APPEND test_input
   testinput/gds2_sst_l2p.nc
   testinput/gds2_sst_l3u.nc
   testinput/giirs_fy4a-test.nc
+  testinput/gmao_argo.nc
   testinput/godae_prof.bin
   testinput/godae_ship.bin
   testinput/godae_trak.bin
@@ -40,21 +41,23 @@ list( APPEND test_input
   testinput/gnssro_obs_2018041500_s.nc4
   testinput/wrfdadiags_goes-16-abi_2018041500.nc
   testinput/b001xx007.20200310.bufr
+  testinput/icartt_DC8_20230627_RA.nc
+  testinput/GCAS_NO2_20230802.nc
   testinput/viirs_aod.nc
   testinput/tropomi_no2.nc
   testinput/mopitt_co.he5
   testinput/tropess_cris_co.nc
   testinput/modis_aod.hdf
-  testinput/imssnow_24km.grib2
   testinput/2020100106_metars_small.csv
-  testinput/afwa_snod_24km.grib
   testinput/singleob.yaml
   testinput/ghcn_20200228.csv
   testinput/SMAP_L2_SM_P_NRT_24342_A_20190822T224858_N16023_002.h5
+  testinput/AL945_2020277203000.EDP
   testinput/smos_l2nrt_ssm.nc
   testinput/ascat_ssm.nc
   testinput/SM_REPR_MIR_OSUDP2_20100601T000131_20100601T001849_662_120_1.nc
   testinput/airnow_sites.dat
+  testinput/airnow_sites_epalist_20240716.csv
   testinput/airnow_2020081306.dat
   testinput/aeronet_aod.dat
   testinput/dt_global_twosat_phy_l4_20190101_vDT2021.nc
@@ -62,7 +65,8 @@ list( APPEND test_input
   testinput/SWOT_L2_SSHA.nc
   testinput/aeronet_cad.dat
   testinput/aeronet_tab.dat
-  testinput/imsscf_20191215_c48.nc
+  testinput/ascii_input_IMSscf.20230501.oro_C48.nc
+  testinput/nc_input_IMSscf.20230501.oro_C48.nc
   testinput/bfrPrf_C2E6.2021.214.12.00.G16_0001.0001_bufr
   testinput/sample.SNDR.SNPP.ATMS.2022021600.nc4
   testinput/sample.SNDR.J1.ATMS.2022021600.nc4
@@ -92,6 +96,8 @@ list( APPEND test_input
   testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t180544_small.h5
   testinput/viirs_j1_l1b_albedo_geoloc_202108050600.nc
   testinput/viirs_j1_l1b_albedo_obsval_202108050600.nc
+  testinput/madis_2021010100.nc
+  testinput/gpm_dpr_20240401-S105223-E122536.sample.hdf5
 )
 
 list( APPEND test_output
@@ -106,6 +112,7 @@ list( APPEND test_output
   testoutput/gds2_sst_l3u.nc
   testoutput/giirs_fy4a_obs_2017030208.nc4
   testoutput/giirs_ssec_ioda.nc4
+  testoutput/gmao_argo.nc
   testoutput/godae_prof.nc
   testoutput/godae_ship.nc
   testoutput/godae_trak.nc
@@ -128,6 +135,8 @@ list( APPEND test_output
   testoutput/aod_viirs_obs_2018041500_s.nc4
   testoutput/abi_g16_obs_2018041500.nc4
   testoutput/ioda.NC001007.2020031012.nc
+  testoutput/ioda_icartt_DC8_20230627_RA.nc
+  testoutput/ioda_GCAS_NO2_20230802.nc
   testoutput/viirs_aod.nc
   testoutput/viirs_bias.nc
   testoutput/tropomi_no2_total.nc
@@ -135,17 +144,17 @@ list( APPEND test_output
   testoutput/mopitt_co.nc
   testoutput/tropess_cris_co.nc
   testoutput/modis_aod.nc
-  testoutput/imssnow_scf.nc
   testoutput/2020100106_metars_small.nc
-  testoutput/afwa_snod.nc
   testoutput/singleob.nc
   testoutput/ghcn_snod_20200228.nc
+  testoutput/ionosonde_edp_20201003T203000Z.nc4
   testoutput/smap_ssm.nc
   testoutput/smap_nrt_ssm.nc
   testoutput/smos_ssm.nc
   testoutput/ascat_ssm.nc
   testoutput/smos_sss_l2.nc
   testoutput/airnow_2020081306.nc
+  testoutput/airnow_2020081306_epalist.nc
   testoutput/aeronet_aod.nc
   testoutput/ioda_dt_global_twosat_phy_l4_20190101_vDT2021.nc
   testoutput/ioda_global_vavh_l3_rt_s3a_20210930T18.nc
@@ -177,6 +186,9 @@ list( APPEND test_output
   testoutput/mrms_reflectivity_Z1500m.nc
   testoutput/omps_o3_nm.nc
   testoutput/viirs_j1_l1b_albedo_2021080506.nc
+  testoutput/imsfv3grid_scf.nc
+  testoutput/madis_snod_2021010100.nc
+  testoutput/20240401T105230_PT1M_dpr_gpm.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -312,6 +324,8 @@ if( iodaconv_bufr_query_ENABLED )
     testinput/rtma_ADPUPA.prepbufr
     testinput/bufr_ncep_rtma_adpupa.yaml
     testinput/rtma.t00z.adpupa.tm00.bufr_d
+    testinput/bufr_gpsipw.yaml
+    testinput/obs.20240806T00Z.ipw_gnssgb.ncep.bufr
   )
 
   list( APPEND test_output
@@ -378,6 +392,7 @@ if( iodaconv_bufr_query_ENABLED )
     testoutput/rtma_ru.t0000z.aircar_NC004004.tm00.nc
     testoutput/gdas.t00z.rtma_adpupa.prepbufr.nc
     testoutput/rtma.t00z.adpupa.tm00.nc
+    testoutput/20240806T00Z_PT1M_ipw_gnssgb_ncep.nc
   )
 endif()
 
@@ -589,6 +604,17 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_rads_adt
                           -o testrun/rads_adt.nc
                           -d 2018041512"
                           rads_adt.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gmao_argo
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/gmao_obs2ioda.py
+                          -i testinput/gmao_argo.nc
+                          -o testrun/gmao_argo.nc"
+                          gmao_argo.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_godae_prof
                   TYPE    SCRIPT
@@ -937,6 +963,18 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mrms
                           -o testrun/mrms_reflectivity_Z1500m.nc"
                           mrms_reflectivity_Z1500m.nc ${IODA_CONV_COMP_TOL_ZERO})
 
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_dpr_gpm
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/cloudsat_netcdf_to_ioda.py
+                          -f testinput/gpm_dpr_20240401-S105223-E122536.sample.hdf5
+                          -o testrun/20240401T105230_PT1M_dpr_gpm.nc"
+                          20240401T105230_PT1M_dpr_gpm.nc ${IODA_CONV_COMP_TOL_ZERO})
+
+#===============================================================================
 #===============================================================================
 # MISC converters
 #===============================================================================
@@ -1220,6 +1258,32 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_satbias_viirs_aod
                           -o testrun/varbc/viirs_bias.nc"
                           varbc/viirs_bias.nc ${IODA_CONV_COMP_TOL})
 
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_icartt
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/icartt_nc2ioda.py
+                          -i testinput/icartt_DC8_20230627_RA.nc
+                          -o testrun/ioda_icartt_DC8_20230627_RA.nc
+                          -r 2023062715 2023062721"
+                          ioda_icartt_DC8_20230627_RA.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gcas
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/gcas_nc2ioda.py
+                          -i testinput/GCAS_NO2_20230802.nc
+                          -o testrun/ioda_GCAS_NO2_20230802.nc
+                          -c tropo
+                          -r 2023080215 2023080321"
+                          ioda_GCAS_NO2_20230802.nc ${IODA_CONV_COMP_TOL})
+
+
 foreach (coltype total tropo)
         ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2_${coltype}
                           TYPE    SCRIPT
@@ -1329,6 +1393,19 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_airnow
                           -o testrun/airnow_2020081306.nc"
                           airnow_2020081306.nc ${IODA_CONV_COMP_TOL})
 
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_airnow_epalist
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/airnow2ioda_nc.py
+                          -i testinput/airnow_2020081306.dat
+                          -s testinput/airnow_sites_epalist_20240716.csv
+			  --epa_list
+                          -o testrun/airnow_2020081306_epalist.nc"
+                          airnow_2020081306_epalist.nc ${IODA_CONV_COMP_TOL})
+
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_co_total
                   TYPE    SCRIPT
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
@@ -1365,6 +1442,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_j1_l1b_albedo
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/viirs_l1bnc2ioda.py
                           -i testinput/viirs_j1_l1b_albedo_obsval_202108050600.nc
                           -g testinput/viirs_j1_l1b_albedo_geoloc_202108050600.nc
+                          --secterm
                           -o testrun/viirs_j1_l1b_albedo_2021080506.nc"
                           viirs_j1_l1b_albedo_2021080506.nc ${IODA_CONV_COMP_TOL})
 
@@ -1807,6 +1885,15 @@ if(iodaconv_bufr_query_ENABLED)
                             rtma.t00z.adpupa.tm00.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_gpsipw
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_gpsipw.yaml"
+                            20240806T00Z_PT1M_ipw_gnssgb_ncep.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
 #  FIXME: Greg Thompson
 #  ecbuild_add_test( TARGET  test_iodaconv_bufr_aircar
 #                    TYPE    SCRIPT
@@ -2204,32 +2291,6 @@ endif()
 # Land product converters
 #==============================================================================
 
-if( iodaconv_pygrib_ENABLED )
-  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ims_scf
-                    TYPE    SCRIPT
-                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
-                    COMMAND bash
-                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                            netcdf
-                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/ims_scf2ioda.py
-                            -i testinput/imssnow_24km.grib2
-                            -o testrun/imssnow_scf.nc
-                            -m maskout"
-                            imssnow_scf.nc ${IODA_CONV_COMP_TOL})
-
-  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_afwa_snod
-                    TYPE    SCRIPT
-                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
-                    COMMAND bash
-                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                            netcdf
-                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/afwa_snod2ioda.py
-                            -i testinput/afwa_snod_24km.grib
-                            -o testrun/afwa_snod.nc
-                            -m maskout"
-                            afwa_snod.nc ${IODA_CONV_COMP_TOL})
-endif()
-
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ghcn_snod
                   TYPE    SCRIPT
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
@@ -2243,6 +2304,17 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ghcn_snod
                           -d 2020022818
                           -m maskout"
                           ghcn_snod_20200228.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ionosonde_edp
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/ionosonde_ascii2ioda.py
+                            -i testinput/AL945_2020277203000.EDP
+                            -o testrun/ionosonde_edp_20201003T203000Z.nc4"
+                            ionosonde_edp_20201003T203000Z.nc4 ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap_nrt_ssm
                     TYPE    SCRIPT
@@ -2287,7 +2359,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_imsfv3_scf
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                             "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/imsfv3_scf2ioda.py
-                            -i testinput/imsscf_20191215_c48.nc
+                            -i testinput/ascii_input_IMSscf.20230501.oro_C48.nc
                             -o testrun/imsfv3_scf.nc"
                             imsfv3_scf.nc ${IODA_CONV_COMP_TOL})
 
@@ -2314,6 +2386,28 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_land_owp_snow_obs_dup_thin
                           -o testrun/owp_snow_obs_dup_thin_err_fn.nc
                           --thin_swe 1 --thin_depth .5 --thin_random_seed 3  --err_fn dummy_err"
                           owp_snow_obs_dup_thin_err_fn.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_imsfv3grid_scf
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/imsfv3_scf2ioda.py
+                            -i testinput/nc_input_IMSscf.20230501.oro_C48.nc
+                            -o testrun/imsfv3grid_scf.nc"
+                            imsfv3grid_scf.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_madis_snod
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/madis_snow2ioda.py
+                            -i testinput/madis_2021010100.nc
+                            -o testrun/madis_snod_2021010100.nc"
+                            madis_snod_2021010100.nc ${IODA_CONV_COMP_TOL})
 
 #######################################################
 # Auto-generated tests for ioda file validation

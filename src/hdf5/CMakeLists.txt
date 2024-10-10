@@ -1,7 +1,10 @@
 list(APPEND scripts
   atms_netcdf_hdf5_2ioda.py
   amsr2_2ioda.py
+  cloudsat_netcdf_to_ioda.py
   gmi_2ioda.py
+  read_cloudsat.py
+  read_dpr_gpm.py
   tropics_2ioda.py
 )
 
