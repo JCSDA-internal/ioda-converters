@@ -291,11 +291,21 @@ def populate_obsValue(line, local_data):
     try:
         height, freq, f_conf, density, density_conf, ARTScale, Layer, POLAN, polanLayer = line.split()
 
-        local_data['height'] = np.append(local_data['height'], height)
-        local_data['criticalFrequency'] = np.append(local_data['criticalFrequency'], freq)
-        local_data['criticalFrequencyConfidence'] = np.append(local_data['criticalFrequencyConfidence'], f_conf)
-        local_data['electronDensity'] = np.append(local_data['electronDensity'], density)
-        local_data['electronDensityConfidence'] = np.append(local_data['electronDensityConfidence'], density_conf)
+        # Convert only freq, f_conf, density, and density_conf to float
+        height, freq, f_conf, density, density_conf = map(float, [height, freq, f_conf, density, density_conf])
+
+        if all(x > 0 for x in [freq, f_conf, density, density_conf]):
+            local_data['height'] = np.append(local_data['height'], height)
+            local_data['criticalFrequency'] = np.append(local_data['criticalFrequency'], freq)
+            local_data['criticalFrequencyConfidence'] = np.append(local_data['criticalFrequencyConfidence'], f_conf)
+            local_data['electronDensity'] = np.append(local_data['electronDensity'], density)
+            local_data['electronDensityConfidence'] = np.append(local_data['electronDensityConfidence'], density_conf)
+        else:
+            local_data['height'] = np.append(local_data['height'], height)
+            local_data['criticalFrequency'] = np.append(local_data['criticalFrequency'], float_missing_value)
+            local_data['criticalFrequencyConfidence'] = np.append(local_data['criticalFrequencyConfidence'], float_missing_value)
+            local_data['electronDensity'] = np.append(local_data['electronDensity'], float_missing_value)
+            local_data['electronDensityConfidence'] = np.append(local_data['electronDensityConfidence'], float_missing_value)
     except ValueError:
         pass
 
