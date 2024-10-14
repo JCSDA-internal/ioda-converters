@@ -303,7 +303,7 @@ do iband = 1, nband
 !write(33,*) 'wget -np -nd -nc http://noaa-himawari8.s3.amazonaws.com/AHI-L1b-FLDK/' &
 !& //ccyy//'/'//mm//'/'//dd//'/'//hhnn//'/'//trim(fnames(ij))//'.bz2'
       inquire(file=trim(fnames(ij)), exist=fexist(ij))
-      if ( fexist(ij) == .false. ) then
+      if ( fexist(ij) .eqv. .false. ) then
          write(segment,'(a,i2.2,i2.2)') 'S', isegm, nodivisionsegm
          fnames(ij) = trim(inpdir)//'HS_'//satellite//'_'//ccyymmdd//'_'//hhnn//'_'//band//'_'//region//'_'//resolution//'_'//segment//'.DAT'
          inquire(file=trim(fnames(ij)), exist=fexist(ij))
