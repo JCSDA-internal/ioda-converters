@@ -13,6 +13,7 @@ import netCDF4 as nc
 import numpy as np
 from datetime import datetime, timedelta
 import os
+import re
 from pathlib import Path
 
 import xarray as xr
@@ -26,17 +27,15 @@ from pyiodaconv.def_jedi_utils import epoch, iso8601_string
 
 # constants
 MOLECCM_2MOLM_2 = 10000/6.0221408e+23  # molec/cm2 to mol/m2
-HPA2PA = 1E2
+MBAR2PA = 1E2
 
 float_missing_value = iconv.get_default_fill_val(np.float32)
 
 
-class gcas(object):
+class pandora(object):
 
-    def __init__(self, filenames, column, time_range):
-
+    def __init__(self, filenames, time_range):
         self.filenames = filenames
-        self.column = column
         self.time_range = time_range
         self.make_dictionaries()      # Set up variable names for IODA
         self.DimDict = {}
@@ -47,132 +46,107 @@ class gcas(object):
         # Loop through input filenames
         first = True
         for filename in self.filenames:
-            try:
-                dsFlight = xr.open_dataset(filename)
-            except IOError:
-                raise IOError('%s file not found!' % self.filename)
-            except Exception:
-                raise Exception('Unknown error opening %s' % self.filename)
 
-            # Read global attributes
-            self.AttrData['platform'] = dsFlight.attrs['MeasurementPlatform']
-            self.AttrData['description'] = dsFlight.attrs['RevisionNumber']
+            # Read station lat lon
+            with open(filename, 'r', encoding='ISO-8859-1') as file:
+                content = file.read()
 
-            # Read lat lon and flatten from 2d (time,xtrack) and make it 1d
-            flats = dsFlight['lat'].values.flatten()
-            flats = np.where(np.isnan(flats), float_missing_value, flats)
-            lats = flats.astype(np.float32)
+            latitude = re.search(r"Location latitude \[deg\]:\s*([-\d.]+)", content)
+            longitude = re.search(r"Location longitude \[deg\]:\s*([-\d.]+)", content)
+            lat = float(latitude.group(1))
+            lon = float(longitude.group(1))
 
-            flons = dsFlight['lon'].values.flatten()
-            flons = np.where(np.isnan(flons), float_missing_value, flons)
-            lons = flons.astype(np.float32)
+            # Separate the tabular section of pandora txt file or the 3rd section
+            sections = content.split('---------------------------------------------------------------------------------------')
 
-            alts_1d = dsFlight['aircraft_altitude'].values.flatten()
-            xtrack = np.arange(dsFlight.dims['xtrack'])  # pixels in swath
-            nlocs = lats.shape[0]
-            alts = np.repeat(alts_1d, len(xtrack))  # repeat alt for each swath
+            if len(sections) >= 3:
+                table_content = sections[2].strip()
+                # Rows do not have the same number of columms
+                # because of optional columns at the end of some rows
+                # Find max num of cols and pad rows with missing columns with NaN
+                lines = table_content.split('\n')
+                rows = []
+                # except for datetime convert to float
+                for line in lines:
+                    row = []
+                    for value in line.split():
+                        try:
+                            row.append(float(value))
+                        except ValueError:
+                            row.append(value)
+                    rows.append(row)
+
+                max_columns = max(len(row) for row in rows)
+                padded_rows = [row + [np.nan] * (max_columns - len(row)) for row in rows]
+                data = np.array(padded_rows, dtype=object)
+            else:
+                print("The input file is not in the standard format")
+
+            times = data[:, 0]
+            no2 = data[:, 38]  # no2 total column amount [mole/m2]
+            no2_unc = data[:, 42]  # Total uncertainty of nitrogen dioxide total vertical column amount [moles per square meter]
+            surf_p = data[:, 11]*MBAR2PA  # climatological station pressure [mbar]
+            nlocs = len(times)
+
+            lats = np.full(nlocs, lat)
+            lons = np.full(nlocs, lon)
 
             lats = lats.astype(np.float32)
             lons = lons.astype(np.float32)
-            alts = alts.astype(np.float32)
 
-            # Read 3d model alt (level) and reshape it to 2d
-            geoscf = xr.open_dataset(filename, group='_Model_Information')
-            # Model alt label in incorrect, change km to m
-            fmodel_alt = geoscf['model_altitude']*1000
-            level_dim, time_dim, xtrack_dim = fmodel_alt.shape
-            model_alt = fmodel_alt.values.reshape(level_dim, time_dim * xtrack_dim)
-
-            # Read 3d model pressure and reshape it to 2d
-            fmodel_press = geoscf['model_pressure']*HPA2PA
-            model_press = fmodel_press.values.reshape(level_dim, time_dim * xtrack_dim)
-            model_press = np.where(np.isnan(model_press), float_missing_value, model_press)
-            model_press = model_press.astype(np.float32)
-
-            # Find aircraft P using model pressure and altitude info
-            aircraft_p = np.zeros(time_dim * xtrack_dim, dtype=np.float32)
-            for t in range(time_dim * xtrack_dim):
-                differences = np.abs(np.array(model_alt[:, t]) - np.array(alts[t]))
-                idx = np.argmin(differences)
-                aircraft_p[t] = model_press[idx, t]
-
-            # Only 2 vertice: surface pressure and flight pressure
-            # For total column flight_pressure is 0
+            # 2 vertice: surface pressure and top (0)
             num_vert = 2
-            pressure_vertice = np.zeros([time_dim * xtrack_dim, num_vert], dtype=np.float32)
-            pressure_vertice[:, 1] = model_press[level_dim-1, :]  # surface pressure from model
-
-            # Read time and convert to ioda time format
-            obs_time = dsFlight['time'].values
-            time = np.repeat(obs_time, len(xtrack))
-
-            times = (time - np.datetime64(epoch.strftime("%Y-%m-%dT%H:%M:%S"))) / np.timedelta64(1, 's')
-
-            if (self.column.strip() == 'total'):
-                var_data_below = dsFlight['no2_vertical_column_below_aircraft'].values.flatten()
-                var_data_above = dsFlight['no2_vertical_column_above_aircraft'].values.flatten()
-                var_data = (var_data_below+var_data_above) * MOLECCM_2MOLM_2  # change to mol/m2
-                var_name = 'nitrogendioxideTotal'
-                pressure_vertice[:, 0] = np.zeros(time_dim * xtrack_dim, dtype=np.float32)
-            elif (self.column.strip() == 'tropo'):
-                var_data = dsFlight['no2_vertical_column_below_aircraft'].values.flatten()*MOLECCM_2MOLM_2
-                var_name = 'nitrogendioxideColumn'
-                pressure_vertice[:, 0] = aircraft_p
-
-            data = {}
-            # flatten 2d (time,xtrack)
-            var_data = np.where(np.isnan(var_data), float_missing_value, var_data)
-            data[var_name] = var_data.astype(np.float32)
+            pressure_vertice = np.zeros([nlocs, num_vert], dtype=np.float32)
+            pressure_vertice[:, 1] = surf_p
 
             # set flag
             flag = np.full((nlocs), True)
-            obs_error = np.full((nlocs), 0.0).astype(np.float32)
+            obs_error = no2_unc.astype(np.float32)
             qa = np.full((nlocs), 0)
 
             # date range to fit DA window
+            time = np.array([datetime.strptime(date, '%Y%m%dT%H%M%S.%fZ') for date in times])
+            iodatime = np.array([date.strftime('%Y-%m-%dT%H:%M:%SZ') for date in time], dtype='object')
+
             wbegin = np.datetime64(datetime.strptime(self.time_range[0], "%Y%m%d%H"))
             wend = np.datetime64(datetime.strptime(self.time_range[1], "%Y%m%d%H"))
-            flag = np.where((time >= wbegin) & (time <= wend), 1, 0)
+            flag_time = np.where((time >= wbegin) & (time <= wend), 1, 0)
+            flag_neg = np.where(no2 > 0, 1, 0)
+            flag = np.logical_and(flag_time, flag_neg)
+
             flag = flag.astype(bool)
 
-            # ---- Write Metadata and data
+            # Write MetaData and data
+            var_name = "nitrogendioxideTotal"
+            data = {}
+            data[var_name] = no2.astype(np.float32)
             if first:
-
-                # add metadata variables
-                self.outData[('dateTime', 'MetaData')] = times[flag]
+                self.outData[('dateTime', 'MetaData')] = iodatime[flag]
                 self.outData[('latitude', 'MetaData')] = lats[flag]
                 self.outData[('longitude', 'MetaData')] = lons[flag]
-                self.outData[('aircraft_altitude', 'MetaData')] = alts[flag]
-                self.outData[('aircraft_pressure', 'MetaData')] = aircraft_p[flag]
                 self.outData[('pressureVertice', 'RetrievalAncillaryData')] = pressure_vertice[flag]
 
-                varDict = self.varDict.get(var_name)
-                self.outData[varDict['valKey']] = \
+                self.outData[self.varDict[var_name]['valKey']] = \
                     data[var_name][flag]
                 self.outData[self.varDict[var_name]['errKey']] = \
                     obs_error[flag]
                 self.outData[self.varDict[var_name]['qcKey']] = \
                     qa[flag]
-
             else:
                 self.outData[('dateTime', 'MetaData')] = np.concatenate(
-                    (self.outData[('dateTime', 'MetaData')], times[flag]))
+                    (self.outData[('dateTime', 'MetaData')], iodatime[flag]))
                 self.outData[('latitude', 'MetaData')] = np.concatenate(
                     (self.outData[('latitude', 'MetaData')], lats[flag]))
                 self.outData[('longitude', 'MetaData')] = np.concatenate(
                     (self.outData[('longitude', 'MetaData')], lons[flag]))
-                self.outData[('aircraft_altitude', 'MetaData')] = np.concatenate(
-                    (self.outData[('aircraft_altitude', 'MetaData')], alts[flag]))
-                self.outData[('aircraft_pressure', 'MetaData')] = np.concatenate(
-                    (self.outData[('aircraft_pressure', 'MetaData')], aircraft_p[flag]))
                 self.outData[('pressureVertice', 'RetrievalAncillaryData')] = np.concatenate(
                     (self.outData[('pressureVertice', 'RetrievalAncillaryData')], pressure_vertice[flag]))
 
-                self.outData[(var_name, 'valKey')] = np.concatenate(
-                    (self.outData[varDict['valKey']], data[var_name][flag]))
-                self.outData[(var_name, 'errKey')] = np.concatenate(
+                self.outData[self.varDict[var_name]['valKey']] = np.concatenate(
+                    (self.outData[self.varDict[var_name]['valKey']], data[var_name][flag]))
+                self.outData[self.varDict[var_name]['errKey']] = np.concatenate(
                     (self.outData[self.varDict[var_name]['errKey']], obs_error[flag]))
-                self.outData[(var_name, 'qcKey')] = np.concatenate(
+                self.outData[self.varDict[var_name]['qcKey']] = np.concatenate(
                     (self.outData[self.varDict[var_name]['qcKey']], qa[flag]))
 
             first = False
@@ -204,8 +178,7 @@ class gcas(object):
         """
         Make a dictionary of obsvars
         """
-        obsvars = {"nitrogendioxideTotal",
-                   "nitrogendioxideColumn"}
+        obsvars = {"nitrogendioxideTotal"}
         self.obsvars = obsvars
 
     def make_AttrData(self):
@@ -248,7 +221,7 @@ def get_parser():
     # get command line arguments
     parser = argparse.ArgumentParser(
         description=(
-            'Reads GCAS column netCDF files from NASA STAQS campaign'
+            'Reads Pandora L2 total columns of NO2 from txt files (L2_rnvs3)'
             'and converts into IODA formatted output files. Multiple'
             'files are able to be concatenated.'),
         formatter_class=argparse.RawDescriptionHelpFormatter
@@ -258,7 +231,7 @@ def get_parser():
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
         '-i', '--input',
-        help="path of GCAS observation netCDF input file(s)",
+        help="path of Pandora measurement txt file",
         type=str,
         nargs='+',
         required=True)
@@ -268,11 +241,6 @@ def get_parser():
         help="path of IODA output file",
         type=str,
         required=True)
-
-    required.add_argument(
-        '-c', '--column',
-        help="type of column: total or tropo",
-        type=str, required=True)
 
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
@@ -302,14 +270,14 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
 
-    # Read in the flight data
-    flightData = gcas(args.input, args.column, args.time_range)
+    # Read in the pandora station data
+    pandoraData = pandora(args.input, args.time_range)
 
     # setup the IODA writer
-    writer = iconv.IodaWriter(args.output, locationKeyList, flightData.DimDict)
+    writer = iconv.IodaWriter(args.output, locationKeyList, pandoraData.DimDict)
 
     # write everything out
-    writer.BuildIoda(flightData.outData, varDims, flightData.varAttrs, flightData.AttrData)
+    writer.BuildIoda(pandoraData.outData, varDims, pandoraData.varAttrs, pandoraData.AttrData)
 
 
 if __name__ == '__main__':

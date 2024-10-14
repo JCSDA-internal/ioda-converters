@@ -134,11 +134,11 @@ class icartt(object):
 
                 for var in self.obsvars:
                     self.outData[(var, 'valKey')] = np.concatenate(
-                        (self.outData[(var, 'valKey')], times[flag]))
-                self.outData[(var_name, 'errKey')] = np.concatenate(
-                    (self.outData[(var_name, 'errKey')], times[flag]))
-                self.outData[(var_name, 'qcKey')] = np.concatenate(
-                    (self.outData[(var_name, 'qcKey')], times[flag]))
+                        (self.outData[self.varDict[var]['valKey']], data[var][flag]))
+                    self.outData[(var_name, 'errKey')] = np.concatenate(
+                        (self.outData[self.varDict[var]['errKey']], obs_error[flag]))
+                    self.outData[(var_name, 'qcKey')] = np.concatenate(
+                        (self.outData[self.varDict[var]['qcKey']], qa[flag]))
 
             first = False
 

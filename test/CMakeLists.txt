@@ -98,6 +98,7 @@ list( APPEND test_input
   testinput/viirs_j1_l1b_albedo_obsval_202108050600.nc
   testinput/madis_2021010100.nc
   testinput/gpm_dpr_20240401-S105223-E122536.sample.hdf5
+  testinput/Pandora57s1_BoulderCO_L2_rnvs3p1-8.txt
 )
 
 list( APPEND test_output
@@ -189,6 +190,7 @@ list( APPEND test_output
   testoutput/imsfv3grid_scf.nc
   testoutput/madis_snod_2021010100.nc
   testoutput/20240401T105230_PT1M_dpr_gpm.nc
+  testoutput/Pandora57s1_BoulderCO_L2_rnvs3p1-8.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -1283,6 +1285,17 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gcas
                           -r 2023080215 2023080321"
                           ioda_GCAS_NO2_20230802.nc ${IODA_CONV_COMP_TOL})
 
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pandora
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/pandora_2ioda.py
+                          -i testinput/Pandora57s1_BoulderCO_L2_rnvs3p1-8.txt
+                          -o testrun/Pandora57s1_BoulderCO_L2_rnvs3p1-8.nc
+                          -r 2023080115 2023080121"
+                          Pandora57s1_BoulderCO_L2_rnvs3p1-8.nc ${IODA_CONV_COMP_TOL})
 
 foreach (coltype total tropo)
         ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2_${coltype}
