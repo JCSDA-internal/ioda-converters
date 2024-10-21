@@ -46,13 +46,14 @@ class pandora(object):
         # Loop through input filenames
         first = True
         for filename in self.filenames:
-
+            print(filename)
             # Read station lat lon
             with open(filename, 'r', encoding='ISO-8859-1') as file:
                 content = file.read()
 
             latitude = re.search(r"Location latitude \[deg\]:\s*([-\d.]+)", content)
             longitude = re.search(r"Location longitude \[deg\]:\s*([-\d.]+)", content)
+
             lat = float(latitude.group(1))
             lon = float(longitude.group(1))
 
@@ -82,6 +83,10 @@ class pandora(object):
             else:
                 print("The input file is not in the standard format")
 
+            if data.size == 0 or data.shape[1] == 0:
+                print(f"{filename} is empty")
+                continue
+
             times = data[:, 0]
             no2 = data[:, 38]  # no2 total column amount [mole/m2]
             no2_unc = data[:, 42]  # Total uncertainty of nitrogen dioxide total vertical column amount [moles per square meter]
@@ -101,6 +106,7 @@ class pandora(object):
 
             # set flag
             flag = np.full((nlocs), True)
+            flag_time = np.full((nlocs), 0)
             obs_error = no2_unc.astype(np.float32)
             qa = np.full((nlocs), 0)
 
@@ -111,8 +117,13 @@ class pandora(object):
             wbegin = np.datetime64(datetime.strptime(self.time_range[0], "%Y%m%d%H"))
             wend = np.datetime64(datetime.strptime(self.time_range[1], "%Y%m%d%H"))
             flag_time = np.where((time >= wbegin) & (time <= wend), 1, 0)
+
             flag_neg = np.where(no2 > 0, 1, 0)
             flag = np.logical_and(flag_time, flag_neg)
+
+            if (np.sum(flag) == 0):
+                print(f"No data within time range in {filename}")
+                continue
 
             flag = flag.astype(bool)
 
@@ -150,6 +161,11 @@ class pandora(object):
                     (self.outData[self.varDict[var_name]['qcKey']], qa[flag]))
 
             first = False
+
+        # No data within range in any sites
+        if len(self.outData[('dateTime', 'MetaData')]) == 0:
+            print("No data within the time range in any site")
+            sys.exit(0)
 
         self.DimDict['Location'] = len(self.outData[('dateTime', 'MetaData')])
         self.AttrData['Location'] = np.int32(self.DimDict['Location'])
