@@ -26,7 +26,6 @@ from pyiodaconv.orddicts import DefaultOrderedDict
 from pyiodaconv.def_jedi_utils import epoch, iso8601_string
 
 # constants
-MOLECCM_2MOLM_2 = 10000/6.0221408e+23  # molec/cm2 to mol/m2
 MBAR2PA = 1E2
 
 float_missing_value = iconv.get_default_fill_val(np.float32)
