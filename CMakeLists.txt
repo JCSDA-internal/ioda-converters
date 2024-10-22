@@ -13,7 +13,7 @@ cmake_minimum_required( VERSION 3.12 )
 project( iodaconv VERSION 0.0.1 LANGUAGES CXX Fortran )
 list( APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake )
 
-find_package( ecbuild 3 REQUIRED HINTS ${CMAKE_CURENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../ecbuild )
+find_package( ecbuild 3 REQUIRED )
 if( ecbuild_VERSION VERSION_LESS 3.4 )
   include(GNUInstallDirs)
 endif()
