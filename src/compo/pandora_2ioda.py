@@ -33,9 +33,9 @@ float_missing_value = iconv.get_default_fill_val(np.float32)
 
 class pandora(object):
 
-    def __init__(self, filenames, time_range):
+    def __init__(self, filenames, date_range):
         self.filenames = filenames
-        self.time_range = time_range
+        self.date_range = date_range
         self.make_dictionaries()      # Set up variable names for IODA
         self.DimDict = {}
         self.read()    # Read data from file
@@ -113,8 +113,8 @@ class pandora(object):
             time = np.array([datetime.strptime(date, '%Y%m%dT%H%M%S.%fZ') for date in times])
             iodatime = np.array([date.strftime('%Y-%m-%dT%H:%M:%SZ') for date in time], dtype='object')
 
-            wbegin = np.datetime64(datetime.strptime(self.time_range[0], "%Y%m%d%H"))
-            wend = np.datetime64(datetime.strptime(self.time_range[1], "%Y%m%d%H"))
+            wbegin = np.datetime64(datetime.strptime(self.date_range[0], "%Y%m%d%H"))
+            wend = np.datetime64(datetime.strptime(self.date_range[1], "%Y%m%d%H"))
             flag_time = np.where((time >= wbegin) & (time <= wend), 1, 0)
 
             flag_neg = np.where(no2 > 0, 1, 0)
@@ -259,9 +259,9 @@ def get_parser():
 
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
-        '-r', '--time_range',
+        '--date_range',
         help="extract a date range to fit the data assimilation window"
-        "format -r YYYYMMDDHH YYYYMMDDHH",
+        "format --date_range YYYYMMDDHH YYYYMMDDHH",
         type=str, metavar=('begindate', 'enddate'), nargs=2,
         default=('1970010100', '2170010100'))
 
@@ -286,7 +286,7 @@ def main():
     args = parser.parse_args()
 
     # Read in the pandora station data
-    pandoraData = pandora(args.input, args.time_range)
+    pandoraData = pandora(args.input, args.date_range)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, pandoraData.DimDict)
