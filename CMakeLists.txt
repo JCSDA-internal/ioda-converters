@@ -82,7 +82,7 @@ endif()
 find_package( gsl-lite HINTS $ENV{gsl_lite_DIR} )
 find_package( MPI )
 
-find_package( ioda REQUIRED QUIET )
+find_package( ioda REQUIRED )
 
 find_package( bufr 12.0.1 QUIET )
 find_package( NetCDF QUIET COMPONENTS Fortran )
