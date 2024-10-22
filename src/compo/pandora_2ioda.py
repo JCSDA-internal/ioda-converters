@@ -58,7 +58,7 @@ class pandora(object):
             lon = float(longitude.group(1))
 
             # Separate the tabular section of pandora txt file or the 3rd section
-            sections = content.split('---------------------------------------------------------------------------------------')
+            sections = content.split('-' * 87)
 
             if len(sections) >= 3:
                 table_content = sections[2].strip()
