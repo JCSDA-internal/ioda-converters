@@ -169,11 +169,11 @@ class gcas(object):
                     (self.outData[('pressureVertice', 'RetrievalAncillaryData')], pressure_vertice[flag]))
 
                 self.outData[(var_name, 'valKey')] = np.concatenate(
-                    (self.outData[(var_name, 'valKey')], times[flag]))
+                    (self.outData[varDict['valKey']], data[var_name][flag]))
                 self.outData[(var_name, 'errKey')] = np.concatenate(
-                    (self.outData[(var_name, 'errKey')], times[flag]))
+                    (self.outData[self.varDict[var_name]['errKey']], obs_error[flag]))
                 self.outData[(var_name, 'qcKey')] = np.concatenate(
-                    (self.outData[(var_name, 'qcKey')], times[flag]))
+                    (self.outData[self.varDict[var_name]['qcKey']], qa[flag]))
 
             first = False
 

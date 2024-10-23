@@ -28,7 +28,7 @@ conf_targets_deps( "${programs}"
 
 install( PROGRAMS ${gsi_ncdiag_bin_install_deps} DESTINATION ${CMAKE_INSTALL_BINDIR} )
 
-install( FILES ${gsi_ncdiag_lib_deps} DESTINATION $(PYIODA_INSTALL_LIBDIR) )
+install( FILES ${gsi_ncdiag_lib_deps} DESTINATION ${PYIODACONV_INSTALL_LIBDIR} )
 
 ecbuild_add_test( TARGET  ${PROJECT_NAME}_gsi_ncdiag_coding_norms
                   TYPE    SCRIPT
