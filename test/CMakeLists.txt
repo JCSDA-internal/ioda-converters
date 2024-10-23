@@ -1233,7 +1233,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_aod
                           -n 0.0"
                           viirs_aod.nc ${IODA_CONV_COMP_TOL})
 
-ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_aod
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_smoke_dust
                   TYPE    SCRIPT
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND bash
