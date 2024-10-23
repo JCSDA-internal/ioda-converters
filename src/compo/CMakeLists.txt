@@ -1,20 +1,21 @@
 list(APPEND programs
-  icartt_nc2ioda.py
-  ompsnm_o3_nc2ioda.py
-  ompsnm_o3_nc2ioda.py
-  omi_o3_nc2ioda.py
-  mls_o3_nc2ioda.py
-  viirs_aod2ioda.py
-  tropomi_no2_co_nc2ioda.py
-  tempo_nc2ioda.py
-  mopitt_co_nc2ioda.py
-  tropess_co_nc2ioda.py
-  airnow2ioda_nc.py
-  modis_aod2ioda.py
   aeronet_aod2ioda.py
   aeronet_aaod2ioda.py
-  viirs_biaswriter.py
+  airnow2ioda_nc.py
+  gcas_nc2ioda.py
+  icartt_nc2ioda.py
+  mls_o3_nc2ioda.py
+  modis_aod2ioda.py
+  mopitt_co_nc2ioda.py
+  omi_o3_nc2ioda.py
+  ompsnm_o3_nc2ioda.py
   omps_o3_nm_h52ioda.py
+  pandora_2ioda.py
+  tempo_nc2ioda.py
+  tropess_co_nc2ioda.py
+  tropomi_no2_co_nc2ioda.py
+  viirs_aod2ioda.py
+  viirs_biaswriter.py
   viirs_l1bnc2ioda.py
 )
 

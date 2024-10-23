@@ -119,7 +119,7 @@ class tempo(object):
 
             # add cloud fraction filter here as UFO one doesn't work
             # needs FIX in future
-            cld = cld_fra < 0.05   # from TEMPO STM meetings, experimental
+            cld = cld_fra < 0.5   # from TEMPO STM meetings, experimental
             flg = np.logical_and(flg, cld)
 
             # time
@@ -201,6 +201,7 @@ class tempo(object):
                 if self.v3:
                     if self.columnType == "total" or self.columnType == "stratosphere":
                         sys.exit("no error with total and strato NRT product")
+                    err = err * conv
                 else:
                     err = err * conv * col_amf / tot_amf
 

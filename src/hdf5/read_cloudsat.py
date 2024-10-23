@@ -21,6 +21,17 @@ import xarray as xr
 from pyiodaconv.def_jedi_utils import iso8601_string, epoch
 
 
+def is_hdf4(fname):
+    # return a True if file is hdf4
+    from pyhdf.SD import SD, HDF4Error
+    try:
+        file = SD(fname)
+        file.end()  # Ensuring the file is properly closed
+        return True
+    except HDF4Error:
+        return False
+
+
 def read_cloudsat_hdf_file(fname):
     print(f"Reading {fname}")
     from pyhdf.SD import SD, SDC
@@ -77,6 +88,7 @@ def read_cloudsat_hdf_file(fname):
     xid = vs.find('start_time')
     start_time = np.array(vs.attach(xid)[:]).flatten()
     start_time = datetime.datetime.strptime(start_time[0], '%Y%m%d%H%M%S')
+    start_time = start_time.replace(tzinfo=datetime.timezone.utc)
 
     xid = vs.find('Latitude')
     latid = vs.attach(xid)
@@ -153,20 +165,10 @@ def read_cloudsat_hdf_file(fname):
     return csdata
 
 
-def read_cloudsat(cs_fnames):
+def read_cloudsat(fname):
 
-    for f in cs_fnames:
-        cs_data = read_cloudsat_hdf_file(f)
-
-        if 'cs_data1' not in vars():  # not defined yet
-            cs_data1 = cs_data
-        else:
-            # common keys
-            for k in (cs_data.keys() & cs_data1.keys()):
-                cs_data1[k] = np.append(cs_data1[k], cs_data[k], axis=0)
-
-    if 'cs_data1' not in vars():
-        return []
+    cs_data = read_cloudsat_hdf_file(fname)
+    cs_data1 = cs_data
 
     # create xarray dataset
     nobs = cs_data1['obs'].shape[0]
@@ -180,6 +182,8 @@ def read_cloudsat(cs_fnames):
     cs_data['obs_id'] = xr.DataArray(obs_id, dims={'obs_id': obs_id})
     cs_data['channel'] = xr.DataArray(channel, dims={'channel': channel})
     cs_data['elevation'] = xr.DataArray(elevation, dims={'elevation': elevation})
+    cs_data['centerFreq'] = xr.DataArray(np.array([94.05]), dims={"channel": 1})  # GHz
+    cs_data['centerWN'] = xr.DataArray(np.array([3.1371]), dims={"channel": 1})   # 1/cm
 
     for k in cs_data1:
         if (k == 'obs') or (k == 'height'):
