@@ -163,7 +163,7 @@ all_LocKeyList = {
     'SCCF_chan_wavelen': ('sensorCentralFrequency', 'double'),
     'QI_with_FC': ('percentConfidenceWithForecast', 'float'),
     'QI_without_FC': ('percentConfidenceWithoutForecast', 'float'),
-    'Data_Vertical_Velocity': ('windUpward', 'float'),
+    'Data_Vertical_Velocity': ('instantaneousAltitudeRate', 'float'),
     'LaunchTime': ('releaseTime', 'float'),
     'wind_computation_method': ('windComputationMethod', 'integer'),
     'satellite_zenith_angle': ('satelliteZenithAngle', 'float'),
