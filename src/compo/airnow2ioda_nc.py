@@ -27,10 +27,10 @@ os.environ["TZ"] = "UTC"
 # First is the incoming variable name followed by list of IODA outgoing name and units.
 
 varDict = {'PM2.5': ['particulatematter2p5Surface', 'mg m-3'],
-           'OZONE': ['ozoneSurface', 'ppmV'],
-           'NO2': ['nitrogendioxideSurface', 'ppmV'],
-           'CO': ['carbonmonoxideSurface', 'ppmV'],
-           'SO2': ['sulfurdioxideSurface', 'ppmV'],
+           'OZONE': ['ozoneSurface', 'ppmV (1e6 mol mol-1)'],
+           'NO2': ['nitrogendioxideSurface', 'ppmV (1e6 mol mol-1)'],
+           'CO': ['carbonmonoxideSurface', 'ppmV (1e6 mol mol-1)'],
+           'SO2': ['sulfurdioxideSurface', 'ppmV (1e6 mol mol-1)'],
            }
 
 locationKeyList = [("latitude", "float", "degrees_north"),
@@ -77,10 +77,10 @@ def read_monitor_file(sitefile, is_epa):
     if is_epa:
         tmpdf = pd.read_csv(sitefile)
         tmpdf = tmpdf[['stat_id', 'lat', 'lon', 'elevation', 'loc_setting']]
-        tmpdf['loc_type'] = np.nan
+        tmpdf['loc_type'] = 0
         for n, loc_type in enumerate(['UNKNOWN', 'RURAL', 'SUBURBAN', 'URBAN AND CENTER CITY']):
             type_filter = (tmpdf['loc_setting'] == loc_type)
-            tmpdf.loc[type_filter, 'loc_type'].loc[type_filter] = n
+            tmpdf.loc[type_filter, 'loc_type'] = n
         airnow = tmpdf.rename(columns={'stat_id': 'siteid', 'lat': 'latitude', 'lon': 'longitude'})
     else:
         colsinuse = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
