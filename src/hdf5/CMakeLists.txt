@@ -4,6 +4,7 @@ list(APPEND scripts
   cloudsat_netcdf_to_ioda.py
   gmi_2ioda.py
   read_cloudsat.py
+  read_dpr_gpm.py
   tropics_2ioda.py
 )
 

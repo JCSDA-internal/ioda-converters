@@ -23,6 +23,7 @@ import numpy as np
 import pyiodaconv.ioda_conv_engines as iconv
 from pyiodaconv.orddicts import DefaultOrderedDict
 from pyiodaconv.def_jedi_utils import int_missing_value, long_missing_value, float_missing_value
+from pyiodaconv.def_jedi_utils import record_time
 from collections import defaultdict
 
 # Globals
@@ -53,12 +54,18 @@ meta_keys = [m_item[0] for m_item in MetaDataKeyList]
 
 # The outgoing IODA variables (ObsValues), their units, and assigned constant ObsError.
 obsvars = ['windSpeed', 'windSpeed'+obsErrName, 'windSpeed'+obsQcName]
+# Add wind components to be able to assign obsError with dummy values
+obsvars_dummy = ['windEastward', 'windNorthward']
+# List of the observables
+obsvars_list = [obsvars[0]] + obsvars_dummy
 obsvars_units = 'm s-1'
 obsvars_dtype = 'float'
 
 # Assign dimensions to the obs values
 VarDims = {
     'windSpeed': ['Location'],
+    'windEastward': ['Location'],
+    'windNorthward': ['Location'],
 }
 
 # Assign missing value details for the variables
@@ -81,6 +88,8 @@ def main(args):
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.ERROR)
+
+    tic = record_time()
 
     # Loop through input files and concatenate into dataframe
     file_cnt = 0
@@ -125,11 +134,21 @@ def main(args):
         # count files
         file_cnt += 1
 
+#   a value of 0. is set. Using missing value triggers UFO rejection
+    for iodavar in obsvars_dummy:
+        obs_data[iodavar] = 0.
+        obs_data[iodavar+obsQcName] = 0
+
     # replace missing values
     for MetaDataKey in MetaDataKeyList:
         obs_data[MetaDataKey[0]].fillna(missing_vals[MetaDataKey[1]], inplace=True)
     iodavar = obsvars[0]
     obs_data[iodavar].fillna(missing_vals[obsvars_dtype], inplace=True)
+
+    # find where windSpeed is missing and set the components to missing as well
+    mask = obs_data['windSpeed'] == missing_vals[obsvars_dtype]
+    for iodavar in obsvars_dummy:
+        obs_data[iodavar].mask(mask.values, missing_vals[obsvars_dtype], inplace=True)
 
     # sort by instrument and then time
     if args.sort:
@@ -152,16 +171,16 @@ def main(args):
     varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 
     # Set coordinates and units of the ObsValues.
-    iodavar = obsvars[0]
-    # set the obs space attributes
-    varDict[iodavar]['valKey'] = iodavar, obsValName
-    varDict[iodavar]['errKey'] = iodavar, obsErrName
-    varDict[iodavar]['qcKey'] = iodavar, obsQcName
-    varAttrs[iodavar, obsValName]['coordinates'] = 'longitude latitude'
-    varAttrs[iodavar, obsErrName]['coordinates'] = 'longitude latitude'
-    varAttrs[iodavar, obsQcName]['coordinates'] = 'longitude latitude'
-    varAttrs[iodavar, obsValName]['units'] = obsvars_units
-    varAttrs[iodavar, obsErrName]['units'] = obsvars_units
+    for iodavar in obsvars_list:
+        # set the obs space attributes
+        varDict[iodavar]['valKey'] = iodavar, obsValName
+        varDict[iodavar]['errKey'] = iodavar, obsErrName
+        varDict[iodavar]['qcKey'] = iodavar, obsQcName
+        varAttrs[iodavar, obsValName]['coordinates'] = 'longitude latitude'
+        varAttrs[iodavar, obsErrName]['coordinates'] = 'longitude latitude'
+        varAttrs[iodavar, obsQcName]['coordinates'] = 'longitude latitude'
+        varAttrs[iodavar, obsValName]['units'] = obsvars_units
+        varAttrs[iodavar, obsErrName]['units'] = obsvars_units
 
     # Set units of the MetaData variables and all _FillValues.
     for key in meta_keys:
@@ -172,15 +191,19 @@ def main(args):
         ioda_data[(key, metaDataName)] = np.array(obs_data[key], dtype=dtypes[dtypestr])
 
     # Transfer from the 1-D data vectors and ensure output data (ioda_data) types using numpy.
-    iodavar = obsvars[0]
-    ioda_data[(iodavar, obsValName)] = np.array(obs_data[iodavar], dtype=np.float32)
-    ioda_data[(iodavar, obsErrName)] = np.array(obs_data[iodavar+obsErrName], dtype=np.float32)
-    ioda_data[(iodavar, obsQcName)] = np.array(obs_data[iodavar+obsQcName], dtype=np.int32)
+    for iodavar in obsvars_list:
+        ioda_data[(iodavar, obsValName)] = np.array(obs_data[iodavar], dtype=np.float32)
+        ioda_data[(iodavar, obsQcName)] = np.array(obs_data[iodavar+obsQcName], dtype=np.int32)
+        if iodavar == 'windSpeed':
+            ioda_data[(iodavar, obsErrName)] = np.array(obs_data[iodavar+obsErrName], dtype=np.float32)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output_file, MetaDataKeyList, DimDict)
     # write everything out
     writer.BuildIoda(ioda_data, VarDims, varAttrs, GlobalAttrs)
+
+    # report time
+    toc = record_time(tic=tic)
 
 
 def get_data_source(afile):
@@ -190,17 +213,22 @@ def get_data_source(afile):
         return 'Muon'
     elif 'constellation' in afile.attrs.keys() and "spire" in afile.attrs['constellation'].decode('UTF-8'):
         return 'Spire'
+    elif 'title' in afile.attrs.keys() and 'SPIRE' in afile.attrs['title'].decode('UTF-8'):
+        return 'Spire-L2'
+    else:
+        # throw error
+        pass
 
 
 def get_reference_time(afile, osw_source):
-    if osw_source in ('CYGNSS'):
+    if osw_source == 'CYGNSS' or osw_source == 'Spire-L2':
         dat_ref = afile['sample_time'].attrs['units'].decode('UTF-8').split('since ')[-1]
         dat_ref = datetime.strptime(dat_ref, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc).timestamp()
-    elif osw_source in ('Muon'):
+    elif osw_source == 'Muon':
         # note same as CYGNSS except item key is simply time
         dat_ref = afile['time'].attrs['units'].decode('UTF-8').split('since ')[-1]
         dat_ref = datetime.strptime(dat_ref, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc).timestamp()
-    elif osw_source in ('Spire'):
+    elif osw_source == 'Spire':
         # the precision of the seconds appears troublesome when too many digits
         # take the floor of the seconds by stripping of fractional seconds
         dat_ref = afile['sample_time'].attrs['units'].decode('UTF-8').split()[-1]
@@ -212,7 +240,7 @@ def get_reference_time(afile, osw_source):
 def get_data_from_file(afile, col_names, osw_source, file_name):
 
     # Pull each data type (variable) and create a list
-    if osw_source == 'CYGNSS':
+    if osw_source == 'CYGNSS' or osw_source == 'Spire-L2':
         latitude = [v for v in afile['lat']]
         longitude = [v for v in afile['lon']]
         dateTime = [int(v) for v in afile['sample_time']]  # datetime with different ref time
@@ -275,9 +303,7 @@ def adjust_dateTime(obs_DF, dat_ref):
 
 
 def adjust_longitude(obs_DF, osw_source):
-    if osw_source in ('CYGNSS', 'Spire'):
-        mask = obs_DF['longitude'] > 180
-        obs_DF.loc[mask, 'longitude'] = obs_DF['longitude'].loc[mask].values - 360
+    obs_DF.loc[obs_DF['longitude'] > 180, 'longitude'] -= 360
     return obs_DF
 
 
@@ -286,11 +312,13 @@ def add_long_description(osw_source):
     # Add some additional information to platformLongDescription global attribute
     long_description = ''
     if osw_source == 'CYGNSS':
-        long_description = 'Derived from CYGNSS GNSS-R recievers.'
+        long_description = 'OSW derived from CYGNSS GNSS-R receivers.'
     elif osw_source == 'Muon':
-        long_description = 'Proxy Muon data derived from CYGNSS GNSS-R recievers.'
+        long_description = 'Proxy Muon OSW data derived from CYGNSS GNSS-R receivers.'
     elif osw_source == 'Spire':
-        long_description = 'Derived from Spire GNSS-R recievers.'
+        long_description = 'OSW derived from Spire GNSS-R receivers.'
+    elif osw_source == 'Spire-L2':
+        long_description = 'NOAA Level-2 OSW from Spire GNSS-R receivers.'
     return long_description
 
 
