@@ -95,7 +95,8 @@ list( APPEND test_input
   testinput/viirs_j1_l1b_albedo_geoloc_202108050600.nc
   testinput/viirs_j1_l1b_albedo_obsval_202108050600.nc
   testinput/madis_2021010100.nc
-  testinput/viirs_aod_smoke_dust_inputfile.nc
+  testinput/JRR-AOD_v3r2_j01_s20240110T202044Z_e20240110T202044Z.sample.nc
+  testinput/JRR-ADP_v3r2_j01_s20240110T202044Z_e20240110T202044Z.sample.nc
 )
 
 list( APPEND test_output
@@ -184,7 +185,7 @@ list( APPEND test_output
   testoutput/viirs_j1_l1b_albedo_2021080506.nc
   testoutput/imsfv3grid_scf.nc
   testoutput/madis_snod_2021010100.nc
-  testoutput/obs.20200912T200000Z_PT1H_aod_smoke_dust.nc
+  testoutput/obs.20240110T202044Z_PT1M_aod_smoke.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -1240,12 +1241,14 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_aod
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/viirs_aod2ioda.py
-                          -i testinput/viirs_aod_smoke_dust_inputfile.nc
-                          -o testrun/obs.20200912T200000Z_PT1H_aod_smoke_dust.nc
+                          -i testinput/JRR-AOD_v3r2_j01_s20240110T202044Z_e20240110T202044Z.sample.nc
+                          --adp_mask testinput/JRR-ADP_v3r2_j01_s20240110T202044Z_e20240110T202044Z.sample.nc
+                          --adp_conf_lvl 'medhigh'
+                          -o testrun/obs.20240110T202044Z_PT1M_aod.nc
                           -m nesdis
                           -k maskout
                           -n 0.0"
-                          obs.20200912T200000Z_PT1H_aod_smoke_dust.nc ${IODA_CONV_COMP_TOL})
+                          obs.20240110T202044Z_PT1M_aod_smoke.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_satbias_viirs_aod
                   TYPE    SCRIPT
