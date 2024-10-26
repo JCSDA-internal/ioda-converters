@@ -17,11 +17,12 @@ from pyhdf.SD import SD, SDC
 import pyiodaconv.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from pyiodaconv.orddicts import DefaultOrderedDict
+from pyiodaconv.def_jedi_utils import iso8601_string
 
 locationKeyList = [
-    ("latitude", "float"),
-    ("longitude", "float"),
-    ("dateTime", "long")
+    ("latitude", "float", "degrees_north"),
+    ("longitude", "float", "degrees_east"),
+    ("dateTime", "long", iso8601_string),
 ]
 
 obsvars = ["aerosolOpticalDepth"]
@@ -41,46 +42,69 @@ channels = [4]
 
 # Get the group names we use the most.
 metaDataName = iconv.MetaDataName()
-obsValName = iconv.OvalName()
-obsErrName = iconv.OerrName()
-qcName = iconv.OqcName()
 
+varsKeyList = [
+        ('valKey', iconv.OvalName(), 'float', 'longitude latitude', '1'),
+        ('errKey', iconv.OerrName(), 'float', 'longitude latitude', '1'),
+        ('qcKey', iconv.OqcName(), 'integer', 'longitude latitude', None),
+        ]
+
+float_missing_value = nc.default_fillvals['f4']
+int_missing_value = nc.default_fillvals['i4']
+double_missing_value = nc.default_fillvals['f8']
 long_missing_value = nc.default_fillvals['i8']
+string_missing_value = '_'
+
+missing_vals = {'string': string_missing_value,
+                'integer': int_missing_value,
+                'long': long_missing_value,
+                'float': float_missing_value,
+                'double': double_missing_value}
 
 
 class AOD(object):
-    def __init__(self, filenames, obs_time, pltfrm):
+    def __init__(self, filenames, date_range, pltfrm):
         self.filenames = filenames
-        self.obs_time = obs_time
+        self.wbeg = np.datetime64(datetime.strptime(date_range[0], "%Y%m%d%H"))
+        self.wend = np.datetime64(datetime.strptime(date_range[1], "%Y%m%d%H"))
         self.pltfrm = pltfrm
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
-        self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         # there's absolutely no difference in the hdf4 files attributes
         # between Terra and Aqua files. So it is user specified
         AttrData['platform'] = pltfrm
         # sensor would be always MODIS for this converter
         AttrData['sensor'] = 'MODIS'
-        AttrData['datetimeReference'] = obs_time
+        self.setDicts()
         self._read()
 
-    def _read(self):
+    def setDicts(self):
+        meta_keys = [m_item[0] for m_item in locationKeyList]
+        # Set units of the MetaData variables and all _FillValues.
+        self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+        for key in meta_keys:
+            dtypestr = locationKeyList[meta_keys.index(key)][1]
+            if locationKeyList[meta_keys.index(key)][2]:
+                self.varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
+            self.varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtypestr]
+
+        var_keys = [v_item[0] for v_item in varsKeyList]
         # set up variable names for IODA
         for iodavar in obsvars:
-            self.varDict[iodavar]['valKey'] = iodavar, obsValName
-            self.varDict[iodavar]['errKey'] = iodavar, obsErrName
-            self.varDict[iodavar]['qcKey'] = iodavar, qcName
-            self.varAttrs[iodavar, obsValName]['coordinates'] = 'longitude latitude'
-            self.varAttrs[iodavar, obsErrName]['coordinates'] = 'longitude latitude'
-            self.varAttrs[iodavar, qcName]['coordinates'] = 'longitude latitude'
-            self.varAttrs[iodavar, obsValName]['_FillValue'] = -9999.
-            self.varAttrs[iodavar, obsErrName]['_FillValue'] = -9999.
-            self.varAttrs[iodavar, qcName]['_FillValue'] = -9999
-            self.varAttrs[iodavar, obsValName]['units'] = '1'
-            self.varAttrs[iodavar, obsErrName]['units'] = '1'
+            for key in var_keys:
+                varGroupName = varsKeyList[var_keys.index(key)][1]
+                dtypestr = varsKeyList[var_keys.index(key)][2]
+                coord = varsKeyList[var_keys.index(key)][3]
+                self.varDict[iodavar][key] = iodavar, varGroupName
+                self.varAttrs[iodavar, varGroupName]['coordinates'] = coord
+                self.varAttrs[iodavar, varGroupName]['_FillValue'] = missing_vals[dtypestr]
+                if varsKeyList[var_keys.index(key)][4]:
+                    self.varAttrs[iodavar, varGroupName]['units'] = varsKeyList[var_keys.index(key)][4]
+                
+    def _read(self):
 
         # All of MODIS AOD data have a singular reference time
-        self.varAttrs[('dateTime', metaDataName)]['units'] = 'seconds since 1993-01-01T00:00:00Z'
+        modis_ref_time = datetime(1993,1,1,0,0,0)
 
         # Make empty lists for the output vars
         self.outdata[('latitude', metaDataName)] = np.array([], dtype=np.float32)
@@ -123,7 +147,8 @@ class AOD(object):
             sen_zen = sen_zen[pos_index]
             unc_land = unc_land[pos_index] * 1E-3  # see scale factor
             modis_time = modis_time[pos_index]
-            obs_time = np.full(len(modis_time), np.around(modis_time), dtype=np.int64)
+            obs_time = (modis_time + modis_ref_time.timestamp()).astype('datetime64[s]')
+            winmsk = ((obs_time >= self.wbeg) & (obs_time <= self.wend))
 
             # uncertainty estimates:
             # From MODIS file (over ocean) and Levy, 2010 (over land)
@@ -133,14 +158,20 @@ class AOD(object):
             over_land = np.logical_not(land_sea_flag == 0)
             UNC = np.where(over_land, unc_land, np.add(0.05, np.multiply(0.15, aod)))
 
-            self.outdata[('latitude', metaDataName)] = np.append(self.outdata[('latitude', metaDataName)], np.array(lats, dtype=np.float32))
-            self.outdata[('longitude', metaDataName)] = np.append(self.outdata[('longitude', metaDataName)], np.array(lons, dtype=np.float32))
-            self.outdata[('dateTime', metaDataName)] = np.append(self.outdata[('dateTime', metaDataName)], np.array(obs_time, dtype=np.int64))
+            self.outdata[('latitude', metaDataName)] = np.append(self.outdata[('latitude', metaDataName)],
+                                                                 np.array(lats, dtype=np.float32))
+            self.outdata[('longitude', metaDataName)] = np.append(self.outdata[('longitude', metaDataName)],
+                                                                  np.array(lons, dtype=np.float32))
+            self.outdata[('dateTime', metaDataName)] = np.append(self.outdata[('dateTime', metaDataName)],
+                                                                 np.array(obs_time, dtype=np.int64))
 
             for iodavar in obsvars:
-                self.outdata[self.varDict[iodavar]['valKey']] = np.append(self.outdata[self.varDict[iodavar]['valKey']], np.array(aod, dtype=np.float32))
-                self.outdata[self.varDict[iodavar]['errKey']] = np.append(self.outdata[self.varDict[iodavar]['errKey']], np.array(UNC, dtype=np.float32))
-                self.outdata[self.varDict[iodavar]['qcKey']] = np.append(self.outdata[self.varDict[iodavar]['qcKey']], np.array(QC_flag, dtype=np.int32))
+                self.outdata[self.varDict[iodavar]['valKey']] = np.append(self.outdata[self.varDict[iodavar]['valKey']],
+                                                                          np.array(aod[winmsk], dtype=np.float32))
+                self.outdata[self.varDict[iodavar]['errKey']] = np.append(self.outdata[self.varDict[iodavar]['errKey']],
+                                                                          np.array(UNC[winmsk], dtype=np.float32))
+                self.outdata[self.varDict[iodavar]['qcKey']] = np.append(self.outdata[self.varDict[iodavar]['qcKey']],
+                                                                        np.array(QC_flag[winmsk], dtype=np.int32))
 
         DimDict['Location'] = len(self.outdata[('dateTime', metaDataName)])
         DimDict['Channel'] = np.array(channels)
@@ -149,10 +180,10 @@ class AOD(object):
 def main():
 
     # get command line arguments
-    # Usage: python blah.py -i /path/to/obs/2021060801.nc /path/to/obs/2021060802.nc ... -p <Terra or Aqua> -t Analysis_time /path/to/obs/2021060823.nc
-    # -o /path/to/ioda/20210608.nc
-    # where the input obs could be for any desired interval to concatenated together. Analysis time is generally the midpoint of
-    # analysis window.
+    # Usage: python blah.py -i /path/to/obs/2021060801.nc /path/to/obs/2021060802.nc ... -p <Terra or Aqua> 
+    # -o /path/to/ioda/20210608.nc --date_range YYYYMMDDHH YYYYMMDDHH
+    # where the input obs could be for any desired interval to concatenated together. 
+    # Analysis time is generally the midpoint of analysis window.
     parser = argparse.ArgumentParser(
         description=(
             'Reads MODIS AOD hdf4 files provided by NASA'
@@ -166,10 +197,6 @@ def main():
         help="path of MODIS AOD hdf4 input file(s)",
         type=str, nargs='+', required=True)
     required.add_argument(
-        '-t', '--time',
-        help="Observation time in global attributes (YYYYMMDDHH)",
-        type=int, required=True)
-    required.add_argument(
         '-p', '--platform',
         help="AQUA or TERRA satellite?",
         type=str, required=True)
@@ -178,15 +205,20 @@ def main():
         help="path of IODA output file",
         type=str, required=True)
 
+    optional = parser.add_argument_group(title='optional arguments')
+    optional.add_argument(
+        '--date_range',
+        help="extract a date range to fit the data assimilation window"
+        "format -r YYYYMMDDHH YYYYMMDDHH",
+        type=str, metavar=('begindate', 'enddate'), nargs=2,
+        default=('1970010100', '2170010100'))
+
     args = parser.parse_args()
 
     # setup the IODA writer
-
-    # get the obs time
-    obs_time = args.time
-
     # Read in the AOD data
-    aod_class = AOD(args.input, args.time, args.platform)
+    aod_class = AOD(args.input, args.date_range, args.platform)
+
     # write everything out
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
     writer.BuildIoda(aod_class.outdata, VarDims, aod_class.varAttrs, AttrData)
