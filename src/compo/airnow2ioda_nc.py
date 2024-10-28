@@ -26,18 +26,17 @@ os.environ["TZ"] = "UTC"
 # Dictionary of output variables (ObsVal, ObsError, and PreQC).
 # First is the incoming variable name followed by list of IODA outgoing name and units.
 
-varDict = {'PM2.5': ['particulatematter2p5Surface', 'mg m-3'],
-           'OZONE': ['ozoneSurface', 'ppmV'],
-           'NO2': ['nitrogendioxideSurface', 'ppmV'],
-           'CO': ['carbonmonoxideSurface', 'ppmV'],
-           'SO2': ['sulfurdioxideSurface', 'ppmV'],
+varDict = {'PM2.5': ['particulatematter2p5Insitu', 'ug m-3'],
+           'OZONE': ['ozoneInsitu', 'mol mol-1'],
+           'NO2': ['nitrogendioxideInsitu', 'mol mol-1'],
+           'CO': ['carbonmonoxideInsitu', 'mol mol-1'],
+           'SO2': ['sulfurdioxideInsitu', 'mol mol-1)'],
            }
 
 locationKeyList = [("latitude", "float", "degrees_north"),
                    ("longitude", "float", "degrees_east"),
                    ("dateTime", "long", iso8601_string),
                    ("stationElevation", "float", "m"),
-                   ("height", "float", "m"),
                    ("stationIdentification", "string", ""),
                    ]
 
@@ -78,9 +77,8 @@ def read_monitor_file(sitefile, is_epa):
         tmpdf = pd.read_csv(sitefile)
         tmpdf = tmpdf[['stat_id', 'lat', 'lon', 'elevation', 'loc_setting']]
         tmpdf['loc_type'] = np.nan
-        for n, loc_type in enumerate(['UNKNOWN', 'RURAL', 'SUBURBAN', 'URBAN AND CENTER CITY']):
-            type_filter = (tmpdf['loc_setting'] == loc_type)
-            tmpdf.loc[type_filter, 'loc_type'].loc[type_filter] = n
+        for n_loc_type, n_loc_setting in enumerate(['UNKNOWN', 'RURAL', 'SUBURBAN', 'URBAN AND CENTER CITY']):
+            tmpdf.loc[tmpdf['loc_setting'] == n_loc_setting, 'loc_type'] = n_loc_type
         airnow = tmpdf.rename(columns={'stat_id': 'siteid', 'lat': 'latitude', 'lon': 'longitude'})
     else:
         colsinuse = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
@@ -99,15 +97,6 @@ def read_monitor_file(sitefile, is_epa):
 
 
 def filter_bad_values(df):
-    """Short summary.
-
-    Returns
-    -------
-    type
-        Description of returned object.
-
-    """
-
     df.loc[(df.obs > 3000) | (df.obs < 0), 'obs'] = np.NaN
     return df
 
@@ -212,7 +201,7 @@ if __name__ == '__main__':
 
         f = add_data(infile, args.sitefile, args.epa_list).drop_duplicates(
             subset=['PM2.5', 'OZONE', 'NO2', 'CO', 'SO2', 'siteid', 'latitude', 'longitude'])
-        f2 = f.dropna(subset=['PM2.5'], how='any').reset_index()
+        f2 = f.dropna(subset=['PM2.5', 'OZONE', 'NO2', 'CO', 'SO2'], how='all').reset_index()
 
         time_filter = (f2['time'] >= date_start) & (f2['time'] <= date_end)
 
@@ -235,7 +224,6 @@ if __name__ == '__main__':
         data['latitude'] = np.append(data['latitude'], np.array(f3['latitude']))
         data['longitude'] = np.append(data['longitude'], np.array(f3['longitude']))
         data['stationElevation'] = np.append(data['stationElevation'], np.array(f3['elevation']))
-        data['height'] = np.append(data['height'], np.array(f3['elevation']) + 10.0)
 
         if args.epa_list:
             data['airQualityClassification'] = np.append(data['airQualityClassification'],
@@ -244,12 +232,16 @@ if __name__ == '__main__':
         GlobalAttrs['sourceFiles'] += str(infile.split('/')[-1]) + ", "
 
         for key in varDict.keys():
-            if key in ['PM2.5', 'CO']:
+
+            if key in ['PM2.5']:
                 data[varDict[key][0]] = np.append(data[varDict[key][0]],
                                                   np.array(f3[key].fillna(float_missing_value)))
+            if key in ['CO']:
+                data[varDict[key][0]] = np.append(data[varDict[key][0]],
+                                                  np.array((f3[key]*1E-6).fillna(float_missing_value)))
             elif key in ['OZONE', 'NO2', 'SO2']:
                 data[varDict[key][0]] = np.append(data[varDict[key][0]],
-                                                  np.array((f3[key]/1000).fillna(float_missing_value)))
+                                                  np.array((f3[key]*1E-9).fillna(float_missing_value)))
 
         total_locs += nlocs
 
@@ -289,9 +281,12 @@ if __name__ == '__main__':
 
     for key in varDict.keys():
         variable = varDict[key][0]
-        ioda_data[(variable, obsValName)] = np.array(data[variable], dtype=np.float32)
-        ioda_data[(variable, obsErrName)] = np.full(nlocs, 0.1, dtype=np.float32)
-        ioda_data[(variable, qcName)] = np.full(nlocs, 2, dtype=np.int32)
+        obsval = data[variable]
+        errval = np.where(obsval < 1e+36, obsval * 0.1, obsval) #rough, needs refinement per species TBC
+        qcval = np.where((obsval > 1e+36) | np.isinf(obsval) | np.isnan(obsval), 0, 1)
+        ioda_data[(variable, obsValName)] = np.array(obsval, dtype=np.float32)
+        ioda_data[(variable, obsErrName)] = np.array(errval, dtype=np.float32)
+        ioda_data[(variable, qcName)] = np.array(qcval, dtype=np.int32)
 
     # setup the IODA writer and write everything out.
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
