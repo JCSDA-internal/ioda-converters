@@ -1296,7 +1296,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pandora
                           -i testinput/Pandora57s1_BoulderCO_L2_rnvs3p1-8.txt
                           -o testrun/Pandora57s1_BoulderCO_L2_rnvs3p1-8.nc
                           --date_range 2023080115 2023080121
-                          --site_classification pandora_site_classification.csv"
+                          --site_classification testinput/pandora_site_classification.csv"
                           Pandora57s1_BoulderCO_L2_rnvs3p1-8.nc ${IODA_CONV_COMP_TOL})
 
 foreach (coltype total tropo)

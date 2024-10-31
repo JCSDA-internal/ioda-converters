@@ -100,8 +100,6 @@ class pandora(object):
 
             lats = lats.astype(np.float32)
             lons = lons.astype(np.float32)
-
-
             aq_class = np.zeros(nlocs, dtype=np.int32)
 
             if self.site_classification:
@@ -109,18 +107,14 @@ class pandora(object):
                 pandora_sites = pd.read_csv(self.site_classification)
                 pandora_lats = pandora_sites['lat']
                 pandora_lons = pandora_sites['lon']
-                #pandora_sites_class = pandora_sites['urb_class']
-                #pandora_pct_urb = pandora_sites['pct_urb']  # [low, med, high densiy]
-              
+
                 lat_tol = 0.01
                 lon_tol = 0.01
-                
                 # Filter rows within the tolerance range
                 close_rows = pandora_sites[
-                    (pandora_lats >= lat - lat_tol) & (pandora_lats <= lat + lat_tol) &
-                    (pandora_lons >= lon - lon_tol) & (pandora_lons <= lon + lon_tol)
-                ]
-                
+                    (pandora_lats >= lat - lat_tol) & (pandora_lats <= lat + lat_tol)
+                    & (pandora_lons >= lon - lon_tol) & (pandora_lons <= lon + lon_tol)]
+
                 # Find the urb_class of the closest row(s)
                 if not close_rows.empty:
                     closest_row = close_rows.iloc[0]  # Select the first closest row
@@ -133,8 +127,8 @@ class pandora(object):
                     print(closest_row['File'])
                     print(f"The closest urb_class is: {urb_class}")
                 else:
-                    print("No nearby location found within the tolerance.")
-                #    urb_class = 0 
+                    print("No nearby location found within the tolerance. assign UNKNOWN")
+                    urb_class = 0
 
             aq_class = np.full(nlocs, urb_class)
             pct_urb_L = np.full(nlocs, pct_urb_L)
@@ -270,7 +264,6 @@ class pandora(object):
             self.varAttrs[item, iconv.OvalName()]['_FillValue'] = float_missing_value
             self.varAttrs[item, iconv.OerrName()]['_FillValue'] = float_missing_value
         self.varAttrs[('airQualityClassification', 'MetaData')]['_FillValue'] = int_missing_value
-
 
 
 def get_parser():
