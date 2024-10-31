@@ -11,6 +11,7 @@ import sys
 import argparse
 import netCDF4 as nc
 import numpy as np
+import pandas as pd
 from datetime import datetime, timedelta
 import os
 import re
@@ -29,13 +30,15 @@ from pyiodaconv.def_jedi_utils import epoch, iso8601_string
 MBAR2PA = 1E2
 
 float_missing_value = iconv.get_default_fill_val(np.float32)
+int_missing_value = iconv.get_default_fill_val(np.int32)
 
 
 class pandora(object):
 
-    def __init__(self, filenames, date_range):
+    def __init__(self, filenames, date_range, site_classification):
         self.filenames = filenames
         self.date_range = date_range
+        self.site_classification = site_classification
         self.make_dictionaries()      # Set up variable names for IODA
         self.DimDict = {}
         self.read()    # Read data from file
@@ -98,10 +101,49 @@ class pandora(object):
             lats = lats.astype(np.float32)
             lons = lons.astype(np.float32)
 
-            # 2 vertice: surface pressure and top (0)
-            num_vert = 2
-            pressure_vertice = np.zeros([nlocs, num_vert], dtype=np.float32)
-            pressure_vertice[:, 1] = surf_p
+
+            aq_class = np.zeros(nlocs, dtype=np.int32)
+
+            if self.site_classification:
+                print('site classification file is available')
+                pandora_sites = pd.read_csv(self.site_classification)
+                pandora_lats = pandora_sites['lat']
+                pandora_lons = pandora_sites['lon']
+                #pandora_sites_class = pandora_sites['urb_class']
+                #pandora_pct_urb = pandora_sites['pct_urb']  # [low, med, high densiy]
+              
+                lat_tol = 0.01
+                lon_tol = 0.01
+                
+                # Filter rows within the tolerance range
+                close_rows = pandora_sites[
+                    (pandora_lats >= lat - lat_tol) & (pandora_lats <= lat + lat_tol) &
+                    (pandora_lons >= lon - lon_tol) & (pandora_lons <= lon + lon_tol)
+                ]
+                
+                # Find the urb_class of the closest row(s)
+                if not close_rows.empty:
+                    closest_row = close_rows.iloc[0]  # Select the first closest row
+                    urb_class = closest_row['urb_class']
+                    elements = closest_row['pct_urb'].strip("[]").split()
+                    float_elements = list(map(float, elements))
+                    pct_urb_L = float_elements[0]
+                    pct_urb_M = float_elements[1]
+                    pct_urb_H = float_elements[2]
+                    print(closest_row['File'])
+                    print(f"The closest urb_class is: {urb_class}")
+                else:
+                    print("No nearby location found within the tolerance.")
+                #    urb_class = 0 
+
+            aq_class = np.full(nlocs, urb_class)
+            pct_urb_L = np.full(nlocs, pct_urb_L)
+            pct_urb_M = np.full(nlocs, pct_urb_M)
+            pct_urb_H = np.full(nlocs, pct_urb_H)
+
+            pct_urb_L = pct_urb_L.astype(np.float32)
+            pct_urb_M = pct_urb_M.astype(np.float32)
+            pct_urb_H = pct_urb_H.astype(np.float32)
 
             # set flag
             flag = np.full((nlocs), True)
@@ -134,7 +176,10 @@ class pandora(object):
                 self.outData[('dateTime', 'MetaData')] = iodatime[flag]
                 self.outData[('latitude', 'MetaData')] = lats[flag]
                 self.outData[('longitude', 'MetaData')] = lons[flag]
-                self.outData[('pressureVertice', 'RetrievalAncillaryData')] = pressure_vertice[flag]
+                self.outData[('airQualityClassification', 'MetaData')] = aq_class[flag]
+                self.outData[('pctUrbL', 'MetaData')] = pct_urb_L[flag]
+                self.outData[('pctUrbM', 'MetaData')] = pct_urb_M[flag]
+                self.outData[('pctUrbH', 'MetaData')] = pct_urb_H[flag]
 
                 self.outData[self.varDict[var_name]['valKey']] = \
                     data[var_name][flag]
@@ -149,8 +194,14 @@ class pandora(object):
                     (self.outData[('latitude', 'MetaData')], lats[flag]))
                 self.outData[('longitude', 'MetaData')] = np.concatenate(
                     (self.outData[('longitude', 'MetaData')], lons[flag]))
-                self.outData[('pressureVertice', 'RetrievalAncillaryData')] = np.concatenate(
-                    (self.outData[('pressureVertice', 'RetrievalAncillaryData')], pressure_vertice[flag]))
+                self.outData[('airQualityClassification', 'MetaData')] = np.concatenate(
+                    (self.outData[('airQualityClassification', 'MetaData')], aq_class[flag]))
+                self.outData[('pctUrbL', 'MetaData')] = np.concatenate(
+                    (self.outData[('pctUrbL', 'MetaData')], pct_urb_L[flag]))
+                self.outData[('pctUrbM', 'MetaData')] = np.concatenate(
+                    (self.outData[('pctUrbM', 'MetaData')], pct_urb_M[flag]))
+                self.outData[('pctUrbH', 'MetaData')] = np.concatenate(
+                    (self.outData[('pctUrbH', 'MetaData')], pct_urb_H[flag]))
 
                 self.outData[self.varDict[var_name]['valKey']] = np.concatenate(
                     (self.outData[self.varDict[var_name]['valKey']], data[var_name][flag]))
@@ -168,14 +219,6 @@ class pandora(object):
 
         self.DimDict['Location'] = len(self.outData[('dateTime', 'MetaData')])
         self.AttrData['Location'] = np.int32(self.DimDict['Location'])
-
-        self.DimDict['Vertice'] = num_vert  # surface and aircraft
-        self.AttrData['Vertice'] = np.int32(self.DimDict['Vertice'])
-
-        varname = 'pressureVertice'
-        vkey = (varname, 'RetrievalAncillaryData')
-        self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
-        self.varAttrs[vkey]['units'] = 'Pa'
 
     def make_dictionaries(self):
         """
@@ -224,6 +267,10 @@ class pandora(object):
             self.varAttrs[item, iconv.OvalName()]['units'] = 'mol m-2'
             self.varAttrs[item, iconv.OerrName()]['units'] = 'mol m-2'
             self.varAttrs[item, iconv.OqcName()]['units'] = 'unitless'
+            self.varAttrs[item, iconv.OvalName()]['_FillValue'] = float_missing_value
+            self.varAttrs[item, iconv.OerrName()]['_FillValue'] = float_missing_value
+        self.varAttrs[('airQualityClassification', 'MetaData')]['_FillValue'] = int_missing_value
+
 
 
 def get_parser():
@@ -265,6 +312,14 @@ def get_parser():
         type=str, metavar=('begindate', 'enddate'), nargs=2,
         default=('1970010100', '2170010100'))
 
+    optional = parser.add_argument_group(title='optional arguments')
+    optional.add_argument(
+        '--site_classification',
+        help="site classification file with lat, lon, urb_class info"
+        "‘UNKNOWN’:0, ‘RURAL’:1,"
+        "‘SUBURBAN’:2, ‘URBAN AND CENTER CITY’:3",
+        type=str, default='')
+
     return parser
 
 
@@ -278,7 +333,6 @@ def main():
 
     varDims = {
         'x': ['Location'],
-        'pressureVertice': ['Location', 'Vertice']
     }
 
     # -- read command line arguments
@@ -286,7 +340,7 @@ def main():
     args = parser.parse_args()
 
     # Read in the pandora station data
-    pandoraData = pandora(args.input, args.date_range)
+    pandoraData = pandora(args.input, args.date_range, args.site_classification)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, pandoraData.DimDict)
