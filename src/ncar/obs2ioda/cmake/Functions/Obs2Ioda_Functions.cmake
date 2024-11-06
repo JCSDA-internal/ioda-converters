@@ -17,6 +17,11 @@ function(obs2ioda_fortran_target target target_main)
         list(APPEND OBS2IODA_FORTRAN_TARGET_COMPILE_OPTIONS_PRIVATE
              $<$<COMPILE_LANGUAGE:Fortran>:-cpp -ffree-line-length-none>
         )
+        if (CMAKE_BUILD_TYPE MATCHES Debug)
+            list(APPEND OBS2IODA_FORTRAN_TARGET_COMPILE_OPTIONS_PRIVATE
+                 $<$<COMPILE_LANGUAGE:Fortran>:-fbacktrace -ffpe-trap=invalid,zero,overflow -fcheck=all>
+            )
+        endif ()
     elseif (CMAKE_Fortran_COMPILER_ID MATCHES Intel)
         list(APPEND OBS2IODA_FORTRAN_TARGET_COMPILE_OPTIONS_PRIVATE
              $<$<COMPILE_LANGUAGE:Fortran>:-fpp>
