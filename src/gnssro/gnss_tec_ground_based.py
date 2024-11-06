@@ -26,8 +26,8 @@ from pyiodaconv.def_jedi_utils import iso8601_string, epoch
 os.environ["TZ"] = "UTC"
 
 # these are the unique values in the raw input file
-varDict = { 'vertical total electron content': ['verticalTEC', "float", 'fractional percent'],
-           'slant total electron content': ['slantTEC', "float", "m"],
+varDict = { 'total electron content vertical': ['totalElectronContentVertical', "integer", 'TECU'],
+           'total electron content slant': ['totalElectronContentSlant', "integer", "TECU"],
 }
 
 # these are the MetaData common to each input
@@ -35,7 +35,7 @@ locationKeyList = [
     ('latitude', 'float', 'degrees_north'),
     ('longitude', 'float', 'degrees_east'),
     ('pseudoRandomNoiseCode', 'integer'),
-    ('elevationAngle', 'float', 'GNSS transmitter satellite elevation angle in degrees'),
+    ('elevationAngleGNSS', 'float', 'GNSS transmitter satellite elevation angle in degrees'),
     ('azimuthAngle', 'float', 'aziumuth angle viewing GNSS transmitter in degrees west'),
     ('height', 'float'),
     ('xECEFPosition', 'float', 'receiving station Earth Centered Earth Fixed X-coordinate in meters'),
@@ -44,6 +44,8 @@ locationKeyList = [
     ('xECEFPositionGNSS', 'float', 'GNSS transmitting satellite Earth Centered Earth Fixed X-coordinate in meters'),
     ('yECEFPositionGNSS', 'float', 'GNSS transmitting satellite Earth Centered Earth Fixed Y-coordinate in meters'),
     ('zECEFPositionGNSS', 'float', 'GNSS transmitting satellite Earth Centered Earth Fixed Z-coordinate in meters'),
+    ('latitudeIPP', 'float', 'latitude of Ionospheric Pierce Point in degrees_north'),
+    ('longitudeIPP', 'float', 'longitude of Ionospheric Pierce Point in degrees_east'),
     ('dateTime', 'long', 'seconds from epoch 01Jan1970')
     ('WMOstationIdentifier', 'integer', 'WMO assigned number for the site'),
     ('stationIdentifier', 'string', 'GNSS ground-based receiving station name'),
@@ -205,10 +207,15 @@ def read_file(file_name, any_data, qc_strict=True):
             try:
                 # Get the next line from the iterator
                 line = next(file_iterator)
-                local_data = populate_obsValue(line, local_data)
+                local_data, endReport = populate_obsValue(line, local_data)
+                if endReport:
+                    break
+                    
             except StopIteration:
                 # If StopIteration is raised, break from the loop
                 break
+
+        # header read for first record now reset and read another header
 
     # has any data been read at any point
     any_data = any_data or header_read
@@ -243,91 +250,94 @@ def get_header(file_iterator, local_data):
     # Line #3: 23074 0694/ 271608 NRIL 000064539804 002253881156 005946178085
     # WMO number, latitude (N), longitude (W), station name, ECEF station coordinates
 
-    # for all ECEF coordinates 0 in front indicates positive, and 1 indicates negative.
-
     header_read = False
-    while True:
-        # read first line
-        try:
-            _, _, report_time = line.split()
-        except ValueError:
-            break
+    # read first line
+    try:
+        _, _, report_time = line.split()
+    except ValueError:
+        return local_data, header_read
 
-        # read second line
-        line = next(file_iterator)
-        if 'TENET' not in line:
-            break  # not necessarily needed
+    # read second line
+    line = next(file_iterator)
+    if 'TENET' not in line:
+        return local_data, header_read   #  not necessarily needed could try to continue
 
-        # read third line
-        line = next(file_iterator)
-        try:
-            WMOid, latitude, longitude, stationName, xECEFPosition, yECEFPosition, zECEFPosition = line.split()
-        except ValueError:
-            break
+    # read third line
+    line = next(file_iterator)
+    try:
+        WMOid, lat, lon, stationName, xECEFPosition, yECEFPosition, zECEFPosition = line.split()
+    except ValueError:
+        return local_data, header_read
 
-        xECEFPosition = convert_ECEF_string(xECEFPosition)
-        yECEFPosition = convert_ECEF_string(yECEFPosition)
-        zECEFPosition = convert_ECEF_string(zECEFPosition)
+    xECEFPosition = convert_ECEF_string(xECEFPosition)
+    yECEFPosition = convert_ECEF_string(yECEFPosition)
+    zECEFPosition = convert_ECEF_string(zECEFPosition)
 
-        except ValueError:
-            break
+    lat = parse_latitude(lat)
 
-            local_data['latitude'] = np.append(local_data['latitude'], lat)
-            local_data['longitude'] = np.append(local_data['longitude'], lon)
-            local_data['stationIdentifier'] = np.append(local_data['stationIdentifier'], stationID)
-            local_data['hmF2'] = np.append(local_data['hmF2'], hmf2)
-            local_data['foF2'] = np.append(local_data['foF2'], fof2)
-            local_data['nmF2'] = np.append(local_data['nmF2'], nmf2)
-            local_data['foF2Uncertainty'] = np.append(local_data['foF2Uncertainty'], conf_fof2)
-            local_data['nmF2Uncertainty'] = np.append(local_data['nmF2Uncertainty'], conf_nmf2)
-            local_data['sequenceNumber'] = np.append(local_data['sequenceNumber'], recordNumber)
-            # populate the first row of ObsValues
-            local_data = populate_obsValue(line, local_data)
+    try:
+        local_data['latitude'] = np.append(local_data['latitude'], float(lat))
+        local_data['longitude'] = np.append(local_data['longitude'], float(lon))
+        local_data['stationIdentifier'] = np.append(local_data['stationIdentifier'], stationName)
+        local_data['xECEFPosition'] = np.append(local_data['xECEFPosition'], xECEFPosition)
+        local_data['yECEFPosition'] = np.append(local_data['yECEFPosition'], yECEFPosition)
+        local_data['zECEFPosition'] = np.append(local_data['zECEFPosition'], zECEFPosition)
+    except ValueError:
+        return local_data, header_read
 
-            header_read = True
-        except StopIteration:
-            # If StopIteration is raised, break from the loop
-            break
+    header_read = True
 
     return local_data, header_read
 
 
 def populate_obsValue(line, local_data):
 
-    # get the electron density retrieved from GNSS transmitter
+    # get the electron content retrieved from GNSS transmitter
     # if can correctly parse all fields populate local_data otherwise do nothing
 
     # ObsValue data row (example)
     # Line #4: 11111 180208 021000 280771 26911 2165166150 4210322950 0233/ 3558/ 102029725204 114864753823 022550194624
-    # unknown, YYMMDD, HHMMSS, PRN/Latitude, Longitude, VOBS, SOBS, satelite elevation angle, azimuth angle, GNSS ECEF coordinates
+    # unknown, YYMMDD, HHMMSS, PRN/LatitudeIPP, LongitudeIPP, VOBS, SOBS, satelite elevation angle, azimuth angle, GNSS ECEF coordinates
 
     # for all ECEF coordinates 0 in front indicates positive, and 1 indicates negative.
+    # IPP = Ionospheric Pierce Point
 
+    endReport = False
+    if '99999' in line[0:5]:
+        # reset for next record
+        endReport = True
+        return local_data, endReport
 
     # read data lines beginning at fourth line
     try:
-        _, yymmdd, hhmmss, PRNlatitude, longitude, vobs, sobs, elevationAngle, azimuthAngle, \
+        _, yymmdd, hhmmss, PRNlatitudeIPP, longitudeIPP, vobs, sobs, elevationAngle, azimuthAngle, \
         xECEFPositionGNSS, yECEFPositionGNSS, zECEFPositionGNSS = line.split()
     except ValueError:
-        break
+        return local_data, endReport
 
     dateTime = convert_string_to_dateTime(yymmdd, hhmmss)
-    PRN, latitude = parse_station_and_latitude(PRNlatitude)
+    PRN, IPPlatitude = parse_station_and_latitude(PRNlatitude)
 
     xECEFPositionGNSS = convert_ECEF_string(xECEFPositionGNSS)
     yECEFPositionGNSS = convert_ECEF_string(yECEFPositionGNSS)
     zECEFPositionGNSS = convert_ECEF_string(zECEFPositionGNSS)
 
-    local_data['dateTime'] = np.append(local_data['dateTime'], dateTime)
-    local_data['pseudoRandomNoiseCode'] = np.append(local_data['longitude'], PRN)
-    local_data['latitude'] = np.append(local_data['latitude'], latitude)
-    local_data['longitude'] = np.append(local_data['longitude'], longitude)
-    local_data['elevationAngle'] = np.append(local_data['elevationAngle'], elevationAngle)
-    local_data['azimuthAngle'] = np.append(local_data['azimuthAngle'], azimuthAngle)
-    local_data['verticalElectronDensity'] = np.append(local_data['verticalElectronDensity'], vobs)
-    local_data['slantElectronDensity'] = np.append(local_data['slantElectronDensity'], sobs)
+    try:
+        local_data['dateTime'] = np.append(local_data['dateTime'], dateTime)
+        local_data['pseudoRandomNoiseCode'] = np.append(local_data['pseudoRandomNoiseCode'], PRN)
+        local_data['latitudeIPP'] = np.append(local_data['latitudeIPP'], latitudeIPP)
+        local_data['longitudeIPP'] = np.append(local_data['longitudeIPP'], float(longitudeIPP)/100.)
+        local_data['elevationAngleGNSS'] = np.append(local_data['elevationAngleGNSS'], float(elevationAngle.rstrip('/'))/10.)
+        local_data['azimuthAngle'] = np.append(local_data['azimuthAngle'], float(azimuthAngle.rstrip('/'))/10.)
+        local_data['totalElectronContentVertical'] = np.append(local_data['totalElectronContentVertical'], int(vobs.lstrip('/')))
+        local_data['totalElectronContentSlant'] = np.append(local_data['totalElectronContentSlant'], int(sobs.lstrip('/')))
+        local_data['xECEFPositionGNSS'] = np.append(local_data['xECEFPositionGNSS'], xECEFPositionGNSS)
+        local_data['xECEFPositionGNSS'] = np.append(local_data['xECEFPositionGNSS'], xECEFPositionGNSS)
+        local_data['xECEFPositionGNSS'] = np.append(local_data['xECEFPositionGNSS'], xECEFPositionGNSS)
+    except ValueError:
+        return local_data, endReport
 
-    return local_data
+    return local_data, endReport
 
 
 def convert_ECEF_string(c):
@@ -376,6 +386,22 @@ def parse_station_and_latitude(code):
     
     except ValueError as e:
         raise ValueError(f"Invalid input '{code}': {e}")
+
+
+def parse_latitude(lat_str):
+    try:
+        # Determine the latitude sign based on the first digit
+        latitude_sign = 1 if lat_str[0] == '0' else -1 if lat_str[0] == '1' else None
+        if latitude_sign is None:
+            raise ValueError(f"Invalid latitude sign indicator '{lat_str[0]}'; expected '0' for positive or '1' for negative.")
+        
+        # Convert the remaining digits to latitude, apply the sign, and divide by 10
+        latitude = latitude_sign * int(lat_str[1:]) / 10.0
+        
+        return latitude
+    
+    except ValueError as e:
+        raise ValueError(f"Invalid latitude input '{lat_str}': {e}")
 
 
 def apply_gross_quality_control(data, qc_strict=False):
