@@ -43,11 +43,9 @@ channels = [4]
 # Get the group names we use the most.
 metaDataName = iconv.MetaDataName()
 
-varsKeyList = [
-        ('valKey', iconv.OvalName(), 'float', 'longitude latitude', '1'),
-        ('errKey', iconv.OerrName(), 'float', 'longitude latitude', '1'),
-        ('qcKey', iconv.OqcName(), 'integer', 'longitude latitude', None),
-        ]
+varsKeyList = [('valKey', iconv.OvalName(), 'float', 'longitude latitude', '1'),
+               ('errKey', iconv.OerrName(), 'float', 'longitude latitude', '1'),
+               ('qcKey', iconv.OqcName(), 'integer', 'longitude latitude', None)]
 
 float_missing_value = nc.default_fillvals['f4']
 int_missing_value = nc.default_fillvals['i4']
@@ -100,11 +98,11 @@ class AOD(object):
                 self.varAttrs[iodavar, varGroupName]['_FillValue'] = missing_vals[dtypestr]
                 if varsKeyList[var_keys.index(key)][4]:
                     self.varAttrs[iodavar, varGroupName]['units'] = varsKeyList[var_keys.index(key)][4]
-                
+
     def _read(self):
 
         # All of MODIS AOD data have a singular reference time
-        modis_ref_time = datetime(1993,1,1,0,0,0)
+        modis_ref_time = datetime(1993, 1, 1, 0, 0, 0)
 
         # Make empty lists for the output vars
         self.outdata[('latitude', metaDataName)] = np.array([], dtype=np.float32)
@@ -171,7 +169,7 @@ class AOD(object):
                 self.outdata[self.varDict[iodavar]['errKey']] = np.append(self.outdata[self.varDict[iodavar]['errKey']],
                                                                           np.array(UNC[winmsk], dtype=np.float32))
                 self.outdata[self.varDict[iodavar]['qcKey']] = np.append(self.outdata[self.varDict[iodavar]['qcKey']],
-                                                                        np.array(QC_flag[winmsk], dtype=np.int32))
+                                                                         np.array(QC_flag[winmsk], dtype=np.int32))
 
         DimDict['Location'] = len(self.outdata[('dateTime', metaDataName)])
         DimDict['Channel'] = np.array(channels)
@@ -180,9 +178,9 @@ class AOD(object):
 def main():
 
     # get command line arguments
-    # Usage: python blah.py -i /path/to/obs/2021060801.nc /path/to/obs/2021060802.nc ... -p <Terra or Aqua> 
+    # Usage: python blah.py -i /path/to/obs/2021060801.nc /path/to/obs/2021060802.nc ... -p <Terra or Aqua>
     # -o /path/to/ioda/20210608.nc --date_range YYYYMMDDHH YYYYMMDDHH
-    # where the input obs could be for any desired interval to concatenated together. 
+    # where the input obs could be for any desired interval to concatenated together.
     # Analysis time is generally the midpoint of analysis window.
     parser = argparse.ArgumentParser(
         description=(
