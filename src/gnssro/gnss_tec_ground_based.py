@@ -198,35 +198,37 @@ def read_file(file_name, any_data, qc_strict=True):
         # Create an iterator from the file object
         file_iterator = iter(file)
 
-        local_data, header_read = get_header(file_iterator, local_data)
-        logging.debug(f'header was read w/o error: {header_read}')
-
-        while header_read and True:
+        while True:
             try:
-                # Get the next line from the iterator
-                line = next(file_iterator)
-                local_data, endReport = populate_obsValue(line, local_data)
-                if endReport:
-                    break
+
+                local_data, header_read = get_header(file_iterator, local_data)
+                logging.debug(f'header was read w/o error: {header_read}')
+
+                while header_read:
+                    # Get the next line from the iterator
+                    line = next(file_iterator)
+                    local_data, endReport = populate_obsValue(line, local_data)
+                    if endReport:
+                        header_read = False
+                        break
 
             except StopIteration:
                 # If StopIteration is raised, break from the loop
                 break
 
-        # header read for first record now reset and read another header
-
+    import pdb
+    pdb.set_trace()
     # has any data been read at any point
     any_data = any_data or header_read
 
     # repeat all the metaData values
-    if header_read:
-        nlocs = len(local_data['dateTime'])
+    nlocs = len(local_data['dateTime'])
+    if nlocs > 0:
         for key in meta_keys:
             dtype = locationKeyList[meta_keys.index(key)][1]
             local_data[key] = np.full(nlocs, local_data[key], dtype=dtypes[dtype])
-
-    # if the header was not sucessfully read return nothing
-    if not header_read:
+    else:
+        # if the header was not sucessfully read return nothing
         local_data = None
 
     return local_data, any_data
