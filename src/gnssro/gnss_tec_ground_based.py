@@ -216,21 +216,12 @@ def read_file(file_name, any_data, qc_strict=True):
                 # If StopIteration is raised, break from the loop
                 break
 
-    import pdb
-    pdb.set_trace()
-    # has any data been read at any point
-    any_data = any_data or header_read
-
+    any_data = True
     # repeat all the metaData values
     nlocs = len(local_data['dateTime'])
-    if nlocs > 0:
-        for key in meta_keys:
-            dtype = locationKeyList[meta_keys.index(key)][1]
-            local_data[key] = np.full(nlocs, local_data[key], dtype=dtypes[dtype])
-    else:
+    if nlocs == 0:
         # if the header was not sucessfully read return nothing
         local_data = None
-
     return local_data, any_data
 
 
@@ -338,6 +329,11 @@ def populate_obsValue(line, local_data):
         local_data['zECEFPositionGNSS'] = np.append(local_data['zECEFPositionGNSS'], zECEFPositionGNSS)
     except ValueError:
         return local_data, endReport
+
+    # repeat the metaData
+    if len(local_data['latitude']) < len(local_data['latitudeIPP']):
+        for key in ['latitude', 'longitude', 'stationIdentifier', 'stationIdentifierWMO', 'xECEFPosition', 'yECEFPosition', 'zECEFPosition']:
+            local_data[key] = np.append(local_data[key], local_data[key][-1])
 
     return local_data, endReport
 
