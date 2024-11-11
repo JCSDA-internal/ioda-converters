@@ -13,25 +13,15 @@ function(obs2ioda_fortran_target target target_main)
     set(OBS2IODA_FORTRAN_TARGET_COMPILE_OPTIONS_PRIVATE
         $<$<COMPILE_LANGUAGE:Fortran>:-mcmodel=medium>
     )
-        if (CMAKE_Fortran_COMPILER_ID MATCHES GNU)
-                list(APPEND OBS2IODA_FORTRAN_TARGET_COMPILE_OPTIONS_PRIVATE
-                     $<$<COMPILE_LANGUAGE:Fortran>:-cpp -ffree-line-length-none>
-                )
-                if (CMAKE_BUILD_TYPE MATCHES Debug)
-                    list(APPEND OBS2IODA_FORTRAN_TARGET_COMPILE_OPTIONS_PRIVATE
-                         $<$<COMPILE_LANGUAGE:Fortran>:-fbacktrace -ffpe-trap=invalid,zero,overflow -fcheck=all>
-                    )
-                endif ()
-            elseif (CMAKE_Fortran_COMPILER_ID MATCHES Intel)
-                list(APPEND OBS2IODA_FORTRAN_TARGET_COMPILE_OPTIONS_PRIVATE
-                     $<$<COMPILE_LANGUAGE:Fortran>:-fpp>
-                )
-                if (CMAKE_BUILD_TYPE MATCHES Debug)
-                    list(APPEND OBS2IODA_FORTRAN_TARGET_COMPILE_OPTIONS_PRIVATE
-                         $<$<COMPILE_LANGUAGE:Fortran>:-check uninit -ftrapuv -g -traceback -fpe0>
-                    )
-                endif ()
-            endif ()
+    if (CMAKE_Fortran_COMPILER_ID MATCHES GNU)
+        list(APPEND OBS2IODA_FORTRAN_TARGET_COMPILE_OPTIONS_PRIVATE
+             $<$<COMPILE_LANGUAGE:Fortran>:-cpp -ffree-line-length-none>
+        )
+    elseif (CMAKE_Fortran_COMPILER_ID MATCHES Intel)
+        list(APPEND OBS2IODA_FORTRAN_TARGET_COMPILE_OPTIONS_PRIVATE
+             $<$<COMPILE_LANGUAGE:Fortran>:-fpp>
+        )
+    endif ()
     target_compile_options(${target} PRIVATE ${OBS2IODA_FORTRAN_TARGET_COMPILE_OPTIONS_PRIVATE})
     target_link_libraries(${target} PUBLIC ${public_link_libraries})
     add_executable(obs2ioda_${target} ${target_main})
