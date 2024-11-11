@@ -125,7 +125,8 @@ class calipso_l2ext(object):
             pres = hdf.select('Pressure').get() * 1e3
             nlevs = pres.shape[1] 
             proftime = hdf.select('Profile_Time').get()[:,1]
-            obs_time = round((proftime + calipso_ref_time.timestamp()).astype('datetime64[s]'))
+            obs_time = (proftime + calipso_ref_time.timestamp()).astype('datetime64[s]')
+            winmsk = ((obs_time >= self.wbeg) & (obs_time <= self.wend))
 
             obs = np.zeros(pres.shape)
             err = np.zeros(pres.shape)
@@ -150,21 +151,21 @@ class calipso_l2ext(object):
             pres = np.where(pres < 0, float_missing_value, pres)
                 
             self.outdata[('latitude', metaDataName)] = np.append(self.outdata[('latitude', metaDataName)],
-                                                                 np.array(lats, dtype=np.float32))
+                                                                 np.array(lats[winmsk], dtype=np.float32))
             self.outdata[('longitude', metaDataName)] = np.append(self.outdata[('longitude', metaDataName)],
-                                                                  np.array(lons, dtype=np.float32))
+                                                                  np.array(lons[winmsk], dtype=np.float32))
             self.outdata[('dateTime', metaDataName)] = np.append(self.outdata[('dateTime', metaDataName)],
-                                                                 np.array(obs_time, dtype=np.int64))
+                                                                 np.array(obs_time[winmsk], dtype=np.int64))
             self.outdata[('pressure', metaDataName)] = np.append(self.outdata[('pressure', metaDataName)],
-                                                                 np.array(pres, dtype=np.float32))
+                                                                 np.array(pres[winmsk, :], dtype=np.float32))
 
             for iodavar in obsvars:
                 self.outdata[self.varDict[iodavar]['valKey']] = np.append(self.outdata[self.varDict[iodavar]['valKey']],
-                                                                          np.array(obs, dtype=np.float32))
+                                                                          np.array(obs[winmsk, :, :], dtype=np.float32))
                 self.outdata[self.varDict[iodavar]['errKey']] = np.append(self.outdata[self.varDict[iodavar]['errKey']],
-                                                                          np.array(err, dtype=np.float32))
+                                                                          np.array(err[winmsk, :, :], dtype=np.float32))
                 self.outdata[self.varDict[iodavar]['qcKey']] = np.append(self.outdata[self.varDict[iodavar]['qcKey']],
-                                                                         np.array(qcf, dtype=np.int32))
+                                                                         np.array(qcf[winmsk, :, :], dtype=np.int32))
             hdf.end()
 
         self.outdata[('sensorCentralWavelength', metaDataName)] = np.array(wavelength, dtype=np.float32)[output_chidx]
