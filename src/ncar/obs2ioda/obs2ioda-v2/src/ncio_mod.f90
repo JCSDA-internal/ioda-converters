@@ -89,7 +89,7 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
          allocate (ichan(xdata(ityp,itim)%nvars))
          ichan(:) = xdata(ityp,itim)%xseninfo_int(:,iv)
          allocate (obserr(xdata(ityp,itim)%nvars))
-         if  ( geoinst_list(ityp) == 'ahi_himawari8' ) then
+         if  ( write_opt == write_nc_radiance_geo ) then
              call set_ahi_obserr(geoinst_list(ityp), xdata(ityp,itim)%nvars, obserr)
          else
              call set_brit_obserr(inst_list(ityp), xdata(ityp,itim)%nvars, obserr)
