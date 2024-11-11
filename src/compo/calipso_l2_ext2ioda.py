@@ -12,6 +12,7 @@ from pyhdf.HDF import *
 from pyhdf.VS import *
 from pyhdf.SD import SD, SDC
 import numpy as np
+import netCDF4 as nc
 
 import pyiodaconv.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
@@ -22,7 +23,7 @@ from pyiodaconv.def_jedi_utils import iso8601_string, epoch
 # globals
 CALIPSO_WMO_sat_ID = 787
 
-AttrsData = {
+AttrData = {
     'converter': os.path.basename(__file__),
     "platformCommonName": "CALIPSO",
     "platformLongDescription": "CALIPSO L2 Lidar Data",
@@ -32,15 +33,18 @@ metaKeyList = [
     ("latitude", "float", "degrees_north"),
     ("longitude", "float", "degrees_east"),
     ("dateTime", "long", iso8601_string),
-    #("lidarDataAltitude", "float", "km"),
-    ("pressure", "float", "hPa"),
+    ("pressure", "float", "Pa"),
     ("sensorCentralWavelength", "float", "micron"),
 ]
 
 DimDict = {
 }
 
-VarDims = {'extinctionCoefficient':['Location', 'Level', 'Channel']}
+VarDims = {'extinctionCoefficient': ['Location', 'Level', 'Channel'],
+           'pressure': ['Location','Level'],
+}
+
+obsvars = ["extinctionCoefficient"]
 channels = [1, 2]
 wavelength = [0.532, 1.064]
 
@@ -68,25 +72,24 @@ class calipso_l2ext(object):
         self.filenames = filenames
         self.wbeg = np.datetime64(datetime.strptime(date_range[0], "%Y%m%d%H"))
         self.wend = np.datetime64(datetime.strptime(date_range[1], "%Y%m%d%H"))
-        self.pltfrm = pltfrm
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.setDicts()
         self._read()
 
     def setDicts(self):
-        meta_keys = [m_item[0] for m_item in locationKeyList]
+        meta_keys = [m_item[0] for m_item in metaKeyList]
         # Set units of the MetaData variables and all _FillValues.
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         for key in meta_keys:
-            dtypestr = locationKeyList[meta_keys.index(key)][1]
-            if locationKeyList[meta_keys.index(key)][2]:
-                self.varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
+            dtypestr = metaKeyList[meta_keys.index(key)][1]
+            if metaKeyList[meta_keys.index(key)][2]:
+                self.varAttrs[(key, metaDataName)]['units'] = metaKeyList[meta_keys.index(key)][2]
             self.varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtypestr]
 
         var_keys = [v_item[0] for v_item in varsKeyList]
         # set up variable names for IODA
-        for iodavar in varDims.keys():
+        for iodavar in obsvars:
             for key in var_keys:
                 varGroupName = varsKeyList[var_keys.index(key)][1]
                 dtypestr = varsKeyList[var_keys.index(key)][2]
@@ -100,13 +103,15 @@ class calipso_l2ext(object):
     def _read(self):
         # default missing value in CALIPSO file
         default_missing_value = -9999.
-        n_channel = len(channels)
+        calipso_ref_time = datetime(1993, 1, 1, 0, 0, 0)
+        nchan = len(channels)
         output_chidx = np.array(channels, dtype=np.int32) - 1
 
         # Make empty lists for the output vars
         self.outdata[('latitude', metaDataName)] = np.array([], dtype=np.float32)
         self.outdata[('longitude', metaDataName)] = np.array([], dtype=np.float32)
         self.outdata[('dateTime', metaDataName)] = np.array([], dtype=np.int64)
+        self.outdata[('pressure', metaDataName)] = np.array([], dtype=np.float32)
         for iodavar in obsvars:
             self.outdata[self.varDict[iodavar]['valKey']] = np.array([], dtype=np.float32)
             self.outdata[self.varDict[iodavar]['errKey']] = np.array([], dtype=np.float32)
@@ -115,37 +120,45 @@ class calipso_l2ext(object):
         for f in self.filenames:
             hdf = SD(f, SDC.READ)
 
-            nlevs = hdf.select('Pressure').get().shape[1]
+            lats = hdf.select('Latitude').get()[:,1]
+            lons = hdf.select('Longitude').get()[:,1]
+            pres = hdf.select('Pressure').get() * 1e3
+            nlevs = pres.shape[1] 
+            proftime = hdf.select('Profile_Time').get()[:,1]
+            obs_time = round((proftime + calipso_ref_time.timestamp()).astype('datetime64[s]'))
 
-            lats = f.select('Latitude').get()[:,1]
-            lons = f.select('Longitude').get()[:,1]
-            pres = f.select('Pressure').get()
-            proftime = f.select('Profile_Time').get()[:,1]
-
-            obs = np.array([])
-            err = np.array([])
-            qcf = np.array([])
-            for chidx in output_chidx:
-                wavelength_str = str(int(wavelength[chidx] * 1000))
+            obs = np.zeros(pres.shape)
+            err = np.zeros(pres.shape)
+            qcf = np.zeros(pres.shape)
+            for i, chidx in enumerate(output_chidx):
+                wavelength_str = str(int(wavelength[chidx] * 1e3))
                 obsvarname = f"Extinction_Coefficient_{wavelength_str}"
                 errvarname = f"Extinction_Coefficient_Uncertainty_{wavelength_str}"
                 qcfvarname = f"Extinction_QC_Flag_{wavelength_str}"
 
-                obs = np.append(obs, f.select(obsvarname).get())
-                err = np.append(err, f.select(errvarname).get())
-                qcf = np.append(qcf, f.select(qcfvarname).get())
-                
-            print(obs.shape)
-            sys.exit()
+                if i==0:
+                    obs = hdf.select(obsvarname).get()[:, :, np.newaxis]
+                    err = hdf.select(errvarname).get()[:, :, np.newaxis]
+                    qcf = hdf.select(qcfvarname).get()[:, :, np.newaxis]
+                else:
+                    obs = np.concatenate((obs, hdf.select(obsvarname).get()[:, :, np.newaxis]), axis=2)
+                    err = np.concatenate((err, hdf.select(errvarname).get()[:, :, np.newaxis]), axis=2)
+                    qcf = np.concatenate((qcf, hdf.select(qcfvarname).get()[:, :, np.newaxis]), axis=2)
 
+            obs = np.where(obs < 0, float_missing_value, obs)
+            err = np.where(err < 0, float_missing_value, err)
+            pres = np.where(pres < 0, float_missing_value, pres)
+                
             self.outdata[('latitude', metaDataName)] = np.append(self.outdata[('latitude', metaDataName)],
                                                                  np.array(lats, dtype=np.float32))
             self.outdata[('longitude', metaDataName)] = np.append(self.outdata[('longitude', metaDataName)],
                                                                   np.array(lons, dtype=np.float32))
             self.outdata[('dateTime', metaDataName)] = np.append(self.outdata[('dateTime', metaDataName)],
-                                                                 np.array(proftime, dtype=np.int64))
+                                                                 np.array(obs_time, dtype=np.int64))
+            self.outdata[('pressure', metaDataName)] = np.append(self.outdata[('pressure', metaDataName)],
+                                                                 np.array(pres, dtype=np.float32))
 
-            for iodavar in VarDims.keys():
+            for iodavar in obsvars:
                 self.outdata[self.varDict[iodavar]['valKey']] = np.append(self.outdata[self.varDict[iodavar]['valKey']],
                                                                           np.array(obs, dtype=np.float32))
                 self.outdata[self.varDict[iodavar]['errKey']] = np.append(self.outdata[self.varDict[iodavar]['errKey']],
@@ -156,7 +169,8 @@ class calipso_l2ext(object):
 
         self.outdata[('sensorCentralWavelength', metaDataName)] = np.array(wavelength, dtype=np.float32)[output_chidx]
         DimDict['Location'] = len(self.outdata[('dateTime', metaDataName)])
-        # DimDict['Level'] = 
+        DimDict['Level'] = nlevs 
+        DimDict['Channel'] = nchan
 
 def get_data_from_files(afile):
 
@@ -346,7 +360,7 @@ def main():
     calipsol2 = calipso_l2ext(args.input, args.date_range)
 
     # write everything out
-    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
+    writer = iconv.IodaWriter(args.output, metaKeyList, DimDict)
     writer.BuildIoda(calipsol2.outdata, VarDims, calipsol2.varAttrs, AttrData)
 
 if __name__ == "__main__":
