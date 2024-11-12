@@ -748,6 +748,7 @@ else
   end if
 
   ! do thinning every subsample pixels
+  iloc = 0
   do jj = 1, nline, subsample
      do ii = 1, npixel, subsample
         if ( .not. valid(ii,jj) ) cycle
