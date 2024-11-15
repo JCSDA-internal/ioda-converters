@@ -1367,7 +1367,8 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_aod
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/modis_aod2ioda.py
                           -i testinput/modis_aod.hdf
                           -p Terra
-                          -o testrun/modis_aod.nc"
+			  --date_range 2021080100 2021080101
+                          -o testrun/modis_aod.nc"			
                           modis_aod.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_aeronet_aod

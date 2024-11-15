@@ -157,11 +157,11 @@ class AOD(object):
             UNC = np.where(over_land, unc_land, np.add(0.05, np.multiply(0.15, aod)))
 
             self.outdata[('latitude', metaDataName)] = np.append(self.outdata[('latitude', metaDataName)],
-                                                                 np.array(lats, dtype=np.float32))
+                                                                 np.array(lats[winmsk], dtype=np.float32))
             self.outdata[('longitude', metaDataName)] = np.append(self.outdata[('longitude', metaDataName)],
-                                                                  np.array(lons, dtype=np.float32))
+                                                                  np.array(lons[winmsk], dtype=np.float32))
             self.outdata[('dateTime', metaDataName)] = np.append(self.outdata[('dateTime', metaDataName)],
-                                                                 np.array(obs_time, dtype=np.int64))
+                                                                 np.array(obs_time[winmsk], dtype=np.int64))
 
             for iodavar in obsvars:
                 self.outdata[self.varDict[iodavar]['valKey']] = np.append(self.outdata[self.varDict[iodavar]['valKey']],
