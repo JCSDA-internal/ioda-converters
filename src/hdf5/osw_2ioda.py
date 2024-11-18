@@ -207,16 +207,33 @@ def main(args):
 
 
 def get_data_source(afile):
-    if 'title' in afile.attrs.keys() and 'CYGNSS' in afile.attrs['title'].decode('UTF-8'):
+
+    keys = ['title', 'constellation']
+    title = None
+
+    for key in keys:
+        value = afile.attrs.get(key, None)
+        if value is not None:
+            title = value.decode('UTF-8') if isinstance(value, bytes) else value
+            break
+
+    if title is None:
+        # throw error
+        pass
+    elif 'CYGNSS' in title:
         return 'CYGNSS'
-    elif 'title' in afile.attrs.keys() and 'Muon' in afile.attrs['title'].decode('UTF-8'):
-        return 'Muon'
-    elif 'constellation' in afile.attrs.keys() and "spire" in afile.attrs['constellation'].decode('UTF-8'):
+    elif 'Muon' in title:
+        if 'Level 3' in title:
+            return 'Muon-L3'
+        else:
+            return 'Muon'
+    elif 'spire' in title:
         return 'Spire'
-    elif 'title' in afile.attrs.keys() and 'SPIRE' in afile.attrs['title'].decode('UTF-8'):
+    elif 'SPIRE' in title:
         return 'Spire-L2'
     else:
         # throw error
+        print(f' ... WARNING: did not recognize source title: {title}')
         pass
 
 
@@ -224,6 +241,12 @@ def get_reference_time(afile, osw_source):
     if osw_source == 'CYGNSS' or osw_source == 'Spire-L2':
         dat_ref = afile['sample_time'].attrs['units'].decode('UTF-8').split('since ')[-1]
         dat_ref = datetime.strptime(dat_ref, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc).timestamp()
+    elif osw_source == 'Muon-L3':
+        # Parse the start and end times
+        time_start = datetime.strptime(afile.attrs['time_start'], '%Y%m%dT%HZ').replace(tzinfo=timezone.utc).timestamp()
+        time_end = datetime.strptime(afile.attrs['time_end'], '%Y%m%dT%HZ').replace(tzinfo=timezone.utc).timestamp()
+        # Calculate the average
+        dat_ref = (time_start + time_end) / 2
     elif osw_source == 'Muon':
         # note same as CYGNSS except item key is simply time
         dat_ref = afile['time'].attrs['units'].decode('UTF-8').split('since ')[-1]
@@ -252,6 +275,24 @@ def get_data_from_file(afile, col_names, osw_source, file_name):
         satelliteAscendingFlag = [get_normalized_bit(v, bit_index=1) for v in afile['sample_flags']]
         windSpeedObsError = [v for v in afile['wind_speed_uncertainty']]
         sensorIdentification = [str(v) for v in afile['sv_num']]  # sv_num is the GPS space vehicle number
+    elif osw_source == 'Muon-L3':
+        import re
+        instrument_ref = re.search(r'MuSat\d+', afile.attrs['title'])
+        if instrument_ref:
+            instrument_ref = instrument_ref.group()
+        else:
+            instrument_ref = osw_source
+        # latitude, longitude and OSW are 2D array
+        latitude = [v for row in afile['latitude'] for v in row]
+        longitude = [v for row in afile['longitude'] for v in row]
+        dat_ref = get_reference_time(afile, osw_source)
+        dateTime = [dat_ref] * len(latitude)
+        windSpeed = [v for row in afile['ocean_wind_speed_level3'] for v in row]
+        fillValue = afile['ocean_wind_speed_level3'].attrs['_FillValue']
+        # use all values in data set to FillValue (-9999)
+        windSpeedPreQC = [1 if value == fillValue else 0 for value in windSpeed]
+        windSpeedObsError = [5.0] * len(latitude)
+        sensorIdentification = [instrument_ref]*len(latitude)
     elif osw_source == 'Muon':
         # Get instrument reference
         import re
