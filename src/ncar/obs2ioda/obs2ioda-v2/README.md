@@ -22,11 +22,11 @@ If you have an environment preconfigured for `mpas-jedi`, simply source that env
    ```bash
    find . -name *libbufr*
    ```
-4. Next, run CMake to configure the build. Remember to specify the path to the NCEP BUFR library:
+4. Next, run CMake to configure the build. Specify the `CMAKE_BUILD_TYPE` option to set the build type. Currently, the supported types are `Release`, `RelWithDebInfo`, and `Debug`. Don't forget to include the path to the NCEP BUFR library:
    ```bash
-   cmake <OBS2IODA_ROOT_DIR> -DNCEP_BUFR_LIB=<NCEP_BUFR_LIB_PATH>
+   cmake <OBS2IODA_ROOT_DIR> -DNCEP_BUFR_LIB=<NCEP_BUFR_LIB_PATH> -DCMAKE_BUILD_TYPE=<BUILD_TYPE>
    ```
-5. Finally, build the project using this command:
+5. Finally, build `obs2ioda` using `CMake`'s build tool. In this case, we use `GNU Make`, but other build tools supported by `CMake` can be used:
    ```bash
    make
    ```
