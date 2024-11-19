@@ -150,6 +150,7 @@ class AOD(object):
 
             # uncertainty estimates:
             # From MODIS file (over ocean) and Levy, 2010 (over land)
+            # https://acp.copernicus.org/articles/10/10399/2010/acp-10-10399-2010.pdf
             # flag = 0 (ocean) 1(land) 2(coastal)
 
             over_ocean = np.logical_not(land_sea_flag > 0)
@@ -178,10 +179,10 @@ class AOD(object):
 def main():
 
     # get command line arguments
-    # Usage: python blah.py -i /path/to/obs/2021060801.nc /path/to/obs/2021060802.nc ... -p <Terra or Aqua>
-    # -o /path/to/ioda/20210608.nc --date_range YYYYMMDDHH YYYYMMDDHH
+    # Usage: python modis_aod2ioda.py -i /path/to/obs/2021060801.nc /path/to/obs/2021060802.nc ... -p <Terra or Aqua>
+    # -o /path/to/ioda/2021060806.nc --date_range YYYYMMDDHH YYYYMMDDHH
     # where the input obs could be for any desired interval to concatenated together.
-    # Analysis time is generally the midpoint of analysis window.
+    # Use date_range to process data for the length of assimilation window.
     parser = argparse.ArgumentParser(
         description=(
             'Reads MODIS AOD hdf4 files provided by NASA'
