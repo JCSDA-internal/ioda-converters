@@ -99,6 +99,7 @@ list( APPEND test_input
   testinput/madis_2021010100.nc
   testinput/gpm_dpr_20240401-S105223-E122536.sample.hdf5
   testinput/Pandora57s1_BoulderCO_L2_rnvs3p1-8.txt
+  testinput/balloonsonde_sample_20241001T00Z_PT15M.json
 )
 
 list( APPEND test_output
@@ -191,6 +192,7 @@ list( APPEND test_output
   testoutput/madis_snod_2021010100.nc
   testoutput/20240401T105230_PT1M_dpr_gpm.nc
   testoutput/Pandora57s1_BoulderCO_L2_rnvs3p1-8.nc
+  testoutput/obs.20241001T000000Z_PT15M_balloonsonde.nc4
 )
 
 if( iodaconv_gnssro_ENABLED )
