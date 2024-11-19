@@ -2168,6 +2168,7 @@ endif()
                             -i testinput/balloonsonde_sample_20241001T00Z_PT15M.json
                             -o testrun/obs.20241001T000000Z_PT15M_balloonsonde.nc4
                             --sort"
+                            obs.20241001T000000Z_PT15M_balloonsonde.nc4 ${IODA_CONV_COMP_TOL})
 
 #==============================================================================
 # PrepBUFR and BUFR tests
