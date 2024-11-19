@@ -26,8 +26,7 @@ from pyiodaconv.def_jedi_utils import iso8601_string, epoch
 os.environ["TZ"] = "UTC"
 
 # these are the unique values in the raw input file
-varDict = {'totalElectronContentVertical': ['totalElectronContentVertical', "integer", 'TECU'],
-           'totalElectronContentSlant': ['totalElectronContentSlant', "integer", "TECU"],
+varDict = {'totalElectronContent': ['totalElectronContent', "integer", 'TECU'],
 }
 
 # these are the MetaData common to each input
@@ -45,7 +44,7 @@ locationKeyList = [
     ('zECEFPositionGNSS', 'float', 'GNSS transmitting satellite Earth Centered Earth Fixed Z-coordinate in meters'),
     ('latitudeIPP', 'float', 'latitude of Ionospheric Pierce Point in degrees_north'),
     ('longitudeIPP', 'float', 'longitude of Ionospheric Pierce Point in degrees_east'),
-    ('dateTime', 'long', 'seconds from epoch 01Jan1970'),
+    ('dateTime', 'long', iso8601_string),
     ('stationIdentifierWMO', 'integer', 'WMO assigned number for the site'),
     ('stationIdentifier', 'string', 'GNSS ground-based receiving station name'),
 ]
@@ -144,7 +143,7 @@ def main(args):
         varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtype]
 
     # Set units and FillValue attributes for groups associated with observed variable.
-    for key in ['totalElectronContentSlant', 'totalElectronContentVertical']:
+    for key in varDict.keys():
         variable = varDict[key][0]
         dtype = varDict[key][1]
         units = varDict[key][2]
@@ -322,8 +321,7 @@ def populate_obsValue(line, local_data):
         local_data['longitudeIPP'] = np.append(local_data['longitudeIPP'], float(longitudeIPP)/100.)
         local_data['elevationAngleGNSS'] = np.append(local_data['elevationAngleGNSS'], float(elevationAngle.rstrip('/'))/10.)
         local_data['azimuthAngle'] = np.append(local_data['azimuthAngle'], float(azimuthAngle.rstrip('/'))/10.)
-        local_data['totalElectronContentVertical'] = np.append(local_data['totalElectronContentVertical'], int(vobs.lstrip('/')))
-        local_data['totalElectronContentSlant'] = np.append(local_data['totalElectronContentSlant'], int(sobs.lstrip('/')))
+        local_data['totalElectronContent'] = np.append(local_data['totalElectronContent'], int(sobs.lstrip('/')))
         local_data['xECEFPositionGNSS'] = np.append(local_data['xECEFPositionGNSS'], xECEFPositionGNSS)
         local_data['yECEFPositionGNSS'] = np.append(local_data['yECEFPositionGNSS'], yECEFPositionGNSS)
         local_data['zECEFPositionGNSS'] = np.append(local_data['zECEFPositionGNSS'], zECEFPositionGNSS)
