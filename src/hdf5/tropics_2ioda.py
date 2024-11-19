@@ -128,10 +128,6 @@ def main(args):
     VarAttrs[(k, 'ObsValue')]['units'] = 'K'
     VarAttrs[(k, 'ObsError')]['units'] = 'K'
     # VarAttrs[(k, 'PreQC')]['units'] = 'unitless'
-    import pdb
-    pdb.set_trace()
-    import sys
-    sys.exit()
 
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
