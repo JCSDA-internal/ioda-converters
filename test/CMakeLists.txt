@@ -99,6 +99,7 @@ list( APPEND test_input
   testinput/madis_2021010100.nc
   testinput/gpm_dpr_20240401-S105223-E122536.sample.hdf5
   testinput/Pandora57s1_BoulderCO_L2_rnvs3p1-8.txt
+  testinput/tec_groundBased_TENET_20201001T00Z.tec
 )
 
 list( APPEND test_output
@@ -191,6 +192,7 @@ list( APPEND test_output
   testoutput/madis_snod_2021010100.nc
   testoutput/20240401T105230_PT1M_dpr_gpm.nc
   testoutput/Pandora57s1_BoulderCO_L2_rnvs3p1-8.nc
+  testoutput/obs.20201001T000000Z_PT1M_tec_groundbased.nc4
 )
 
 if( iodaconv_gnssro_ENABLED )
