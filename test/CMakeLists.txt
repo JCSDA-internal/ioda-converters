@@ -2158,6 +2158,17 @@ if( iodaconv_bufr_query_ENABLED )
 
 endif()
 
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_balloonsonde
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/balloon_sonde_json2ioda.py
+                            -i testinput/balloonsonde_sample_20241001T00Z_PT15M.json
+                            -o testrun/obs.20241001T000000Z_PT15M_balloonsonde.nc4
+                            --sort"
+
 #==============================================================================
 # PrepBUFR and BUFR tests
 #==============================================================================
