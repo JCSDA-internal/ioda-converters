@@ -95,6 +95,10 @@ def main(args):
     nlocs = nlocs_int.item()
     nchans = len(obs_data[('sensorChannelNumber', metaDataName)])
 
+    if nlocs == 0:
+        print(f'  ...  WARNING: no data found exiting without writing output')
+        return
+
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
     if dtg:
@@ -124,6 +128,10 @@ def main(args):
     VarAttrs[(k, 'ObsValue')]['units'] = 'K'
     VarAttrs[(k, 'ObsError')]['units'] = 'K'
     # VarAttrs[(k, 'PreQC')]['units'] = 'unitless'
+    import pdb
+    pdb.set_trace()
+    import sys
+    sys.exit()
 
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
