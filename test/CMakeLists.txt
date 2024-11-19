@@ -2158,6 +2158,17 @@ if( iodaconv_bufr_query_ENABLED )
 
 endif()
 
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tec_groundbased
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/gnss_tec_ground_based.py
+                            -i testinput/tec_groundBased_TENET_20201001T00Z.tec
+                            -o testrun/obs.20201001T000000Z_PT1M_tec_groundbased.nc4"
+                            obs.20201001T000000Z_PT1M_tec_groundbased.nc4 ${IODA_CONV_COMP_TOL})
+
 #==============================================================================
 # PrepBUFR and BUFR tests
 #==============================================================================
