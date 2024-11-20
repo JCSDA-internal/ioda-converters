@@ -26,7 +26,8 @@ from pyiodaconv.def_jedi_utils import iso8601_string, epoch
 os.environ["TZ"] = "UTC"
 
 # these are the unique values in the raw input file
-varDict = {'totalElectronContent': ['totalElectronContent', "integer", 'TECU'],
+varDict = {
+    'totalElectronContent': ['totalElectronContent', "integer", 'TECU'],
 }
 
 # these are the MetaData common to each input
