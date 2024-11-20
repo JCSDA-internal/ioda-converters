@@ -35,13 +35,11 @@ metaDataName = iconv.MetaDataName()
 obsValName = iconv.OvalName()
 
 # globals
-TROPICS01_WMO_sat_ID = 933  # 691  did this ID get updated by WMO
-TROPICS02_WMO_sat_ID = 895
-TROPICS03_WMO_sat_ID = 896
-TROPICS04_WMO_sat_ID = 966
-TROPICS05_WMO_sat_ID = 967
-TROPICS06_WMO_sat_ID = 968
-TROPICS07_WMO_sat_ID = 969
+TROPICS01_WMO_sat_ID = 709
+TROPICS03_WMO_sat_ID = 228
+TROPICS05_WMO_sat_ID = 263
+TROPICS06_WMO_sat_ID = 264
+TROPICS07_WMO_sat_ID = 284
 TOMORROWIO_GENERIC_sat_ID = 769
 
 # TROPICS Epoch Time (TET) offset
