@@ -99,6 +99,7 @@ list( APPEND test_input
   testinput/madis_2021010100.nc
   testinput/gpm_dpr_20240401-S105223-E122536.sample.hdf5
   testinput/Pandora57s1_BoulderCO_L2_rnvs3p1-8.txt
+  testinput/balloonsonde_sample_20241001T00Z_PT15M.json
   testinput/tec_groundBased_TENET_20201001T00Z.tec
 )
 
@@ -192,6 +193,7 @@ list( APPEND test_output
   testoutput/madis_snod_2021010100.nc
   testoutput/20240401T105230_PT1M_dpr_gpm.nc
   testoutput/Pandora57s1_BoulderCO_L2_rnvs3p1-8.nc
+  testoutput/obs.20241001T000000Z_PT15M_balloonsonde.nc4
   testoutput/obs.20201001T000000Z_PT1M_tec_groundbased.nc4
 )
 
@@ -2159,6 +2161,18 @@ if( iodaconv_bufr_query_ENABLED )
                             synop_wmo_multi2.nc ${IODA_CONV_COMP_TOL})
 
 endif()
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_balloonsonde
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/balloon_sonde_json2ioda.py
+                            -i testinput/balloonsonde_sample_20241001T00Z_PT15M.json
+                            -o testrun/obs.20241001T000000Z_PT15M_balloonsonde.nc4
+                            --sort"
+                            obs.20241001T000000Z_PT15M_balloonsonde.nc4 ${IODA_CONV_COMP_TOL})
 
   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tec_groundbased
                     TYPE    SCRIPT
