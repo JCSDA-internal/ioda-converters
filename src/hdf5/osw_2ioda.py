@@ -252,7 +252,7 @@ def get_reference_time(afile, osw_source):
         dat_ref = (time_start.timestamp() + time_end.timestamp()) / 2
     elif osw_source == 'Muon':
         # note same as CYGNSS except item key is simply time
-        dat_ref = afile['time'].attrs['units'].decode('UTF-8').split('since ')[-1]
+        dat_ref = afile['time'].attrs['units'].split('since ')[-1]
         dat_ref = datetime.strptime(dat_ref, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc).timestamp()
     elif osw_source == 'Spire':
         # the precision of the seconds appears troublesome when too many digits
@@ -298,11 +298,7 @@ def get_data_from_file(afile, col_names, osw_source, file_name):
         sensorIdentification = [instrument_ref]*len(latitude)
     elif osw_source == 'Muon':
         # Get instrument reference
-        import re
-        subst = 'CY..._G..'
-        temp = re.compile(subst)
-        res = temp.search(file_name)
-        instrument_ref = res.group(0)
+        instrument_ref = afile.attrs['spacecraft_num']
 
         latitude = [v for v in afile['lat']]
         longitude = [v for v in afile['lon']]
