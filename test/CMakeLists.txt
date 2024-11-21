@@ -9,7 +9,7 @@
 
 list( APPEND test_input
   testinput/tropics_2022021600.nc
-  testinput/cygnss.sample.20240401T000600_PT1M.l2.wind_trackgridsize25km_NOAAv1.2.nc
+  testinput/cygnss.sample.20240401T000600Z_PT1M.l2.wind_trackgridsize25km_NOAAv1.2.nc
   testinput/sample.amsr2.gcom-w1.20220216.h5
   testinput/gmi_gpm_20220216.h5
   testinput/icethk_coperl4.nc
@@ -2181,7 +2181,7 @@ endif()
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                             "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/osw_2ioda.py
-                            -i testinput/cygnus.sample.20240401T000600_PT1M.l2.wind_trackgridsize25km_NOAAv1.2.nc
+                            -i testinput/cygnus.sample.20240401T000600Z_PT1M.l2.wind_trackgridsize25km_NOAAv1.2.nc
                             -o testrun/obs.20240401T000600Z_PT1M_osw_cygnss_noaa.nc4"
                             obs.20240401T000600Z_PT1M_osw_cygnss_noaa.nc4 ${IODA_CONV_COMP_TOL})
 
