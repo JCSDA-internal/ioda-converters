@@ -47,11 +47,11 @@ varsKeyList = [('valKey', iconv.OvalName(), 'float', 'longitude latitude', '1'),
                ('errKey', iconv.OerrName(), 'float', 'longitude latitude', '1'),
                ('qcKey', iconv.OqcName(), 'integer', 'longitude latitude', None)]
 
-float_missing_value = nc.default_fillvals['f4']
-int_missing_value = nc.default_fillvals['i4']
-double_missing_value = nc.default_fillvals['f8']
-long_missing_value = nc.default_fillvals['i8']
-string_missing_value = '_'
+float_missing_value = iconv.get_default_fill_val(np.float32)
+double_missing_value = iconv.get_default_fill_val(np.float64)
+int_missing_value = iconv.get_default_fill_val(np.int32)
+long_missing_value = iconv.get_default_fill_val(np.int64)
+string_missing_value = iconv.get_default_fill_val(np.str_)
 
 missing_vals = {'string': string_missing_value,
                 'integer': int_missing_value,
