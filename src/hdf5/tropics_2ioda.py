@@ -260,14 +260,14 @@ def get_data_deprecated(f, obs_data, skip=1):
     obs_data[(k, "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
     obs_data[(k, "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
 
-    # Bit 1: land/undefined
-    # Bit 2: Lunar/solar intrusion
-    # Bit 3: Active Maneuver
-    # Bit 4: Cold Cal. Consistency
-    # Bit 5: Hot Cal. Consistency
-    # Bit 6: Ascending/Descending
-    # Bit 7: Day/Night
-    # Bit 8: Payload forward/aft"
+    # Bit 0: land/undefined
+    # Bit 1: Lunar/solar intrusion
+    # Bit 2: Active Maneuver
+    # Bit 3: Cold Cal. Consistency
+    # Bit 4: Hot Cal. Consistency
+    # Bit 5: Ascending/Descending
+    # Bit 6: Day/Night
+    # Bit 7: Payload forward/aft"
     quality_word = np.vstack(np.stack(f['calQualityFlag'], axis=2))
     obs_data[('satelliteAscendingFlag', metaDataName)] = np.array(get_normalized_bit(quality_word[:, 0], bit_index=5), dtype='int32')
 
