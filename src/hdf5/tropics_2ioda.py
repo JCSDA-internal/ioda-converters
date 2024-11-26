@@ -164,91 +164,10 @@ def get_data_from_files(afile, skip=1):
     return obs_data
 
 
-def get_data(f, obs_data, skip=1):
-
-    # List of keys to check
-    key_list = ['ShortName', 'platform']
-
-    # Check if either key exists in f.attrs
-    key_found = next((key for key in key_list if key in f.attrs), None)
-
-    if key_found:
-        # If a key is found, decode and get the WMO_sat_ID
-        WMO_sat_ID = get_WMO_satellite_ID(f.attrs[key_found].decode("utf-8"))
-    else:
-        # If neither key is found, raise an exception
-        raise KeyError(f"Neither '{key_list[0]}' nor '{key_list[1]}' found in f.attrs")
-
-    nscans = len(f['scans'])
-    nbeam_pos = len(f['spots'])
-    nchans = len(f['channels'])
-
-    # nbands = len(f['bands'])  # unused
-    # Bands_to_Channel = "Band 1 = Ch 1; Band 2 = Ch 2-4; Band 3 = Ch 5-8; Band 4 = Ch 9-11; Band 5 = Ch 12"
-    iband = 0   # at this point arbitrarily select a band
-    obs_data[('latitude', metaDataName)] = np.array(f['latitude'][iband, :, :].flatten(), dtype='float32')
-    obs_data[('longitude', metaDataName)] = np.array(f['longitude'][iband, :, :].flatten(), dtype='float32')
-    obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(nchans)+1, dtype='int32')
-    obs_data[('sensorScanPosition', metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='int32')+1, (nscans, 1)).flatten()
-    obs_data[('solarZenithAngle', metaDataName)] = np.array(f['solar_zenith_angle'][iband, :, :].flatten(), dtype='float32')
-    obs_data[('solarAzimuthAngle', metaDataName)] = np.array(f['solar_azimuth_angle'][iband, :, :].flatten(), dtype='float32')
-    obs_data[('sensorZenithAngle', metaDataName)] = np.array(f['sensor_zenith_angle'][iband, :, :].flatten(), dtype='float32')
-    obs_data[('sensorAzimuthAngle', metaDataName)] = np.array(f['sensor_azimuth_angle'][iband, :, :].flatten(), dtype='float32')
-    obs_data[('sensorViewAngle', metaDataName)] = np.array(f['sensor_view_angle'][iband, :, :].flatten(), dtype='float32')
-    obs_data[('dateTime', metaDataName)] = np.array(f['time'][:, :].flatten() + tet_offset, dtype='int64')
-
-    quality_word = np.vstack(np.stack(f['calQualityFlag'], axis=2))
-    # Bit 5: Ascending/Descending
-    obs_data[('satelliteAscendingFlag', metaDataName)] = np.array(get_normalized_bit(quality_word[:, 0], bit_index=5), dtype='int32')
-
-    obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(nchans)+1, dtype='int32')
-    obs_data[('sensorScanPosition', metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='int32')+1, (nscans, 1)).flatten()
-    nlocs = len(obs_data[('latitude', metaDataName)])
-    obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
-
-    nlocs = len(obs_data[('latitude', metaDataName)])
-    k = 'brightnessTemperature'
-    # have to reorder the channel axis to be last then merge ( nscans x nspots = nlocs )
-    obs_data[(k, "ObsValue")] = np.array(np.vstack(np.stack(
-        np.where(f['brightness_temperature'] == f['brightness_temperature'].fillvalue,
-                 float_missing_value, f['brightness_temperature']), axis=2)), dtype='float32')
-
-    obs_data[(k, "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
-    obs_data[(k, "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
-
-    # check some global satellite geometry will compress all data using this
-    chk_geolocation = (obs_data[('latitude', metaDataName)] > 90) | (obs_data[('latitude', metaDataName)] < -90) | \
-        (obs_data[('longitude', metaDataName)] > 180) | (obs_data[('longitude', metaDataName)] < -180) | \
-        (obs_data[('sensorZenithAngle', metaDataName)] > 80) | (obs_data[('sensorZenithAngle', metaDataName)] < 0)
-
-    obs_data[('latitude', metaDataName)][chk_geolocation] = float_missing_value
-    obs_data[('longitude', metaDataName)][chk_geolocation] = float_missing_value
-    obs_data[('sensorZenithAngle', metaDataName)][chk_geolocation] = float_missing_value
-
-    obs_key = (k, "ObsValue")
-    obs_data = set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data, skip=skip)
-
-    return obs_data
-
-
 def get_tio_data(f, obs_data, skip=1, L1BR=False):
 
-    # List of keys to check
-    key_list = ['ShortName', 'platform']
-
-    # Check if either key exists in f.attrs
-    key_found = next((key for key in key_list if key in f.attrs), None)
-
-    if key_found:
-        # If a key is found, decode and get the WMO_sat_ID
-        WMO_sat_ID = get_WMO_satellite_ID(f.attrs[key_found].decode("utf-8"))
-    else:
-        # If neither key is found, raise an exception
-        raise KeyError(f"Neither '{key_list[0]}' nor '{key_list[1]}' found in f.attrs")
-
-    nscans = len(f['scans'])
-    nbeam_pos = len(f['spots'])
-    nchans = len(f['channels'])
+    WMO_sat_ID, nscans, nbeam_pos, nchans = get_header_info(f)
+    obs_data = assign_dimension(obs_data, nchans, nscans, nbeam_pos)
 
     if L1BR:
         # remapped data metaData consistent across scan and beamposition
@@ -279,11 +198,10 @@ def get_tio_data(f, obs_data, skip=1, L1BR=False):
         obs_data[('dateTime', metaDataName)] = np.array(f['time'][:, :, 0].flatten() + tet_offset, dtype='int64')
         obs_data[('satelliteAscendingFlag', metaDataName)] = np.array(f['flagAscDesc'][:, :, iband].flatten(), dtype='int32')
 
-    obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(nchans)+1, dtype='int32')
-    obs_data[('sensorScanPosition', metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='int32')+1, (nscans, 1)).flatten()
-    nlocs = len(obs_data[('latitude', metaDataName)])
-    obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
+    # assign orbit WMO ID to all locations
+    obs_data = assign_WMO_ID(obs_data, WMO_sat_ID)
 
+    # get ObsValue assign an error and PreQC
     nlocs = len(obs_data[('latitude', metaDataName)])
     k = 'brightnessTemperature'
     # have to reorder the channel axis to be last then merge ( nscans x nspots = nlocs )
@@ -291,48 +209,79 @@ def get_tio_data(f, obs_data, skip=1, L1BR=False):
         np.where(f['brightness_temperature'] == f['brightness_temperature'].fillvalue,
                  float_missing_value, f['brightness_temperature']), dtype='float32')
     obs_data[(k, "ObsValue")] = obs_data[(k, "ObsValue")].reshape(-1, obs_data[(k, "ObsValue")].shape[2])
-
     obs_data[(k, "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
     obs_data[(k, "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
 
-    # check some global satellite geometry will compress all data using this
-    chk_geolocation = (obs_data[('latitude', metaDataName)] > 90) | (obs_data[('latitude', metaDataName)] < -90) | \
-        (obs_data[('longitude', metaDataName)] > 180) | (obs_data[('longitude', metaDataName)] < -180) | \
-        (obs_data[('sensorZenithAngle', metaDataName)] > 80) | (obs_data[('sensorZenithAngle', metaDataName)] < 0)
+    # apply gross quality control
+    obs_data, chk_geolocation = apply_gross_qc(obs_data)
 
-    obs_data[('latitude', metaDataName)][chk_geolocation] = float_missing_value
-    obs_data[('longitude', metaDataName)][chk_geolocation] = float_missing_value
-    obs_data[('sensorZenithAngle', metaDataName)][chk_geolocation] = float_missing_value
-
+    # quality control using data Flag and final check for valid ObsValues for all bands
     obs_key = (k, "ObsValue")
     obs_data = set_flagged_value(nchans, chk_geolocation, f, obs_key, obs_data, skip=skip)
 
     return obs_data
 
 
+def get_data(f, obs_data, skip=1):
+
+    WMO_sat_ID, nscans, nbeam_pos, nchans = get_header_info(f)
+    obs_data = assign_dimension(obs_data, nchans, nscans, nbeam_pos)
+
+    # nbands = len(f['bands'])  # unused
+    # Bands_to_Channel = "Band 1 = Ch 1; Band 2 = Ch 2-4; Band 3 = Ch 5-8; Band 4 = Ch 9-11; Band 5 = Ch 12"
+    iband = 0   # at this point arbitrarily select a band
+    obs_data[('latitude', metaDataName)] = np.array(f['latitude'][iband, :, :].flatten(), dtype='float32')
+    obs_data[('longitude', metaDataName)] = np.array(f['longitude'][iband, :, :].flatten(), dtype='float32')
+    obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(nchans)+1, dtype='int32')
+    obs_data[('sensorScanPosition', metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='int32')+1, (nscans, 1)).flatten()
+    obs_data[('solarZenithAngle', metaDataName)] = np.array(f['solar_zenith_angle'][iband, :, :].flatten(), dtype='float32')
+    obs_data[('solarAzimuthAngle', metaDataName)] = np.array(f['solar_azimuth_angle'][iband, :, :].flatten(), dtype='float32')
+    obs_data[('sensorZenithAngle', metaDataName)] = np.array(f['sensor_zenith_angle'][iband, :, :].flatten(), dtype='float32')
+    obs_data[('sensorAzimuthAngle', metaDataName)] = np.array(f['sensor_azimuth_angle'][iband, :, :].flatten(), dtype='float32')
+    obs_data[('sensorViewAngle', metaDataName)] = np.array(f['sensor_view_angle'][iband, :, :].flatten(), dtype='float32')
+    obs_data[('dateTime', metaDataName)] = np.array(f['time'][:, :].flatten() + tet_offset, dtype='int64')
+
+    quality_word = np.vstack(np.stack(f['calQualityFlag'], axis=2))
+    # Bit 5: Ascending/Descending
+    obs_data[('satelliteAscendingFlag', metaDataName)] = np.array(get_normalized_bit(quality_word[:, 0], bit_index=5), dtype='int32')
+
+    # assign orbit WMO ID to all locations
+    obs_data = assign_WMO_ID(obs_data, WMO_sat_ID)
+
+    # get ObsValue assign an error and PreQC
+    nlocs = len(obs_data[('latitude', metaDataName)])
+    k = 'brightnessTemperature'
+    # have to reorder the channel axis to be last then merge ( nscans x nspots = nlocs )
+    obs_data[(k, "ObsValue")] = np.array(np.vstack(np.stack(
+        np.where(f['brightness_temperature'] == f['brightness_temperature'].fillvalue,
+                 float_missing_value, f['brightness_temperature']), axis=2)), dtype='float32')
+    obs_data[(k, "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
+    obs_data[(k, "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
+
+    # apply gross quality control
+    obs_data, chk_geolocation = apply_gross_qc(obs_data)
+
+    # quality control using data Flag and final check for valid ObsValues for all bands
+    obs_key = (k, "ObsValue")
+    obs_data = set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data, skip=skip)
+
+    return obs_data
+
+
 def get_data_deprecated(f, obs_data, skip=1):
 
-    WMO_sat_ID = get_WMO_satellite_ID(f.attrs['ShortName'].decode("utf-8"))
+    WMO_sat_ID, nscans, nbeam_pos, nchans = get_header_info(f)
+    obs_data = assign_dimension(obs_data, nchans, nscans, nbeam_pos)
 
-    nscans = len(f['scans'])
-    nbeam_pos = len(f['spots'])
-    nchans = len(f['channels'])
-    nbands = len(f['bands'])
+    # nbands = len(f['bands'])  # unused
     # Bands_to_Channel = "Band 1 = Ch 1; Band 2 = Ch 2-4; Band 3 = Ch 5-8; Band 4 = Ch 9-11; Band 5 = Ch 12"
     iband = 0   # at this point arbitrarily select a band
     obs_data[('latitude', metaDataName)] = np.array(f['losLat_deg'][iband, :, :].flatten(), dtype='float32')
     obs_data[('longitude', metaDataName)] = np.array(f['losLon_deg'][iband, :, :].flatten(), dtype='float32')
-    obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(nchans)+1, dtype='int32')
-    k = 'sensorScanPosition'
-    obs_data[(k, metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='int32')+1, (nscans, 1)).flatten()
-    k = 'solarZenithAngle'
-    obs_data[(k, metaDataName)] = np.array(f['losSolZen_deg'][iband, :, :].flatten(), dtype='float32')
-    k = 'solarAzimuthAngle'
-    obs_data[(k, metaDataName)] = np.array(f['losSolAzi_deg'][iband, :, :].flatten(), dtype='float32')
-    k = 'sensorZenithAngle'
-    obs_data[(k, metaDataName)] = np.array(f['losZen_deg'][iband, :, :].flatten(), dtype='float32')
-    k = 'sensorAzimuthAngle'
-    obs_data[(k, metaDataName)] = np.array(f['losAzi_deg'][iband, :, :].flatten(), dtype='float32')
+    obs_data[('solarZenithAngle', metaDataName)] = np.array(f['losSolZen_deg'][iband, :, :].flatten(), dtype='float32')
+    obs_data[('solarAzimuthAngle', metaDataName)] = np.array(f['losSolAzi_deg'][iband, :, :].flatten(), dtype='float32')
+    obs_data[('sensorZenithAngle', metaDataName)] = np.array(f['losZen_deg'][iband, :, :].flatten(), dtype='float32')
+    obs_data[('sensorAzimuthAngle', metaDataName)] = np.array(f['losAzi_deg'][iband, :, :].flatten(), dtype='float32')
     instr_scan_ang = np.array(f['losScan_deg'][iband, :, :].flatten(), dtype='float32')
     # compute view angle
     sat_altitude = np.empty_like(instr_scan_ang)
@@ -341,12 +290,12 @@ def get_data_deprecated(f, obs_data, skip=1):
         instr_scan_ang,
         sat_altitude,
         instr_scan_ang)
-
-    nlocs = len(obs_data[('latitude', metaDataName)])
-    obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
-    # obs_data[('datetime', metaDataName)] = np.array(get_string_dtg(f), dtype=object)
     obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f), dtype='int64')
 
+    # assign orbit WMO ID to all locations
+    obs_data = assign_WMO_ID(obs_data, WMO_sat_ID)
+
+    # get ObsValue assign an error and PreQC
     nlocs = len(obs_data[('latitude', metaDataName)])
     k = 'brightnessTemperature'
     # have to reorder the channel axis to be last then merge ( nscans x nspots = nlocs )
@@ -359,15 +308,10 @@ def get_data_deprecated(f, obs_data, skip=1):
     # Bit 5: Ascending/Descending
     obs_data[('satelliteAscendingFlag', metaDataName)] = np.array(get_normalized_bit(quality_word[:, 0], bit_index=5), dtype='int32')
 
-    # check some global satellite geometry will compress all data using this
-    chk_geolocation = (obs_data[('latitude', metaDataName)] > 90) | (obs_data[('latitude', metaDataName)] < -90) | \
-        (obs_data[('longitude', metaDataName)] > 180) | (obs_data[('longitude', metaDataName)] < -180) | \
-        (obs_data[('sensorZenithAngle', metaDataName)] > 80) | (obs_data[('sensorZenithAngle', metaDataName)] < 0)
+    # apply gross quality control
+    obs_data, chk_geolocation = apply_gross_qc(obs_data)
 
-    obs_data[('latitude', metaDataName)][chk_geolocation] = float_missing_value
-    obs_data[('longitude', metaDataName)][chk_geolocation] = float_missing_value
-    obs_data[('sensorZenithAngle', metaDataName)][chk_geolocation] = float_missing_value
-
+    # quality control using data Flag and final check for valid ObsValues for all bands
     obs_key = (k, "ObsValue")
     obs_data = set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data, skip=skip)
 
@@ -464,8 +408,55 @@ def assign_values(data):
         return np.array(data, dtype=ioda_int_type)
 
 
-def get_WMO_satellite_ID(attrs_shortname):
+def get_header_info(f):
 
+    WMO_sat_ID = get_WMO_satellite_ID(f)
+    nscans = len(f['scans'])
+    nbeam_pos = len(f['spots'])
+    nchans = len(f['channels'])
+    return WMO_sat_ID, nscans, nbeam_pos, nchans
+
+
+def assign_dimension(obs_data, nchans, nscans, nbeam_pos):
+    obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(nchans)+1, dtype='int32')
+    obs_data[('sensorScanPosition', metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='int32')+1, (nscans, 1)).flatten()
+    return obs_data
+
+
+def assign_WMO_ID(obs_data, WMO_sat_ID):
+    nlocs = len(obs_data[('latitude', metaDataName)])
+    obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
+    return obs_data
+
+
+def apply_gross_qc(obs_data):
+    # check some global satellite geometry will compress all data using this
+    chk_geolocation = (obs_data[('latitude', metaDataName)] > 90) | (obs_data[('latitude', metaDataName)] < -90) | \
+        (obs_data[('longitude', metaDataName)] > 180) | (obs_data[('longitude', metaDataName)] < -180) | \
+        (obs_data[('sensorZenithAngle', metaDataName)] > 80) | (obs_data[('sensorZenithAngle', metaDataName)] < 0)
+
+    obs_data[('latitude', metaDataName)][chk_geolocation] = float_missing_value
+    obs_data[('longitude', metaDataName)][chk_geolocation] = float_missing_value
+    obs_data[('sensorZenithAngle', metaDataName)][chk_geolocation] = float_missing_value
+    return obs_data, chk_geolocation
+
+
+def get_WMO_satellite_ID(f):
+
+    # List of keys to check
+    key_list = ['ShortName', 'platform']
+
+    # Check if either key exists in f.attrs
+    key_found = next((key for key in key_list if key in f.attrs), None)
+
+    if key_found:
+        # If a key is found, decode and get the platform ShortName
+        attrs_shortname = f.attrs[key_found].decode("utf-8")
+    else:
+        # If neither key is found, raise an exception
+        raise KeyError(f"Neither '{key_list[0]}' nor '{key_list[1]}' found in f.attrs")
+
+    # assign WMO ID
     if 'TROPICS01' in attrs_shortname:
         WMO_sat_ID = TROPICS01_WMO_sat_ID
     elif 'TROPICS03' in attrs_shortname:
