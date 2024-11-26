@@ -405,11 +405,11 @@ def set_flagged_value(nchans, chk_geolocation, f, obs_key, obs_data, skip=1):
         i_intrusion = np.array(f['flagSolarIntrusion'][:, :, jchan].flatten(), dtype='int32')
         i_intrusion += np.array(f['flagLunarIntrusion'][:, :, jchan].flatten(), dtype='int32')
         i_maneuver = np.array(f['flagManeuver'][:, :, jchan].flatten(), dtype='int32')
-        i_cold_cal = np.sum(np.array(f['flagColdCal'][:, :, jchan], dtype='int32'),axis=0)
+        i_cold_cal = np.sum(np.array(f['flagColdCal'][:, :, jchan], dtype='int32'), axis=0)
         i_cold_cal = np.repeat(i_cold_cal[np.newaxis, :], 81, axis=0).flatten()
-        i_ict_cal = np.sum(np.array(f['flagICTCal'][:, :, jchan], dtype='int32'),axis=0)
+        i_ict_cal = np.sum(np.array(f['flagICTCal'][:, :, jchan], dtype='int32'), axis=0)
         i_ict_cal = np.repeat(i_ict_cal[np.newaxis, :], 81, axis=0).flatten()
-        i_nd_cal = np.sum(np.array(f['flagNDCal'][:, :, jchan], dtype='int32'),axis=0)
+        i_nd_cal = np.sum(np.array(f['flagNDCal'][:, :, jchan], dtype='int32'), axis=0)
         i_nd_cal = np.repeat(i_nd_cal[np.newaxis, :], 81, axis=0).flatten()
 
         chk_ob = (i_cold_cal + i_ict_cal + i_nd_cal + i_intrusion + i_maneuver + chk_geolocation) > 0
