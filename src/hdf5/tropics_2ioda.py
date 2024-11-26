@@ -139,14 +139,19 @@ def get_data_from_files(afile, skip=1):
     f = h5py.File(afile, 'r')
     software_version = -1
     tio_sounder = False
+    L1BR = False
     if 'L1b_SW_Ver' in f.attrs.keys():
         software_version = int(f.attrs['L1b_SW_Ver'].decode("utf-8").split('.')[0])
     if 'platform' in f.attrs.keys():
         if 'Tomorrow' in f.attrs['platform'].decode("utf-8"):
             tio_sounder = True
+        if 'L1b_SW_Ver' in f.attrs.keys():
             software_version = int(f.attrs['L1b_SW_Ver'].decode("utf-8").split('.')[1])
+        elif 'L1BR_SW_Ver' in f.attrs.keys():
+            software_version = int(f.attrs['L1BR_SW_Ver'].decode("utf-8").split('.')[1])
+            L1BR = True
     if tio_sounder:
-        obs_data = get_tio_data(f, obs_data, skip=skip)
+        obs_data = get_tio_data(f, obs_data, skip=skip, L1BR=L1BR)
     elif software_version >= 3:
         obs_data = get_data(f, obs_data, skip=skip)
     elif software_version == 2:
@@ -232,7 +237,7 @@ def get_data(f, obs_data, skip=1):
     return obs_data
 
 
-def get_tio_data(f, obs_data, skip=1):
+def get_tio_data(f, obs_data, skip=1, L1BR=False):
 
     # List of keys to check
     key_list = ['ShortName', 'platform']
@@ -251,18 +256,34 @@ def get_tio_data(f, obs_data, skip=1):
     nbeam_pos = len(f['spots'])
     nchans = len(f['channels'])
 
-    # tomorrow(io) data has values per channel rather than per band....
-    # np.shape(f['solar_zenith_angle'])  =  (81, 491, 12)
-    iband = 0   # at this point arbitrarily select a band
-    obs_data[('latitude', metaDataName)] = np.array(f['latitude'][:, :, iband].flatten(), dtype='float32')
-    obs_data[('longitude', metaDataName)] = np.array(f['longitude'][:, :, iband].flatten(), dtype='float32')
-    obs_data[('solarZenithAngle', metaDataName)] = np.array(f['solar_zenith_angle'][:, :, iband].flatten(), dtype='float32')
-    obs_data[('solarAzimuthAngle', metaDataName)] = np.array(f['solar_azimuth_angle'][:, :, iband].flatten(), dtype='float32')
-    obs_data[('sensorZenithAngle', metaDataName)] = np.array(f['sensor_zenith_angle'][:, :, iband].flatten(), dtype='float32')
-    obs_data[('sensorAzimuthAngle', metaDataName)] = np.array(f['sensor_azimuth_angle'][:, :, iband].flatten(), dtype='float32')
-    obs_data[('sensorViewAngle', metaDataName)] = np.array(f['sensor_view_angle'][:, :, iband].flatten(), dtype='float32')
-    obs_data[('dateTime', metaDataName)] = np.array(f['time'][:, :, 0].flatten() + tet_offset, dtype='int64')
-    obs_data[('satelliteAscendingFlag', metaDataName)] = np.array(f['flagAscDesc'][:, :, iband].flatten(), dtype='int32')
+    if L1BR:
+        # remapped data metaData consistent across scan and beamposition
+        obs_data[('latitude', metaDataName)] = np.array(f['latitude'][:, :].flatten(), dtype='float32')
+        obs_data[('longitude', metaDataName)] = np.array(f['longitude'][:, :].flatten(), dtype='float32')
+        # missing in L1BR files?
+        obs_data[('solarZenithAngle', metaDataName)] = np.full((nscans*nbeam_pos), float_missing_value, dtype='float32')
+        obs_data[('solarAzimuthAngle', metaDataName)] = np.full((nscans*nbeam_pos), float_missing_value, dtype='float32')
+        # obs_data[('solarZenithAngle', metaDataName)] = np.array(f['solar_zenith_angle'][:, :].flatten(), dtype='float32')
+        # obs_data[('solarAzimuthAngle', metaDataName)] = np.array(f['solar_azimuth_angle'][:, :].flatten(), dtype='float32')
+        obs_data[('sensorZenithAngle', metaDataName)] = np.array(f['sensor_zenith_angle'][:, :].flatten(), dtype='float32')
+        obs_data[('sensorAzimuthAngle', metaDataName)] = np.array(f['sensor_azimuth_angle'][:, :].flatten(), dtype='float32')
+        obs_data[('sensorViewAngle', metaDataName)] = np.array(f['sensor_view_angle'][:, :].flatten(), dtype='float32')
+        obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f), dtype='int64')
+        # the Ascending/Descending flag has index by channel?
+        # obs_data[('satelliteAscendingFlag', metaDataName)] = np.array(f['flagAscDesc'][:, :].flatten(), dtype='int32')
+        obs_data[('satelliteAscendingFlag', metaDataName)] = np.array(f['flagAscDesc'][:, :, 0].flatten(), dtype='int32')
+    else:
+        # tomorrow(io) data has metaData values per channel rather than per band....
+        iband = 0   # at this point arbitrarily select a channel
+        obs_data[('latitude', metaDataName)] = np.array(f['latitude'][:, :, iband].flatten(), dtype='float32')
+        obs_data[('longitude', metaDataName)] = np.array(f['longitude'][:, :, iband].flatten(), dtype='float32')
+        obs_data[('solarZenithAngle', metaDataName)] = np.array(f['solar_zenith_angle'][:, :, iband].flatten(), dtype='float32')
+        obs_data[('solarAzimuthAngle', metaDataName)] = np.array(f['solar_azimuth_angle'][:, :, iband].flatten(), dtype='float32')
+        obs_data[('sensorZenithAngle', metaDataName)] = np.array(f['sensor_zenith_angle'][:, :, iband].flatten(), dtype='float32')
+        obs_data[('sensorAzimuthAngle', metaDataName)] = np.array(f['sensor_azimuth_angle'][:, :, iband].flatten(), dtype='float32')
+        obs_data[('sensorViewAngle', metaDataName)] = np.array(f['sensor_view_angle'][:, :, iband].flatten(), dtype='float32')
+        obs_data[('dateTime', metaDataName)] = np.array(f['time'][:, :, 0].flatten() + tet_offset, dtype='int64')
+        obs_data[('satelliteAscendingFlag', metaDataName)] = np.array(f['flagAscDesc'][:, :, iband].flatten(), dtype='int32')
 
     obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(nchans)+1, dtype='int32')
     obs_data[('sensorScanPosition', metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='int32')+1, (nscans, 1)).flatten()
