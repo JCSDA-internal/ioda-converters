@@ -34,9 +34,9 @@ varDict = {
 locationKeyList = [
     ('latitude', 'float', 'degrees_north'),
     ('longitude', 'float', 'degrees_east'),
-    ('pseudoRandomNoiseCode', 'integer', 'GNSS transmitter pseudoRandomNoise PRN code'),
+    ('satelliteTransmitterId', 'integer', 'GNSS transmitter ID constellation pseudoRandomNoise PRN code'),
     ('elevationAngleGNSS', 'float', 'GNSS transmitter satellite elevation angle in degrees'),
-    ('azimuthAngle', 'float', 'aziumuth angle viewing GNSS transmitter in degrees west'),
+    ('sensorAzimuthAngle', 'float', 'aziumuth angle viewing GNSS transmitter in degrees west'),
     ('xECEFPosition', 'float', 'receiving station Earth Centered Earth Fixed X-coordinate in meters'),
     ('yECEFPosition', 'float', 'receiving station Earth Centered Earth Fixed Y-coordinate in meters'),
     ('zECEFPosition', 'float', 'receiving station Earth Centered Earth Fixed Z-coordinate in meters'),
@@ -317,11 +317,11 @@ def populate_obsValue(line, local_data):
 
     try:
         local_data['dateTime'] = np.append(local_data['dateTime'], dateTime)
-        local_data['pseudoRandomNoiseCode'] = np.append(local_data['pseudoRandomNoiseCode'], PRN)
+        local_data['satelliteTransmitterId'] = np.append(local_data['satelliteTransmitterId'], PRN)
         local_data['latitudeIPP'] = np.append(local_data['latitudeIPP'], latitudeIPP)
         local_data['longitudeIPP'] = np.append(local_data['longitudeIPP'], float(longitudeIPP)/100.)
         local_data['elevationAngleGNSS'] = np.append(local_data['elevationAngleGNSS'], float(elevationAngle.rstrip('/'))/10.)
-        local_data['azimuthAngle'] = np.append(local_data['azimuthAngle'], float(azimuthAngle.rstrip('/'))/10.)
+        local_data['sensorAzimuthAngle'] = np.append(local_data['sensorAzimuthAngle'], float(azimuthAngle.rstrip('/'))/10.)
         local_data['totalElectronContent'] = np.append(local_data['totalElectronContent'], int(sobs.lstrip('/')))
         local_data['xECEFPositionGNSS'] = np.append(local_data['xECEFPositionGNSS'], xECEFPositionGNSS)
         local_data['yECEFPositionGNSS'] = np.append(local_data['yECEFPositionGNSS'], yECEFPositionGNSS)
