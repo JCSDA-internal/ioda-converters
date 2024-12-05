@@ -99,6 +99,7 @@ list( APPEND test_input
   testinput/madis_2021010100.nc
   testinput/gpm_dpr_20240401-S105223-E122536.sample.hdf5
   testinput/Pandora57s1_BoulderCO_L2_rnvs3p1-8.txt
+  testinput/pandora_site_classification.csv
   testinput/balloonsonde_sample_20241001T00Z_PT15M.json
   testinput/tec_groundBased_TENET_20201001T00Z.tec
 )
@@ -1298,7 +1299,8 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pandora
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/pandora_2ioda.py
                           -i testinput/Pandora57s1_BoulderCO_L2_rnvs3p1-8.txt
                           -o testrun/Pandora57s1_BoulderCO_L2_rnvs3p1-8.nc
-                          --date_range 2023080115 2023080121"
+                          --date_range 2023080115 2023080121
+                          --site_classification testinput/pandora_site_classification.csv"
                           Pandora57s1_BoulderCO_L2_rnvs3p1-8.nc ${IODA_CONV_COMP_TOL})
 
 foreach (coltype total tropo)
