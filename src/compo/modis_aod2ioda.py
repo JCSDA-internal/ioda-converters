@@ -101,9 +101,6 @@ class AOD(object):
 
     def _read(self):
 
-        # All of MODIS AOD data have a singular reference time
-        modis_ref_time = datetime(1993, 1, 1, 0, 0, 0)
-
         # Make empty lists for the output vars
         self.outdata[('latitude', metaDataName)] = np.array([], dtype=np.float32)
         self.outdata[('longitude', metaDataName)] = np.array([], dtype=np.float32)
@@ -117,8 +114,24 @@ class AOD(object):
         for f in self.filenames:
             hdf = SD(f, SDC.READ)
 
+            # All of MODIS AOD data have a singular reference time - good practice to get from attribute
+            modis_time_key = 'Scan_Start_Time'
+            try:
+                modis_time_attribute = hdf.select(modis_time_key).attributes().get('units')
+                if modis_time_attribute is None:
+                    print("'units' attribute is not present in {modis_time_key}.")
+                    modis_ref_time = datetime(1993, 1, 1, 0, 0, 0)
+                else:
+                    # Extract the date and time part
+                    datetime_str = modis_time_attribute.split('since ')[1].rsplit(' ', 1)[0]
+
+                    # Convert to a datetime object
+                    modis_ref_time = datetime.strptime(datetime_str, "%Y-%m-%d %H:%M:%S.%f")
+            except Exception as e:
+                # Catch and print any errors
+                print(f"An error occurred: {e}")
             #  Get variables
-            modis_time = hdf.select('Scan_Start_Time')[:].ravel()
+            modis_time = hdf.select(modis_time_key)[:].ravel()
             print(f"length of time var: {len(modis_time)}")
             modis_time = modis_time.astype('float32')
             lats = hdf.select('Latitude')[:].ravel()
