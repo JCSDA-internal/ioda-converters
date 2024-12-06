@@ -9,6 +9,7 @@
 
 list( APPEND test_input
   testinput/tropics_2022021600.nc
+  testinput/cygnss.sample.20240401T000600Z_PT1M.l2.wind_trackgridsize25km_NOAAv1.2.nc
   testinput/sample.amsr2.gcom-w1.20220216.h5
   testinput/gmi_gpm_20220216.h5
   testinput/icethk_coperl4.nc
@@ -105,6 +106,7 @@ list( APPEND test_input
 
 list( APPEND test_output
   testoutput/20220216T00Z_PT3H_tms_tropics-01.nc4
+  testoutput/obs.20240401T000600Z_PT1M_osw_cygnss_noaa.nc4
   testoutput/amsr2_gcom-w1_20220216.nc4
   testoutput/gmi_gpm_20220216.nc4
   testoutput/icethk_coperl4.nc
@@ -2173,6 +2175,17 @@ endif()
                             -o testrun/obs.20241001T000000Z_PT15M_balloonsonde.nc4
                             --sort"
                             obs.20241001T000000Z_PT15M_balloonsonde.nc4 ${IODA_CONV_COMP_TOL})
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_osw_cygnss
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/osw_2ioda.py
+                            -i testinput/cygnss.sample.20240401T000600Z_PT1M.l2.wind_trackgridsize25km_NOAAv1.2.nc
+                            -o testrun/obs.20240401T000600Z_PT1M_osw_cygnss_noaa.nc4"
+                            obs.20240401T000600Z_PT1M_osw_cygnss_noaa.nc4 ${IODA_CONV_COMP_TOL})
 
 #==============================================================================
 # PrepBUFR and BUFR tests
