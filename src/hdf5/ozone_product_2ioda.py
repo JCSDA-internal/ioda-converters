@@ -25,7 +25,7 @@ import pyiodaconv.ioda_conv_engines as iconv
 from pyiodaconv.orddicts import DefaultOrderedDict
 from pyiodaconv.def_jedi_utils import set_metadata_attributes, set_obspace_attributes
 from pyiodaconv.def_jedi_utils import compute_scan_angle
-from pyiodaconv.def_jedi_utils import ioda_int_type, ioda_float_type, epoch
+from pyiodaconv.def_jedi_utils import ioda_int_type, ioda_float_type, epoch, iso8601_string
 from pyiodaconv.def_jedi_utils import concat_obs_dict
 
 float_missing_value = iconv.get_default_fill_val(np.float32)
@@ -53,10 +53,16 @@ GlobalAttrs = {
 }
 
 locationKeyList = [
-    ("latitude", "float"),
-    ("longitude", "float"),
-    ("pressure", "float"),
-    ("dateTime", "long"),
+    ("latitude", "float", "degree_north"),
+    ("longitude", "float", "degree_east"),
+    ("pressure", "float", "Pa"),
+    ("dateTime", "long", iso8601_string),
+]
+
+metaDataKeyList = [
+    ('satelliteIdentifier', "int", "WMO satellite identifier"),
+    ('surfaceQualifier', "int", "surface classification from NOAA V8PRO"),
+    ('satelliteAscendingFlag', "int", "ascending descending orbit flag")
 ]
 
 
@@ -119,15 +125,22 @@ def main(args):
     writer = iconv.IodaWriter(output_filename, locationKeyList, DimDict)
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-    set_obspace_attributes(VarAttrs)
-    set_metadata_attributes(VarAttrs)
+
+    for k in locationKeyList + metaDataKeyList:
+        VarAttrs[(k[0], metaDataName)]['units'] = k[2]
+        if k[1] == 'float':
+            VarAttrs[(k[0], metaDataName)]['_FillValue'] = float_missing_value
+        elif k[1] == 'int':
+            VarAttrs[(k[0], metaDataName)]['_FillValue'] = int_missing_value
+        elif k[1] == 'long':
+            VarAttrs[(k[0], metaDataName)]['_FillValue'] = long_missing_value
 
     for k in ['ozoneProfile', 'ozoneColumn']:
-        VarAttrs[(k, 'ObsValue')]['_FillValue'] = float_missing_value
+        VarAttrs[(k, obsValName)]['_FillValue'] = float_missing_value
         VarAttrs[(k, 'ObsError')]['_FillValue'] = float_missing_value
         VarAttrs[(k, 'PreQC')]['_FillValue'] = int_missing_value
         # need to convert Dobson to ppmv? or mixing ratio?
-        VarAttrs[(k, 'ObsValue')]['units'] = 'DU'
+        VarAttrs[(k, obsValName)]['units'] = 'DU'
         VarAttrs[(k, 'ObsError')]['units'] = 'DU'
 
     # final write to IODA file
@@ -168,13 +181,13 @@ def get_data(f, obs_data, skip=1):
     obs_data[('dateTime', metaDataName)] = get_epoch_time(f, itime=itime)
 
     k = 'ozoneProfile'
-    obs_data[(k, "ObsValue")] = np.array(f['O3FINAL'][:, itime, :], dtype=ioda_float_type)
+    obs_data[(k, obsValName)] = np.array(f['O3FINAL'][:, itime, :], dtype=ioda_float_type)
     obs_data[(k, "ObsError")] = np.full((nlocs, nvertice), 5.0, dtype=ioda_float_type)
     # f['AlgorithmFlag_TO3'][:, 0]  # do not know what the codes for these values are is 1 == good?
     obs_data[(k, "PreQC")] = np.full((nlocs, nvertice), 0, dtype=ioda_int_type)
 
     k = 'ozoneColumn'
-    obs_data[(k, "ObsValue")] = get_obs_total(f, k="O3FINAL", itime=itime)
+    obs_data[(k, obsValName)] = get_obs_total(f, k="O3FINAL", itime=itime)
     obs_data[(k, "ObsError")] = np.full((nlocs), 5.0, dtype=ioda_float_type)
     # f['AlgorithmFlag_TO3'][:, 0]  # do not know what the codes for these values are
     obs_data[(k, "PreQC")] = np.full((nlocs), 0, dtype=ioda_int_type)
@@ -263,8 +276,8 @@ def get_obs_total(f, k="O3FINAL", itime=0):
 
 def init_obs_loc():
     obs = {
-        ('ozoneProfile', "ObsValue"): [],
-        ('ozoneColumn', "ObsValue"): [],
+        ('ozoneProfile', obsValName): [],
+        ('ozoneColumn', obsValName): [],
         ('ozoneProfile', "ObsError"): [],
         ('ozoneColumn', "ObsError"): [],
         ('ozoneProfile', "PreQC"): [],
