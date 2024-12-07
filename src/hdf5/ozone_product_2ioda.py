@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #
-# (C) Copyright 2020-2023 UCAR
+# (C) Copyright 2020-2024 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -162,24 +162,24 @@ def get_data(f, obs_data, skip=1):
     obs_data[('longitude', metaDataName)] = np.array(f['Longitude'][:, itime].flatten(), dtype=ioda_float_type)
     obs_data[('pressure', metaDataName)] = np.array(f['Pressure'][:], dtype=ioda_float_type)
     nvertice = len(obs_data[('pressure', metaDataName)])
-    obs_data[('surfaceQualifier', metaDataName)] = np.array(f['SurfaceCategory'][:, itime], dtype='int32')
+    obs_data[('surfaceQualifier', metaDataName)] = np.array(f['SurfaceCategory'][:, itime], dtype=ioda_int_type)
 
-    obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
+    obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype=ioda_int_type)
     obs_data[('dateTime', metaDataName)] = get_epoch_time(f, itime=itime)
 
     k = 'ozoneProfile'
     obs_data[(k, "ObsValue")] = np.array(f['O3FINAL'][:, itime, :], dtype=ioda_float_type)
     obs_data[(k, "ObsError")] = np.full((nlocs, nvertice), 5.0, dtype=ioda_float_type)
     # f['AlgorithmFlag_TO3'][:, 0]  # do not know what the codes for these values are is 1 == good?
-    obs_data[(k, "PreQC")] = np.full((nlocs, nvertice), 0, dtype='int32')
+    obs_data[(k, "PreQC")] = np.full((nlocs, nvertice), 0, dtype=ioda_int_type)
 
     k = 'ozoneColumn'
     obs_data[(k, "ObsValue")] = get_obs_total(f, k="O3FINAL", itime=itime)
     obs_data[(k, "ObsError")] = np.full((nlocs), 5.0, dtype=ioda_float_type)
     # f['AlgorithmFlag_TO3'][:, 0]  # do not know what the codes for these values are
-    obs_data[(k, "PreQC")] = np.full((nlocs), 0, dtype='int32')
+    obs_data[(k, "PreQC")] = np.full((nlocs), 0, dtype=ioda_int_type)
 
-    obs_data[('satelliteAscendingFlag', metaDataName)] = np.array(f['Ascending_Descending'][:, itime], dtype='int32')
+    obs_data[('satelliteAscendingFlag', metaDataName)] = np.array(f['Ascending_Descending'][:, itime], dtype=ioda_int_type)
 
 #   # check some global satellite geometry will compress all data using this
 #   chk_geolocation = (obs_data[('latitude', metaDataName)] > 90) | (obs_data[('latitude', metaDataName)] < -90) | \
