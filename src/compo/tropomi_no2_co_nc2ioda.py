@@ -68,6 +68,7 @@ class tropomi(object):
             except OSError as e:
                 if 'NetCDF: Unknown file format' in str(e):
                     print(f'WARNING: This is not a NetCDF file: {f}')
+                    continue
                 else:
                     raise e
 
