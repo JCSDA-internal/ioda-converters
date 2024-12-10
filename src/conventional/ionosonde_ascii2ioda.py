@@ -296,8 +296,8 @@ def populate_obsValue(line, local_data):
 
         if all(x > 0 for x in [freq, f_conf, density, density_conf]):
 
-            # Scale the electron density by 1e6 (for cm^-3 from m^-3)
-            density = density * 1e6
+            # Scale the electron density by 1e6 (for m^-3 to cm^-3)
+            density = density * 1e-6
 
             local_data['height'] = np.append(local_data['height'], height)
             local_data['criticalFrequency'] = np.append(local_data['criticalFrequency'], freq)
