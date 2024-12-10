@@ -18,7 +18,7 @@ os.environ["TZ"] = "UTC"
 varDict = {'criticalFrequency': ['criticalFrequency', "float", 'm s-1'],
            'criticalFrequencyConfidence': ['criticalFrequencyConfidence', "float", 'fractional percent'],
            'height': ['height', "float", "m"],
-           'electronDensity': ['electronDensity', "float", 'number / cm^3'],
+           'electronDensity': ['electronDensity', "float", 'number cm-3'],
            'electronDensityConfidence': ['electronDensityConfidence', "float", 'number / m^3']}
 
 # these are the MetaData common to each input
@@ -297,7 +297,7 @@ def populate_obsValue(line, local_data):
         if all(x > 0 for x in [freq, f_conf, density, density_conf]):
 
             # Scale the electron density by 1e6 (for m^-3 to cm^-3)
-            density = density * 1e-6
+            density *= 1.e-6
 
             local_data['height'] = np.append(local_data['height'], height)
             local_data['criticalFrequency'] = np.append(local_data['criticalFrequency'], freq)
