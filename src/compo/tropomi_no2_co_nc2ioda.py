@@ -61,7 +61,16 @@ class tropomi(object):
         # loop through input filenames
         first = True
         for f in self.filenames:
-            ncd = nc.Dataset(f, 'r')
+
+            # Open file
+            try:
+                ncd = nc.Dataset(f, 'r')
+            except OSError as e:
+                if 'NetCDF: Unknown file format' in str(e):
+                    print(f'WARNING: This is not a NetCDF file: {f}')
+                    continue
+                else:
+                    raise e
 
             # get global attributes
             AttrData['date_time_string'] = ncd.getncattr('time_reference')[0:19]+'Z'
