@@ -16,11 +16,12 @@ import os
 import pyiodaconv.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from pyiodaconv.orddicts import DefaultOrderedDict
+from pyiodaconv.def_jedi_utils import iso8601_string
 
 locationKeyList = [
-    ("latitude", "float"),
-    ("longitude", "float"),
-    ("dateTime", "long")
+    ("latitude", "float", "degrees_north"),
+    ("longitude", "float", "degrees_east"),
+    ("dateTime", "long", iso8601_string),
 ]
 
 obsvars = ["aerosolOpticalDepth"]
@@ -37,11 +38,22 @@ VarDims = {'aerosolOpticalDepth': ['Location', 'Channel']}
 
 # Get the group names we use the most.
 metaDataName = iconv.MetaDataName()
-obsValName = iconv.OvalName()
-obsErrName = iconv.OerrName()
-qcName = iconv.OqcName()
 
+varsKeyList = [('valKey', iconv.OvalName(), 'float', 'longitude latitude', '1'),
+               ('errKey', iconv.OerrName(), 'float', 'longitude latitude', '1'),
+               ('qcKey', iconv.OqcName(), 'integer', 'longitude latitude', None)]
+
+float_missing_value = nc.default_fillvals['f4']
+int_missing_value = nc.default_fillvals['i4']
+double_missing_value = nc.default_fillvals['f8']
 long_missing_value = nc.default_fillvals['i8']
+string_missing_value = '_'
+
+missing_vals = {'string': string_missing_value,
+                'integer': int_missing_value,
+                'long': long_missing_value,
+                'float': float_missing_value,
+                'double': double_missing_value}
 
 
 class AOD(object):
@@ -53,23 +65,37 @@ class AOD(object):
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        self._read()
+        self.setDicts()
 
-    def _read(self):
+    def setDicts(self):
+        meta_keys = [m_item[0] for m_item in locationKeyList]
+        # Set units of the MetaData variables and all _FillValues.
+        self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+        for key in meta_keys:
+            dtypestr = locationKeyList[meta_keys.index(key)][1]
+            if locationKeyList[meta_keys.index(key)][2]:
+                self.varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
+            self.varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtypestr]
+
+        var_keys = [v_item[0] for v_item in varsKeyList]
         # set up variable names for IODA
         for iodavar in obsvars:
-            self.varDict[iodavar]['valKey'] = iodavar, obsValName
-            self.varDict[iodavar]['errKey'] = iodavar, obsErrName
-            self.varDict[iodavar]['qcKey'] = iodavar, qcName
-            self.varAttrs[iodavar, obsValName]['coordinates'] = 'longitude latitude'
-            self.varAttrs[iodavar, obsErrName]['coordinates'] = 'longitude latitude'
-            self.varAttrs[iodavar, qcName]['coordinates'] = 'longitude latitude'
-            self.varAttrs[iodavar, obsValName]['_FillValue'] = -9999.
-            self.varAttrs[iodavar, obsErrName]['_FillValue'] = -9999.
-            self.varAttrs[iodavar, qcName]['_FillValue'] = -9999
-            self.varAttrs[iodavar, obsValName]['units'] = '1'
-            self.varAttrs[iodavar, obsErrName]['units'] = '1'
+            for key in var_keys:
+                varGroupName = varsKeyList[var_keys.index(key)][1]
+                dtypestr = varsKeyList[var_keys.index(key)][2]
+                coord = varsKeyList[var_keys.index(key)][3]
+                self.varDict[iodavar][key] = iodavar, varGroupName
+                self.varAttrs[iodavar, varGroupName]['coordinates'] = coord
+                self.varAttrs[iodavar, varGroupName]['_FillValue'] = missing_vals[dtypestr]
+                if varsKeyList[var_keys.index(key)][4]:
+                    self.varAttrs[iodavar, varGroupName]['units'] = varsKeyList[var_keys.index(key)][4]
 
+    def _read_nasa_dt(self):
+    def _read_nasa_db(self):
+    def _read_noaa(self):
+
+
+    def _read(self):
         # Make empty lists for the output vars
         self.outdata[('latitude', metaDataName)] = np.array([], dtype=np.float32)
         self.outdata[('longitude', metaDataName)] = np.array([], dtype=np.float32)
@@ -78,6 +104,14 @@ class AOD(object):
             self.outdata[self.varDict[iodavar]['valKey']] = np.array([], dtype=np.float32)
             self.outdata[self.varDict[iodavar]['errKey']] = np.array([], dtype=np.float32)
             self.outdata[self.varDict[iodavar]['qcKey']] = np.array([], dtype=np.int32)
+
+        if self.provider == 'nasa':
+            if self.retrieval_method == 'DarkTarget'
+                readaod = self._read_nasa_dt()
+            if self.retrieval_method == 'DeepBlue'
+                readaod = self._read_nasa_db()
+        elif self.provider == 'noaa'
+            readaod = self._read_noaa()
 
         # loop through input filenamess
         for f in self.filenames:
