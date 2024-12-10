@@ -295,8 +295,8 @@ def populate_obsValue(line, local_data):
         height, freq, f_conf, density, density_conf = map(float, [height, freq, f_conf, density, density_conf])
 
         # convert electronDensity values from number per m-3 to cm-3
-        density *= 1.e6
-        density_conf *= 1.e6
+        density *= 1.e-6
+        density_conf *= 1.e-6
 
         if all(x > 0 for x in [freq, f_conf, density, density_conf]):
             local_data['height'] = np.append(local_data['height'], height)
