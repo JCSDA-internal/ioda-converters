@@ -135,7 +135,7 @@ def main(args):
             varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
         varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtype]
     for key in varDict.keys():
-        if 'electronDensity' in key:
+        if 'totalElectronContent' in key:
             continue
         dtype = varDict[key][1]
         units = varDict[key][2]
@@ -167,16 +167,17 @@ def main(args):
     for key in varDict.keys():
         variable = varDict[key][0]
         dtype = varDict[key][1]
-        if 'electronDensity' not in key and 'criticalFrequency' not in key:
+        if 'totalElectronContent' not in key:
             logging.info(f" the variable: {variable} will be placed into MetaData of ioda_data")
             # these MetaData are arrays nlocs long already
             ioda_data[(key, metaDataName)] = np.array(data[variable], dtype=dtypes[dtype])
-        elif 'Confidence' not in key:
-            # (electronDensityConfidence) is used as the ObsError
+        else:
+            # what should be used as ObsError (10% or a fixed value)
             variable = varDict[key][0]
             logging.info(f" the variable: {variable} will be placed into ObsValue of ioda_data")
             ioda_data[(variable, obsValName)] = np.array(data[variable], dtype=np.float32)
-            ioda_data[(variable, obsErrName)] = np.array(data[variable+'Confidence'], dtype=np.float32)
+            ioda_data[(variable, obsErrName)] = np.array(data[variable]*0.1, dtype=np.float32)
+            # ioda_data[(variable, obsErrName)] = np.full((nlocs), errValue, dtype=np.float32)
             qc_array_hack = apply_gross_quality_control(data, qc_strict=args.qc_strict)
             ioda_data[(variable, qcName)] = np.array(qc_array_hack, dtype=np.int32)  # how to interpret AQI ?
 
@@ -406,7 +407,7 @@ def apply_gross_quality_control(data, qc_strict=False):
     # apply using simple physical reality check on variables
 
     # initialize returned variable
-    qc_array_hack = np.zeros_like(data['electronDensity'], dtype=np.int32)
+    qc_array_hack = np.zeros_like(data['totalElectronContent'], dtype=np.int32)
     # is requested apply check
     if qc_strict:
         qc_array_hack = np.where(
