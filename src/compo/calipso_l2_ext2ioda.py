@@ -35,13 +35,13 @@ metaKeyList = [
     ("dateTime", "long", iso8601_string),
     ("pressure", "float", "Pa"),
     ("sensorCentralWavelength", "float", "micron"),
+    ("sequenceNumber", "integer", None),
 ]
 
 DimDict = {
 }
 
 VarDims = {'extinctionCoefficient': ['Location', 'Level', 'Channel'],
-           'pressure': ['Location','Level'],
 }
 
 obsvars = ["extinctionCoefficient"]
@@ -112,6 +112,7 @@ class calipso_l2ext(object):
         self.outdata[('longitude', metaDataName)] = np.array([], dtype=np.float32)
         self.outdata[('dateTime', metaDataName)] = np.array([], dtype=np.int64)
         self.outdata[('pressure', metaDataName)] = np.array([], dtype=np.float32)
+        self.outdata[('sequenceNumber', metaDataName)] = np.array([], dtype=np.int64)
         for iodavar in obsvars:
             self.outdata[self.varDict[iodavar]['valKey']] = np.array([], dtype=np.float32)
             self.outdata[self.varDict[iodavar]['errKey']] = np.array([], dtype=np.float32)
@@ -120,13 +121,21 @@ class calipso_l2ext(object):
         for f in self.filenames:
             hdf = SD(f, SDC.READ)
 
-            lats = hdf.select('Latitude').get()[:,1]
-            lons = hdf.select('Longitude').get()[:,1]
-            pres = hdf.select('Pressure').get() * 1e3
+            pres = hdf.select('Pressure').get() * 1e2 # hPa to Pa
+            nlocs = pres.shape[0]
             nlevs = pres.shape[1] 
+            pres = pres.ravel()
+            lats = hdf.select('Latitude').get()[:,1]
+            lats = np.tile(lats[:, np.newaxis], (1, nlevs)).ravel()
+            lons = hdf.select('Longitude').get()[:,1]
+            lons = np.tile(lons[:, np.newaxis], (1, nlevs)).ravel()
+            profidx = np.arange(nlocs)
+            profidx = np.tile(profidx[:, np.newaxis], (1, nlevs)).ravel()
             proftime = hdf.select('Profile_Time').get()[:,1]
             obs_time = (proftime + calipso_ref_time.timestamp()).astype('datetime64[s]')
+            obs_time = np.tile(obs_time[:, np.newaxis], (1, nlevs)).ravel()
             winmsk = ((obs_time >= self.wbeg) & (obs_time <= self.wend))
+            print(lats.shape)
 
             obs = np.zeros(pres.shape)
             err = np.zeros(pres.shape)
@@ -138,13 +147,15 @@ class calipso_l2ext(object):
                 qcfvarname = f"Extinction_QC_Flag_{wavelength_str}"
 
                 if i==0:
-                    obs = hdf.select(obsvarname).get()[:, :, np.newaxis]
-                    err = hdf.select(errvarname).get()[:, :, np.newaxis]
-                    qcf = hdf.select(qcfvarname).get()[:, :, np.newaxis]
+                    obs = hdf.select(obsvarname).get().ravel()[:, np.newaxis]
+                    err = hdf.select(errvarname).get().ravel()[:, np.newaxis]
+                    qcf = hdf.select(qcfvarname).get().ravel()[:, np.newaxis]
                 else:
-                    obs = np.concatenate((obs, hdf.select(obsvarname).get()[:, :, np.newaxis]), axis=2)
-                    err = np.concatenate((err, hdf.select(errvarname).get()[:, :, np.newaxis]), axis=2)
-                    qcf = np.concatenate((qcf, hdf.select(qcfvarname).get()[:, :, np.newaxis]), axis=2)
+                    obs = np.concatenate((obs, hdf.select(obsvarname).get().ravel()[:, np.newaxis]), axis=1)
+                    err = np.concatenate((err, hdf.select(errvarname).get().ravel()[:, np.newaxis]), axis=1)
+                    qcf = np.concatenate((qcf, hdf.select(qcfvarname).get().ravel()[:, np.newaxis]), axis=1)
+
+            # Below 8.3 km, QC flag needs to consider the rightmost dimension
 
             obs = np.where(obs < 0, float_missing_value, obs)
             err = np.where(err < 0, float_missing_value, err)
@@ -157,38 +168,21 @@ class calipso_l2ext(object):
             self.outdata[('dateTime', metaDataName)] = np.append(self.outdata[('dateTime', metaDataName)],
                                                                  np.array(obs_time[winmsk], dtype=np.int64))
             self.outdata[('pressure', metaDataName)] = np.append(self.outdata[('pressure', metaDataName)],
-                                                                 np.array(pres[winmsk, :], dtype=np.float32))
+                                                                 np.array(pres[winmsk], dtype=np.float32))
 
             for iodavar in obsvars:
                 self.outdata[self.varDict[iodavar]['valKey']] = np.append(self.outdata[self.varDict[iodavar]['valKey']],
-                                                                          np.array(obs[winmsk, :, :], dtype=np.float32))
+                                                                          np.array(obs[winmsk, :], dtype=np.float32))
                 self.outdata[self.varDict[iodavar]['errKey']] = np.append(self.outdata[self.varDict[iodavar]['errKey']],
-                                                                          np.array(err[winmsk, :, :], dtype=np.float32))
+                                                                          np.array(err[winmsk, :], dtype=np.float32))
                 self.outdata[self.varDict[iodavar]['qcKey']] = np.append(self.outdata[self.varDict[iodavar]['qcKey']],
-                                                                         np.array(qcf[winmsk, :, :], dtype=np.int32))
+                                                                         np.array(qcf[winmsk, :], dtype=np.int32))
+
             hdf.end()
 
         self.outdata[('sensorCentralWavelength', metaDataName)] = np.array(wavelength, dtype=np.float32)[output_chidx]
         DimDict['Location'] = len(self.outdata[('dateTime', metaDataName)])
-        DimDict['Level'] = nlevs 
         DimDict['Channel'] = nchan
-
-def get_data_from_files(afile):
-
-    # allocate space for output depending on which variables are to be saved
-    obs_data = init_obs_loc()
-
-    hdf=HDF(afile)
-    vs=hdf.vstart()
-    meta_dict=get_hdf_meta_dict(vs)
-    vs.end()
-    hdf.close()
-
-    f = SD(afile,SDC.READ)
-    obs_data = get_data(f, obs_data, meta_dict)
-    f.end()
-
-    return obs_data
 
 def get_hdf_meta_dict(vs):
     # Reference: https://forum.earthdata.nasa.gov/viewtopic.php?f=7&t=2452#confirm_external_link-modal
@@ -258,45 +252,6 @@ def set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data):
 
 def get_normalized_bit(value, bit_index):
     return (value >> bit_index) & 1
-
-
-def assign_values(data):
-    if data.dtype == float:
-        data[np.abs(data) >= np.abs(float_missing_value)] = float_missing_value
-        return np.array(data, dtype=ioda_float_type)
-    elif data.dtype == int:
-        data[np.abs(data) >= np.abs(int_missing_value)] = int_missing_value
-        return np.array(data, dtype=ioda_int_type)
-
-
-def concat_obs_dict(obs_data, append_obs_data):
-    # For now we are assuming that the obs_data dictionary has the "golden" list
-    # of variables. If one is missing from append_obs_data, the obs_data variable
-    # will be extended using fill values.
-    #
-    # Use the first key in the append_obs_data dictionary to determine how
-    # long to make the fill value vector.
-    append_keys = list(append_obs_data.keys())
-
-
-def get_string_dtg(f):
-
-    # for TROPICS data times are per scan line
-    # current IODA needs replication by beam position
-    nbeam_pos = len(f['spots'])
-    year = f['Year']
-    month = f['Month']
-    day = f['Day']
-    hour = f['Hour']
-    minute = f['Minute']
-    dtg = []
-    for i, yyyy in enumerate(year):
-        cdtg = ("%4i-%.2i-%.2iT%.2i:%.2i:00Z" % (yyyy, month[i], day[i], hour[i], minute[i]))
-        # need to add replication by nbeam_pos
-        for _ in range(nbeam_pos):
-            dtg.append(cdtg)
-
-    return dtg
 
 
 def init_obs_loc():
