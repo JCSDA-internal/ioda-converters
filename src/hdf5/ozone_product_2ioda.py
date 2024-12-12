@@ -170,9 +170,13 @@ def get_data(f, obs_data, skip=1):
     # only the initial time appears to be populated
     # use an assertion to verify this is the case for data being processed
     itime = 0
-    assert not np.allclose(f['Latitude'][:, itime], dataset_float_fill), f'index {itime} has all fill_value'
+    # assert not np.allclose(f['Latitude'][:, itime], dataset_float_fill), f'index {itime} has all fill_value'
+    if not np.allclose(f['Latitude'][:, itime], dataset_float_fill):
+        # rather than use assertion just return None in case file has no valid data
+        print(f'time index {itime} has all fill_value')
+        return None
     for i in range(1, np.shape(f['Latitude'])[-1]):
-        assert np.allclose(f['Latitude'][:, i], dataset_float_fill), f'index {i} contains some data'
+        assert np.allclose(f['Latitude'][:, i], dataset_float_fill), f'time index {i} contains some data'
     data = np.array(f['Latitude'][:, itime].flatten(), dtype=ioda_float_type)
     obs_data[('latitude', metaDataName)] = reassign_missing_values(data, dataset_missing=dataset_float_fill)
     nlocs = len(obs_data[('latitude', metaDataName)])
