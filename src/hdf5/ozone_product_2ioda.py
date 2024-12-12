@@ -23,7 +23,6 @@ import numpy as np
 
 import pyiodaconv.ioda_conv_engines as iconv
 from pyiodaconv.orddicts import DefaultOrderedDict
-from pyiodaconv.def_jedi_utils import set_metadata_attributes, set_obspace_attributes
 from pyiodaconv.def_jedi_utils import compute_scan_angle
 from pyiodaconv.def_jedi_utils import ioda_int_type, ioda_float_type, epoch, iso8601_string
 from pyiodaconv.def_jedi_utils import concat_obs_dict
@@ -99,8 +98,18 @@ def main(args):
 
     nlocs_int = np.array(len(obs_data[('latitude', metaDataName)]), dtype='int64')
     nlocs = nlocs_int.item()
-    nvertice_int = np.array(len(obs_data[('pressure', metaDataName)]), dtype='int64')
-    nvertice = nlocs_int.item()
+    # determine if profiles are in obs_data
+    if 'ozoneProfile' in {key[0] for key in obs_data.keys()}:
+        has_ozoneProfile = True
+    else:
+        has_ozoneProfile = False
+
+    if has_ozoneProfile:
+        nvertice_int = np.array(len(obs_data[('pressure', metaDataName)]), dtype='int64')
+        nvertice = nvertice_int.item()
+    else:
+        global locationKeyList  # globals, globals everywhere
+        locationKeyList = [item for item in locationKeyList if item[0] != 'pressure']
 
     if nlocs == 0:
         print(f'  ...  WARNING: no data found exiting without writing output')
@@ -114,14 +123,17 @@ def main(args):
 
     # pass parameters to the IODA writer
     VarDims = {
-        'ozoneProfile': ['Location', 'Pressure'],
         'ozoneColumn': ['Location'],
     }
+    if has_ozoneProfile:
+        VarDims['ozoneProfile'] = ['Location', 'Pressure']
 
     DimDict = {
         'Location': nlocs,
-        'Pressure': nvertice,
     }
+    if has_ozoneProfile:
+        DimDict['Pressure'] = nvertice
+
     writer = iconv.IodaWriter(output_filename, locationKeyList, DimDict)
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -135,7 +147,10 @@ def main(args):
         elif k[1] == 'long':
             VarAttrs[(k[0], metaDataName)]['_FillValue'] = long_missing_value
 
-    for k in ['ozoneProfile', 'ozoneColumn']:
+    varKeys = ['ozoneColumn']
+    if has_ozoneProfile:
+        varKeys.append('ozoneProfile')
+    for k in varKeys:
         VarAttrs[(k, obsValName)]['_FillValue'] = float_missing_value
         VarAttrs[(k, 'ObsError')]['_FillValue'] = float_missing_value
         VarAttrs[(k, 'PreQC')]['_FillValue'] = int_missing_value
@@ -149,17 +164,17 @@ def main(args):
 
 def get_data_from_files(afile, skip=1):
 
-    # allocate space for output depending on which variables are to be saved
-    obs_data = init_obs_loc()
-
     f = h5py.File(afile, 'r')
     product_title = f.attrs['title'].decode('utf-8')
     product_description = f.attrs['summary'].decode('utf-8')
     GlobalAttrs["platformLongDescription"] = ' - '.join([product_title, product_description])
     if 'PRO' in product_title:
+        # allocate space for output depending on which variables are to be saved
+        obs_data = init_obs_loc(profile=True)
         # designed with 'V8PRO L2 ozone profile product'
         obs_data = get_np_data(f, obs_data, skip=skip)
     elif 'TOZ' in product_title:
+        obs_data = init_obs_loc(profile=False)
         # designed with V8TOZ_EDR ozone total column product'
         obs_data = get_tc_data(f, obs_data, skip=skip)
     f.close()
@@ -179,7 +194,7 @@ def get_np_data(f, obs_data, skip=1):
     # use an assertion to verify this is the case for data being processed
     itime = 0
 #   assert not np.allclose(f['Latitude'][:, itime], dataset_float_fill), f'index {itime} has all fill_value'
-    if np.all(f['Latitude'][:, itime]  == dataset_float_fill):
+    if np.all(f['Latitude'][:, itime] == dataset_float_fill):
         # rather than use assertion just return None in case file has no valid data
         print(f'time index {itime} has all fill_value')
         return None
@@ -194,7 +209,7 @@ def get_np_data(f, obs_data, skip=1):
     obs_data[('surfaceQualifier', metaDataName)] = np.array(f['SurfaceCategory'][:, itime], dtype=ioda_int_type)
 
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype=ioda_int_type)
-    obs_data[('dateTime', metaDataName)] = get_epoch_time(f, timekey='MidTime', itime=itime)
+    obs_data[('dateTime', metaDataName)] = get_epoch_time(f, f['MidTime'][:, itime], timekey='MidTime')
 
     k = 'ozoneProfile'
     obs_data[(k, obsValName)] = np.array(f['O3FINAL'][:, itime, :], dtype=ioda_float_type)
@@ -227,37 +242,50 @@ def get_tc_data(f, obs_data, skip=1):
     # possible dimensions are location, times and vertice
     dataset_float_fill = f['Latitude'].fillvalue
     dataset_int_fill = f['ErrorFlag'].fillvalue
+    dataset_mask_2d = f['Latitude'][:, :] != f['Latitude'].fillvalue
+    # these locations coincide with ErrFlag8
+    qc_mask = f['ColumnAmountO3'][dataset_mask_2d] != f['ColumnAmountO3'].fillvalue
 
-    itime = 0
-    data = np.array(f['Latitude'][itime, :].flatten(), dtype=ioda_float_type)
-    obs_data[('latitude', metaDataName)] = reassign_missing_values(data, dataset_missing=dataset_float_fill)
+    # dimensions
+    nIFOV = np.shape(f['nIFOV'])[0]
+    nTimes = np.shape(f['nTimes'])[0]
+
+    obs_data[('latitude', metaDataName)] = np.array(f['Latitude'][dataset_mask_2d].flatten(), dtype=ioda_float_type)
+    obs_data[('longitude', metaDataName)] = np.array(f['Longitude'][dataset_mask_2d].flatten(), dtype=ioda_float_type)
     nlocs = len(obs_data[('latitude', metaDataName)])
-    obs_data[('longitude', metaDataName)] = np.array(f['Longitude'][itime, :].flatten(), dtype=ioda_float_type)
-    obs_data[('pressure', metaDataName)] = np.array(f['Pressure'][:], dtype=ioda_float_type)
-    nvertice = len(obs_data[('pressure', metaDataName)])
-    # obs_data[('surfaceQualifier', metaDataName)] = np.array(f['SurfaceCategory'][itime, :], dtype=ioda_int_type)
+    # there are layer pressures?  "nLayer": shape (11,), type "f4"
+    # obs_data[('pressure', metaDataName)] = np.array(f['Pressure'][:], dtype=ioda_float_type)
 
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype=ioda_int_type)
-    obs_data[('dateTime', metaDataName)] = get_epoch_time(f, timekey='ScanTime', itime=itime)
 
-    import pdb
-    pdb.set_trace()
-    import sys
-    sys.exit()
+    # broadcast scanTime to (nTime, nIFOV)
+    expanded_scan_time = f['ScanTime'][:]
+    expanded_scan_time = expanded_scan_time[:, np.newaxis] * np.ones(nIFOV)
+    obs_data[('dateTime', metaDataName)] = get_epoch_time(f, expanded_scan_time[dataset_mask_2d], timekey='ScanTime')
+    # broadcast ascending/descending to (nTime, nIFOV)
+    expanded_iasc = f['Ascending_Descending'][:]
+    expanded_iasc = expanded_iasc[:, np.newaxis] * np.ones(nIFOV)
+    obs_data[('satelliteAscendingFlag', metaDataName)] = np.array(expanded_iasc[dataset_mask_2d], dtype=ioda_int_type)
 
     k = 'ozoneColumn'
-    obs_data[(k, obsValName)] =  np.array(f['ColumnAmountO3'][itime, :], dtype=ioda_float_type)
+    # there are missing values in the ColumnAmountO3 these match ErrorFlag=8
+    data = np.array(f['ColumnAmountO3'][dataset_mask_2d], dtype=ioda_float_type)
+    obs_data[(k, obsValName)] = reassign_missing_values(data, dataset_missing=dataset_float_fill)
     obs_data[(k, "ObsError")] = np.full((nlocs), 5.0, dtype=ioda_float_type)
-    # f['QualityFlag'][:, 0]  # do not know what the codes for these values are
     # f['ErrorFlag'][:, 0]  # do not know what the codes for these values are
+    # f['QualityFlag'][:, 0]  # do not know what the codes for these values are
+    # appears QualityFlag is the correct one to use but translation is needed
+    # does not follow a convention where =0 == good; >0 == bad
     obs_data[(k, "PreQC")] = np.full((nlocs), 0, dtype=ioda_int_type)
+    # not used -- tropospheric Ozone
+    # k='O3BelowCloud' f[k]=<HDF5 dataset "O3BelowCloud": shape (30, 240), type "<f4">
 
-    obs_data[('satelliteAscendingFlag', metaDataName)] = np.array(f['Ascending_Descending'][itime, :], dtype=ioda_int_type)
+    obs_data[('surfaceQualifier', metaDataName)] = np.full((nlocs), int_missing_value, dtype=ioda_int_type)
 
-#   # check some global satellite geometry will compress all data using this
+#   # check here seems to use the qc_mask
 #   chk_geolocation = (obs_data[('latitude', metaDataName)] > 90) | (obs_data[('latitude', metaDataName)] < -90) | \
-#       (obs_data[('longitude', metaDataName)] > 180) | (obs_data[('longitude', metaDataName)] < -180)
-
+#       (obs_data[('longitude', metaDataName)] > 180) | (obs_data[('longitude', metaDataName)] < -180) | \
+#       (obs_data[('ozoneColumn', obsValName)] != float_missing_value)
 #   obs_data[('latitude', metaDataName)][chk_geolocation] = float_missing_value
 #   obs_data[('longitude', metaDataName)][chk_geolocation] = float_missing_value
 
@@ -299,7 +327,7 @@ def get_WMO_satellite_ID(filename):
     return WMO_sat_ID
 
 
-def get_epoch_time(f, timekey='ScanTime', itime=0):
+def get_epoch_time(f, values, timekey='ScanTime'):
 
     # get the epoch time references to the IODA epoch
     try:
@@ -319,11 +347,8 @@ def get_epoch_time(f, timekey='ScanTime', itime=0):
     iet_epoch = iet_epoch.replace(tzinfo=timezone.utc)
     offset = (epoch - iet_epoch).total_seconds()  # Offset in seconds
     # Convert IET to Unix time
-    # f['MidTime'][:, 0]  # MicroSeconds
-    if 'MidTime' in timekey:
-        ioda_dateTime = np.array([val/1.e6 - offset for val in f[timekey][:, itime]], dtype='int64')
-    elif 'ScanTime' in timekey:
-        ioda_dateTime = np.array([val/1.e6 - offset for val in f[timekey][:]], dtype='int64')
+    ioda_dateTime = np.array([val/1.e6 - offset for val in values], dtype='int64')
+
     return ioda_dateTime
 
 
@@ -337,23 +362,23 @@ def get_obs_total(f, k="O3FINAL", itime=0):
     return obs_value_total
 
 
-def init_obs_loc():
+def init_obs_loc(profile=True):
     obs = {
-        ('ozoneProfile', obsValName): [],
         ('ozoneColumn', obsValName): [],
-        ('ozoneProfile', "ObsError"): [],
         ('ozoneColumn', "ObsError"): [],
-        ('ozoneProfile', "PreQC"): [],
         ('ozoneColumn', "PreQC"): [],
         ('satelliteIdentifier', metaDataName): [],
         ('latitude', metaDataName): [],
         ('longitude', metaDataName): [],
-        ('pressure', metaDataName): [],
         ('dateTime', metaDataName): [],
         ('surfaceQualifier', metaDataName): [],
         ('satelliteAscendingFlag', metaDataName): [],
     }
-#       ('stationLongName', metaDataName): [],  # is this needed?
+    if profile:
+        obs[('ozoneProfile', obsValName)] = []
+        obs[('ozoneProfile', "ObsError")] = []
+        obs[('ozoneProfile', "PreQC")] = []
+        obs[('pressure', metaDataName)] = []
 
     return obs
 
