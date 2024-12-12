@@ -153,13 +153,21 @@ def get_data_from_files(afile, skip=1):
     obs_data = init_obs_loc()
 
     f = h5py.File(afile, 'r')
-    obs_data = get_data(f, obs_data, skip=skip)
+    product_title = f.attrs['title'].decode('utf-8')
+    product_description = f.attrs['summary'].decode('utf-8')
+    GlobalAttrs["platformLongDescription"] = ' - '.join([product_title, product_description])
+    if 'PRO' in product_title:
+        # designed with 'V8PRO L2 ozone profile product'
+        obs_data = get_np_data(f, obs_data, skip=skip)
+    elif 'TOZ' in product_title:
+        # designed with V8TOZ_EDR ozone total column product'
+        obs_data = get_tc_data(f, obs_data, skip=skip)
     f.close()
 
     return obs_data
 
 
-def get_data(f, obs_data, skip=1):
+def get_np_data(f, obs_data, skip=1):
 
     WMO_sat_ID = get_WMO_satellite_ID(f.attrs['platform_name'].decode("utf-8"))
 
@@ -186,7 +194,7 @@ def get_data(f, obs_data, skip=1):
     obs_data[('surfaceQualifier', metaDataName)] = np.array(f['SurfaceCategory'][:, itime], dtype=ioda_int_type)
 
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype=ioda_int_type)
-    obs_data[('dateTime', metaDataName)] = get_epoch_time(f, itime=itime)
+    obs_data[('dateTime', metaDataName)] = get_epoch_time(f, timekey='MidTime', itime=itime)
 
     k = 'ozoneProfile'
     obs_data[(k, obsValName)] = np.array(f['O3FINAL'][:, itime, :], dtype=ioda_float_type)
@@ -201,6 +209,50 @@ def get_data(f, obs_data, skip=1):
     obs_data[(k, "PreQC")] = np.full((nlocs), 0, dtype=ioda_int_type)
 
     obs_data[('satelliteAscendingFlag', metaDataName)] = np.array(f['Ascending_Descending'][:, itime], dtype=ioda_int_type)
+
+#   # check some global satellite geometry will compress all data using this
+#   chk_geolocation = (obs_data[('latitude', metaDataName)] > 90) | (obs_data[('latitude', metaDataName)] < -90) | \
+#       (obs_data[('longitude', metaDataName)] > 180) | (obs_data[('longitude', metaDataName)] < -180)
+
+#   obs_data[('latitude', metaDataName)][chk_geolocation] = float_missing_value
+#   obs_data[('longitude', metaDataName)][chk_geolocation] = float_missing_value
+
+    return obs_data
+
+
+def get_tc_data(f, obs_data, skip=1):
+
+    WMO_sat_ID = get_WMO_satellite_ID(f.attrs['platform_name'].decode("utf-8"))
+
+    # possible dimensions are location, times and vertice
+    dataset_float_fill = f['Latitude'].fillvalue
+    dataset_int_fill = f['ErrorFlag'].fillvalue
+
+    itime = 0
+    data = np.array(f['Latitude'][itime, :].flatten(), dtype=ioda_float_type)
+    obs_data[('latitude', metaDataName)] = reassign_missing_values(data, dataset_missing=dataset_float_fill)
+    nlocs = len(obs_data[('latitude', metaDataName)])
+    obs_data[('longitude', metaDataName)] = np.array(f['Longitude'][itime, :].flatten(), dtype=ioda_float_type)
+    obs_data[('pressure', metaDataName)] = np.array(f['Pressure'][:], dtype=ioda_float_type)
+    nvertice = len(obs_data[('pressure', metaDataName)])
+    # obs_data[('surfaceQualifier', metaDataName)] = np.array(f['SurfaceCategory'][itime, :], dtype=ioda_int_type)
+
+    obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype=ioda_int_type)
+    obs_data[('dateTime', metaDataName)] = get_epoch_time(f, timekey='ScanTime', itime=itime)
+
+    import pdb
+    pdb.set_trace()
+    import sys
+    sys.exit()
+
+    k = 'ozoneColumn'
+    obs_data[(k, obsValName)] =  np.array(f['ColumnAmountO3'][itime, :], dtype=ioda_float_type)
+    obs_data[(k, "ObsError")] = np.full((nlocs), 5.0, dtype=ioda_float_type)
+    # f['QualityFlag'][:, 0]  # do not know what the codes for these values are
+    # f['ErrorFlag'][:, 0]  # do not know what the codes for these values are
+    obs_data[(k, "PreQC")] = np.full((nlocs), 0, dtype=ioda_int_type)
+
+    obs_data[('satelliteAscendingFlag', metaDataName)] = np.array(f['Ascending_Descending'][itime, :], dtype=ioda_int_type)
 
 #   # check some global satellite geometry will compress all data using this
 #   chk_geolocation = (obs_data[('latitude', metaDataName)] > 90) | (obs_data[('latitude', metaDataName)] < -90) | \
@@ -247,12 +299,12 @@ def get_WMO_satellite_ID(filename):
     return WMO_sat_ID
 
 
-def get_epoch_time(f, itime=0):
+def get_epoch_time(f, timekey='ScanTime', itime=0):
 
     # get the epoch time references to the IODA epoch
     try:
         # expected value: b'IET, Elapsed time in seconds since Jan 1, 1958 including leap seconds.'
-        time_attribute = f['MidTime'].attrs['long_name'].decode('utf-8')
+        time_attribute = f[timekey].attrs['long_name'].decode('utf-8')
         match = re.search(r'since (\w+ \d+, \d{4})', time_attribute)
         if match:
             date_str = match.group(1)  # Extracted date string
@@ -268,7 +320,10 @@ def get_epoch_time(f, itime=0):
     offset = (epoch - iet_epoch).total_seconds()  # Offset in seconds
     # Convert IET to Unix time
     # f['MidTime'][:, 0]  # MicroSeconds
-    ioda_dateTime = np.array([val/1.e6 - offset for val in f['MidTime'][:, itime]], dtype='int64')
+    if 'MidTime' in timekey:
+        ioda_dateTime = np.array([val/1.e6 - offset for val in f[timekey][:, itime]], dtype='int64')
+    elif 'ScanTime' in timekey:
+        ioda_dateTime = np.array([val/1.e6 - offset for val in f[timekey][:]], dtype='int64')
     return ioda_dateTime
 
 
