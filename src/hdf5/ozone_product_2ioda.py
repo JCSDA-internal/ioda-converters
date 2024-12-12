@@ -277,17 +277,15 @@ def get_tc_data(f, obs_data, skip=1):
     # appears QualityFlag is the correct one to use but translation is needed
     # does not follow a convention where =0 == good; >0 == bad
     obs_data[(k, "PreQC")] = np.full((nlocs), 0, dtype=ioda_int_type)
+    obs_data[('surfaceQualifier', metaDataName)] = np.full((nlocs), int_missing_value, dtype=ioda_int_type)
     # not used -- tropospheric Ozone
     # k='O3BelowCloud' f[k]=<HDF5 dataset "O3BelowCloud": shape (30, 240), type "<f4">
 
-    obs_data[('surfaceQualifier', metaDataName)] = np.full((nlocs), int_missing_value, dtype=ioda_int_type)
-
 #   # check here seems to use the qc_mask
-#   chk_geolocation = (obs_data[('latitude', metaDataName)] > 90) | (obs_data[('latitude', metaDataName)] < -90) | \
-#       (obs_data[('longitude', metaDataName)] > 180) | (obs_data[('longitude', metaDataName)] < -180) | \
-#       (obs_data[('ozoneColumn', obsValName)] != float_missing_value)
-#   obs_data[('latitude', metaDataName)][chk_geolocation] = float_missing_value
-#   obs_data[('longitude', metaDataName)][chk_geolocation] = float_missing_value
+    obs_data[(k, obsValName)][np.isnan(obs_data[(k, obsValName)])] = float_missing_value
+    qc_array = ( obs_data[(k, obsValName)] < 1 ) | \
+               ( ( obs_data[(k, obsValName)] > 1000. ) & ( obs_data[(k, obsValName)] != float_missing_value ) )
+    obs_data[(k, obsValName)][qc_array] = float_missing_value
 
     return obs_data
 
