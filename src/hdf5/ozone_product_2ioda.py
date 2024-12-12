@@ -170,8 +170,8 @@ def get_data(f, obs_data, skip=1):
     # only the initial time appears to be populated
     # use an assertion to verify this is the case for data being processed
     itime = 0
-    # assert not np.allclose(f['Latitude'][:, itime], dataset_float_fill), f'index {itime} has all fill_value'
-    if not np.allclose(f['Latitude'][:, itime], dataset_float_fill):
+#   assert not np.allclose(f['Latitude'][:, itime], dataset_float_fill), f'index {itime} has all fill_value'
+    if np.all(f['Latitude'][:, itime]  == dataset_float_fill):
         # rather than use assertion just return None in case file has no valid data
         print(f'time index {itime} has all fill_value')
         return None
