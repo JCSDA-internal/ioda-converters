@@ -12,7 +12,7 @@ Python code to ingest Ocean Surface Wind (OSW) data
 """
 import logging
 import argparse
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import os.path
 import sys
 import pandas as pd
@@ -119,7 +119,8 @@ def main(args):
         obs_data_append = get_data_from_file(file, obs_data.keys(), osw_source, file_name)
 
         # Change time reference
-        obs_data_append = adjust_dateTime(obs_data_append, dat_ref)
+        if osw_source != 'Muon-L3':
+            obs_data_append = adjust_dateTime(obs_data_append, dat_ref)
 
         # Change longitude range
         obs_data_append = adjust_longitude(obs_data_append, osw_source)
@@ -207,16 +208,33 @@ def main(args):
 
 
 def get_data_source(afile):
-    if 'title' in afile.attrs.keys() and 'CYGNSS' in afile.attrs['title'].decode('UTF-8'):
+
+    keys = ['title', 'constellation']
+    title = None
+
+    for key in keys:
+        value = afile.attrs.get(key, None)
+        if value is not None:
+            title = value.decode('UTF-8') if isinstance(value, bytes) else value
+            break
+
+    if title is None:
+        # throw error
+        pass
+    elif 'CYGNSS' in title:
         return 'CYGNSS'
-    elif 'title' in afile.attrs.keys() and 'Muon' in afile.attrs['title'].decode('UTF-8'):
-        return 'Muon'
-    elif 'constellation' in afile.attrs.keys() and "spire" in afile.attrs['constellation'].decode('UTF-8'):
+    elif 'Muon' in title:
+        if 'Level 3' in title:
+            return 'Muon-L3'
+        else:
+            return 'Muon'
+    elif 'spire' in title:
         return 'Spire'
-    elif 'title' in afile.attrs.keys() and 'SPIRE' in afile.attrs['title'].decode('UTF-8'):
+    elif 'SPIRE' in title:
         return 'Spire-L2'
     else:
         # throw error
+        print(f' ... WARNING: did not recognize source title: {title}')
         pass
 
 
@@ -224,9 +242,17 @@ def get_reference_time(afile, osw_source):
     if osw_source == 'CYGNSS' or osw_source == 'Spire-L2':
         dat_ref = afile['sample_time'].attrs['units'].decode('UTF-8').split('since ')[-1]
         dat_ref = datetime.strptime(dat_ref, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc).timestamp()
+    elif osw_source == 'Muon-L3':
+        # Parse the start and end times
+        time_start = datetime.strptime(afile.attrs['time_start'], '%Y%m%dT%HZ').replace(tzinfo=timezone.utc)
+        # time_end does not follow iso_standard (allows T24Z)
+        # time_end = datetime.strptime(afile.attrs['time_end'], '%Y%m%dT%HZ').replace(tzinfo=timezone.utc)
+        time_end = time_start + timedelta(hours=1)
+        # Calculate the average
+        dat_ref = (time_start.timestamp() + time_end.timestamp()) / 2
     elif osw_source == 'Muon':
         # note same as CYGNSS except item key is simply time
-        dat_ref = afile['time'].attrs['units'].decode('UTF-8').split('since ')[-1]
+        dat_ref = afile['time'].attrs['units'].split('since ')[-1]
         dat_ref = datetime.strptime(dat_ref, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc).timestamp()
     elif osw_source == 'Spire':
         # the precision of the seconds appears troublesome when too many digits
@@ -252,21 +278,33 @@ def get_data_from_file(afile, col_names, osw_source, file_name):
         satelliteAscendingFlag = [get_normalized_bit(v, bit_index=1) for v in afile['sample_flags']]
         windSpeedObsError = [v for v in afile['wind_speed_uncertainty']]
         sensorIdentification = [str(v) for v in afile['sv_num']]  # sv_num is the GPS space vehicle number
+    elif osw_source == 'Muon-L3':
+        import re
+        instrument_ref = re.search(r'MuSat\d+', afile.attrs['title'])
+        if instrument_ref:
+            instrument_ref = instrument_ref.group()
+        else:
+            instrument_ref = osw_source
+        # latitude, longitude and OSW are 2D array
+        latitude = [v for row in afile['latitude'] for v in row]
+        longitude = [v for row in afile['longitude'] for v in row]
+        dat_ref = get_reference_time(afile, osw_source)
+        dateTime = [int(dat_ref)] * len(latitude)
+        windSpeed = [v for row in afile['ocean_wind_speed_level3'] for v in row]
+        fillValue = afile['ocean_wind_speed_level3'].attrs['_FillValue']
+        # use all values in data set to FillValue (-9999)
+        windSpeedPreQC = [1 if value == fillValue else 0 for value in windSpeed]
+        windSpeedObsError = [5.0] * len(latitude)
+        sensorIdentification = [instrument_ref]*len(latitude)
     elif osw_source == 'Muon':
         # Get instrument reference
-        import re
-        subst = 'CY..._G..'
-        temp = re.compile(subst)
-        res = temp.search(file_name)
-        instrument_ref = res.group(0)
+        instrument_ref = afile.attrs['spacecraft_num']
 
         latitude = [v for v in afile['lat']]
         longitude = [v for v in afile['lon']]
         dateTime = [int(v) for v in afile['time']]  # datetime with different ref time
         windSpeed = [v for v in afile['wind_speed_level2']]
-        # not implemented in proxy data all values in proxy data are set to -9999
-        windSpeedPreQC = [0] * len(windSpeed)
-        # windSpeedPreQC = [v for v in afile['retrieval_qual_flag']]
+        windSpeedPreQC = [v for v in afile['retrieval_qual_flag']]
         windSpeedObsError = [v for v in afile['wind_speed_level2_error']]
         sensorIdentification = [instrument_ref]*len(latitude)
     elif osw_source == 'Spire':
