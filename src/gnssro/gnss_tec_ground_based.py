@@ -29,6 +29,10 @@ os.environ["TZ"] = "UTC"
 varDict = {
     'totalElectronContent': ['totalElectronContent', "integer", 'TECU'],
 }
+# extend the variable keys including 'Error', and 'Flag'
+extended_varDict_keys = set()
+for key in varDict.keys():
+    extended_varDict_keys.update([key, key + 'Error', key + 'Flag'])
 
 # these are the MetaData common to each input
 locationKeyList = [
@@ -90,7 +94,7 @@ def main(args):
     any_data = False
     for fname in file_names:
         logging.info(f"Reading file:  {fname}")
-        file_data, any_data = read_file(fname, any_data, qc_strict=args.qc_strict)
+        file_data, any_data = read_file(fname, any_data)
         # if there is data do something
         if file_data:
             # first successful read
@@ -98,7 +102,7 @@ def main(args):
                 data = file_data
             # subsequent successful read
             else:
-                for key in set(varDict.keys()).union(meta_keys):
+                for key in extended_varDict_keys.union(meta_keys):
                     # data[key] = np.concatenate(data[key], file_data[key]) # why not and gotta be much better way
                     data[key] = np.append(data[key], file_data[key])
 
@@ -172,18 +176,11 @@ def main(args):
             # these MetaData are arrays nlocs long already
             ioda_data[(key, metaDataName)] = np.array(data[variable], dtype=dtypes[dtype])
         else:
-            # what should be used as ObsError (10% or a fixed value)
             variable = varDict[key][0]
             logging.info(f" the variable: {variable} will be placed into ObsValue of ioda_data")
-            # Convert into TEC Unites (TEC):1 TECU = 10^16 electrons m-2
-            # scaleFactor = 1.e-16
-            scaleFactor = 1.e-7  # TENET has an unknown scaling factor
-            ioda_data[(variable, obsValName)] = np.array(data[variable], dtype=np.float32) * scaleFactor
-            ioda_data[(variable, obsErrName)] = np.array(data[variable]*0.1*scaleFactor, dtype=np.float32)
-            # ioda_data[(variable, obsErrName)] = np.full((nlocs), errValue, dtype=np.float32)
-            qc_array_hack = apply_gross_quality_control(data, scaleFactor=scaleFactor, qc_strict=args.qc_strict)
-
-            ioda_data[(variable, qcName)] = np.array(qc_array_hack, dtype=np.int32)  # how to interpret AQI ?
+            ioda_data[(variable, obsValName)] = np.array(data[variable], dtype=np.float32)
+            ioda_data[(variable, obsErrName)] = np.array(data[variable+'Error'], dtype=np.float32)
+            ioda_data[(variable, qcName)] = np.array(data[variable+'Flag'], dtype=np.int32)
 
     logging.debug("Writing file: " + output_file)
 
@@ -194,7 +191,7 @@ def main(args):
     logging.info("--- {:9.4g} total seconds ---".format(time.time() - start_time))
 
 
-def read_file(file_name, any_data, qc_strict=True):
+def read_file(file_name, any_data):
 
     local_data = init_data_dict()
 
@@ -327,7 +324,10 @@ def populate_obsValue(line, local_data):
         local_data['longitudeIPP'] = np.append(local_data['longitudeIPP'], float(longitudeIPP)/100.)
         local_data['elevationAngleGNSS'] = np.append(local_data['elevationAngleGNSS'], float(elevationAngle.rstrip('/'))/10.)
         local_data['sensorAzimuthAngle'] = np.append(local_data['sensorAzimuthAngle'], float(azimuthAngle.rstrip('/'))/10.)
-        local_data['totalElectronContent'] = np.append(local_data['totalElectronContent'], int(sobs.lstrip('/')))
+        tec_value, tec_error, tec_flag = tenet_10digit_reader(sobs.lstrip('/'))
+        local_data['totalElectronContent'] = np.append(local_data['totalElectronContent'], tec_value)
+        local_data['totalElectronContentError'] = np.append(local_data['totalElectronContentError'], tec_error)
+        local_data['totalElectronContentFlag'] = np.append(local_data['totalElectronContentFlag'], tec_flag)
         local_data['xECEFPositionGNSS'] = np.append(local_data['xECEFPositionGNSS'], xECEFPositionGNSS)
         local_data['yECEFPositionGNSS'] = np.append(local_data['yECEFPositionGNSS'], yECEFPositionGNSS)
         local_data['zECEFPositionGNSS'] = np.append(local_data['zECEFPositionGNSS'], zECEFPositionGNSS)
@@ -340,6 +340,43 @@ def populate_obsValue(line, local_data):
             local_data[key] = np.append(local_data[key], local_data[key][-1])
 
     return local_data, endReport
+
+
+def tenet_10digit_reader(int_10digit_number):
+
+    """Read TENET data files.
+
+    Parameters
+    ----------
+    int_10digit_number : int
+        10 digit integer number from .tec files.
+
+    Returns
+    -------
+
+    tec : flt
+        TEC value.
+    error : flt
+        Uncertainty of TEC value.
+    flag : int
+        Integer flag.
+
+    Notes
+
+    -----
+    This function converts tenet 10 digit number into:
+       tec, error, and quality flag
+    Source: "SWAFS TENET File Data Definition", dated 24 August, 2001
+    """
+
+    # extract exponential and convert into TEC Units (TEC): 1 TECU = 10^16 electrons m-2
+    exponential = np.power(10, int(10 + int(int_10digit_number[8: 9]))) / 1e16
+
+    flag = int(int_10digit_number[9: 10])
+    tec = float(int_10digit_number[0: 4]) / 100. * exponential
+    error = float(int_10digit_number[4: 8]) / 100. * exponential
+
+    return tec, error, flag
 
 
 def convert_ECEF_string(c):
@@ -406,28 +443,9 @@ def parse_latitude(lat_str):
         raise ValueError(f"Invalid latitude input '{lat_str}': {e}")
 
 
-def apply_gross_quality_control(data, scaleFactor=1., qc_strict=False):
-    # if strict quality-control is requested
-    # apply using simple physical reality check on variables
-
-    # initialize returned variable
-    qc_array_hack = np.zeros_like(data['totalElectronContent'], dtype=np.int32)
-    # is requested apply check
-    if qc_strict:
-        qc_array_hack = np.where(
-            (data['totalElectronContent'].astype(float)*scaleFactor < 0)
-            | (data['totalElectronContent'].astype(float)*scaleFactor > 1000)
-            | (data['latitude'].astype(float) > 90)
-            | (data['longitude'].astype(float) > 360)
-            | (data['elevationAngleGNSS'].astype(float) < 0),
-            1,
-            0)
-    return qc_array_hack
-
-
 def init_data_dict():
     local_data = {}              # Before assigning the output types into the above.
-    for key in set(varDict.keys()).union(meta_keys):
+    for key in extended_varDict_keys.union(meta_keys):
         local_data[key] = []
     return local_data
 
@@ -452,9 +470,6 @@ if __name__ == "__main__":
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument('--debug', action='store_true', default=False,
                           help='enable debug messages')
-    optional.add_argument('--quality-control', action='store_true',
-                          default=False, dest='qc_strict',
-                          help='add PreQC values')
     optional.add_argument('--verbose', action='store_true', default=False,
                           help='enable verbose debug messages')
 
