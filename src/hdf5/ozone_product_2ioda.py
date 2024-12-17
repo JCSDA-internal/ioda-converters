@@ -206,31 +206,37 @@ def get_np_data(f, obs_data, skip=1):
     obs_data[('longitude', metaDataName)] = np.array(f['Longitude'][:, itime].flatten(), dtype=ioda_float_type)
     obs_data[('pressure', metaDataName)] = np.array(f['Pressure'][:], dtype=ioda_float_type)
     nvertice = len(obs_data[('pressure', metaDataName)])
-    obs_data[('surfaceQualifier', metaDataName)] = np.array(f['SurfaceCategory'][:, itime], dtype=ioda_int_type)
+    data = np.array(f['SurfaceCategory'][:, itime], dtype=ioda_int_type)
+    obs_data[('surfaceQualifier', metaDataName)] = reassign_missing_values(data, dataset_missing=dataset_int_fill)
 
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype=ioda_int_type)
     obs_data[('dateTime', metaDataName)] = get_epoch_time(f, f['MidTime'][:, itime], timekey='MidTime')
 
     k = 'ozoneProfile'
-    obs_data[(k, obsValName)] = np.array(f['O3FINAL'][:, itime, :], dtype=ioda_float_type)
+    data = np.array(f['O3FINAL'][:, itime, :], dtype=ioda_float_type)
+    obs_data[(k, obsValName)] = reassign_missing_values(data, dataset_missing=dataset_float_fill)
     obs_data[(k, "ObsError")] = np.full((nlocs, nvertice), 5.0, dtype=ioda_float_type)
     # f['AlgorithmFlag_TO3'][:, 0]  # do not know what the codes for these values are is 1 == good?
     obs_data[(k, "PreQC")] = np.full((nlocs, nvertice), 0, dtype=ioda_int_type)
 
     k = 'ozoneColumn'
-    obs_data[(k, obsValName)] = get_obs_total(f, k="O3FINAL", itime=itime)
+    data = get_obs_total(f, k="O3FINAL", itime=itime)
+    obs_data[(k, obsValName)] = reassign_missing_values(data, dataset_missing=dataset_float_fill)
     obs_data[(k, "ObsError")] = np.full((nlocs), 5.0, dtype=ioda_float_type)
     # f['AlgorithmFlag_TO3'][:, 0]  # do not know what the codes for these values are
     obs_data[(k, "PreQC")] = np.full((nlocs), 0, dtype=ioda_int_type)
 
     obs_data[('satelliteAscendingFlag', metaDataName)] = np.array(f['Ascending_Descending'][:, itime], dtype=ioda_int_type)
 
-#   # check some global satellite geometry will compress all data using this
-#   chk_geolocation = (obs_data[('latitude', metaDataName)] > 90) | (obs_data[('latitude', metaDataName)] < -90) | \
-#       (obs_data[('longitude', metaDataName)] > 180) | (obs_data[('longitude', metaDataName)] < -180)
-
-#   obs_data[('latitude', metaDataName)][chk_geolocation] = float_missing_value
-#   obs_data[('longitude', metaDataName)][chk_geolocation] = float_missing_value
+#   # check here seems to use the qc_mask
+    valLimit = {}
+    valLimit['ozoneProfile'] = (0., 100.)
+    valLimit['ozoneColumn'] = (0., 1000.)
+    for k in ['ozoneProfile', 'ozoneColumn']:
+        obs_data[(k, obsValName)][np.isnan(obs_data[(k, obsValName)])] = float_missing_value
+        qc_array = ( obs_data[(k, obsValName)] < valLimit[k][0] ) | \
+                ( ( obs_data[(k, obsValName)] > valLimit[k][1] ) & ( obs_data[(k, obsValName)] != float_missing_value ) )
+        obs_data[(k, obsValName)][qc_array] = float_missing_value
 
     return obs_data
 
