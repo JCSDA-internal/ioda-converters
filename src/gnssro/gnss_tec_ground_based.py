@@ -175,10 +175,14 @@ def main(args):
             # what should be used as ObsError (10% or a fixed value)
             variable = varDict[key][0]
             logging.info(f" the variable: {variable} will be placed into ObsValue of ioda_data")
-            ioda_data[(variable, obsValName)] = np.array(data[variable], dtype=np.float32)
-            ioda_data[(variable, obsErrName)] = np.array(data[variable]*0.1, dtype=np.float32)
+            # Convert into TEC Unites (TEC):1 TECU = 10^16 electrons m-2
+            # scaleFactor = 1.e-16
+            scaleFactor = 1.e-7  # TENET has an unknown scaling factor
+            ioda_data[(variable, obsValName)] = np.array(data[variable], dtype=np.float32) * scaleFactor
+            ioda_data[(variable, obsErrName)] = np.array(data[variable]*0.1*scaleFactor, dtype=np.float32)
             # ioda_data[(variable, obsErrName)] = np.full((nlocs), errValue, dtype=np.float32)
-            qc_array_hack = apply_gross_quality_control(data, qc_strict=args.qc_strict)
+            qc_array_hack = apply_gross_quality_control(data, scaleFactor=scaleFactor, qc_strict=args.qc_strict)
+
             ioda_data[(variable, qcName)] = np.array(qc_array_hack, dtype=np.int32)  # how to interpret AQI ?
 
     logging.debug("Writing file: " + output_file)
@@ -402,7 +406,7 @@ def parse_latitude(lat_str):
         raise ValueError(f"Invalid latitude input '{lat_str}': {e}")
 
 
-def apply_gross_quality_control(data, qc_strict=False):
+def apply_gross_quality_control(data, scaleFactor=1., qc_strict=False):
     # if strict quality-control is requested
     # apply using simple physical reality check on variables
 
@@ -411,7 +415,8 @@ def apply_gross_quality_control(data, qc_strict=False):
     # is requested apply check
     if qc_strict:
         qc_array_hack = np.where(
-            (data['totalElectronContentSlant'].astype(float) < 0)
+            (data['totalElectronContent'].astype(float)*scaleFactor < 0)
+            | (data['totalElectronContent'].astype(float)*scaleFactor > 1000)
             | (data['latitude'].astype(float) > 90)
             | (data['longitude'].astype(float) > 360)
             | (data['elevationAngleGNSS'].astype(float) < 0),
