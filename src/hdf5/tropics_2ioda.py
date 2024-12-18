@@ -167,6 +167,22 @@ def get_data_from_files(afile, skip=1):
 def get_tio_data(f, obs_data, skip=1, L1BR=False):
 
     WMO_sat_ID, nscans, nbeam_pos, nchans = get_header_info(f)
+
+    # modify and correct for TIO data
+    global GlobalAttrs
+    GlobalAttrs['platformCommonName'] = f.attrs['platform'].decode("utf-8")
+    GlobalAttrs['platformLongDescription'] = ' '.join([f.attrs['collection'].decode('utf-8'),
+                                                     f['brightness_temperature'].attrs['long_name'].decode('utf-8'), 
+                                                     f['brightness_temperature'].attrs['Description'].decode('utf-8')])
+    GlobalAttrs["sensorCentralFrequency"] = "[91.655,  " + \
+                                            "118.75+/-3.5,  " + \
+                                            "118.75+/-2.625,  " + \
+                                            "118.75+/-1.875,  " + \
+                                            "118.75+/-1.25,  " + \
+                                            "118.75+/-0.75,  " + \
+                                            "118.75+/-0.375,  " + \
+                                            "118.75+/-0.175,  " + \
+                                            "184.41,  186.51,  190.31,  204.80]"
     obs_data = assign_dimension(obs_data, nchans, nscans, nbeam_pos)
 
     if L1BR:
@@ -232,8 +248,6 @@ def get_data(f, obs_data, skip=1):
     iband = 0   # at this point arbitrarily select a band
     obs_data[('latitude', metaDataName)] = np.array(f['latitude'][iband, :, :].flatten(), dtype='float32')
     obs_data[('longitude', metaDataName)] = np.array(f['longitude'][iband, :, :].flatten(), dtype='float32')
-    obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(nchans)+1, dtype='int32')
-    obs_data[('sensorScanPosition', metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='int32')+1, (nscans, 1)).flatten()
     obs_data[('solarZenithAngle', metaDataName)] = np.array(f['solar_zenith_angle'][iband, :, :].flatten(), dtype='float32')
     obs_data[('solarAzimuthAngle', metaDataName)] = np.array(f['solar_azimuth_angle'][iband, :, :].flatten(), dtype='float32')
     obs_data[('sensorZenithAngle', metaDataName)] = np.array(f['sensor_zenith_angle'][iband, :, :].flatten(), dtype='float32')
@@ -422,7 +436,11 @@ def get_header_info(f):
 
 def assign_dimension(obs_data, nchans, nscans, nbeam_pos):
     obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(nchans)+1, dtype='int32')
-    obs_data[('sensorScanPosition', metaDataName)] = np.tile(np.arange(nbeam_pos, dtype='int32')+1, (nscans, 1)).flatten()
+    values = np.arange(nbeam_pos, dtype='int32')+1
+    if "Tomorrow" in GlobalAttrs['platformCommonName']:
+        obs_data[('sensorScanPosition', metaDataName)] = np.tile(values[:, np.newaxis], (1, nscans)).flatten()
+    else:
+        obs_data[('sensorScanPosition', metaDataName)] = np.tile(values, (nscans, 1)).flatten()
     return obs_data
 
 
