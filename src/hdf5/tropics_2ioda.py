@@ -171,18 +171,22 @@ def get_tio_data(f, obs_data, skip=1, L1BR=False):
     # modify and correct for TIO data
     global GlobalAttrs
     GlobalAttrs['platformCommonName'] = f.attrs['platform'].decode("utf-8")
-    GlobalAttrs['platformLongDescription'] = ' '.join([f.attrs['collection'].decode('utf-8'),
-                                                     f['brightness_temperature'].attrs['long_name'].decode('utf-8'), 
-                                                     f['brightness_temperature'].attrs['Description'].decode('utf-8')])
-    GlobalAttrs["sensorCentralFrequency"] = "[91.655,  " + \
-                                            "118.75+/-3.5,  " + \
-                                            "118.75+/-2.625,  " + \
-                                            "118.75+/-1.875,  " + \
-                                            "118.75+/-1.25,  " + \
-                                            "118.75+/-0.75,  " + \
-                                            "118.75+/-0.375,  " + \
-                                            "118.75+/-0.175,  " + \
-                                            "184.41,  186.51,  190.31,  204.80]"
+    GlobalAttrs['platformLongDescription'] = ' '.join([
+        f.attrs['collection'].decode('utf-8'),
+        f['brightness_temperature'].attrs['long_name'].decode('utf-8'),
+        f['brightness_temperature'].attrs['Description'].decode('utf-8')
+    ])
+    GlobalAttrs["sensorCentralFrequency"] = (
+        "[91.655,  "
+        "118.75+/-3.5,  "
+        "118.75+/-2.625,  "
+        "118.75+/-1.875,  "
+        "118.75+/-1.25,  "
+        "118.75+/-0.75,  "
+        "118.75+/-0.375,  "
+        "118.75+/-0.175,  "
+        "184.41,  186.51,  190.31,  204.80]"
+    )
     obs_data = assign_dimension(obs_data, nchans, nscans, nbeam_pos)
 
     if L1BR:
