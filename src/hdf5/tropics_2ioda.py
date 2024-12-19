@@ -259,8 +259,8 @@ def get_data(f, obs_data, skip=1):
     # Bit 5: Ascending/Descending
     obs_data[('satelliteAscendingFlag', metaDataName)] = np.array(get_normalized_bit(quality_word[:, 0], bit_index=5), dtype='int32')
     # use scanPosition to set sign
-    scan_sign = obs_data[('sensorScanPosition', metaDataName)] < 41
-    obs_data[('sensorViewAngle', metaDataName)] *= 1 - 2*scan_sign
+#   scan_sign = obs_data[('sensorScanPosition', metaDataName)] < 41
+#   obs_data[('sensorViewAngle', metaDataName)] *= 1 - 2*scan_sign
 
     # assign orbit WMO ID to all locations
     obs_data = assign_WMO_ID(obs_data, WMO_sat_ID)
