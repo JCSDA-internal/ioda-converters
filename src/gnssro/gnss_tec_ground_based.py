@@ -277,6 +277,7 @@ def get_header(file_iterator, local_data):
         local_data['xECEFPosition'] = np.append(local_data['xECEFPosition'], xECEFPosition)
         local_data['yECEFPosition'] = np.append(local_data['yECEFPosition'], yECEFPosition)
         local_data['zECEFPosition'] = np.append(local_data['zECEFPosition'], zECEFPosition)
+        print(f"{len(local_data['stationIdentifier'])=}  {local_data['stationIdentifier'][-1]=}")
     except ValueError:
         return local_data, header_read
 
@@ -301,6 +302,7 @@ def populate_obsValue(line, local_data):
     if '99999' in line[0:5]:
         # reset for next record
         endReport = True
+        print(f"{endReport=}")
         return local_data, endReport
 
     # read data lines beginning at fourth line
@@ -308,6 +310,7 @@ def populate_obsValue(line, local_data):
         _, yymmdd, hhmmss, PRNlatitudeIPP, longitudeIPP, vobs, sobs, elevationAngle, azimuthAngle, \
             xECEFPositionGNSS, yECEFPositionGNSS, zECEFPositionGNSS = line.split()
     except ValueError:
+        print("  ... ValueError reading line")
         return local_data, endReport
 
     dateTime = convert_string_to_dateTime(yymmdd, hhmmss)
@@ -331,7 +334,9 @@ def populate_obsValue(line, local_data):
         local_data['xECEFPositionGNSS'] = np.append(local_data['xECEFPositionGNSS'], xECEFPositionGNSS)
         local_data['yECEFPositionGNSS'] = np.append(local_data['yECEFPositionGNSS'], yECEFPositionGNSS)
         local_data['zECEFPositionGNSS'] = np.append(local_data['zECEFPositionGNSS'], zECEFPositionGNSS)
+        print(f"{len(local_data['zECEFPositionGNSS'])=}  {local_data['zECEFPositionGNSS'][-1]=}")
     except ValueError:
+        print("  ... ValueError parsing into local_data")
         return local_data, endReport
 
     # repeat the metaData
