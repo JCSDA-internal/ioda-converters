@@ -27,7 +27,7 @@ os.environ["TZ"] = "UTC"
 
 # these are the unique values in the raw input file
 varDict = {
-    'totalElectronContent': ['totalElectronContent', "integer", 'TECU'],
+    'totalElectronContent': ['totalElectronContent', "float", 'TECU'],
 }
 # extend the variable keys including 'Error', and 'Flag'
 extended_varDict_keys = set()
@@ -277,7 +277,6 @@ def get_header(file_iterator, local_data):
         local_data['xECEFPosition'] = np.append(local_data['xECEFPosition'], xECEFPosition)
         local_data['yECEFPosition'] = np.append(local_data['yECEFPosition'], yECEFPosition)
         local_data['zECEFPosition'] = np.append(local_data['zECEFPosition'], zECEFPosition)
-        print(f"{len(local_data['stationIdentifier'])=}  {local_data['stationIdentifier'][-1]=}")
     except ValueError:
         return local_data, header_read
 
@@ -302,7 +301,6 @@ def populate_obsValue(line, local_data):
     if '99999' in line[0:5]:
         # reset for next record
         endReport = True
-        print(f"{endReport=}")
         return local_data, endReport
 
     # read data lines beginning at fourth line
@@ -310,7 +308,7 @@ def populate_obsValue(line, local_data):
         _, yymmdd, hhmmss, PRNlatitudeIPP, longitudeIPP, vobs, sobs, elevationAngle, azimuthAngle, \
             xECEFPositionGNSS, yECEFPositionGNSS, zECEFPositionGNSS = line.split()
     except ValueError:
-        print("  ... ValueError reading line")
+        local_data = fill_data_with_missing(local_data)
         return local_data, endReport
 
     dateTime = convert_string_to_dateTime(yymmdd, hhmmss)
@@ -320,24 +318,31 @@ def populate_obsValue(line, local_data):
     yECEFPositionGNSS = convert_ECEF_string(yECEFPositionGNSS)
     zECEFPositionGNSS = convert_ECEF_string(zECEFPositionGNSS)
 
-    try:
-        local_data['dateTime'] = np.append(local_data['dateTime'], dateTime)
-        local_data['satelliteTransmitterId'] = np.append(local_data['satelliteTransmitterId'], PRN)
-        local_data['latitudeIPP'] = np.append(local_data['latitudeIPP'], latitudeIPP)
-        local_data['longitudeIPP'] = np.append(local_data['longitudeIPP'], float(longitudeIPP)/100.)
-        local_data['elevationAngleGNSS'] = np.append(local_data['elevationAngleGNSS'], float(elevationAngle.rstrip('/'))/10.)
-        local_data['sensorAzimuthAngle'] = np.append(local_data['sensorAzimuthAngle'], float(azimuthAngle.rstrip('/'))/10.)
-        tec_value, tec_error, tec_flag = tenet_10digit_reader(sobs.lstrip('/'))
-        local_data['totalElectronContent'] = np.append(local_data['totalElectronContent'], tec_value)
-        local_data['totalElectronContentError'] = np.append(local_data['totalElectronContentError'], tec_error)
-        local_data['totalElectronContentFlag'] = np.append(local_data['totalElectronContentFlag'], tec_flag)
-        local_data['xECEFPositionGNSS'] = np.append(local_data['xECEFPositionGNSS'], xECEFPositionGNSS)
-        local_data['yECEFPositionGNSS'] = np.append(local_data['yECEFPositionGNSS'], yECEFPositionGNSS)
-        local_data['zECEFPositionGNSS'] = np.append(local_data['zECEFPositionGNSS'], zECEFPositionGNSS)
-        print(f"{len(local_data['zECEFPositionGNSS'])=}  {local_data['zECEFPositionGNSS'][-1]=}")
-    except ValueError:
-        print("  ... ValueError parsing into local_data")
+    # the slant TEC needs to be 10 digits for the reader to parse correctly
+    if len(sobs.lstrip('/')) != 10:
+        local_data = fill_data_with_missing(local_data)
         return local_data, endReport
+
+    try:
+        tec_value, tec_error, tec_flag = tenet_10digit_reader(sobs.lstrip('/'))
+        elevationAngleGNSS = float(elevationAngle.rstrip('/'))/10.
+        sensorAzimuthAngle = float(azimuthAngle.rstrip('/'))/10.
+    except ValueError:
+        local_data = fill_data_with_missing(local_data)
+        return local_data, endReport
+
+    local_data['dateTime'] = np.append(local_data['dateTime'], dateTime)
+    local_data['satelliteTransmitterId'] = np.append(local_data['satelliteTransmitterId'], PRN)
+    local_data['latitudeIPP'] = np.append(local_data['latitudeIPP'], latitudeIPP)
+    local_data['longitudeIPP'] = np.append(local_data['longitudeIPP'], float(longitudeIPP)/100.)
+    local_data['elevationAngleGNSS'] = np.append(local_data['elevationAngleGNSS'], elevationAngleGNSS)
+    local_data['sensorAzimuthAngle'] = np.append(local_data['sensorAzimuthAngle'], sensorAzimuthAngle)
+    local_data['totalElectronContent'] = np.append(local_data['totalElectronContent'], tec_value)
+    local_data['totalElectronContentError'] = np.append(local_data['totalElectronContentError'], tec_error)
+    local_data['totalElectronContentFlag'] = np.append(local_data['totalElectronContentFlag'], tec_flag)
+    local_data['xECEFPositionGNSS'] = np.append(local_data['xECEFPositionGNSS'], xECEFPositionGNSS)
+    local_data['yECEFPositionGNSS'] = np.append(local_data['yECEFPositionGNSS'], yECEFPositionGNSS)
+    local_data['zECEFPositionGNSS'] = np.append(local_data['zECEFPositionGNSS'], zECEFPositionGNSS)
 
     # repeat the metaData
     if len(local_data['latitude']) < len(local_data['latitudeIPP']):
@@ -353,7 +358,7 @@ def tenet_10digit_reader(int_10digit_number):
 
     Parameters
     ----------
-    int_10digit_number : int
+    int_10digit_number : string
         10 digit integer number from .tec files.
 
     Returns
@@ -446,6 +451,23 @@ def parse_latitude(lat_str):
 
     except ValueError as e:
         raise ValueError(f"Invalid latitude input '{lat_str}': {e}")
+
+
+def fill_data_with_missing(local_data):
+    # fill the data records from TENET line 4 with missing
+    local_data['dateTime'] = np.append(local_data['dateTime'], int_missing_value)
+    local_data['satelliteTransmitterId'] = np.append(local_data['satelliteTransmitterId'], int_missing_value)
+    local_data['latitudeIPP'] = np.append(local_data['latitudeIPP'], float_missing_value)
+    local_data['longitudeIPP'] = np.append(local_data['longitudeIPP'], float_missing_value)
+    local_data['elevationAngleGNSS'] = np.append(local_data['elevationAngleGNSS'], float_missing_value)
+    local_data['sensorAzimuthAngle'] = np.append(local_data['sensorAzimuthAngle'], float_missing_value)
+    local_data['totalElectronContent'] = np.append(local_data['totalElectronContent'], float_missing_value)
+    local_data['totalElectronContentError'] = np.append(local_data['totalElectronContentError'], float_missing_value)
+    local_data['totalElectronContentFlag'] = np.append(local_data['totalElectronContentFlag'], int_missing_value)
+    local_data['xECEFPositionGNSS'] = np.append(local_data['xECEFPositionGNSS'], float_missing_value)
+    local_data['yECEFPositionGNSS'] = np.append(local_data['yECEFPositionGNSS'], float_missing_value)
+    local_data['zECEFPositionGNSS'] = np.append(local_data['zECEFPositionGNSS'], float_missing_value)
+    return local_data
 
 
 def init_data_dict():
