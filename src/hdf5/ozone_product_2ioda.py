@@ -163,9 +163,9 @@ def main(args):
 
     for k in varKeys:
         # Need  Convert data from DU to mole m-2, 1DU = 4.4615E-04 mol m-2
-        val_array =  obs_data[(k, obsValName)] != float_missing_value
+        val_array = obs_data[(k, obsValName)] != float_missing_value
         obs_data[(k, obsValName)][val_array] = obs_data[(k, obsValName)][val_array]*4.4615E-04
-        err_array =  obs_data[(k, 'ObsError')] != float_missing_value
+        err_array = obs_data[(k, 'ObsError')] != float_missing_value
         obs_data[(k, 'ObsError')][err_array] = obs_data[(k, 'ObsError')][err_array]*4.4615E-04
 
     # final write to IODA file
@@ -244,8 +244,13 @@ def get_np_data(f, obs_data, skip=1):
     valLimit['ozoneColumn'] = (0., 1000.)
     for k in ['ozoneProfile', 'ozoneColumn']:
         obs_data[(k, obsValName)][np.isnan(obs_data[(k, obsValName)])] = float_missing_value
-        qc_array = ( obs_data[(k, obsValName)] < valLimit[k][0] ) | \
-                ( ( obs_data[(k, obsValName)] > valLimit[k][1] ) & ( obs_data[(k, obsValName)] != float_missing_value ) )
+        qc_array = (
+            (obs_data[(k, obsValName)] < valLimit[k][0])
+            | (
+                (obs_data[(k, obsValName)] > valLimit[k][1])
+                & (obs_data[(k, obsValName)] != float_missing_value)
+            )
+        )
         obs_data[(k, obsValName)][qc_array] = float_missing_value
 
     return obs_data
@@ -299,8 +304,12 @@ def get_tc_data(f, obs_data, skip=1):
 
 #   # check here seems to use the qc_mask
     obs_data[(k, obsValName)][np.isnan(obs_data[(k, obsValName)])] = float_missing_value
-    qc_array = ( obs_data[(k, obsValName)] < 1 ) | \
-               ( ( obs_data[(k, obsValName)] > 1000. ) & ( obs_data[(k, obsValName)] != float_missing_value ) )
+    qc_array = (
+        (obs_data[(k, obsValName)] < 1)
+        | (
+            (obs_data[(k, obsValName)] > 1000.) & (obs_data[(k, obsValName)] != float_missing_value)
+        )
+    )
     obs_data[(k, obsValName)][qc_array] = float_missing_value
 
     return obs_data
