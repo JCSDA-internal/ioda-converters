@@ -87,9 +87,12 @@ class tempo(object):
             AttrData['sensor'] = ncd.getncattr('project')
             AttrData['platform'] = ncd.getncattr('platform')
 
-            # coordinates and mask
+            # coordinates, mask and RT parameters for BC 
             lats = ncd.groups['geolocation'].variables['latitude'][:].ravel()
             lons = ncd.groups['geolocation'].variables['longitude'][:].ravel()
+            sza = ncd.groups['geolocation'].variables['solar_zenith_angle'][:].ravel()
+            vza = ncd.groups['geolocation'].variables['viewing_zenith_angle'][:].ravel()
+            albedo = ncd.groups['support_data'].variables['albedo'][:].ravel()
             qc_flag = ncd.groups['support_data'].variables['ground_pixel_quality_flag'][:]\
                 .ravel()
             cld_fra = ncd.groups['support_data'].variables['eff_cloud_fraction'][:]\
@@ -234,6 +237,9 @@ class tempo(object):
             print('flg: ', np.shape(flg))
             print('qa_value: ', np.shape(qa_value))
             print('cld_fra: ', np.shape(cld_fra))
+            print('sza: ',  np.shape(sza))
+            print('vza: ',  np.shape(vza))
+            print('albedo: ',  np.shape(albedo))
             print('qc_flag: ', np.shape(qc_flag))
             print('obs: ', np.shape(obs))
             print('err: ', np.shape(err))
@@ -247,6 +253,9 @@ class tempo(object):
             flg = np.ma.compressed(flg)
             qa_value = np.ma.compressed(qa_value).astype('float32')
             cld_fra = np.ma.compressed(cld_fra).astype('float32')
+            sza = np.ma.compressed(sza).astype('float32')
+            vza = np.ma.compressed(vza).astype('float32')
+            albedo = np.ma.compressed(albedo).astype('float32')
             qc_flag = np.ma.compressed(qc_flag).astype('int32')
             obs = np.ma.compressed(obs).astype('float32')
             err = np.ma.compressed(err).astype('float32')
@@ -266,6 +275,9 @@ class tempo(object):
                 print('flg: ', np.shape(flg))
                 print('qa_value: ', np.shape(qa_value))
                 print('cld_fra: ', np.shape(cld_fra))
+                print('sza: ', np.shape(sza))
+                print('vza: ', np.shape(vza))
+                print('albedo: ', np.shape(albedo))
                 print('qc_flag: ', np.shape(qc_flag))
                 print('obs: ', np.shape(obs))
                 print('err: ', np.shape(err))
@@ -278,6 +290,9 @@ class tempo(object):
                     self.outdata[('longitude', 'MetaData')] = lons[flg]
                     self.outdata[('quality_assurance_value', 'MetaData')] = qa_value[flg]
                     self.outdata[('cloud_fraction', 'MetaData')] = cld_fra[flg]
+                    self.outdata[('solar_zenith_angle', 'MetaData')] = sza[flg]
+                    self.outdata[('viewing_zenith_angle', 'MetaData')] = vza[flg]
+                    self.outdata[('albedo', 'MetaData')] = albedo[flg]
                     self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = avg_kernel[flg]
                     self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = preslev[flg]
                     self.outdata[self.varDict[iodavar]['valKey']] = obs[flg]
@@ -294,6 +309,12 @@ class tempo(object):
                         self.outdata[('quality_assurance_value', 'MetaData')], qa_value[flg]))
                     self.outdata[('cloud_fraction', 'MetaData')] = np.concatenate((
                         self.outdata[('cloud_fraction', 'MetaData')], cld_fra[flg]))
+                    self.outdata[('solar_zenith_angle', 'MetaData')] = np.concatenate((
+                        self.outdata[('solar_zenith_angle', 'MetaData')], sza[flg]))
+                    self.outdata[('viewing_zenith_angle', 'MetaData')] = np.concatenate((
+                        self.outdata[('viewing_zenith_angle', 'MetaData')], vza[flg]))
+                    self.outdata[('albedo', 'MetaData')] = np.concatenate((
+                        self.outdata[('albedo', 'MetaData')], albedo[flg]))
                     self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = np.concatenate((
                         self.outdata[('averagingKernel', 'RetrievalAncillaryData')], avg_kernel[flg]))
                     self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = np.concatenate((
