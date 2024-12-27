@@ -113,6 +113,12 @@ class tempo(object):
             cld_fra.mask = False
             cld_fra = np.ma.array(cld_fra, mask=mask)
             qa_value = np.ma.array(qa_value, mask=mask)
+            sza.mask = False
+            sza = np.ma.array(sza, mask=mask)
+            vza.mask = False
+            vza = np.ma.array(vza, mask=mask)
+            albedo.mask = False
+            albedo = np.ma.array(albedo, mask=mask)
 
             # adding ability to pre filter the data using the qa value
             # and also perform thinning using random uniform draw
@@ -388,6 +394,7 @@ def main():
     optional.add_argument(
         '-v3', '--version3',
         action='store_true',
+        default=True,
         help='Read V3 files and not V2 files')
 
     args = parser.parse_args()
@@ -405,7 +412,7 @@ def main():
     if args.column == "troposphere" or args.column == "stratosphere":
 
         obsVar = {
-            var_name+'_'+args.column+'spheric_column': var_name+'Column'
+            var_name+'_'+args.column+'_column': var_name+'Column'
         }
 
         varDims = {
