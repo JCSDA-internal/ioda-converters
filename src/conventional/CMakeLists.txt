@@ -1,6 +1,7 @@
 list(APPEND programs
   amdar_bufr2ioda.py
   amv_ssec_ascii2ioda.py
+  balloon_sonde_json2ioda.py
   buoy_bufr2ioda.py
   ionosonde_ascii2ioda.py
   metar_csv2ioda.py

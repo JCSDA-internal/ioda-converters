@@ -35,13 +35,11 @@ metaDataName = iconv.MetaDataName()
 obsValName = iconv.OvalName()
 
 # globals
-TROPICS01_WMO_sat_ID = 933  # 691  did this ID get updated by WMO
-TROPICS02_WMO_sat_ID = 895
-TROPICS03_WMO_sat_ID = 896
-TROPICS04_WMO_sat_ID = 966
-TROPICS05_WMO_sat_ID = 967
-TROPICS06_WMO_sat_ID = 968
-TROPICS07_WMO_sat_ID = 969
+TROPICS01_WMO_sat_ID = 709
+TROPICS03_WMO_sat_ID = 228
+TROPICS05_WMO_sat_ID = 263
+TROPICS06_WMO_sat_ID = 264
+TROPICS07_WMO_sat_ID = 284
 TOMORROWIO_GENERIC_sat_ID = 769
 
 # TROPICS Epoch Time (TET) offset
@@ -94,6 +92,10 @@ def main(args):
     nlocs_int = np.array(len(obs_data[('latitude', metaDataName)]), dtype='int64')
     nlocs = nlocs_int.item()
     nchans = len(obs_data[('sensorChannelNumber', metaDataName)])
+
+    if nlocs == 0:
+        print(f'  ...  WARNING: no data found exiting without writing output')
+        return
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
@@ -196,7 +198,7 @@ def get_data(f, obs_data, skip=1):
     # Bit 7: Night
     # Bit 8: Payload rear orientation'
     quality_word = np.vstack(np.stack(f['calQualityFlag'], axis=2))
-    obs_data[('satelliteAscendingFlag', metaDataName)] = np.array(get_normalized_bit(quality_word[:, 0], bit_index=6), dtype='int32')
+    obs_data[('satelliteAscendingFlag', metaDataName)] = np.array(get_normalized_bit(quality_word[:, 0], bit_index=5), dtype='int32')
 
     # check some global satellite geometry will compress all data using this
     chk_geolocation = (obs_data[('latitude', metaDataName)] > 90) | (obs_data[('latitude', metaDataName)] < -90) | \
@@ -258,16 +260,16 @@ def get_data_deprecated(f, obs_data, skip=1):
     obs_data[(k, "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
     obs_data[(k, "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
 
-    # Bit 1: land/undefined
-    # Bit 2: Lunar/solar intrusion
-    # Bit 3: Active Maneuver
-    # Bit 4: Cold Cal. Consistency
-    # Bit 5: Hot Cal. Consistency
-    # Bit 6: Ascending/Descending
-    # Bit 7: Day/Night
-    # Bit 8: Payload forward/aft"
+    # Bit 0: land/undefined
+    # Bit 1: Lunar/solar intrusion
+    # Bit 2: Active Maneuver
+    # Bit 3: Cold Cal. Consistency
+    # Bit 4: Hot Cal. Consistency
+    # Bit 5: Ascending/Descending
+    # Bit 6: Day/Night
+    # Bit 7: Payload forward/aft"
     quality_word = np.vstack(np.stack(f['calQualityFlag'], axis=2))
-    obs_data[('satelliteAscendingFlag', metaDataName)] = np.array(get_normalized_bit(quality_word[:, 0], bit_index=6), dtype='int32')
+    obs_data[('satelliteAscendingFlag', metaDataName)] = np.array(get_normalized_bit(quality_word[:, 0], bit_index=5), dtype='int32')
 
     # check some global satellite geometry will compress all data using this
     chk_geolocation = (obs_data[('latitude', metaDataName)] > 90) | (obs_data[('latitude', metaDataName)] < -90) | \
@@ -287,14 +289,14 @@ def get_data_deprecated(f, obs_data, skip=1):
 def set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data, skip=1):
     # use quality word to determine where to set for missing values
     for jchan in np.arange(nchans):
-        i_land = get_normalized_bit(quality_word[:, jchan], bit_index=1)
-        i_intrusion = get_normalized_bit(quality_word[:, jchan], bit_index=2)
-        i_maneuver = get_normalized_bit(quality_word[:, jchan], bit_index=3)
-        i_cold_cal = get_normalized_bit(quality_word[:, jchan], bit_index=4)
-        i_hot_cal = get_normalized_bit(quality_word[:, jchan], bit_index=5)
-        i_asc = get_normalized_bit(quality_word[:, jchan], bit_index=6)
-        i_day = get_normalized_bit(quality_word[:, jchan], bit_index=7)
-        i_forward = get_normalized_bit(quality_word[:, jchan], bit_index=8)
+        i_land = get_normalized_bit(quality_word[:, jchan], bit_index=0)
+        i_intrusion = get_normalized_bit(quality_word[:, jchan], bit_index=1)
+        i_maneuver = get_normalized_bit(quality_word[:, jchan], bit_index=2)
+        i_cold_cal = get_normalized_bit(quality_word[:, jchan], bit_index=3)
+        i_hot_cal = get_normalized_bit(quality_word[:, jchan], bit_index=4)
+        i_asc = get_normalized_bit(quality_word[:, jchan], bit_index=5)
+        i_day = get_normalized_bit(quality_word[:, jchan], bit_index=6)
+        i_forward = get_normalized_bit(quality_word[:, jchan], bit_index=7)
         chk_ob = (i_cold_cal + i_hot_cal + i_intrusion + i_maneuver + chk_geolocation) > 0
         obs_data[obs_key][:, jchan][chk_ob] = float_missing_value
 
