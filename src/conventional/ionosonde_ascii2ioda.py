@@ -18,8 +18,8 @@ os.environ["TZ"] = "UTC"
 varDict = {'criticalFrequency': ['criticalFrequency', "float", 'm s-1'],
            'criticalFrequencyConfidence': ['criticalFrequencyConfidence', "float", 'fractional percent'],
            'height': ['height', "float", "m"],
-           'electronDensity': ['electronDensity', "float", 'number / m^3'],
-           'electronDensityConfidence': ['electronDensityConfidence', "float", 'number / m^3']}
+           'electronDensity': ['electronDensity', "float", 'number cm-3'],
+           'electronDensityConfidence': ['electronDensityConfidence', "float", 'number cm-3']}
 
 # these are the MetaData common to each input
 locationKeyList = [("latitude", "float", "degrees_north"),
@@ -293,6 +293,10 @@ def populate_obsValue(line, local_data):
 
         # Convert only freq, f_conf, density, and density_conf to float
         height, freq, f_conf, density, density_conf = map(float, [height, freq, f_conf, density, density_conf])
+
+        # convert electronDensity values from number per m-3 to cm-3
+        density *= 1.e-6
+        density_conf *= 1.e-6
 
         if all(x > 0 for x in [freq, f_conf, density, density_conf]):
             local_data['height'] = np.append(local_data['height'], height)

@@ -9,6 +9,8 @@
 
 list( APPEND test_input
   testinput/tropics_2022021600.nc
+  testinput/cygnss.sample.20240401T000600Z_PT1M.l2.wind_trackgridsize25km_NOAAv1.2.nc
+  testinput/V8PRO-EDR_v3r3_j01_s202202142345436_e202202142346211_c202202150032490.nc
   testinput/sample.amsr2.gcom-w1.20220216.h5
   testinput/gmi_gpm_20220216.h5
   testinput/icethk_coperl4.nc
@@ -99,6 +101,7 @@ list( APPEND test_input
   testinput/madis_2021010100.nc
   testinput/gpm_dpr_20240401-S105223-E122536.sample.hdf5
   testinput/Pandora57s1_BoulderCO_L2_rnvs3p1-8.txt
+  testinput/pandora_site_classification.csv
   testinput/balloonsonde_sample_20241001T00Z_PT15M.json
   testinput/TMS02.1B-TB.V00-07.NRT.ST20241115-125911.ET20241115-130757.CT20241119-074232.nc
   testinput/TROPICS03.BRTT.L1B.Orbit07819.V05-02.ST20241023-003347.ET20241023-020756.CT20241023-145302.nc
@@ -106,6 +109,8 @@ list( APPEND test_input
 
 list( APPEND test_output
   testoutput/20220216T00Z_PT3H_tms_tropics-01.nc4
+  testoutput/obs.20240401T000600Z_PT1M_osw_cygnss_noaa.nc4
+  testoutput/20220214T21Z_PT6H_ozonecolumn_omps_n20.sample.nc4
   testoutput/amsr2_gcom-w1_20220216.nc4
   testoutput/gmi_gpm_20220216.nc4
   testoutput/icethk_coperl4.nc
@@ -1300,7 +1305,8 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pandora
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/pandora_2ioda.py
                           -i testinput/Pandora57s1_BoulderCO_L2_rnvs3p1-8.txt
                           -o testrun/Pandora57s1_BoulderCO_L2_rnvs3p1-8.nc
-                          --date_range 2023080115 2023080121"
+                          --date_range 2023080115 2023080121
+                          --site_classification testinput/pandora_site_classification.csv"
                           Pandora57s1_BoulderCO_L2_rnvs3p1-8.nc ${IODA_CONV_COMP_TOL})
 
 foreach (coltype total tropo)
@@ -1372,9 +1378,9 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_aod
                           netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/modis_aod2ioda.py
                           -i testinput/modis_aod.hdf
-                          -t 2021080100
                           -p Terra
-                          -o testrun/modis_aod.nc"
+			  --date_range 2021080100 2021080101
+                          -o testrun/modis_aod.nc"			
                           modis_aod.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_aeronet_aod
@@ -2175,6 +2181,29 @@ endif()
                             -o testrun/obs.20241001T000000Z_PT15M_balloonsonde.nc4
                             --sort"
                             obs.20241001T000000Z_PT15M_balloonsonde.nc4 ${IODA_CONV_COMP_TOL})
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_osw_cygnss
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/osw_2ioda.py
+                            -i testinput/cygnss.sample.20240401T000600Z_PT1M.l2.wind_trackgridsize25km_NOAAv1.2.nc
+                            -o testrun/obs.20240401T000600Z_PT1M_osw_cygnss_noaa.nc4"
+                            obs.20240401T000600Z_PT1M_osw_cygnss_noaa.nc4 ${IODA_CONV_COMP_TOL})
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ozone_product
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/ozone_product_2ioda.py
+                            -i testinput/V8PRO-EDR_v3r3_j01_s202202142345436_e202202142346211_c202202150032490.nc
+                            -o testrun/20220214T21Z_PT6H_ozonecolumn_omps_n20.sample.nc4
+                            -d 2022021500"
+                            20220214T21Z_PT6H_ozonecolumn_omps_n20.sample.nc4 ${IODA_CONV_COMP_TOL})
 
 #==============================================================================
 # PrepBUFR and BUFR tests

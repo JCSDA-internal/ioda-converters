@@ -113,7 +113,7 @@ class GMAOobs(object):
 
         data['longitude'] = ncd.variables['lon'][:].data
         data['latitude'] = ncd.variables['lat'][:].data
-        data['depthBelowWaterSurface'] = ncd.variables['depth'][:].data
+        data['depth'] = ncd.variables['depth'][:].data
         types = ncd.variables['typ'][:].data
         values = ncd.variables['value'][:].data
         values[np.isnan(values)] = float_missing_value
@@ -163,7 +163,7 @@ class IODA(object):
 
         # Update locationKeyList and meta_keys for the profiler data
         if include_depth:
-            locationKeyList = locationKeyListBase + [("depthBelowWaterSurface", "float", "m")]
+            locationKeyList = locationKeyListBase + [("depth", "float", "m")]
         else:
             locationKeyList = locationKeyListBase
         meta_keys = [m_item[0] for m_item in locationKeyList]
