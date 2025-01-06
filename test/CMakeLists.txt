@@ -103,6 +103,7 @@ list( APPEND test_input
   testinput/Pandora57s1_BoulderCO_L2_rnvs3p1-8.txt
   testinput/pandora_site_classification.csv
   testinput/balloonsonde_sample_20241001T00Z_PT15M.json
+  testinput/tec_groundBased_TENET_20201001T00Z.tec
 )
 
 list( APPEND test_output
@@ -198,6 +199,7 @@ list( APPEND test_output
   testoutput/20240401T105230_PT1M_dpr_gpm.nc
   testoutput/Pandora57s1_BoulderCO_L2_rnvs3p1-8.nc
   testoutput/obs.20241001T000000Z_PT15M_balloonsonde.nc4
+  testoutput/obs.20201001T000000Z_PT1M_tec_groundbased.nc4
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -2178,7 +2180,18 @@ endif()
                             --sort"
                             obs.20241001T000000Z_PT15M_balloonsonde.nc4 ${IODA_CONV_COMP_TOL})
 
-  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_osw_cygnss
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tec_groundbased
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/gnss_tec_ground_based.py
+                            -i testinput/tec_groundBased_TENET_20201001T00Z.tec
+                            -o testrun/obs.20201001T000000Z_PT1M_tec_groundbased.nc4"
+                            obs.20201001T000000Z_PT1M_tec_groundbased.nc4 ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_osw_cygnss
                     TYPE    SCRIPT
                     ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                     COMMAND bash
