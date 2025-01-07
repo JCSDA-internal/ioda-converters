@@ -66,6 +66,10 @@ class AOD(object):
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self.setDicts()
+        self.read()
+
+        DimDict['Location'] = len(self.outdata[('latitude', metaDataName)])
+        DimDict['Channel'] = np.array(channels)
 
     def setDicts(self):
         meta_keys = [m_item[0] for m_item in locationKeyList]
@@ -91,28 +95,12 @@ class AOD(object):
                     self.varAttrs[iodavar, varGroupName]['units'] = varsKeyList[var_keys.index(key)][4]
 
     def _read_nasa_dt(self):
+        print(f'Testing')
+
     def _read_nasa_db(self):
+        print(f'Testing')
+
     def _read_noaa(self):
-
-
-    def _read(self):
-        # Make empty lists for the output vars
-        self.outdata[('latitude', metaDataName)] = np.array([], dtype=np.float32)
-        self.outdata[('longitude', metaDataName)] = np.array([], dtype=np.float32)
-        self.outdata[('dateTime', metaDataName)] = np.array([], dtype=object)
-        for iodavar in obsvars:
-            self.outdata[self.varDict[iodavar]['valKey']] = np.array([], dtype=np.float32)
-            self.outdata[self.varDict[iodavar]['errKey']] = np.array([], dtype=np.float32)
-            self.outdata[self.varDict[iodavar]['qcKey']] = np.array([], dtype=np.int32)
-
-        if self.provider == 'nasa':
-            if self.retrieval_method == 'DarkTarget'
-                readaod = self._read_nasa_dt()
-            if self.retrieval_method == 'DeepBlue'
-                readaod = self._read_nasa_db()
-        elif self.provider == 'noaa'
-            readaod = self._read_noaa()
-
         # loop through input filenamess
         for f in self.filenames:
             ncd = nc.Dataset(f, 'r')
@@ -141,7 +129,7 @@ class AOD(object):
 
             qcall = ncd.variables['QCAll'][:].ravel().astype('int32')
             obs_time = np.full(np.shape(qcall), base_datetime, dtype=object)
-            if self.mask == "maskout":
+            if self.mask_missing:
                 mask = np.logical_not(vals.mask)
                 vals = vals[mask]
                 lons = lons[mask]
@@ -170,21 +158,40 @@ class AOD(object):
                 errs[qcpath % 2 == 1] = 0.00784394 + 0.219923*vals[qcpath % 2 == 1]  # over ocean
                 errs[qcpath % 4 == 2] = 0.0550472 + 0.299558*vals[qcpath % 4 == 2]   # over bright land
 
-            #  Write out data
-            self.outdata[('latitude', metaDataName)] = np.append(self.outdata[('latitude', metaDataName)], np.array(lats, dtype=np.float32))
-            self.outdata[('longitude', metaDataName)] = np.append(self.outdata[('longitude', metaDataName)], np.array(lons, dtype=np.float32))
-            self.outdata[('dateTime', metaDataName)] = np.append(self.outdata[('dateTime', metaDataName)], np.array(obs_time, dtype=object))
+            self._append_outdata()
 
-            for iodavar in obsvars:
-                self.outdata[self.varDict[iodavar]['valKey']] = np.append(
-                    self.outdata[self.varDict[iodavar]['valKey']], np.array(vals, dtype=np.float32))
-                self.outdata[self.varDict[iodavar]['errKey']] = np.append(
-                    self.outdata[self.varDict[iodavar]['errKey']], np.array(errs, dtype=np.float32))
-                self.outdata[self.varDict[iodavar]['qcKey']] = np.append(
-                    self.outdata[self.varDict[iodavar]['qcKey']], np.array(qcall, dtype=np.int32))
+    def _append_outdata(self):
+        #  Write out data
+        self.outdata[('latitude', metaDataName)] = np.append(self.outdata[('latitude', metaDataName)], np.array(lats, dtype=np.float32))
+        self.outdata[('longitude', metaDataName)] = np.append(self.outdata[('longitude', metaDataName)], np.array(lons, dtype=np.float32))
+        self.outdata[('dateTime', metaDataName)] = np.append(self.outdata[('dateTime', metaDataName)], np.array(obs_time, dtype=object))
 
-        DimDict['Location'] = len(self.outdata[('latitude', metaDataName)])
-        DimDict['Channel'] = np.array(channels)
+        for iodavar in obsvars:
+            self.outdata[self.varDict[iodavar]['valKey']] = np.append(
+                self.outdata[self.varDict[iodavar]['valKey']], np.array(vals, dtype=np.float32))
+            self.outdata[self.varDict[iodavar]['errKey']] = np.append(
+                self.outdata[self.varDict[iodavar]['errKey']], np.array(errs, dtype=np.float32))
+            self.outdata[self.varDict[iodavar]['qcKey']] = np.append(
+                self.outdata[self.varDict[iodavar]['qcKey']], np.array(qcall, dtype=np.int32))
+
+    def _read(self):
+        # Make empty lists for the output vars
+        self.outdata[('latitude', metaDataName)] = np.array([], dtype=np.float32)
+        self.outdata[('longitude', metaDataName)] = np.array([], dtype=np.float32)
+        self.outdata[('dateTime', metaDataName)] = np.array([], dtype=object)
+        for iodavar in obsvars:
+            self.outdata[self.varDict[iodavar]['valKey']] = np.array([], dtype=np.float32)
+            self.outdata[self.varDict[iodavar]['errKey']] = np.array([], dtype=np.float32)
+            self.outdata[self.varDict[iodavar]['qcKey']] = np.array([], dtype=np.int32)
+
+        if self.provider == 'nasa':
+            if self.retrieval_method == 'DarkTarget':
+                self._read_nasa_dt()
+            if self.retrieval_method == 'DeepBlue':
+                self._read_nasa_db()
+        elif self.provider == 'noaa':
+            self._read_noaa()
+
 
 
 def main():
@@ -208,13 +215,21 @@ def main():
         help="name of ioda-v2 output file",
         type=str, required=True)
     parser.add_argument(
-        '-m', '--method',
-        help="calculation error method: nesdis/default, default=none",
+        '--error_method',
+        help="calculation error method: calval/default, default=none",
         type=str, required=True)
     parser.add_argument(
-        '-k', '--mask',
-        help="maskout missing values: maskout/default, default=none",
+        '--mask_missing',
+        help="maskout missing values, default=False",
+        action='store_true', default=False)
+    parser.add_argument(
+        '--provider',
+        help="data source, noaa/nasa",
         type=str, required=True)
+    parser.add_argument(
+        '--retrieval_method',
+        help="specify the retrieval method when provider is nasa, DarkTarget/DeepBlue",
+        type=str, default=None)
     parser.add_argument(
         '-n', '--thin',
         help="percentage of random thinning fro 0.0 to 1.0. Zero indicates"
@@ -226,7 +241,7 @@ def main():
     # setup the IODA writer
 
     # Read in the AOD data
-    aod = AOD(args.input, args.method, args.mask, args.thin)
+    aod = AOD(args.input, args.error_method, args.mask_missing, args.thin)
 
     # write everything out
 
