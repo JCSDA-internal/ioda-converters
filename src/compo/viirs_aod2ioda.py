@@ -8,7 +8,7 @@
 #
 
 import argparse
-from datetime import datetime
+from datetime import datetime, timezone
 import netCDF4 as nc
 import numpy as np
 import os
@@ -16,7 +16,9 @@ import os
 import pyiodaconv.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from pyiodaconv.orddicts import DefaultOrderedDict
-from pyiodaconv.def_jedi_utils import iso8601_string
+from pyiodaconv.def_jedi_utils import iso8601_string, epoch
+
+os.environ["TZ"] = "UTC"
 
 locationKeyList = [
     ("latitude", "float", "degrees_north"),
@@ -43,11 +45,11 @@ varsKeyList = [('valKey', iconv.OvalName(), 'float', 'longitude latitude', '1'),
                ('errKey', iconv.OerrName(), 'float', 'longitude latitude', '1'),
                ('qcKey', iconv.OqcName(), 'integer', 'longitude latitude', None)]
 
-float_missing_value = nc.default_fillvals['f4']
-int_missing_value = nc.default_fillvals['i4']
-double_missing_value = nc.default_fillvals['f8']
-long_missing_value = nc.default_fillvals['i8']
-string_missing_value = '_'
+float_missing_value = iconv.get_default_fill_val(np.float32)
+double_missing_value = iconv.get_default_fill_val(np.float64)
+int_missing_value = iconv.get_default_fill_val(np.int32)
+long_missing_value = iconv.get_default_fill_val(np.int64)
+string_missing_value = iconv.get_default_fill_val(np.str_)
 
 missing_vals = {'string': string_missing_value,
                 'integer': int_missing_value,
@@ -57,15 +59,19 @@ missing_vals = {'string': string_missing_value,
 
 
 class AOD(object):
-    def __init__(self, filenames, method, mask, thin):
-        self.filenames = filenames
-        self.mask = mask
-        self.method = method
-        self.thin = thin
+    def __init__(self, in_dict):
+        self.filenames = in_dict['input']
+        self.mask_missing = in_dict['mask_missing']
+        self.error_method = in_dict['error_method']
+        self.thin = in_dict['thin']
+        self.provider = in_dict['provider']
+        self.retrieval_method = in_dict['retrieval_method']
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self.setDicts()
+        print(self.varDict)
+        print(self.varAttrs)
         self.read()
 
         DimDict['Location'] = len(self.outdata[('latitude', metaDataName)])
@@ -101,11 +107,23 @@ class AOD(object):
         print(f'Testing')
 
     def _read_noaa(self):
+        min_time = -int_missing_value
+        max_time = int_missing_value
         # loop through input filenamess
         for f in self.filenames:
             ncd = nc.Dataset(f, 'r')
             gatts = {attr: getattr(ncd, attr) for attr in ncd.ncattrs()}
-            base_datetime = datetime.strptime(gatts["time_coverage_end"], '%Y-%m-%dT%H:%M:%SZ')
+
+            # Special time consideration. Get min/max of all times being converted for output attribute data.
+            this_starttime = datetime.strptime(gatts["time_coverage_start"], '%Y-%m-%dT%H:%M:%SZ')
+            this_starttime = this_starttime.replace(tzinfo=timezone.utc)
+            s_time = round((this_starttime - epoch).total_seconds())
+            this_endtime = datetime.strptime(gatts["time_coverage_end"], '%Y-%m-%dT%H:%M:%SZ')
+            this_endtime = this_endtime.replace(tzinfo=timezone.utc)
+            e_time = round((this_endtime - epoch).total_seconds())
+            min_time = min(s_time, min_time)
+            max_time = max(e_time, max_time)
+
             self.satellite = gatts["satellite_name"]
             self.sensor = gatts["instrument_name"]
             AttrData["platform"] = self.satellite
@@ -116,10 +134,10 @@ class AOD(object):
             if AttrData['platform'] == 'NPP':
                 AttrData['platform'] = "suomi_npp"
 
-            lons = ncd.variables['Longitude'][:].ravel()
-            lats = ncd.variables['Latitude'][:].ravel()
-            vals = ncd.variables['AOD550'][:].ravel()
-            errs = ncd.variables['Residual'][:].ravel()
+            self.lons = ncd.variables['Longitude'][:].ravel()
+            self.lats = ncd.variables['Latitude'][:].ravel()
+            self.vals = ncd.variables['AOD550'][:].ravel()
+            self.errs = ncd.variables['Residual'][:].ravel()
 
             # QCPath is the flag for retrieval path. The valid range is 0-127 in the
             # ATBD: https://www.star.nesdis.noaa.gov/jpss/documents/ATBD/ATBD_EPS_Aerosol_AOD_v3.4.pdf.
@@ -127,58 +145,64 @@ class AOD(object):
             qcpath = ncd.variables['QCPath'][:].data.ravel()
             qcpath = np.ma.masked_array(qcpath, np.logical_or(qcpath < 0, qcpath > 127))
 
-            qcall = ncd.variables['QCAll'][:].ravel().astype('int32')
-            obs_time = np.full(np.shape(qcall), base_datetime, dtype=object)
+            self.qcall = ncd.variables['QCAll'][:].ravel().astype('int32')
+            self.obs_time = np.full(np.shape(self.lons), round(0.5*(s_time+e_time)), dtype=np.int64)
+
             if self.mask_missing:
-                mask = np.logical_not(vals.mask)
-                vals = vals[mask]
-                lons = lons[mask]
-                lats = lats[mask]
-                errs = errs[mask]
+                mask = np.logical_not(self.vals.mask)
+                self.vals = self.vals[mask]
+                self.lons = self.lons[mask]
+                self.lats = self.lats[mask]
+                self.errs = self.errs[mask]
                 qcpath = qcpath[mask]
-                qcall = qcall[mask]
-                obs_time = obs_time[mask]
+                self.qcall = self.qcall[mask]
+                self.obs_time = self.obs_time[mask]
 
             ncd.close()
 
             # apply thinning mask
             if self.thin > 0.0:
                 mask_thin = np.random.uniform(size=len(lons)) > self.thin
-                lons = lons[mask_thin]
-                lats = lats[mask_thin]
-                vals = vals[mask_thin]
-                errs = errs[mask_thin]
+                self.lons = self.lons[mask_thin]
+                self.lats = self.lats[mask_thin]
+                self.vals = self.vals[mask_thin]
+                self.errs = self.errs[mask_thin]
                 qcpath = qcpath[mask_thin]
-                qcall = qcall[mask_thin]
-                obs_time = obs_time[mask_thin]
+                self.qcall = self.qcall[mask_thin]
+                self.obs_time = self.obs_time[mask_thin]
 
             # defined surface type and uncertainty
-            if self.method == "nesdis":
-                errs = 0.111431 + 0.128699*vals    # over land (dark)
-                errs[qcpath % 2 == 1] = 0.00784394 + 0.219923*vals[qcpath % 2 == 1]  # over ocean
-                errs[qcpath % 4 == 2] = 0.0550472 + 0.299558*vals[qcpath % 4 == 2]   # over bright land
+            if self.error_method == "calval":
+                self.errs = 0.111431 + 0.128699 * self.vals    # over land (dark)
+                self.errs[qcpath % 2 == 1] = 0.00784394 + 0.219923 * self.vals[qcpath % 2 == 1]  # over ocean
+                self.errs[qcpath % 4 == 2] = 0.0550472 + 0.299558 * self.vals[qcpath % 4 == 2]   # over bright land
 
             self._append_outdata()
 
+        AttrData['datetimeRange'] = np.array([datetime.fromtimestamp(min_time).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                                              datetime.fromtimestamp(max_time).strftime("%Y-%m-%dT%H:%M:%SZ")], dtype=object)
+        print(f"Processed data for datetimeRange: {AttrData['datetimeRange']}")
+
+
     def _append_outdata(self):
         #  Write out data
-        self.outdata[('latitude', metaDataName)] = np.append(self.outdata[('latitude', metaDataName)], np.array(lats, dtype=np.float32))
-        self.outdata[('longitude', metaDataName)] = np.append(self.outdata[('longitude', metaDataName)], np.array(lons, dtype=np.float32))
-        self.outdata[('dateTime', metaDataName)] = np.append(self.outdata[('dateTime', metaDataName)], np.array(obs_time, dtype=object))
+        self.outdata[('latitude', metaDataName)] = np.append(self.outdata[('latitude', metaDataName)], np.array(self.lats, dtype=np.float32))
+        self.outdata[('longitude', metaDataName)] = np.append(self.outdata[('longitude', metaDataName)], np.array(self.lons, dtype=np.float32))
+        self.outdata[('dateTime', metaDataName)] = np.append(self.outdata[('dateTime', metaDataName)], np.array(self.obs_time, dtype=np.int64))
 
         for iodavar in obsvars:
             self.outdata[self.varDict[iodavar]['valKey']] = np.append(
-                self.outdata[self.varDict[iodavar]['valKey']], np.array(vals, dtype=np.float32))
+                self.outdata[self.varDict[iodavar]['valKey']], np.array(self.vals, dtype=np.float32))
             self.outdata[self.varDict[iodavar]['errKey']] = np.append(
-                self.outdata[self.varDict[iodavar]['errKey']], np.array(errs, dtype=np.float32))
+                self.outdata[self.varDict[iodavar]['errKey']], np.array(self.errs, dtype=np.float32))
             self.outdata[self.varDict[iodavar]['qcKey']] = np.append(
-                self.outdata[self.varDict[iodavar]['qcKey']], np.array(qcall, dtype=np.int32))
+                self.outdata[self.varDict[iodavar]['qcKey']], np.array(self.qcall, dtype=np.int32))
 
-    def _read(self):
+    def read(self):
         # Make empty lists for the output vars
         self.outdata[('latitude', metaDataName)] = np.array([], dtype=np.float32)
         self.outdata[('longitude', metaDataName)] = np.array([], dtype=np.float32)
-        self.outdata[('dateTime', metaDataName)] = np.array([], dtype=object)
+        self.outdata[('dateTime', metaDataName)] = np.array([], dtype=np.int64)
         for iodavar in obsvars:
             self.outdata[self.varDict[iodavar]['valKey']] = np.array([], dtype=np.float32)
             self.outdata[self.varDict[iodavar]['errKey']] = np.array([], dtype=np.float32)
@@ -238,10 +262,18 @@ def main():
 
     args = parser.parse_args()
 
+    args_in_dict = {'input': args.input,
+            'error_method': args.error_method,
+            'mask_missing': args.mask_missing,
+            'provider': args.provider,
+            'retrieval_method': args.retrieval_method,
+            'thin': args.thin,
+            }
+
     # setup the IODA writer
 
     # Read in the AOD data
-    aod = AOD(args.input, args.error_method, args.mask_missing, args.thin)
+    aod = AOD(args_in_dict)
 
     # write everything out
 
