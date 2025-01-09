@@ -20,4 +20,3 @@ set(NCEP_BUFR_LIB CACHE STRING "" )
 find_package(NetCDF REQUIRED COMPONENTS Fortran C)
 
 add_subdirectory("${CMAKE_SOURCE_DIR}/obs2ioda-v2")
-
