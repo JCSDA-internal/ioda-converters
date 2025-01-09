@@ -9,7 +9,6 @@ set(v2_SOURCES
     hsd.f90
     satwnd_mod.f90
     kinds.f90
-    main.f90
     ncio_mod.f90
     netcdf_mod.f90
     prepbufr_mod.f90
@@ -20,11 +19,14 @@ set(v2_SOURCES
     f_c_string_1D_t_mod.f90
 )
 list(TRANSFORM v2_SOURCES PREPEND "src/")
-set(v2_MAIN_SOURCE
+set(obs2ioda_v2_SOURCES
     main.f90
 )
-list(TRANSFORM v2_MAIN_SOURCE PREPEND "src/")
+list(TRANSFORM obs2ioda_v2_SOURCES PREPEND "src/")
 set(v2_PUBLIC_LINK_LIBRARIES "${NetCDF_LIBRARIES}" "${NCEP_BUFR_LIB}")
 add_library(v2 SHARED ${v2_SOURCES})
-obs2ioda_fortran_target(v2 ${v2_MAIN_SOURCE})
+obs2ioda_fortran_library(v2 "${v2_PUBLIC_LINK_LIBRARIES}")
+set(obs2ioda_v2_PUBLIC_LINK_LIBRARIES v2 )
+add_executable(obs2ioda_v2 ${obs2ioda_v2_SOURCES})
+obs2ioda_fortran_executable(obs2ioda_v2 "${obs2ioda_v2_PUBLIC_LINK_LIBRARIES}")
 
