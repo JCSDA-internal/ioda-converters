@@ -387,7 +387,7 @@ def quality_control(obs_data, qc_strict=False):
 
 
 def get_normalized_bit(value, bit_index):
-    return (value >> bit_index) & 1
+    return (int(value) >> bit_index) & 1 == 0
 
 
 if __name__ == "__main__":
