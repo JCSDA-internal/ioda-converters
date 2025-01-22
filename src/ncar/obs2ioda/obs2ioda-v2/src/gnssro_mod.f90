@@ -40,6 +40,9 @@ type gnssro_type
 end type gnssro_type
 
 type(gnssro_type) :: gnssro_data
+integer(i_kind), parameter :: n1ahdr = 13, maxlevs=500
+character (*), parameter :: hdr1a = 'YEAR MNTH DAYS HOUR MINU PCCF ELRC SAID SIID PTID GEODU SCLF OGCE'
+character (*), parameter :: nemo = 'QFRO'
 
 logical :: verbose = .false.
 
@@ -75,9 +78,6 @@ logical                   :: good,outside
 integer                   :: refflag, bendflag
 integer(i_kind),parameter :: mxib=31
 integer(i_kind)           :: ibit(mxib),nib
-integer(i_kind),parameter :: maxlevs=500
-integer(i_kind),parameter :: n1ahdr=13
-integer(i_kind)           :: maxobs
 real(r_kind) :: timeo
 
 real(r_kind),dimension(n1ahdr)     :: bfr1ahdr
@@ -94,11 +94,6 @@ integer(i_64)   :: i64_missing
 
 logical,        parameter :: GlobalModel = .true. ! temporary
 
-character(10) nemo
-character(80) hdr1a
-
-data hdr1a / 'YEAR MNTH DAYS HOUR MINU PCCF ELRC SAID SIID PTID GEODU SCLF OGCE' / 
-data nemo /'QFRO'/ 
 
 i_missing=huge(i_missing)
 i64_missing=huge(i64_missing)
@@ -107,7 +102,6 @@ r_missing=huge(i_missing)
 nrec =0
 ndata=0
 nvars=2
-maxobs=0
 
 open(lnbufr,file=trim(infile),form='unformatted')
 call openbf(lnbufr,'IN',lnbufr)
@@ -129,35 +123,7 @@ write(anatime,'(i10)') idate
 
 write(outfile,'(a,i10.10,a)') trim(outdir)//'gnssro_obs_',idate,'.h5'
 
-! loop over all message to estimate maxobs
-do while(ireadmg(lnbufr,subset,idate)==0)
-   read_loop_countmaxobs:  do while(ireadsb(lnbufr)==0)
-     call ufbint(lnbufr,bfr1ahdr,n1ahdr,1,iret,hdr1a)
-     call ufbseq(lnbufr,data1b,50,maxlevs,levs,'ROSEQ1')
-     maxobs= maxobs + levs
-  enddo read_loop_countmaxobs
-end do
-
-allocate(gnssro_data%said(maxobs))
-allocate(gnssro_data%siid(maxobs))
-allocate(gnssro_data%sclf(maxobs))
-allocate(gnssro_data%ptid(maxobs))
-allocate(gnssro_data%recn(maxobs))
-allocate(gnssro_data%asce(maxobs))
-allocate(gnssro_data%ogce(maxobs))
-allocate(gnssro_data%time(maxobs))
-allocate(gnssro_data%epochtime(maxobs))
-allocate(gnssro_data%lat(maxobs))
-allocate(gnssro_data%lon(maxobs))
-allocate(gnssro_data%rfict(maxobs))
-allocate(gnssro_data%azim(maxobs))
-allocate(gnssro_data%geoid(maxobs))
-allocate(gnssro_data%msl_alt(maxobs))
-allocate(gnssro_data%ref(maxobs))
-allocate(gnssro_data%refoe_gsi(maxobs))
-allocate(gnssro_data%bend_ang(maxobs))
-allocate(gnssro_data%impact_para(maxobs))
-allocate(gnssro_data%bndoe_gsi(maxobs))
+call allocate_gnssro_data_array(lnbufr)
 
 !rewind lnbufr
 call closbf(lnbufr)
@@ -485,28 +451,79 @@ call check( nf90_put_var(grpid_metadata, varid_geoid,gnssro_data%geoid(1:ndata))
 call check( nf90_put_var(grpid_metadata, varid_rfict,gnssro_data%rfict(1:ndata)))
 call check( nf90_close(ncid) )
 
-deallocate(gnssro_data%said)
-deallocate(gnssro_data%siid)
-deallocate(gnssro_data%sclf)
-deallocate(gnssro_data%ptid)
-deallocate(gnssro_data%recn)
-deallocate(gnssro_data%asce)
-deallocate(gnssro_data%ogce)
-deallocate(gnssro_data%time)
-deallocate(gnssro_data%epochtime)
-deallocate(gnssro_data%lat)
-deallocate(gnssro_data%lon)
-deallocate(gnssro_data%rfict)
-deallocate(gnssro_data%azim)
-deallocate(gnssro_data%geoid)
-deallocate(gnssro_data%msl_alt)
-deallocate(gnssro_data%ref)
-deallocate(gnssro_data%refoe_gsi)
-deallocate(gnssro_data%bend_ang)
-deallocate(gnssro_data%impact_para)
-deallocate(gnssro_data%bndoe_gsi)
+call deallocate_gnssro_data_array()
 
 end subroutine read_write_gnssro
+
+subroutine allocate_gnssro_data_array(lnbufr)
+   integer(i_kind), intent(in) :: lnbufr  ! fortran logical file unit
+   logical :: isconnected
+   integer(i_kind) :: ireadmg, ireadsb
+   character(len = 8) :: subset
+   integer(i_kind) :: idate, iret, levs, maxobs
+   real(r_kind), dimension(n1ahdr) :: bfr1ahdr
+   real(r_kind), dimension(50, maxlevs) :: data1b
+   ! Make sure the logical unit lnbufr is connected to a file. This does not guarantee that the file unit
+   ! is connected to the bufr library, if such a test exists we should add it later on
+   inquire(unit = lnbufr, opened = isconnected)
+   if (.not. isconnected) then
+      write(6,*) 'Logical unit lnbufr is not connected to a file'
+      stop
+   endif
+   ! estimate total number of observations
+   maxobs = 0
+   do while (ireadmg(lnbufr, subset, idate) == 0)
+      do while(ireadsb(lnbufr) == 0)
+         call ufbint(lnbufr, bfr1ahdr, n1ahdr, 1, iret, hdr1a)
+         call ufbseq(lnbufr, data1b, 50, maxlevs, levs, 'ROSEQ1')
+         maxobs = maxobs + levs
+      enddo
+   end do
+   ! allocate arrays
+   allocate(gnssro_data%said(maxobs))
+   allocate(gnssro_data%siid(maxobs))
+   allocate(gnssro_data%sclf(maxobs))
+   allocate(gnssro_data%ptid(maxobs))
+   allocate(gnssro_data%recn(maxobs))
+   allocate(gnssro_data%asce(maxobs))
+   allocate(gnssro_data%ogce(maxobs))
+   allocate(gnssro_data%time(maxobs))
+   allocate(gnssro_data%epochtime(maxobs))
+   allocate(gnssro_data%lat(maxobs))
+   allocate(gnssro_data%lon(maxobs))
+   allocate(gnssro_data%rfict(maxobs))
+   allocate(gnssro_data%azim(maxobs))
+   allocate(gnssro_data%geoid(maxobs))
+   allocate(gnssro_data%msl_alt(maxobs))
+   allocate(gnssro_data%ref(maxobs))
+   allocate(gnssro_data%refoe_gsi(maxobs))
+   allocate(gnssro_data%bend_ang(maxobs))
+   allocate(gnssro_data%impact_para(maxobs))
+   allocate(gnssro_data%bndoe_gsi(maxobs))
+end subroutine
+
+subroutine deallocate_gnssro_data_array()
+   deallocate(gnssro_data%said)
+   deallocate(gnssro_data%siid)
+   deallocate(gnssro_data%sclf)
+   deallocate(gnssro_data%ptid)
+   deallocate(gnssro_data%recn)
+   deallocate(gnssro_data%asce)
+   deallocate(gnssro_data%ogce)
+   deallocate(gnssro_data%time)
+   deallocate(gnssro_data%epochtime)
+   deallocate(gnssro_data%lat)
+   deallocate(gnssro_data%lon)
+   deallocate(gnssro_data%rfict)
+   deallocate(gnssro_data%azim)
+   deallocate(gnssro_data%geoid)
+   deallocate(gnssro_data%msl_alt)
+   deallocate(gnssro_data%ref)
+   deallocate(gnssro_data%refoe_gsi)
+   deallocate(gnssro_data%bend_ang)
+   deallocate(gnssro_data%impact_para)
+   deallocate(gnssro_data%bndoe_gsi)
+end subroutine
 
 !contains
  subroutine check(status)
