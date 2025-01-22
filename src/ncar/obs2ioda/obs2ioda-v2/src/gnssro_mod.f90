@@ -8,10 +8,38 @@
 module gnssro_bufr2ioda
 use netcdf
 implicit none
+private
+
+public :: read_write_gnssro
 
 integer, parameter :: i_kind  = selected_int_kind(8)    !4
 integer, parameter :: i_64    = selected_int_kind(10)   !8
 integer, parameter :: r_kind  = selected_real_kind(15)  !8
+
+type gnssro_type
+      integer(i_kind), allocatable, dimension(:)    :: said
+      integer(i_kind), allocatable, dimension(:)    :: siid
+      integer(i_kind), allocatable, dimension(:)    :: sclf
+      integer(i_kind), allocatable, dimension(:)    :: ptid
+      integer(i_kind), allocatable, dimension(:)    :: recn
+      integer(i_kind), allocatable, dimension(:)    :: asce
+      integer(i_kind), allocatable, dimension(:)    :: ogce
+      real(r_kind), allocatable, dimension(:)       :: time
+      integer(i_64),allocatable, dimension(:)     :: epochtime
+      real(r_kind), allocatable, dimension(:)     :: lat
+      real(r_kind), allocatable, dimension(:)     :: lon
+      real(r_kind), allocatable, dimension(:)     :: rfict
+      real(r_kind), allocatable, dimension(:)     :: azim
+      real(r_kind), allocatable, dimension(:)     :: geoid
+      real(r_kind), allocatable, dimension(:)     :: msl_alt
+      real(r_kind), allocatable, dimension(:)     :: ref
+      real(r_kind), allocatable, dimension(:)     :: refoe_gsi
+      real(r_kind), allocatable, dimension(:)     :: bend_ang
+      real(r_kind), allocatable, dimension(:)     :: impact_para
+      real(r_kind), allocatable, dimension(:)     :: bndoe_gsi
+end type gnssro_type
+
+type(gnssro_type) :: gnssro_data
 
 logical :: verbose = .false.
 
@@ -51,30 +79,6 @@ integer(i_kind),parameter :: maxlevs=500
 integer(i_kind),parameter :: n1ahdr=13
 integer(i_kind)           :: maxobs
 real(r_kind) :: timeo
-type gnssro_type
-      integer(i_kind), allocatable, dimension(:)    :: said
-      integer(i_kind), allocatable, dimension(:)    :: siid
-      integer(i_kind), allocatable, dimension(:)    :: sclf
-      integer(i_kind), allocatable, dimension(:)    :: ptid
-      integer(i_kind), allocatable, dimension(:)    :: recn
-      integer(i_kind), allocatable, dimension(:)    :: asce
-      integer(i_kind), allocatable, dimension(:)    :: ogce
-      real(r_kind), allocatable, dimension(:)       :: time
-      integer(i_64),allocatable, dimension(:)     :: epochtime
-      real(r_kind), allocatable, dimension(:)     :: lat
-      real(r_kind), allocatable, dimension(:)     :: lon
-      real(r_kind), allocatable, dimension(:)     :: rfict
-      real(r_kind), allocatable, dimension(:)     :: azim
-      real(r_kind), allocatable, dimension(:)     :: geoid
-      real(r_kind), allocatable, dimension(:)     :: msl_alt
-      real(r_kind), allocatable, dimension(:)     :: ref
-      real(r_kind), allocatable, dimension(:)     :: refoe_gsi
-      real(r_kind), allocatable, dimension(:)     :: bend_ang
-      real(r_kind), allocatable, dimension(:)     :: impact_para
-      real(r_kind), allocatable, dimension(:)     :: bndoe_gsi
-end type gnssro_type
-
-type(gnssro_type) :: gnssro_data
 
 real(r_kind),dimension(n1ahdr)     :: bfr1ahdr
 real(r_kind),dimension(50,maxlevs) :: data1b
