@@ -1,6 +1,7 @@
 
 # Set include directories
 include_directories(${NetCDF_INCLUDE_DIRS} )
+add_subdirectory(src/cxx)
 
 # Define sources
 set(v2_SOURCES
@@ -23,7 +24,7 @@ set(obs2ioda_v2_SOURCES
     main.f90
 )
 list(TRANSFORM obs2ioda_v2_SOURCES PREPEND "src/")
-set(v2_PUBLIC_LINK_LIBRARIES "${NetCDF_LIBRARIES}" "${NCEP_BUFR_LIB}")
+set(v2_PUBLIC_LINK_LIBRARIES "${NetCDF_LIBRARIES}" "${NCEP_BUFR_LIB}" obs2ioda_cxx)
 add_library(v2 SHARED ${v2_SOURCES})
 obs2ioda_fortran_library(v2 "${v2_PUBLIC_LINK_LIBRARIES}")
 set(obs2ioda_v2_PUBLIC_LINK_LIBRARIES v2 )
