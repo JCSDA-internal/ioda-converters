@@ -61,7 +61,6 @@ missing_vals = {'string': string_missing_value,
 class AOD(object):
     def __init__(self, in_dict):
         self.filenames = in_dict['input']
-        self.mask_missing = in_dict['mask_missing']
         self.error_method = in_dict['error_method']
         self.thin = in_dict['thin']
         self.provider = in_dict['provider']
@@ -70,8 +69,6 @@ class AOD(object):
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         self.setDicts()
-        print(self.varDict)
-        print(self.varAttrs)
         self.read()
 
         DimDict['Location'] = len(self.outdata[('latitude', metaDataName)])
@@ -106,97 +103,124 @@ class AOD(object):
     def _read_nasa_db(self):
         print(f'Testing')
 
-    def _read_noaa(self):
-        min_time = -int_missing_value
-        max_time = int_missing_value
-        # loop through input filenamess
-        for f in self.filenames:
-            ncd = nc.Dataset(f, 'r')
-            gatts = {attr: getattr(ncd, attr) for attr in ncd.ncattrs()}
+    def get_platform_sensor_names(self):
+        if self.provider == 'noaa':
+            satellite = self.glb_attrs["satellite_name"]
+            sensor = self.glb_attrs["instrument_name"]
+        elif self.provider == 'nasa':
+            satellite = self.glb_attrs["platform"]
+            sensor = self.glb_attrs["instrument"]
 
-            # Special time consideration. Get min/max of all times being converted for output attribute data.
-            this_starttime = datetime.strptime(gatts["time_coverage_start"], '%Y-%m-%dT%H:%M:%SZ')
-            this_starttime = this_starttime.replace(tzinfo=timezone.utc)
-            s_time = round((this_starttime - epoch).total_seconds())
-            this_endtime = datetime.strptime(gatts["time_coverage_end"], '%Y-%m-%dT%H:%M:%SZ')
-            this_endtime = this_endtime.replace(tzinfo=timezone.utc)
-            e_time = round((this_endtime - epoch).total_seconds())
-            min_time = min(s_time, min_time)
-            max_time = max(e_time, max_time)
+        if 'NPP' in satellite:
+            AttrData["platform"] = "suomi_npp"
+            AttrData["sensor"] = "v.viirs-m_npp"
+        elif satellite == 'NOAA-20':
+            AttrData["platform"] = "noaa_20"
+            AttrData["sensor"] = "v.viirs-m_j1"
+            
+    def get_s_e_time(self):
+        if self.provider == 'noaa':
+            timeformat = '%Y-%m-%dT%H:%M:%SZ'
+        elif self.provider == 'nasa':
+            timeformat = '%Y-%m-%dT%H:%M:%S.000Z'
 
-            self.satellite = gatts["satellite_name"]
-            self.sensor = gatts["instrument_name"]
-            AttrData["platform"] = self.satellite
-            AttrData["sensor"] = self.sensor
+        # Special time consideration. Get min/max of all times being converted for output attribute data.
+        this_starttime = datetime.strptime(self.glb_attrs["time_coverage_start"], timeformat)
+        this_starttime = this_starttime.replace(tzinfo=timezone.utc)
+        self.s_time = round((this_starttime - epoch).total_seconds())
 
-            if AttrData['sensor'] == 'VIIRS':
-                AttrData['sensor'] = "v.viirs-m_npp"
-            if AttrData['platform'] == 'NPP':
-                AttrData['platform'] = "suomi_npp"
+        this_endtime = datetime.strptime(self.glb_attrs["time_coverage_end"], timeformat)
+        this_endtime = this_endtime.replace(tzinfo=timezone.utc)
+        self.e_time = round((this_endtime - epoch).total_seconds())
 
-            self.lons = ncd.variables['Longitude'][:].ravel()
-            self.lats = ncd.variables['Latitude'][:].ravel()
-            self.vals = ncd.variables['AOD550'][:].ravel()
-            self.errs = ncd.variables['Residual'][:].ravel()
+    def get_noaa_data(self):
+        # For NOAA EPS
+        self.lons = self.ncd.variables['Longitude'][:].ravel()
+        self.lats = self.ncd.variables['Latitude'][:].ravel()
+        self.vals = self.ncd.variables['AOD550'][:].ravel()
+        self.errs = self.ncd.variables['Residual'][:].ravel()
+        self.qcfs = self.ncd.variables['QCAll'][:].ravel().astype('int32')
 
+        # Define uncertainty (expected error) based on surface type
+        if self.error_method == "ee":
             # QCPath is the flag for retrieval path. The valid range is 0-127 in the
             # ATBD: https://www.star.nesdis.noaa.gov/jpss/documents/ATBD/ATBD_EPS_Aerosol_AOD_v3.4.pdf.
             # QCPath's valid range in the input file is not correct, so we define the valid range here.
-            qcpath = ncd.variables['QCPath'][:].data.ravel()
+            qcpath = self.ncd.variables['QCPath'][:].data.ravel()
             qcpath = np.ma.masked_array(qcpath, np.logical_or(qcpath < 0, qcpath > 127))
 
-            self.qcall = ncd.variables['QCAll'][:].ravel().astype('int32')
-            self.obs_time = np.full(np.shape(self.lons), round(0.5*(s_time+e_time)), dtype=np.int64)
+            self.errs = 0.111431 + 0.128699 * self.vals    # over land (dark)
+            self.errs[qcpath % 2 == 1] = 0.00784394 + 0.219923 * self.vals[qcpath % 2 == 1]  # over ocean
+            self.errs[qcpath % 4 == 2] = 0.0550472 + 0.299558 * self.vals[qcpath % 4 == 2]   # over bright land
+       
+    def get_nasa_dt_data(self):
+        # For NASA Dark Target
+        self.lons = self.ncd.groups['geolocation_data'].variables['longitude'][:].ravel()
+        self.lats = self.ncd.groups['geolocation_data'].variables['latitude'][:].ravel()
+        self.vals = self.ncd.groups['geophysical_data'].variables['Optical_Depth_Land_And_Ocean'][:].ravel()
+        # Based on Dark Target ATBD (March 2024), assign expected error (EE)
+        # https://darktarget.gsfc.nasa.gov/sites/default/files/users/user9/ATBD_DarkTarget_April3.pdf
+        land_mask = self.ncd.groups['geophysical_data'].variables['Land_Sea_Flag'] == 1 
+        self.errs = np.where(over_land, np.add(0.05, np.multiply(0.2, self.vals)),
+                             np.add(0.05, np.multiply(0.15, self.vals)))
 
-            if self.mask_missing:
-                mask = np.logical_not(self.vals.mask)
-                self.vals = self.vals[mask]
-                self.lons = self.lons[mask]
-                self.lats = self.lats[mask]
-                self.errs = self.errs[mask]
-                qcpath = qcpath[mask]
-                self.qcall = self.qcall[mask]
-                self.obs_time = self.obs_time[mask]
+    def get_nasa_db_data(self):
+        # For NASA Deep Blue
+        self.lons = self.ncd.variables['Longitude'][:].ravel()
+        self.lats = self.ncd.variables['Latitude'][:].ravel()
+        self.vals = self.ncd.variables['Aerosol_Optical_Thickness_550_Land_Ocean_Best_Estimate'][:].ravel()
+        
+        # Keep valid data points only
+        valid_pts = ~self.vals.mask
+        self.lons = self.lons[valid_pts]
+        self.lats = self.lats[valid_pts]
+        self.vals = self.vals[valid_pts]
 
-            ncd.close()
+        npts_land = self.ncd.variables['Number_Of_Pixels_Used_Land'][:].ravel()
+        npts_ocean = self.ncd.variables['Number_Of_Pixels_Used_Ocean'][:].ravel()
+        land_pts = np.logical_and(npts_land[valid_pts] > 0, npts_ocean[valid_pts] == 0)
+        ocean_pts = np.logical_and(npts_ocean[valid_pts] > 0, npts_land[valid_pts] == 0)
+        mix_pts = np.logical_and(npts_land[valid_pts] > 0, npts_ocean[valid_pts] > 0)
+        mix_land_pts = np.logical_and(mix_pts, npts_land[valid_pts] > npts_ocean[valid_pts])
+        mix_ocean_pts = np.logical_and(mix_pts, npts_land[valid_pts] < npts_ocean[valid_pts])
+        mix_equal_pts = np.logical_and(mix_pts, npts_land[valid_pts] == npts_ocean[valid_pts])
 
-            # apply thinning mask
-            if self.thin > 0.0:
-                mask_thin = np.random.uniform(size=len(lons)) > self.thin
-                self.lons = self.lons[mask_thin]
-                self.lats = self.lats[mask_thin]
-                self.vals = self.vals[mask_thin]
-                self.errs = self.errs[mask_thin]
-                qcpath = qcpath[mask_thin]
-                self.qcall = self.qcall[mask_thin]
-                self.obs_time = self.obs_time[mask_thin]
+        # VIIRS Deep Blue Prognostic Expected Error (PEE)
+        # Lee et al. (2024): https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2023JD040082?af=R
+        # PEE should fit for DA purpose better according to
+        # Hsu et al. (2018): https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2018JD029688
+        eu_land = self.ncd.variables['Aerosol_Optical_Thickness_550_Expected_Uncertainty_Land'][:].ravel()[valid_pts]
+        eu_ocean = self.ncd.variables['Aerosol_Optical_Thickness_550_Expected_Uncertainty_Ocean'][:].ravel()[valid_pts]
+        self.errs = np.ones_like(eu_land)
+        qaf_land = self.ncd.variables['Aerosol_Optical_Thickness_QA_Flag_Land'][:].ravel()[valid_pts]
+        qaf_ocean = self.ncd.variables['Aerosol_Optical_Thickness_QA_Flag_Ocean'][:].ravel()[valid_pts]
+        self.qcfs = np.ones_like(qaf_land) 
 
-            # defined surface type and uncertainty
-            if self.error_method == "calval":
-                self.errs = 0.111431 + 0.128699 * self.vals    # over land (dark)
-                self.errs[qcpath % 2 == 1] = 0.00784394 + 0.219923 * self.vals[qcpath % 2 == 1]  # over ocean
-                self.errs[qcpath % 4 == 2] = 0.0550472 + 0.299558 * self.vals[qcpath % 4 == 2]   # over bright land
+        if np.count_nonzero(land_pts) > 0: 
+            self.errs[land_pts] = eu_land[land_pts]
+            self.qcfs[land_pts] = qaf_land[land_pts]
+        if np.count_nonzero(ocean_pts) > 0: 
+            self.errs[ocean_pts] = eu_ocean[ocean_pts]
+            self.qcfs[ocean_pts] = qaf_ocean[ocean_pts]
+        if np.count_nonzero(mix_land_pts) > 0:
+            self.errs[mix_land_pts] = eu_land[mix_land_pts]
+            self.qcfs[mix_land_pts] = qaf_land[mix_land_pts]
+        if np.count_nonzero(mix_ocean_pts) > 0:
+            self.errs[mix_ocean_pts] = eu_ocean[mix_ocean_pts]
+            self.qcfs[mix_ocean_pts] = qaf_ocean[mix_ocean_pts]
+        if np.count_nonzero(mix_equal_pts) > 0:
+            self.errs[mix_equal_pts] = 0.5 * eu_land[mix_equal_pts] + 0.5 * eu_ocean[mix_equal_pts]
+            self.qcfs[mix_equal_pts] = np.where( qaf_land[mix_equal_pts] < qaf_ocean[mix_equal_pts], 
+                                                 qaf_land[mix_equal_pts], qaf_ocean[mix_equal_pts] )
 
-            self._append_outdata()
+        AttrData['errorMethod'] = 'Prognostic Expected Error (PEE)'
+        if self.error_method == "ee":
+            # VIIRS DeepBlue Expected Error (https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2018JD029688)
+            self.errs = np.add(0.05, np.multiply(0.2, self.vals[valid_pts]))
+            AttrData['errorMethod'] = 'Expected Error (EE)'
+            
 
-        AttrData['datetimeRange'] = np.array([datetime.fromtimestamp(min_time).strftime("%Y-%m-%dT%H:%M:%SZ"),
-                                              datetime.fromtimestamp(max_time).strftime("%Y-%m-%dT%H:%M:%SZ")], dtype=object)
-        print(f"Processed data for datetimeRange: {AttrData['datetimeRange']}")
 
-
-    def _append_outdata(self):
-        #  Write out data
-        self.outdata[('latitude', metaDataName)] = np.append(self.outdata[('latitude', metaDataName)], np.array(self.lats, dtype=np.float32))
-        self.outdata[('longitude', metaDataName)] = np.append(self.outdata[('longitude', metaDataName)], np.array(self.lons, dtype=np.float32))
-        self.outdata[('dateTime', metaDataName)] = np.append(self.outdata[('dateTime', metaDataName)], np.array(self.obs_time, dtype=np.int64))
-
-        for iodavar in obsvars:
-            self.outdata[self.varDict[iodavar]['valKey']] = np.append(
-                self.outdata[self.varDict[iodavar]['valKey']], np.array(self.vals, dtype=np.float32))
-            self.outdata[self.varDict[iodavar]['errKey']] = np.append(
-                self.outdata[self.varDict[iodavar]['errKey']], np.array(self.errs, dtype=np.float32))
-            self.outdata[self.varDict[iodavar]['qcKey']] = np.append(
-                self.outdata[self.varDict[iodavar]['qcKey']], np.array(self.qcall, dtype=np.int32))
 
     def read(self):
         # Make empty lists for the output vars
@@ -208,13 +232,68 @@ class AOD(object):
             self.outdata[self.varDict[iodavar]['errKey']] = np.array([], dtype=np.float32)
             self.outdata[self.varDict[iodavar]['qcKey']] = np.array([], dtype=np.int32)
 
+        # Define get_data function based on provider and retrieval method (NASA only)
         if self.provider == 'nasa':
             if self.retrieval_method == 'DarkTarget':
-                self._read_nasa_dt()
-            if self.retrieval_method == 'DeepBlue':
-                self._read_nasa_db()
+                get_viirs_data = self.get_nasa_dt_data
+            elif self.retrieval_method == 'DeepBlue':
+                get_viirs_data = self.get_nasa_db_data
+            AttrData['retrievalMethod'] = self.retrieval_method
         elif self.provider == 'noaa':
-            self._read_noaa()
+            get_viirs_data = self.get_noaa_data
+            AttrData['retrievalMethod'] = 'EPS'
+
+        min_time = -int_missing_value
+        max_time = int_missing_value
+
+        # loop through input filenamess
+        for n, f in enumerate(self.filenames):
+            self.ncd = nc.Dataset(f, 'r')
+            self.glb_attrs = {attr: getattr(self.ncd, attr) for attr in self.ncd.ncattrs()}
+
+            # Get the coverage start and end time
+            self.get_s_e_time()
+            min_time = min(self.s_time, min_time)
+            max_time = max(self.e_time, max_time)
+            
+            # Get the platform and sensor name
+            self.get_platform_sensor_names()
+
+            # Get VIIRS data 
+            get_viirs_data()
+
+            # assign the observation time based on time coverage
+            self.obs_time = np.full(np.shape(self.lons), round(0.5*(self.s_time + self.e_time)), dtype=np.int64)
+
+            # apply thinning mask
+            if self.thin > 0.0:
+                mask_thin = np.random.uniform(size=len(self.lons)) > self.thin
+                self.lons = self.lons[mask_thin]
+                self.lats = self.lats[mask_thin]
+                self.vals = self.vals[mask_thin]
+                self.errs = self.errs[mask_thin]
+                self.qcfs = self.qcfs[mask_thin]
+                self.obs_time = self.obs_time[mask_thin]
+
+            #  Write out data
+            self.outdata[('latitude', metaDataName)] = np.append(self.outdata[('latitude', metaDataName)], np.array(self.lats, dtype=np.float32))
+            self.outdata[('longitude', metaDataName)] = np.append(self.outdata[('longitude', metaDataName)], np.array(self.lons, dtype=np.float32))
+            self.outdata[('dateTime', metaDataName)] = np.append(self.outdata[('dateTime', metaDataName)], np.array(self.obs_time, dtype=np.int64))
+
+            for iodavar in obsvars:
+                self.outdata[self.varDict[iodavar]['valKey']] = np.append(
+                    self.outdata[self.varDict[iodavar]['valKey']], np.array(self.vals, dtype=np.float32))
+                self.outdata[self.varDict[iodavar]['errKey']] = np.append(
+                    self.outdata[self.varDict[iodavar]['errKey']], np.array(self.errs, dtype=np.float32))
+                self.outdata[self.varDict[iodavar]['qcKey']] = np.append(
+                    self.outdata[self.varDict[iodavar]['qcKey']], np.array(self.qcfs, dtype=np.int32))
+
+            self.ncd.close()
+
+        AttrData['datetimeRange'] = np.array([datetime.fromtimestamp(min_time).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                                              datetime.fromtimestamp(max_time).strftime("%Y-%m-%dT%H:%M:%SZ")], dtype=object)
+        print(f"Processed data for datetimeRange: {AttrData['datetimeRange']}")
+
 
 
 
@@ -240,12 +319,8 @@ def main():
         type=str, required=True)
     parser.add_argument(
         '--error_method',
-        help="calculation error method: calval/default, default=none",
-        type=str, required=True)
-    parser.add_argument(
-        '--mask_missing',
-        help="maskout missing values, default=False",
-        action='store_true', default=False)
+        help="calculation error method: ee/default, default=none",
+        type=str, default=None)
     parser.add_argument(
         '--provider',
         help="data source, noaa/nasa",
@@ -264,7 +339,6 @@ def main():
 
     args_in_dict = {'input': args.input,
             'error_method': args.error_method,
-            'mask_missing': args.mask_missing,
             'provider': args.provider,
             'retrieval_method': args.retrieval_method,
             'thin': args.thin,
