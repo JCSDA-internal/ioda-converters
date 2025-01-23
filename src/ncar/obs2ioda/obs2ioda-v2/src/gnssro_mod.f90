@@ -19,7 +19,7 @@ real(r_kind), parameter :: r_missing = huge(1_i_kind)  ! perhaps this is a typo 
 integer(i_kind), parameter :: i_missing = huge(1_i_kind)
 integer(i_64), parameter :: i64_missing = huge(1_i_64)
 
-integer(i_kind), parameter :: n1ahdr = 13, maxlevs = 500, datelength = 10
+integer(i_kind), parameter :: n1ahdr = 13, maxlevs = 500, datelength = 10, mxib = 31
 character (*), parameter :: dateformat = '(i10.10)' ! the number of positions corresponds to datelength above 
 character (*), parameter :: hdr1a = 'YEAR MNTH DAYS HOUR MINU PCCF ELRC SAID SIID PTID GEODU SCLF OGCE'
 character (*), parameter :: nemo = 'QFRO'
@@ -59,254 +59,54 @@ subroutine read_write_gnssro(infile, outdir)
 !integer   :: varid_geo_temp,varid_geo_pres,varid_geo_shum,varid_geo_geop, varid_geo_geop_sfc  ! seems to never be used
 character(len=*), intent(in) :: infile
 character(len=*), intent(in) :: outdir
-character,dimension(8)    :: subset
 character(len=10)         :: anatime
-integer(i_kind)           :: i,k,m,ireadmg,ireadsb,said,siid,ptid,sclf,asce,ogce
-integer(i_kind)           :: lnbufr    = 10
 !integer(i_kind)           :: nread  ! seems to never be used
-integer(i_kind)           :: ndata,nvars,nrec, ndata0
-integer(i_kind)           :: idate5(6), idate,iadate5(6)
-integer(i_kind)           :: mincy,minobs
-integer(i_64)             :: epochtime
-
-logical                   :: good
+integer(i_kind) :: ndata, mincy, maxobs
 !logical                   :: outside  ! seems to never be used
-integer                   :: refflag, bendflag
-integer(i_kind),parameter :: mxib=31
-integer(i_kind)           :: ibit(mxib),nib
-real(r_kind) :: timeo
-
-real(r_kind),dimension(n1ahdr)     :: bfr1ahdr
-real(r_kind),dimension(50,maxlevs) :: data1b
-real(r_kind),dimension(50,maxlevs) :: data2a
-real(r_kind),dimension(maxlevs)    :: nreps_this_ROSEQ2
-integer(i_kind)                    :: iret,levs,levsr,nreps_ROSEQ1,nreps_ROSEQ2_int
-real(r_kind) :: pcc,qfro(1),freq_chk,freq,azim
 !real(r_kind) :: usage,dlat,dlat_earth,dlon,dlon_earth  ! seems to never be used
-real(r_kind) :: height,rlat,rlon,ref,bend,impact,roc,geoid,  bend_error,ref_error,bend_pccf,ref_pccf
-real(r_kind) :: obsErr
 
-logical,        parameter :: GlobalModel = .true. ! temporary
+call get_buffer_information(trim(adjustl(infile)), anatime, mincy, maxobs)
 
-nrec =0
-ndata=0
-nvars=2
+call allocate_gnssro_data_array(maxobs)
 
-open(lnbufr,file=trim(adjustl(infile)),form='unformatted')
-call openbf(lnbufr,'IN',lnbufr)
-call datelen(10)
-call readmg(lnbufr,subset,idate,iret)
-if (iret/=0) then
-   write(6,*)'READ_GNSSRO: can not open gnssro file!'
-   stop
-end if
+call read_gnssro_data(trim(adjustl(infile)), mincy, ndata)
 
-write(unit=*,fmt='(a,i10)') trim(infile)//' file date is: ', idate
-iadate5(1) = idate/1000000
-iadate5(2) = (idate-iadate5(1)*1000000)/10000
-iadate5(3) = (idate-iadate5(1)*1000000-iadate5(2)*10000)/100
-iadate5(4) = idate-iadate5(1)*1000000-iadate5(2)*10000-iadate5(3)*100
-iadate5(5) = 0
-call w3fs21(iadate5,mincy)
-write(anatime,'(i10)') idate
 
-call allocate_gnssro_data_array(lnbufr)
-
-!rewind lnbufr
-call closbf(lnbufr)
-open(lnbufr,file=trim(adjustl(infile)),form='unformatted')
-call openbf(lnbufr,'IN',lnbufr)
-call datelen(10)
-call readmg(lnbufr,subset,idate,iret)
-
-do while(ireadmg(lnbufr,subset,idate)==0)
-   read_loop:  do while(ireadsb(lnbufr)==0)
-!    Read/decode data in subset (profile)
-     call ufbint(lnbufr,bfr1ahdr,n1ahdr,1,iret,hdr1a)
-     call ufbint(lnbufr,qfro,1,1,iret,nemo)
-!    observation time in minutes
-     idate5(1) = bfr1ahdr(1) ! year
-     idate5(2) = bfr1ahdr(2) ! month
-     idate5(3) = bfr1ahdr(3) ! day
-     idate5(4) = bfr1ahdr(4) ! hour
-     idate5(5) = bfr1ahdr(5) ! minute
-     idate5(6) = 0 ! seconds
-     pcc  = bfr1ahdr(6)        ! profile per cent confidence
-     roc  = bfr1ahdr(7)        ! Earth local radius of curvature
-     said = bfr1ahdr(8)        ! Satellite identifier
-     siid = bfr1ahdr(9)        ! Satellite instrument
-     ptid = bfr1ahdr(10)       ! Platform transmitter ID number
-     geoid= bfr1ahdr(11)       ! Geoid undulation
-     sclf = bfr1ahdr(12)       ! Satellite classification
-     ogce = bfr1ahdr(13)       ! Identification of originating/generating centre
-
-     call w3fs21(idate5,minobs)
-     timeo=real(minobs-mincy,r_kind)/60.0
-     call epochtimecalculator(idate5, epochtime)  ! calculate epochtime since January 1 1970
-
-     if( roc>6450000.0_r_kind .or. roc<6250000.0_r_kind  .or.       &
-         geoid>200_r_kind .or. geoid<-200._r_kind ) then
-         if (verbose) write(6,*)'READ_GNSSRO: profile fails georeality check, skip this report'
-         cycle read_loop
-     endif
-
-!    profile check:  (1) CDAAC processing - cosmic-1, cosmic-2, sacc, cnofs, kompsat5
-     if ( ((said >= 740).and.(said <=745)).or. &
-          ((said >= 750).and.(said <= 755))    &
-            .or.(said == 820).or.(said == 786).or.(said == 825) &
-            .or. ogce == 60) then  !CDAAC processing
-       if(pcc == 0.0) then
-          if (verbose) write(6,*)'READ_GNSSRO: bad profile 0.0% confidence said=', &
-            said,'ptid=',ptid, ' SKIP this report'
-          cycle read_loop
-        endif
-     endif
-
-     bendflag = 0
-     refflag  = 0
-!    profile check:  (2) GRAS SAF processing - metopa-c, oceansat2, megha-tropiques, sacd 
-     if ( (said >= 3 .and.said <= 5).or.(said == 421).or.(said == 440).or. (said == 821) ) then 
-          call upftbv(lnbufr,nemo,qfro,mxib,ibit,nib)
-          if(nib > 0) then
-            do i = 1, nib
-               if(ibit(i)== 5) then  ! bending angle
-                  bendflag = 1
-                  if (verbose) write(6,*)'READ_GNSSRO: bad profile said=',said,'ptid=', &
-                     ptid, ' SKIP this report'
-                  cycle read_loop
-               endif
-               if(ibit(i)== 6) then  ! refractivity
-                  refflag = 1
-                  exit
-               endif
-           enddo
-         endif 
-     endif
-
-     asce = 0 
-     call upftbv(lnbufr,nemo,qfro,mxib,ibit,nib)
-     if ( nib > 0) then
-        do i = 1, nib
-          if(ibit(i)== 3) then
-             asce = 1
-             exit
-          endif
-        enddo
-     end if
-
-     call ufbint(lnbufr,nreps_this_ROSEQ2,1,maxlevs,nreps_ROSEQ1,'{ROSEQ2}')
-     call ufbseq(lnbufr,data1b,50,maxlevs,levs,'ROSEQ1') 
-     call ufbseq(lnbufr,data2a,50,maxlevs,levsr,'ROSEQ3') ! refractivity
-
-     nrec=nrec+1
-     ndata0 = ndata
-
-     do k = 1, levs
-        rlat     = data1b(1,k)  ! earth relative latitude (degrees)
-        rlon     = data1b(2,k)  ! earth relative longitude (degrees)
-        azim     = data1b(3,k)
-        height   = data2a(1,k)
-        ref      = data2a(2,k)
-        ref_error= data2a(4,k)
-        ref_pccf = data2a(6,k)
-
-!       Loop over number of replications of ROSEQ2 nested inside this particular replication of ROSEQ1
-        nreps_ROSEQ2_int = nreps_this_ROSEQ2(k)
-        do i = 1,nreps_ROSEQ2_int
-           m = (6*i)-2
-           freq_chk=data1b(m,k)      ! frequency (hertz)
-           if(nint(freq_chk).ne.0) cycle ! do not want non-zero freq., go on to next replication of ROSEQ2
-           freq       = data1b(m,k)
-           impact     = data1b(m+1,k)      ! impact parameter (m)
-           bend       = data1b(m+2,k)        ! bending angle (rad)
-           bend_error = data1b(m+4,k)  ! RMSE in bending angle (rad)
-        enddo
-
-        bend_pccf=data1b((6*nreps_ROSEQ2_int)+4,k)  ! percent confidence for this ROSEQ1 replication
-        good=.true. 
-
-        if (  height<0._r_kind   .or. height>100000._r_kind .or.           &
-           abs(rlat)>90._r_kind  .or. abs(rlon)>360._r_kind ) then
-           good=.false.
-           if (verbose) write(6,*)'READ_GNSSRO: obs fails georeality check, said=',said,'ptid=',ptid
-        endif
-        if ( bend>=1.e+9_r_kind .or. bend<=0._r_kind .or. impact>=1.e+9_r_kind .or. impact<roc .or. bendflag == 1 ) then
-           good=.false.
-           if (verbose) write(6,*)'READ_GNSSRO: obs bend/impact is invalid, said=',said,'ptid=',ptid
-        endif
-
-        if ( ref>=1.e+9_r_kind .or. ref<=0._r_kind .or. refflag == 1 ) then
-             ref = r_missing
-        endif
-    
-        if ( abs(azim)>360._r_kind  .or. azim<0._r_kind ) then
-             azim = r_missing
-        endif
-
-    if(good) then
-       ndata  = ndata +1 
-       gnssro_data%recn(ndata)     = nrec
-       gnssro_data%lat(ndata)      = rlat
-       gnssro_data%lon(ndata)      = rlon
-       gnssro_data%time(ndata)     = timeo
-       gnssro_data%epochtime(ndata)= epochtime
-       gnssro_data%said(ndata)     = said
-       gnssro_data%siid(ndata)     = siid
-       gnssro_data%sclf(ndata)     = sclf
-       gnssro_data%asce(ndata)     = asce
-       gnssro_data%ptid(ndata)     = ptid
-       gnssro_data%ogce(ndata)     = ogce
-       gnssro_data%ref(ndata)      = ref
-       gnssro_data%msl_alt(ndata)  = height
-       gnssro_data%bend_ang(ndata)     = bend
-       gnssro_data%bndoe_gsi(ndata)    = bend_error
-       gnssro_data%impact_para(ndata)  = impact
-       gnssro_data%rfict(ndata) = roc
-       gnssro_data%geoid(ndata) = geoid
-       gnssro_data%azim(ndata)  = azim
-       CALL bendingangle_err_gsi(rlat,impact-roc, obsErr, ogce, said)
-       gnssro_data%bndoe_gsi(ndata) = obsErr
-       if ( ref > r_missing)  then
-          CALL refractivity_err_gsi(rlat,height, GlobalModel, obsErr)
-          gnssro_data%refoe_gsi(ndata) = obsErr
-       else
-          gnssro_data%refoe_gsi(ndata) = r_missing
-       end if
-     end if
-
-    end do ! end of k loop
-
-    if (ndata == ndata0) nrec = nrec -1
-
-  enddo read_loop
-end do
-
-call closbf(lnbufr)
-if (nrec==0) then
-    write(6,*) "Error. No valid observations found. Cannot create NetCDF ouput."
-    stop 2
-endif
 
 call write_gnssro_data(anatime, ndata, outdir)
 call deallocate_gnssro_data_array()
 
 end subroutine read_write_gnssro
 
-subroutine allocate_gnssro_data_array(lnbufr)
-   integer(i_kind), intent(in) :: lnbufr  ! fortran logical file unit
-   logical :: isconnected
-   integer(i_kind) :: ireadmg, ireadsb
+subroutine get_buffer_information(infile, anatime, mincy, maxobs)
+   character(len = *), intent(in) :: infile
+   character(len = *), intent(out) :: anatime
+   integer(i_kind), intent(out) :: mincy, maxobs
+   integer(i_kind), parameter :: lnbufr = 10  ! the bufr library expects a unit number in [0-99] -> can't use newunit
    character(len = 8) :: subset
-   integer(i_kind) :: idate, iret, levs, maxobs
+   integer(i_kind) :: idate, iret, levs
+   integer, dimension(6) :: iadate5
+   integer(i_kind) :: ireadmg, ireadsb
    real(r_kind), dimension(n1ahdr) :: bfr1ahdr
    real(r_kind), dimension(50, maxlevs) :: data1b
-   ! Make sure the logical unit lnbufr is connected to a file. This does not guarantee that the file unit
-   ! is connected to the bufr library, if such a test exists we should add it later on
-   inquire(unit = lnbufr, opened = isconnected)
-   if (.not. isconnected) then
-      write(6,*) 'Logical unit lnbufr is not connected to a file'
+   ! open file and connect to buffer library
+   open(unit = lnbufr, file = infile, form = 'unformatted')
+   call openbf(lnbufr, 'IN', lnbufr)
+   call datelen(datelength)
+   ! obtain analysis time
+   call readmg(lnbufr, subset, idate, iret)
+   if (iret /= 0) then
+      write(6, *) 'READ_GNSSRO: can not open gnssro file!'
       stop
-   endif
+   end if
+   write(*, fmt = '(a,i10)') infile // ' file date is: ', idate
+   iadate5(1) = idate / 1000000
+   iadate5(2) = (idate - iadate5(1) * 1000000) / 10000
+   iadate5(3) = (idate - iadate5(1) * 1000000 - iadate5(2) * 10000) / 100
+   iadate5(4) = idate - iadate5(1) * 1000000 - iadate5(2) * 10000 - iadate5(3) * 100
+   iadate5(5) = 0
+   call w3fs21(iadate5, mincy)
+   write(anatime, dateformat) idate
    ! estimate total number of observations
    maxobs = 0
    do while (ireadmg(lnbufr, subset, idate) == 0)
@@ -316,7 +116,12 @@ subroutine allocate_gnssro_data_array(lnbufr)
          maxobs = maxobs + levs
       enddo
    end do
-   ! allocate arrays
+   call closbf(lnbufr)  ! this also closes the frotran file unit
+end subroutine
+
+
+subroutine allocate_gnssro_data_array(maxobs)
+   integer, intent(in) :: maxobs
    allocate(gnssro_data%said(maxobs))
    allocate(gnssro_data%siid(maxobs))
    allocate(gnssro_data%sclf(maxobs))
@@ -337,6 +142,195 @@ subroutine allocate_gnssro_data_array(lnbufr)
    allocate(gnssro_data%bend_ang(maxobs))
    allocate(gnssro_data%impact_para(maxobs))
    allocate(gnssro_data%bndoe_gsi(maxobs))
+end subroutine
+
+subroutine read_gnssro_data(infile, mincy, ndata)
+   character(len = *), intent(in) :: infile
+   integer(i_kind), intent(in) :: mincy
+   integer(i_kind), intent(out) :: ndata
+   integer(i_kind), parameter :: lnbufr = 10
+   character(len = 8) :: subset
+   integer(i_kind) :: idate, iret
+   integer(i_kind) :: ireadmg, ireadsb
+   real(r_kind), dimension(n1ahdr) :: bfr1ahdr
+   real(r_kind), dimension(1) :: qfro
+   integer(i_kind), dimension(6) :: idate5
+   real(r_kind) :: pcc, roc, geoid, timeo
+   integer(i_kind) :: said, siid, ptid, sclf, ogce, minobs, nib, asce
+   integer(i_64) :: epochtime
+   integer :: refflag, bendflag
+   integer(i_kind), dimension(mxib) :: ibit
+   integer(i_kind) :: i, k, m
+   real(r_kind), dimension(maxlevs) :: nreps_this_ROSEQ2
+   integer(i_kind) :: nreps_ROSEQ1, levs, levsr, nrec, ndata0, nreps_ROSEQ2_int
+   real(r_kind), dimension(50, maxlevs) :: data1b, data2a
+   real(r_kind)  :: rlat, rlon, azim, height, ref, ref_error, ref_pccf
+   real(r_kind) :: freq_chk, freq, impact, bend, bend_error, bend_pccf, obsErr
+   logical :: good
+   logical, parameter :: GlobalModel = .true.  ! temporary
+
+   ndata = 0  ! initialize
+   nrec = 0
+
+   ! open file and attach buffer library to it
+   open(unit = lnbufr, file = infile, form = 'unformatted')
+   call openbf(lnbufr, 'IN', lnbufr)
+   call datelen(datelength)
+   call readmg(lnbufr, subset, idate, iret)
+   ! read data
+   do while(ireadmg(lnbufr, subset, idate) == 0)
+      read_loop:  do while(ireadsb(lnbufr) == 0)
+         ! Read / decode data in subset (profile)
+         call ufbint(lnbufr, bfr1ahdr, n1ahdr, 1, iret, hdr1a)
+         call ufbint(lnbufr, qfro, 1, 1, iret, nemo)
+         ! observation time in minutes
+         idate5(1) = bfr1ahdr(1)  ! year
+         idate5(2) = bfr1ahdr(2)  ! month
+         idate5(3) = bfr1ahdr(3)  ! day
+         idate5(4) = bfr1ahdr(4)  ! hour
+         idate5(5) = bfr1ahdr(5)  ! minute
+         idate5(6) = 0  ! seconds
+         pcc  = bfr1ahdr(6)  ! profile per cent confidence
+         roc  = bfr1ahdr(7)  ! Earth local radius of curvature
+         said = bfr1ahdr(8)  ! Satellite identifier
+         siid = bfr1ahdr(9)  ! Satellite instrument
+         ptid = bfr1ahdr(10)  ! Platform transmitter ID number
+         geoid= bfr1ahdr(11)  ! Geoid undulation
+         sclf = bfr1ahdr(12)  ! Satellite classification
+         ogce = bfr1ahdr(13)  ! Identification of originating/generating centre
+         call w3fs21(idate5, minobs)
+         timeo = real(minobs - mincy, r_kind) / 60.0
+         call epochtimecalculator(idate5, epochtime)  ! calculate epochtime since January 1 1970
+         ! check if values are in valid range
+         ! earth radius of curvature
+         if (roc > 6450000.0_r_kind .or. roc < 6250000.0_r_kind .or. geoid > 200_r_kind .or. geoid < -200._r_kind) then
+            if (verbose) write(6, *) 'READ_GNSSRO: profile fails georeality check, skip this report'
+            cycle read_loop
+         endif
+         ! profile check: (1) CDAAC processing - cosmic-1, cosmic-2, sacc, cnofs, kompsat5
+         if (((said >= 740) .and. (said <= 745)) .or. ((said >= 750) .and. (said <= 755)) &
+            .or. (said == 820) .or. (said == 786) .or. (said == 825) .or. ogce == 60) then  !CDAAC processing
+            if(pcc == 0.0) then
+               if (verbose) write(6, *) 'READ_GNSSRO: bad profile 0.0% confidence said=', said,'ptid=',ptid, ' SKIP this report'
+               cycle read_loop
+            endif
+         endif
+         ! profile check: (2) GRAS SAF processing - metopa-c, oceansat2, megha-tropiques, sacd 
+         bendflag = 0
+         refflag  = 0
+         if ((said >= 3 .and. said <= 5) .or. (said == 421) .or. (said == 440) .or. (said == 821)) then 
+            call upftbv(lnbufr, nemo, qfro, mxib, ibit, nib)
+            if(nib > 0) then
+               do i = 1, nib
+                  if(ibit(i) == 5) then  ! bending angle
+                     bendflag = 1
+                     if (verbose) write(6, *) 'READ_GNSSRO: bad profile said=', said, 'ptid=', ptid, ' SKIP this report'
+                     cycle read_loop
+                  endif
+                  if(ibit(i)== 6) then  ! refractivity
+                     refflag = 1
+                     exit
+                  endif
+               enddo
+            endif 
+         endif
+         ! check associated with ascending flag
+         asce = 0
+         call upftbv(lnbufr, nemo, qfro, mxib, ibit, nib)
+         if (nib > 0) then
+            do i = 1, nib
+               if(ibit(i) == 3) then
+                  asce = 1
+                  exit
+               endif
+            enddo
+         end if
+         ! read further data
+         call ufbint(lnbufr, nreps_this_ROSEQ2, 1, maxlevs, nreps_ROSEQ1, '{ROSEQ2}')
+         call ufbseq(lnbufr, data1b, 50, maxlevs,levs, 'ROSEQ1') 
+         call ufbseq(lnbufr, data2a, 50, maxlevs, levsr, 'ROSEQ3') ! refractivity
+         nrec = nrec + 1
+         ndata0 = ndata
+         do k = 1, levs
+            rlat = data1b(1, k)  ! earth relative latitude (degrees)
+            rlon = data1b(2, k)  ! earth relative longitude (degrees)
+            azim = data1b(3, k)
+            height = data2a(1, k)
+            ref = data2a(2, k)
+            ref_error = data2a(4, k)
+            ref_pccf = data2a(6, k)
+            ! Loop over number of replications of ROSEQ2 nested inside this particular replication of ROSEQ1
+            nreps_ROSEQ2_int = nreps_this_ROSEQ2(k)
+            do i = 1, nreps_ROSEQ2_int
+               m = (6 * i) - 2
+               freq_chk = data1b(m, k) ! frequency (hertz)
+               if(nint(freq_chk) .ne. 0) cycle ! do not want non-zero freq., go on to next replication of ROSEQ2
+               freq = data1b(m, k)
+               impact = data1b(m + 1, k)  ! impact parameter (m)
+               bend = data1b(m + 2, k)  ! bending angle (rad)
+               bend_error = data1b(m + 4, k)  ! RMSE in bending angle (rad)
+            enddo
+            bend_pccf = data1b((6 * nreps_ROSEQ2_int) + 4, k)  ! percent confidence for this ROSEQ1 replication
+            ! check if newly read quantities are in valid range
+            ! height and latitude / longitude
+            good = .true. 
+            if (height < 0._r_kind .or. height > 100000._r_kind .or. abs(rlat) > 90._r_kind .or. abs(rlon) > 360._r_kind) then
+               good = .false.
+               if (verbose) write(6, *) 'READ_GNSSRO: obs fails georeality check, said=', said, 'ptid=', ptid
+            endif
+            ! bending angle and impact parameter
+            if (bend >= 1.e+9_r_kind .or. bend <= 0._r_kind .or. impact >= 1.e+9_r_kind .or. impact < roc .or. bendflag == 1 ) then
+               good = .false.
+               if (verbose) write(6, *) 'READ_GNSSRO: obs bend/impact is invalid, said=', said, 'ptid=', ptid
+            endif
+            ! reffractivity
+            if (ref >= 1.e+9_r_kind .or. ref <= 0._r_kind .or. refflag == 1 ) then
+             ref = r_missing
+            endif
+            ! azimuth
+            if (abs(azim) > 360._r_kind .or. azim < 0._r_kind) then
+               azim = r_missing
+            endif
+            ! append data if values are in valid range
+            if (good) then
+               ndata = ndata + 1 
+               gnssro_data%recn(ndata) = nrec
+               gnssro_data%lat(ndata) = rlat
+               gnssro_data%lon(ndata) = rlon
+               gnssro_data%time(ndata) = timeo
+               gnssro_data%epochtime(ndata) = epochtime
+               gnssro_data%said(ndata) = said
+               gnssro_data%siid(ndata) = siid
+               gnssro_data%sclf(ndata) = sclf
+               gnssro_data%asce(ndata) = asce
+               gnssro_data%ptid(ndata) = ptid
+               gnssro_data%ogce(ndata) = ogce
+               gnssro_data%ref(ndata) = ref
+               gnssro_data%msl_alt(ndata) = height
+               gnssro_data%bend_ang(ndata) = bend
+               gnssro_data%bndoe_gsi(ndata) = bend_error
+               gnssro_data%impact_para(ndata) = impact
+               gnssro_data%rfict(ndata) = roc
+               gnssro_data%geoid(ndata) = geoid
+               gnssro_data%azim(ndata) = azim
+               call bendingangle_err_gsi(rlat, impact - roc, obsErr, ogce, said)
+               gnssro_data%bndoe_gsi(ndata) = obsErr
+               if (ref > r_missing)  then
+                  call refractivity_err_gsi(rlat, height, GlobalModel, obsErr)
+                  gnssro_data%refoe_gsi(ndata) = obsErr
+               else
+                  gnssro_data%refoe_gsi(ndata) = r_missing
+               end if
+            end if
+         end do ! end of k loop
+         if (ndata == ndata0) nrec = nrec - 1
+      enddo read_loop
+   end do
+   call closbf(lnbufr)
+   if (nrec == 0) then
+      write(6, *) "Error. No valid observations found. Cannot create NetCDF ouput."
+      stop 2
+   endif
 end subroutine
 
 subroutine write_gnssro_data(anatime, ndata, outdir)
