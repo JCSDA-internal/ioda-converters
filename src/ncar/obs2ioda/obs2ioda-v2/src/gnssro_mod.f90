@@ -55,27 +55,15 @@ logical :: verbose = .false.
 contains
 
 subroutine read_write_gnssro(infile, outdir)
-!integer   :: nlev_dimid  ! seems to never be used
-!integer   :: varid_geo_temp,varid_geo_pres,varid_geo_shum,varid_geo_geop, varid_geo_geop_sfc  ! seems to never be used
-character(len=*), intent(in) :: infile
-character(len=*), intent(in) :: outdir
-character(len=10)         :: anatime
-!integer(i_kind)           :: nread  ! seems to never be used
-integer(i_kind) :: ndata, mincy, maxobs
-!logical                   :: outside  ! seems to never be used
-!real(r_kind) :: usage,dlat,dlat_earth,dlon,dlon_earth  ! seems to never be used
-
-call get_buffer_information(trim(adjustl(infile)), anatime, mincy, maxobs)
-
-call allocate_gnssro_data_array(maxobs)
-
-call read_gnssro_data(trim(adjustl(infile)), mincy, ndata)
-
-
-
-call write_gnssro_data(anatime, ndata, outdir)
-call deallocate_gnssro_data_array()
-
+   character(len = *), intent(in) :: infile
+   character(len = *), intent(in) :: outdir
+   character(len = 10) :: anatime
+   integer(i_kind) :: ndata, mincy, maxobs
+   call get_buffer_information(trim(adjustl(infile)), anatime, mincy, maxobs)
+   call allocate_gnssro_data_array(maxobs)
+   call read_gnssro_data(trim(adjustl(infile)), mincy, ndata)
+   call write_gnssro_data(anatime, ndata, outdir)
+   call deallocate_gnssro_data_array()
 end subroutine read_write_gnssro
 
 subroutine get_buffer_information(infile, anatime, mincy, maxobs)
