@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #
-# (C) Copyright 2020 UCAR
+# (C) Copyright 2024 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -65,6 +65,8 @@ class AOD(object):
         self.thin = in_dict['thin']
         self.provider = in_dict['provider']
         self.retrieval_method = in_dict['retrieval_method']
+        self.wbeg = np.datetime64(datetime.strptime(in_dict['date_range'][0], "%Y%m%d%H")).astype(np.int64)
+        self.wend = np.datetime64(datetime.strptime(in_dict['date_range'][1], "%Y%m%d%H")).astype(np.int64)
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -96,12 +98,6 @@ class AOD(object):
                 self.varAttrs[iodavar, varGroupName]['_FillValue'] = missing_vals[dtypestr]
                 if varsKeyList[var_keys.index(key)][4]:
                     self.varAttrs[iodavar, varGroupName]['units'] = varsKeyList[var_keys.index(key)][4]
-
-    def _read_nasa_dt(self):
-        print(f'Testing')
-
-    def _read_nasa_db(self):
-        print(f'Testing')
 
     def get_platform_sensor_names(self):
         if self.provider == 'noaa':
@@ -141,12 +137,21 @@ class AOD(object):
         self.errs = self.ncd.variables['Residual'][:].ravel()
         self.qcfs = self.ncd.variables['QCAll'][:].ravel().astype('int32')
 
-        # Define uncertainty (expected error) based on surface type
-        if self.error_method == "ee":
+        # Keep valid data points only
+        valid_pts = ~self.vals.mask
+        self.lons = self.lons[valid_pts]
+        self.lats = self.lats[valid_pts]
+        self.vals = self.vals[valid_pts]
+        self.errs = self.errs[valid_pts]
+        self.qcfs = self.qcfs[valid_pts]
+
+        # Define pixel-level uncertainty estimates (PUE) based on surface type
+        if self.error_method == "pue":
+            AttrData['errorMethod'] = 'Pixel-level Uncertainty Estimates (PUE)'
             # QCPath is the flag for retrieval path. The valid range is 0-127 in the
             # ATBD: https://www.star.nesdis.noaa.gov/jpss/documents/ATBD/ATBD_EPS_Aerosol_AOD_v3.4.pdf.
             # QCPath's valid range in the input file is not correct, so we define the valid range here.
-            qcpath = self.ncd.variables['QCPath'][:].data.ravel()
+            qcpath = self.ncd.variables['QCPath'][:].data.ravel()[valid_pts]
             qcpath = np.ma.masked_array(qcpath, np.logical_or(qcpath < 0, qcpath > 127))
 
             self.errs = 0.111431 + 0.128699 * self.vals    # over land (dark)
@@ -158,11 +163,21 @@ class AOD(object):
         self.lons = self.ncd.groups['geolocation_data'].variables['longitude'][:].ravel()
         self.lats = self.ncd.groups['geolocation_data'].variables['latitude'][:].ravel()
         self.vals = self.ncd.groups['geophysical_data'].variables['Optical_Depth_Land_And_Ocean'][:].ravel()
+        self.qcfs = self.ncd.groups['geophysical_data'].variables['Land_Ocean_Quality_Flag'][:].ravel()
+
         # Based on Dark Target ATBD (March 2024), assign expected error (EE)
         # https://darktarget.gsfc.nasa.gov/sites/default/files/users/user9/ATBD_DarkTarget_April3.pdf
-        land_mask = self.ncd.groups['geophysical_data'].variables['Land_Sea_Flag'] == 1 
-        self.errs = np.where(over_land, np.add(0.05, np.multiply(0.2, self.vals)),
+        land_pts = self.ncd.groups['geophysical_data'].variables['Land_Sea_Flag'][:].ravel() == 1 
+        self.errs = np.where(land_pts, np.add(0.05, np.multiply(0.2, self.vals)),
                              np.add(0.05, np.multiply(0.15, self.vals)))
+
+        # Keep valid data points only
+        valid_pts = ~self.vals.mask
+        self.lons = self.lons[valid_pts]
+        self.lats = self.lats[valid_pts]
+        self.vals = self.vals[valid_pts]
+        self.errs = self.errs[valid_pts]
+        self.qcfs = self.qcfs[valid_pts]
 
     def get_nasa_db_data(self):
         # For NASA Deep Blue
@@ -185,7 +200,7 @@ class AOD(object):
         mix_ocean_pts = np.logical_and(mix_pts, npts_land[valid_pts] < npts_ocean[valid_pts])
         mix_equal_pts = np.logical_and(mix_pts, npts_land[valid_pts] == npts_ocean[valid_pts])
 
-        # VIIRS Deep Blue Prognostic Expected Error (PEE)
+        # VIIRS Deep Blue Pixel-level Uncertainty Estimates (PUE)
         # Lee et al. (2024): https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2023JD040082?af=R
         # PEE should fit for DA purpose better according to
         # Hsu et al. (2018): https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2018JD029688
@@ -213,15 +228,12 @@ class AOD(object):
             self.qcfs[mix_equal_pts] = np.where( qaf_land[mix_equal_pts] < qaf_ocean[mix_equal_pts], 
                                                  qaf_land[mix_equal_pts], qaf_ocean[mix_equal_pts] )
 
-        AttrData['errorMethod'] = 'Prognostic Expected Error (PEE)'
-        if self.error_method == "ee":
+        AttrData['errorMethod'] = 'Pixel-level Uncertainty Estimates (PUE)'
+        if self.error_method != "pue":
             # VIIRS DeepBlue Expected Error (https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2018JD029688)
             self.errs = np.add(0.05, np.multiply(0.2, self.vals[valid_pts]))
             AttrData['errorMethod'] = 'Expected Error (EE)'
             
-
-
-
     def read(self):
         # Make empty lists for the output vars
         self.outdata[('latitude', metaDataName)] = np.array([], dtype=np.float32)
@@ -264,6 +276,7 @@ class AOD(object):
 
             # assign the observation time based on time coverage
             self.obs_time = np.full(np.shape(self.lons), round(0.5*(self.s_time + self.e_time)), dtype=np.int64)
+            winmsk = ((self.obs_time >= self.wbeg) & (self.obs_time <= self.wend))
 
             # apply thinning mask
             if self.thin > 0.0:
@@ -276,17 +289,17 @@ class AOD(object):
                 self.obs_time = self.obs_time[mask_thin]
 
             #  Write out data
-            self.outdata[('latitude', metaDataName)] = np.append(self.outdata[('latitude', metaDataName)], np.array(self.lats, dtype=np.float32))
-            self.outdata[('longitude', metaDataName)] = np.append(self.outdata[('longitude', metaDataName)], np.array(self.lons, dtype=np.float32))
-            self.outdata[('dateTime', metaDataName)] = np.append(self.outdata[('dateTime', metaDataName)], np.array(self.obs_time, dtype=np.int64))
+            self.outdata[('latitude', metaDataName)] = np.append(self.outdata[('latitude', metaDataName)], np.array(self.lats[winmsk], dtype=np.float32))
+            self.outdata[('longitude', metaDataName)] = np.append(self.outdata[('longitude', metaDataName)], np.array(self.lons[winmsk], dtype=np.float32))
+            self.outdata[('dateTime', metaDataName)] = np.append(self.outdata[('dateTime', metaDataName)], np.array(self.obs_time[winmsk], dtype=np.int64))
 
             for iodavar in obsvars:
                 self.outdata[self.varDict[iodavar]['valKey']] = np.append(
-                    self.outdata[self.varDict[iodavar]['valKey']], np.array(self.vals, dtype=np.float32))
+                    self.outdata[self.varDict[iodavar]['valKey']], np.array(self.vals[winmsk], dtype=np.float32))
                 self.outdata[self.varDict[iodavar]['errKey']] = np.append(
-                    self.outdata[self.varDict[iodavar]['errKey']], np.array(self.errs, dtype=np.float32))
+                    self.outdata[self.varDict[iodavar]['errKey']], np.array(self.errs[winmsk], dtype=np.float32))
                 self.outdata[self.varDict[iodavar]['qcKey']] = np.append(
-                    self.outdata[self.varDict[iodavar]['qcKey']], np.array(self.qcfs, dtype=np.int32))
+                    self.outdata[self.varDict[iodavar]['qcKey']], np.array(self.qcfs[winmsk], dtype=np.int32))
 
             self.ncd.close()
 
@@ -309,31 +322,41 @@ def main():
                      ' of native NetCDF format for observations of optical'
                      ' depth from VIIRS AOD550 to IODA-V2 netCDF format.')
     )
-    parser.add_argument(
+    required = parser.add_argument_group(title='required arguments')
+    required.add_argument(
         '-i', '--input',
         help="path of viirs aod input file(s)",
         type=str, nargs='+', required=True)
-    parser.add_argument(
+    required.add_argument(
         '-o', '--output',
         help="name of ioda-v2 output file",
         type=str, required=True)
-    parser.add_argument(
-        '--error_method',
-        help="calculation error method: ee/default, default=none",
-        type=str, default=None)
-    parser.add_argument(
+    required.add_argument(
         '--provider',
         help="data source, noaa/nasa",
         type=str, required=True)
-    parser.add_argument(
+
+    optional = parser.add_argument_group(title='optional arguments')
+    optional.add_argument(
         '--retrieval_method',
         help="specify the retrieval method when provider is nasa, DarkTarget/DeepBlue",
         type=str, default=None)
-    parser.add_argument(
+    optional.add_argument(
+        '--error_method',
+        help="calculation error method: pue/default, default is none for NOAA, Expected Error for NASA product",
+        type=str, default=None)
+    optional.add_argument(
         '-n', '--thin',
         help="percentage of random thinning fro 0.0 to 1.0. Zero indicates"
         " no thinning is performed. (default: %(default)s)",
         type=float, default=0.0)
+    optional.add_argument(
+        '--date_range',
+        help="extract a date range to fit the data assimilation window"
+        "format -r YYYYMMDDHH YYYYMMDDHH",
+        type=str, metavar=('begindate', 'enddate'), nargs=2,
+        default=('1970010100', '2170010100'))
+
 
     args = parser.parse_args()
 
@@ -342,6 +365,7 @@ def main():
             'provider': args.provider,
             'retrieval_method': args.retrieval_method,
             'thin': args.thin,
+            'date_range': args.date_range,
             }
 
     # setup the IODA writer
