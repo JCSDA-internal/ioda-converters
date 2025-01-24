@@ -65,8 +65,8 @@ class AOD(object):
         self.thin = in_dict['thin']
         self.provider = in_dict['provider']
         self.retrieval_method = in_dict['retrieval_method']
-        self.wbeg = np.datetime64(datetime.strptime(in_dict['date_range'][0], "%Y%m%d%H")).astype(np.int64)
-        self.wend = np.datetime64(datetime.strptime(in_dict['date_range'][1], "%Y%m%d%H")).astype(np.int64)
+        self.wbeg = np.datetime64(str(datetime.strptime(in_dict['date_range'][0], "%Y%m%d%H"))).astype(np.int64)
+        self.wend = np.datetime64(str(datetime.strptime(in_dict['date_range'][1], "%Y%m%d%H"))).astype(np.int64)
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -231,7 +231,7 @@ class AOD(object):
         AttrData['errorMethod'] = 'Pixel-level Uncertainty Estimates (PUE)'
         if self.error_method != "pue":
             # VIIRS DeepBlue Expected Error (https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2018JD029688)
-            self.errs = np.add(0.05, np.multiply(0.2, self.vals[valid_pts]))
+            self.errs = np.add(0.05, np.multiply(0.2, self.vals))
             AttrData['errorMethod'] = 'Expected Error (EE)'
             
     def read(self):
@@ -308,13 +308,11 @@ class AOD(object):
         print(f"Processed data for datetimeRange: {AttrData['datetimeRange']}")
 
 
-
-
 def main():
 
     # get command line arguments
-    # Usage: python blah.py -i /path/to/obs/2021060801.nc /path/to/obs/2021060802.nc ... -t Analysis_time /path/to/obs/2021060823.nc
-    # -o /path/to/ioda/20210608.nc
+    # Usage: python viirs_aod2ioda.py -i /path/to/obs/2021060801.nc /path/to/obs/2021060802.nc ... -o /path/to/ioda/20210608.nc
+    # --provider [noaa/nasa] --retieval_method [DarkTarget/DeepBlue] --error_method [pue]
     # where the input obs could be for any desired interval to concatenated together. Analysis time is generally the midpoint of
     # analysis window.
     parser = argparse.ArgumentParser(
@@ -367,6 +365,7 @@ def main():
             'thin': args.thin,
             'date_range': args.date_range,
             }
+    print(args_in_dict)
 
     # setup the IODA writer
 
