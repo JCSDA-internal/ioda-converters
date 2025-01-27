@@ -113,7 +113,7 @@ class AOD(object):
         elif satellite == 'NOAA-20':
             AttrData["platform"] = "noaa_20"
             AttrData["sensor"] = "v.viirs-m_j1"
-            
+
     def get_s_e_time(self):
         if self.provider == 'noaa':
             timeformat = '%Y-%m-%dT%H:%M:%SZ'
@@ -157,7 +157,7 @@ class AOD(object):
             self.errs = 0.111431 + 0.128699 * self.vals    # over land (dark)
             self.errs[qcpath % 2 == 1] = 0.00784394 + 0.219923 * self.vals[qcpath % 2 == 1]  # over ocean
             self.errs[qcpath % 4 == 2] = 0.0550472 + 0.299558 * self.vals[qcpath % 4 == 2]   # over bright land
-       
+
     def get_nasa_dt_data(self):
         # For NASA Dark Target
         self.lons = self.ncd.groups['geolocation_data'].variables['longitude'][:].ravel()
@@ -167,7 +167,7 @@ class AOD(object):
 
         # Based on Dark Target ATBD (March 2024), assign expected error (EE)
         # https://darktarget.gsfc.nasa.gov/sites/default/files/users/user9/ATBD_DarkTarget_April3.pdf
-        land_pts = self.ncd.groups['geophysical_data'].variables['Land_Sea_Flag'][:].ravel() == 1 
+        land_pts = self.ncd.groups['geophysical_data'].variables['Land_Sea_Flag'][:].ravel() == 1
         self.errs = np.where(land_pts, np.add(0.05, np.multiply(0.2, self.vals)),
                              np.add(0.05, np.multiply(0.15, self.vals)))
 
@@ -184,7 +184,7 @@ class AOD(object):
         self.lons = self.ncd.variables['Longitude'][:].ravel()
         self.lats = self.ncd.variables['Latitude'][:].ravel()
         self.vals = self.ncd.variables['Aerosol_Optical_Thickness_550_Land_Ocean_Best_Estimate'][:].ravel()
-        
+
         # Keep valid data points only
         valid_pts = ~self.vals.mask
         self.lons = self.lons[valid_pts]
@@ -209,12 +209,12 @@ class AOD(object):
         self.errs = np.ones_like(eu_land)
         qaf_land = self.ncd.variables['Aerosol_Optical_Thickness_QA_Flag_Land'][:].ravel()[valid_pts]
         qaf_ocean = self.ncd.variables['Aerosol_Optical_Thickness_QA_Flag_Ocean'][:].ravel()[valid_pts]
-        self.qcfs = np.ones_like(qaf_land) 
+        self.qcfs = np.ones_like(qaf_land)
 
-        if np.count_nonzero(land_pts) > 0: 
+        if np.count_nonzero(land_pts) > 0:
             self.errs[land_pts] = eu_land[land_pts]
             self.qcfs[land_pts] = qaf_land[land_pts]
-        if np.count_nonzero(ocean_pts) > 0: 
+        if np.count_nonzero(ocean_pts) > 0:
             self.errs[ocean_pts] = eu_ocean[ocean_pts]
             self.qcfs[ocean_pts] = qaf_ocean[ocean_pts]
         if np.count_nonzero(mix_land_pts) > 0:
@@ -225,15 +225,15 @@ class AOD(object):
             self.qcfs[mix_ocean_pts] = qaf_ocean[mix_ocean_pts]
         if np.count_nonzero(mix_equal_pts) > 0:
             self.errs[mix_equal_pts] = 0.5 * eu_land[mix_equal_pts] + 0.5 * eu_ocean[mix_equal_pts]
-            self.qcfs[mix_equal_pts] = np.where( qaf_land[mix_equal_pts] < qaf_ocean[mix_equal_pts], 
-                                                 qaf_land[mix_equal_pts], qaf_ocean[mix_equal_pts] )
+            self.qcfs[mix_equal_pts] = np.where(qaf_land[mix_equal_pts] < qaf_ocean[mix_equal_pts],
+                                                qaf_land[mix_equal_pts], qaf_ocean[mix_equal_pts])
 
         AttrData['errorMethod'] = 'Pixel-level Uncertainty Estimates (PUE)'
         if self.error_method != "pue":
             # VIIRS DeepBlue Expected Error (https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2018JD029688)
             self.errs = np.add(0.05, np.multiply(0.2, self.vals))
             AttrData['errorMethod'] = 'Expected Error (EE)'
-            
+
     def read(self):
         # Make empty lists for the output vars
         self.outdata[('latitude', metaDataName)] = np.array([], dtype=np.float32)
@@ -267,11 +267,11 @@ class AOD(object):
             self.get_s_e_time()
             min_time = min(self.s_time, min_time)
             max_time = max(self.e_time, max_time)
-            
+
             # Get the platform and sensor name
             self.get_platform_sensor_names()
 
-            # Get VIIRS data 
+            # Get VIIRS data
             get_viirs_data()
 
             # assign the observation time based on time coverage
@@ -355,17 +355,15 @@ def main():
         type=str, metavar=('begindate', 'enddate'), nargs=2,
         default=('1970010100', '2170010100'))
 
-
     args = parser.parse_args()
 
     args_in_dict = {'input': args.input,
-            'error_method': args.error_method,
-            'provider': args.provider,
-            'retrieval_method': args.retrieval_method,
-            'thin': args.thin,
-            'date_range': args.date_range,
-            }
-    print(args_in_dict)
+                    'error_method': args.error_method,
+                    'provider': args.provider,
+                    'retrieval_method': args.retrieval_method,
+                    'thin': args.thin,
+                    'date_range': args.date_range,
+                    }
 
     # setup the IODA writer
 
