@@ -314,7 +314,7 @@ def main():
     # get command line arguments
     # Usage: python viirs_aod2ioda.py -i /path/to/obs/2021060801.nc /path/to/obs/2021060802.nc ... -o /path/to/ioda/20210608.nc
     # --provider [noaa/nasa] --retieval_method [DarkTarget/DeepBlue] --error_method [pue]
-    # where the input obs could be for any desired interval to concatenated together. 
+    # where the input obs could be for any desired interval to concatenated together.
     parser = argparse.ArgumentParser(
         description=('Read VIIRS aerosol optical depth file(s) and Converter'
                      ' of native NetCDF format for observations of optical'
