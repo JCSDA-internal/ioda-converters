@@ -167,6 +167,7 @@ class AOD(object):
 
         # Based on Dark Target ATBD (March 2024), assign expected error (EE)
         # https://darktarget.gsfc.nasa.gov/sites/default/files/users/user9/ATBD_DarkTarget_April3.pdf
+        AttrData['errorMethod'] = 'Expected Error (EE)'
         land_pts = self.ncd.groups['geophysical_data'].variables['Land_Sea_Flag'][:].ravel() == 1
         self.errs = np.where(land_pts, np.add(0.05, np.multiply(0.2, self.vals)),
                              np.add(0.05, np.multiply(0.15, self.vals)))
@@ -202,7 +203,7 @@ class AOD(object):
 
         # VIIRS Deep Blue Pixel-level Uncertainty Estimates (PUE)
         # Lee et al. (2024): https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2023JD040082?af=R
-        # PEE should fit for DA purpose better according to
+        # PUE should fit for DA purpose better according to
         # Hsu et al. (2018): https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2018JD029688
         eu_land = self.ncd.variables['Aerosol_Optical_Thickness_550_Expected_Uncertainty_Land'][:].ravel()[valid_pts]
         eu_ocean = self.ncd.variables['Aerosol_Optical_Thickness_550_Expected_Uncertainty_Ocean'][:].ravel()[valid_pts]
@@ -313,8 +314,7 @@ def main():
     # get command line arguments
     # Usage: python viirs_aod2ioda.py -i /path/to/obs/2021060801.nc /path/to/obs/2021060802.nc ... -o /path/to/ioda/20210608.nc
     # --provider [noaa/nasa] --retieval_method [DarkTarget/DeepBlue] --error_method [pue]
-    # where the input obs could be for any desired interval to concatenated together. Analysis time is generally the midpoint of
-    # analysis window.
+    # where the input obs could be for any desired interval to concatenated together. 
     parser = argparse.ArgumentParser(
         description=('Read VIIRS aerosol optical depth file(s) and Converter'
                      ' of native NetCDF format for observations of optical'
