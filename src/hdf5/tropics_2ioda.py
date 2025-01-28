@@ -425,7 +425,7 @@ def set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data, 
 
 
 def get_normalized_bit(value, bit_index):
-    return (value >> bit_index) & 1 == 1
+    return (value >> bit_index) & 1
 
 
 def assign_values(data):
