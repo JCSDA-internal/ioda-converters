@@ -48,6 +48,8 @@ module gnssro_bufr2ioda
       real(r_kind), allocatable, dimension(:) :: bend_ang
       real(r_kind), allocatable, dimension(:) :: impact_para
       real(r_kind), allocatable, dimension(:) :: bndoe_gsi
+      real(r_kind), allocatable, dimension(:) :: gstime
+      integer(i_kind), allocatable, dimension(:) :: idx_window
    end type gnssro_type
 
    type bufr_info_type
@@ -59,14 +61,15 @@ module gnssro_bufr2ioda
 
 contains
 
-   subroutine read_write_gnssro(infile, outdir)
-      character(len = *), intent(in) :: infile
-      character(len = *), intent(in) :: outdir
+   subroutine read_write_gnssro(infile, outdir, nfgat)
+      character(len = *), intent(in) :: infile, outdir
+      integer(i_kind), intent(in) :: nfgat
       type(gnssro_type) :: gnssro_data
       type(bufr_info_type) :: gnssro_bufr_info
       call get_buffer_information(trim(adjustl(infile)), gnssro_bufr_info)
       call allocate_gnssro_data_array(gnssro_data, gnssro_bufr_info)
       call read_gnssro_data(trim(adjustl(infile)), gnssro_data, gnssro_bufr_info)
+      call assign_gnssro_data_to_time_window(gnssro_bufr_info%analysis_time, nfgat, gnssro_bufr_info%nobs)
       call write_gnssro_data(gnssro_data, gnssro_bufr_info, outdir)
       call deallocate_gnssro_data_array(gnssro_data)
    end subroutine read_write_gnssro
@@ -139,10 +142,13 @@ contains
       allocate(gnssro_data%bend_ang(maxobs))
       allocate(gnssro_data%impact_para(maxobs))
       allocate(gnssro_data%bndoe_gsi(maxobs))
+      allocate(gnssro_data%gstime(maxobs))
+      allocate(gnssro_data%idx_window(maxobs))
    end subroutine
 
 
    subroutine read_gnssro_data(infile, gnssro_data, gnssro_bufr_info)
+      use utils_mod, only: get_julian_time
       character(len = *), intent(in) :: infile
       type(gnssro_type), intent(inout) :: gnssro_data
       type(bufr_info_type), intent(inout) :: gnssro_bufr_info
@@ -153,7 +159,7 @@ contains
       real(r_kind), dimension(n1ahdr) :: bfr1ahdr
       real(r_kind), dimension(1) :: qfro
       integer(i_kind), dimension(6) :: idate5
-      real(r_kind) :: pcc, roc, geoid, timeo
+      real(r_kind) :: pcc, roc, geoid, timeo, gstime
       integer(i_kind) :: said, siid, ptid, sclf, ogce, minobs, nib, asce
       integer(i_64) :: epochtime
       integer :: refflag, bendflag
@@ -198,7 +204,7 @@ contains
             ogce = bfr1ahdr(13)  ! Identification of originating/generating centre
             call w3fs21(idate5, minobs)
             timeo = real(minobs - gnssro_bufr_info%analysis_epochtime_in_mins, r_kind) / 60.0
-            call epochtimecalculator(idate5, epochtime)  ! calculate epochtime since January 1 1970
+            call get_julian_time(idate5(1), idate5(2), idate5(3), idate5(4), idate5(5), idate5(6), gstime, epochtime)
             ! check if values are in valid range
             ! earth radius of curvature
             if (roc > 6450000.0_r_kind .or. roc < 6250000.0_r_kind .or. geoid > 200_r_kind .or. geoid < -200._r_kind) then
@@ -300,6 +306,7 @@ contains
                   gnssro_data%lon(ndata) = rlon
                   gnssro_data%time(ndata) = timeo
                   gnssro_data%epochtime(ndata) = epochtime
+                  gnssro_data%gstime(ndata) = gstime
                   gnssro_data%said(ndata) = said
                   gnssro_data%siid(ndata) = siid
                   gnssro_data%sclf(ndata) = sclf
@@ -332,6 +339,41 @@ contains
       if (nrec == 0) then
          write(6, *) "Error. No valid observations found. Cannot create NetCDF ouput."
          stop 2
+      endif
+   end subroutine
+
+
+   subroutine assign_gnssro_data_to_time_window(anatime, nfgat, ndata)
+      use utils_mod, only: da_advance_time, da_get_time_slots
+      use define_mod, only: dtime_min, dtime_max
+      character(len = *), intent(in) :: anatime
+      integer(i_kind), intent(in) :: nfgat, ndata
+      character(len = 14) :: tmin_string, tmax_string
+      real(r_kind), dimension(0 : nfgat) :: time_slots
+      real(r_kind) :: obs_time
+      integer :: idx_obs, j
+      ! initialize window index with value outside of valid time range
+      gnssro_data%idx_window = -1
+      ! identify proper window index
+      if (nfgat > 1) then  ! in case the output is split into time windows
+         call da_advance_time(anatime, dtime_min, tmin_string)  ! initial time of bufr file
+         call da_advance_time(anatime, dtime_max, tmax_string)  ! final time of bufr file
+         call da_get_time_slots(nfgat, tmin_string, tmax_string, time_slots)
+         do idx_obs = 1, ndata
+            obs_time = gnssro_data%gstime(idx_obs)  ! julian time format of gstime is identical to time_slots
+            do j = 1, nfgat
+               ! strictly speaking, the logical expression should contain one <= and one < condition (otherwise the assignment
+               ! at window boundaries is ambiguous). The first and last time windows require a <= at the window start and end,
+               ! respectively. The use of two <= statements accommodates this and implies that observations at intermediate
+               ! domain boundaries are assigned to the preceeding window.
+               if (time_slots(j-1) <= obs_time .and. obs_time <= time_slots(j)) then
+                  gnssro_data%idx_window(idx_obs) = j
+                  exit
+               endif
+            enddo
+         enddo
+      else  ! in case the output is not split into time windows
+         gnssro_data%idx_window(1 : ndata) = 1  ! all valid obs have the same index
       endif
    end subroutine
 
@@ -536,6 +578,8 @@ contains
       deallocate(gnssro_data%bend_ang)
       deallocate(gnssro_data%impact_para)
       deallocate(gnssro_data%bndoe_gsi)
+      deallocate(gnssro_data%gstime)
+      deallocate(gnssro_data%idx_window)
    end subroutine
 
 
@@ -657,38 +701,5 @@ contains
       NMIN = NDAYS * 1440 + IDATE(4) * 60 + IDATE(5)
       RETURN
    END SUBROUTINE W3FS21
-
-   
-   !-------------------------------------------------------------
-   ! written by H. ZHANG based w3nco_v2.0.6/w3fs21.f and iw3jdn.f
-   ! calculating epoch time since January 1, 1970
-   SUBROUTINE epochtimecalculator(IDATE, EPOCHTIME)
-      INTEGER    IDATE(6)
-      INTEGER    NMIN
-      INTEGER    IYEAR, NDAYS, IJDN
-      INTEGER(8) epochtime
-      INTEGER    JDN1970
-      DATA  JDN1970 / 2440588 /
-
-      NMIN  = 0
-      IYEAR = IDATE(1)
-      IF (IYEAR.LE.99) THEN
-         IF (IYEAR.LT.78) THEN
-            IYEAR = IYEAR + 2000
-         ELSE
-            IYEAR = IYEAR + 1900
-         ENDIF
-      ENDIF
-      ! COMPUTE JULIAN DAY NUMBER FROM YEAR, MONTH, DAY
-      IJDN  = IDATE(3) - 32075      &
-         + 1461 * (IYEAR + 4800 + (IDATE(2) - 14) / 12) / 4  &
-         + 367 * (IDATE(2)- 2 - (IDATE(2) -14) / 12 * 12) / 12   &
-         - 3 * ((IYEAR + 4900 + (IDATE(2) - 14) / 12) / 100) / 4
-      ! SUBTRACT JULIAN DAY NUMBER OF JAN 1,1970 TO GET THE
-      ! NUMBER OF DAYS BETWEEN DATES
-      NDAYS = IJDN - JDN1970
-      NMIN = NDAYS * 1440 + IDATE(4) * 60 + IDATE(5)
-      EPOCHTIME = NMIN * 60 + IDATE(6)
-   END SUBROUTINE epochtimecalculator
 
 end module gnssro_bufr2ioda
