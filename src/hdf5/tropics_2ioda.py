@@ -260,11 +260,19 @@ def get_data(f, obs_data, skip=1):
     obs_data[('dateTime', metaDataName)] = np.array(f['time'][:, :].flatten() + tet_offset, dtype='int64')
 
     quality_word = np.vstack(np.stack(f['calQualityFlag'], axis=2))
+
+    # using scanPosition and the forward and aft flag decide while viewAngle gets assigned negative values
+    i_forward = np.array(get_normalized_bit(quality_word[:, iband], bit_index=7), dtype='int32')
+    # For i_forward == 1 assign negative to 1-40
+    scan_sign_forward = obs_data[('sensorScanPosition', metaDataName)] < 41
+    obs_data[('sensorViewAngle', metaDataName)][i_forward == 1] *= 1 - 2 * scan_sign_forward[i_forward == 1]
+
+    # For i_forward == 0 assign negative to 42-82
+    scan_sign_backward = obs_data[('sensorScanPosition', metaDataName)] > 41
+    obs_data[('sensorViewAngle', metaDataName)][i_forward == 0] *= 1 - 2 * scan_sign_backward[i_forward == 0]
+
     # Bit 5: Ascending/Descending
-    obs_data[('satelliteAscendingFlag', metaDataName)] = np.array(get_normalized_bit(quality_word[:, 0], bit_index=5), dtype='int32')
-    # use scanPosition to set sign
-#   scan_sign = obs_data[('sensorScanPosition', metaDataName)] < 41
-#   obs_data[('sensorViewAngle', metaDataName)] *= 1 - 2*scan_sign
+    obs_data[('satelliteAscendingFlag', metaDataName)] = np.array(get_normalized_bit(quality_word[:, iband], bit_index=5), dtype='int32')
 
     # assign orbit WMO ID to all locations
     obs_data = assign_WMO_ID(obs_data, WMO_sat_ID)
@@ -417,7 +425,7 @@ def set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data, 
 
 
 def get_normalized_bit(value, bit_index):
-    return (value >> bit_index) & 1
+    return (value >> bit_index) & 1 == 1
 
 
 def assign_values(data):
