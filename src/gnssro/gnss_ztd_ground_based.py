@@ -39,7 +39,7 @@ locationKeyList = [
     ('latitude', 'float', 'degrees_north'),
     ('longitude', 'float', 'degrees_east'),
     ('dateTime', 'long', iso8601_string),
-    ('stationIdentifierWMO', 'integer', 'WMO assigned number for the site'),
+#   ('stationIdentifierWMO', 'integer', 'WMO assigned number for the site'),
     ('stationIdentifier', 'string', 'GNSS ground-based receiving station name'),
 ]
 
@@ -161,12 +161,16 @@ def main(args):
             variable = varDict[key][0]
             logging.info(f" the variable: {variable} will be placed into ObsValue of ioda_data")
             ioda_data[(variable, obsValName)] = np.array(data[variable], dtype=np.float32)
-            ioda_data[(variable, obsErrName)] = np.array(data[variable+'Error'], dtype=np.float32)
+            ioda_data[(variable, obsErrName)] = np.full(len(ioda_data[(variable, obsValName)]), 0.02, dtype=np.float32)
 
     logging.debug("Writing file: " + output_file)
 
     # setup the IODA writer and write everything out.
     writer = iconv.IodaWriter(output_file, locationKeyList, DimDict)
+#   import pdb
+#   pdb.set_trace()
+#   import sys
+#   sys.exit()
     writer.BuildIoda(ioda_data, varDims, varAttrs, GlobalAttrs)
 
     logging.info("--- {:9.4g} total seconds ---".format(time.time() - start_time))
@@ -190,7 +194,7 @@ def read_file(file_name):
                 while header_read:
                     # Get the next line from the iterator
                     line = next(file_iterator)
-                    local_data = populate_obsValue(line, local_data)
+                    local_data = populate_obsValue(line, local_data, file_name)
 
             except StopIteration:
                 # If StopIteration is raised, break from the loop
@@ -227,7 +231,7 @@ def get_header(file_iterator, local_data):
     return local_data, header_read
 
 
-def populate_obsValue(line, local_data):
+def populate_obsValue(line, local_data, fname):
 
     # get the electron content retrieved from GNSS transmitter
     # if can correctly parse all fields populate local_data otherwise do nothing
@@ -244,8 +248,13 @@ def populate_obsValue(line, local_data):
         return local_data
 
     # ZTD_2022-06-24_02:00:00
-    yymmdd = "220624"
-    hhmmss = "020000"
+    _, yymmdd, hhmmss = fname.split('_')
+    yymmdd = yymmdd.replace('-', '')[2:]
+    hhmmss = hhmmss.replace(':', '')
+#   import pdb
+#   pdb.set_trace()
+#   import sys
+#   sys.exit()
     dateTime = convert_string_to_dateTime(yymmdd, hhmmss)
 
     local_data['dateTime'] = np.append(local_data['dateTime'], dateTime)
@@ -278,17 +287,10 @@ def convert_string_to_dateTime(yymmdd, hhmmss):
 def fill_data_with_missing(local_data):
     # fill the data records from TENET line 4 with missing
     local_data['dateTime'] = np.append(local_data['dateTime'], int_missing_value)
-    local_data['satelliteTransmitterId'] = np.append(local_data['satelliteTransmitterId'], int_missing_value)
-    local_data['latitudeIPP'] = np.append(local_data['latitudeIPP'], float_missing_value)
-    local_data['longitudeIPP'] = np.append(local_data['longitudeIPP'], float_missing_value)
-    local_data['elevationAngleGNSS'] = np.append(local_data['elevationAngleGNSS'], float_missing_value)
-    local_data['sensorAzimuthAngle'] = np.append(local_data['sensorAzimuthAngle'], float_missing_value)
-    local_data['totalElectronContent'] = np.append(local_data['totalElectronContent'], float_missing_value)
-    local_data['totalElectronContentError'] = np.append(local_data['totalElectronContentError'], float_missing_value)
-    local_data['totalElectronContentFlag'] = np.append(local_data['totalElectronContentFlag'], int_missing_value)
-    local_data['xECEFPositionGNSS'] = np.append(local_data['xECEFPositionGNSS'], float_missing_value)
-    local_data['yECEFPositionGNSS'] = np.append(local_data['yECEFPositionGNSS'], float_missing_value)
-    local_data['zECEFPositionGNSS'] = np.append(local_data['zECEFPositionGNSS'], float_missing_value)
+    local_data['stationIdentifier'] = np.append(local_data['stationIdentifier'], string_missing_value)
+    local_data['latitude'] = np.append(local_data['latitude'], float_missing_value)
+    local_data['longitude'] = np.append(local_data['longitude'], float_missing_value)
+    local_data['zenithTotalDelay'] = np.append(local_data['zenithTotalDelay'], float_missing_value)
     return local_data
 
 
