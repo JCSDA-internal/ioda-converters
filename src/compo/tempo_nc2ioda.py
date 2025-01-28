@@ -294,10 +294,10 @@ class tempo(object):
                     self.outdata[('dateTime', 'MetaData')] = time[flg]
                     self.outdata[('latitude', 'MetaData')] = lats[flg]
                     self.outdata[('longitude', 'MetaData')] = lons[flg]
-                    self.outdata[('quality_assurance_value', 'MetaData')] = qa_value[flg]
-                    self.outdata[('cloud_fraction', 'MetaData')] = cld_fra[flg]
-                    self.outdata[('solar_zenith_angle', 'MetaData')] = sza[flg]
-                    self.outdata[('viewing_zenith_angle', 'MetaData')] = vza[flg]
+                    self.outdata[('qualityFlags', 'MetaData')] = qa_value[flg]
+                    self.outdata[('cloudAmount', 'MetaData')] = cld_fra[flg]
+                    self.outdata[('solarZenithAngle', 'MetaData')] = sza[flg]
+                    self.outdata[('viewingZenithAngle', 'MetaData')] = vza[flg]
                     self.outdata[('albedo', 'MetaData')] = albedo[flg]
                     self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = avg_kernel[flg]
                     self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = preslev[flg]
@@ -311,14 +311,14 @@ class tempo(object):
                         self.outdata[('latitude', 'MetaData')], lats[flg]))
                     self.outdata[('longitude', 'MetaData')] = np.concatenate((
                         self.outdata[('longitude', 'MetaData')], lons[flg]))
-                    self.outdata[('quality_assurance_value', 'MetaData')] = np.concatenate((
-                        self.outdata[('quality_assurance_value', 'MetaData')], qa_value[flg]))
-                    self.outdata[('cloud_fraction', 'MetaData')] = np.concatenate((
-                        self.outdata[('cloud_fraction', 'MetaData')], cld_fra[flg]))
-                    self.outdata[('solar_zenith_angle', 'MetaData')] = np.concatenate((
-                        self.outdata[('solar_zenith_angle', 'MetaData')], sza[flg]))
-                    self.outdata[('viewing_zenith_angle', 'MetaData')] = np.concatenate((
-                        self.outdata[('viewing_zenith_angle', 'MetaData')], vza[flg]))
+                    self.outdata[('qualityFlags', 'MetaData')] = np.concatenate((
+                        self.outdata[('qualityFlags', 'MetaData')], qa_value[flg]))
+                    self.outdata[('cloudAmount', 'MetaData')] = np.concatenate((
+                        self.outdata[('cloudAmount', 'MetaData')], cld_fra[flg]))
+                    self.outdata[('solarZenithAngle', 'MetaData')] = np.concatenate((
+                        self.outdata[('solarZenithAngle', 'MetaData')], sza[flg]))
+                    self.outdata[('viewingZenithAngle', 'MetaData')] = np.concatenate((
+                        self.outdata[('viewingZenithAngle', 'MetaData')], vza[flg]))
                     self.outdata[('albedo', 'MetaData')] = np.concatenate((
                         self.outdata[('albedo', 'MetaData')], albedo[flg]))
                     self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = np.concatenate((
