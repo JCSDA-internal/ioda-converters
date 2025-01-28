@@ -148,7 +148,7 @@ class tropomi(object):
                 self.outdata[('dateTime', 'MetaData')] = times[flg]
                 self.outdata[('latitude', 'MetaData')] = lats[flg]
                 self.outdata[('longitude', 'MetaData')] = lons[flg]
-                self.outdata[('quality_assurance_value', 'MetaData')] = qa_value[flg]
+                self.outdata[('qualityFlag', 'MetaData')] = qa_value[flg]
 
                 self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = avg_kernel[flg]
                 self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = preslv[flg]
@@ -160,8 +160,8 @@ class tropomi(object):
                     self.outdata[('latitude', 'MetaData')], lats[flg]))
                 self.outdata[('longitude', 'MetaData')] = np.concatenate((
                     self.outdata[('longitude', 'MetaData')], lons[flg]))
-                self.outdata[('quality_assurance_value', 'MetaData')] = np.concatenate((
-                    self.outdata[('quality_assurance_value', 'MetaData')], qa_value[flg]))
+                self.outdata[('qualityFlag', 'MetaData')] = np.concatenate((
+                    self.outdata[('qualityFlag', 'MetaData')], qa_value[flg]))
 
                 self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = np.concatenate((
                     self.outdata[('averagingKernel', 'RetrievalAncillaryData')], avg_kernel[flg]))

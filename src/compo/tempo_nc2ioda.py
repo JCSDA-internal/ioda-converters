@@ -11,6 +11,7 @@ import argparse
 import netCDF4 as nc
 import numpy as np
 import os
+import sys
 
 import pyiodaconv.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
@@ -41,13 +42,12 @@ molarmass = {"no2": 46.0055, "hcho": 30.031, "o3": 48.0}
 
 
 class tempo(object):
-    def __init__(self, filenames, varname, columnType, qa_flg, thin, v3, obsVar):
+    def __init__(self, filenames, varname, columnType, qa_flg, thin, obsVar):
         self.filenames = filenames
         self.varname = varname
         self.columnType = columnType
         self.qa_flg = qa_flg
         self.thin = thin
-        self.v3 = v3
         self.obsVar = obsVar
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
@@ -87,7 +87,7 @@ class tempo(object):
             AttrData['sensor'] = ncd.getncattr('project')
             AttrData['platform'] = ncd.getncattr('platform')
 
-            # coordinates, mask and RT parameters for BC 
+            # coordinates, mask and RT parameters for BC
             lats = ncd.groups['geolocation'].variables['latitude'][:].ravel()
             lons = ncd.groups['geolocation'].variables['longitude'][:].ravel()
             sza = ncd.groups['geolocation'].variables['solar_zenith_angle'][:].ravel()
@@ -156,19 +156,20 @@ class tempo(object):
                 # so we need to reset the mask and replace with the mask that is used
 
                 if self.varname == 'no2':
-                    if self.v3:
-                        err_name = 'vertical_column_'+self.columnType
-                    else:
-                        err_name = 'vertical_column_total'
+                    err_name = 'vertical_column_'+self.columnType
                     obs_name = 'vertical_column_'+self.columnType
                     col_amf_name = 'amf_'+self.columnType
                     tot_amf_name = 'amf_total'
+                        group_name = 'support_data'
+                    else:
+                        group_name = 'product'
 
                 if self.varname == 'hcho':
                     tot_amf_name = 'amf'
                     col_amf_name = 'amf'
                     obs_name = 'vertical_column'
                     err_name = 'vertical_column'
+                    group_name = 'product'
 
                 tot_amf = ncd.groups['support_data'].variables[tot_amf_name][:].ravel()
                 tot_amf.mask = False
@@ -187,8 +188,6 @@ class tempo(object):
 
                     if self.columnType != "total":
                         t_diff = np.array(t_pause[:, np.newaxis] - preslev)[:, :-1]
-                        if self.columnType == "stratosphere":
-                            avg_kernel[t_diff <= 0] = 0.0
                         if self.columnType == "troposphere":
                             avg_kernel[t_diff > 0] = 0.0
 
@@ -200,26 +199,17 @@ class tempo(object):
                 col_amf = ncd.groups['support_data'].variables[col_amf_name][:].ravel()
                 col_amf.mask = False
                 col_amf = np.ma.array(col_amf, mask=mask)
-                obs = ncd.groups['product'].variables[obs_name][:]\
+                obs = ncd.groups[group_name].variables[obs_name][:]\
                     .ravel() * conv
                 obs.mask = False
                 obs = np.ma.array(obs, mask=mask)
 
                 # error calculation:
-                err = ncd.groups['product'].variables[err_name+'_uncertainty'][:].ravel()
-                if self.v3:
-                    if self.columnType == "total" or self.columnType == "stratosphere":
-                        sys.exit("no error with total and strato NRT product")
-                    err = err * conv
-                else:
-                    err = err * conv * col_amf / tot_amf
+                err = ncd.groups[group_name].variables[err_name+'_uncertainty'][:].ravel()
+                err = err * conv
 
                 err.mask = False
                 err = np.ma.array(err, mask=mask)
-
-                # error tuning for data assimilation, i.e. less weight to low obs values
-                # experimental
-                # err = err * (1.0 + err/obs)
 
             # O3
             if self.varname == 'o3':
@@ -227,9 +217,8 @@ class tempo(object):
                 exit()
 
             # clean data
-            neg_obs = ((obs > 0.0) & (err > 0.0))
+            neg_obs = err > 0.0
             nan_obs = ((obs != np.nan) & (err != np.nan))
-            nan_obs = (~np.isnan(obs) & ~np.isnan(err) & np.isreal(obs) & np.isreal(err) & np.isfinite(obs) & np.isfinite(err))
             cln = np.logical_and(neg_obs, nan_obs)
 
             # final flag before sending this to ioda engines
@@ -243,9 +232,9 @@ class tempo(object):
             print('flg: ', np.shape(flg))
             print('qa_value: ', np.shape(qa_value))
             print('cld_fra: ', np.shape(cld_fra))
-            print('sza: ',  np.shape(sza))
-            print('vza: ',  np.shape(vza))
-            print('albedo: ',  np.shape(albedo))
+            print('sza: ', np.shape(sza))
+            print('vza: ', np.shape(vza))
+            print('albedo: ', np.shape(albedo))
             print('qc_flag: ', np.shape(qc_flag))
             print('obs: ', np.shape(obs))
             print('err: ', np.shape(err))
@@ -378,7 +367,7 @@ def main():
         type=str, required=True)
     required.add_argument(
         '-c', '--column',
-        help="type of column: total, troposphere or stratosphere",
+        help="type of column: total, troposphere",
         type=str, required=True)
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
@@ -391,11 +380,6 @@ def main():
         help="percentage of random thinning from 0.0 to 1.0. Zero indicates"
         " no thinning is performed. (default: %(default)s)",
         type=float, default=0.0)
-    optional.add_argument(
-        '-v3', '--version3',
-        action='store_true',
-        default=True,
-        help='Read V3 files and not V2 files')
 
     args = parser.parse_args()
 

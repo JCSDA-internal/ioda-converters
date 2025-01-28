@@ -89,9 +89,9 @@ list( APPEND test_input
   testinput/sst_ostia.nc
   testinput/2021081612_RAOB_small.txt
   testinput/tropomi_co.nc
-  testinput/TEMPO_no2_L2_V01_20231101T210834Z_S011G08.nc
-  testinput/TEMPO_no2_L2_V01_20231101T211511Z_S011G09.nc
-  testinput/TEMPO_no2_L2_V01_20231101T210157Z_S011G07.nc  
+  testinput/TEMPO_NO2_L2_V03_20230802T151249Z_S001G01.nc
+  testinput/TEMPO_NO2_L2_V03_20230802T151902Z_S001G02.nc
+  testinput/TEMPO_NO2_L2_V03_20230802T152515Z_S001G03.nc
   testinput/gdas.t18z.abias_air
   testinput/MRMS_MergedReflectivityQC_01.50_20230712-152241.grib2
   testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t162415_small.h5
@@ -189,7 +189,6 @@ list( APPEND test_output
   testoutput/tropomi_co_total.nc
   testoutput/tempo_no2_total.nc
   testoutput/tempo_no2_troposphere.nc
-  testoutput/tempo_no2_stratosphere.nc
   testoutput/gdas.t18z.abias_air_ascent.csv
   testoutput/mrms_reflectivity_Z1500m.nc
   testoutput/omps_o3_nm.nc
@@ -1322,9 +1321,9 @@ foreach (coltype total tropo)
                                   tropomi_no2_${coltype}.nc ${IODA_CONV_COMP_TOL})
 endforeach()
 
-foreach (coltype total troposphere stratosphere)
+foreach (coltype total troposphere)
   foreach (spec no2) #hcho not tested and o3 not out yet with real data
-    if (NOT (${spec} STREQUAL "hcho" AND (${coltype} STREQUAL "total" OR ${coltype} STREQUAL "stratosphere")))
+    if (NOT (${spec} STREQUAL "hcho" AND (${coltype} STREQUAL "total")))
        ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tempo_${spec}_${coltype}
                           TYPE    SCRIPT
                           ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
@@ -1332,9 +1331,9 @@ foreach (coltype total troposphere stratosphere)
                           ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                                   netcdf
                                   "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tempo_nc2ioda.py
-				  -i testinput/TEMPO_${spec}_L2_V01_20231101T210157Z_S011G07.nc
-				     testinput/TEMPO_${spec}_L2_V01_20231101T210834Z_S011G08.nc
-				     testinput/TEMPO_${spec}_L2_V01_20231101T211511Z_S011G09.nc
+				  -i testinput/TEMPO_${spec}_L2_V03_20230802T151249Z_S001G01.nc
+				     testinput/TEMPO_${spec}_L2_V03_20230802T151902Z_S001G02.nc
+				     testinput/TEMPO_${spec}_L2_V03_20230802T152515Z_S001G03.nc
 				  -o testrun/tempo_${spec}_${coltype}.nc
                                   -v ${spec}
                                   -c ${coltype}"
