@@ -41,6 +41,7 @@ locationKeyList = [
     ('dateTime', 'long', iso8601_string),
 #   ('stationIdentifierWMO', 'integer', 'WMO assigned number for the site'),
     ('stationIdentifier', 'string', 'GNSS ground-based receiving station name'),
+    ('stationElevation', 'string', 'GNSS ground-based receiving station name'),
 ]
 
 meta_keys = [m_item[0] for m_item in locationKeyList]
