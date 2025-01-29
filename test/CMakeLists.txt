@@ -104,6 +104,7 @@ list( APPEND test_input
   testinput/pandora_site_classification.csv
   testinput/balloonsonde_sample_20241001T00Z_PT15M.json
   testinput/tec_groundBased_TENET_20201001T00Z.tec
+  testinput/COWVR_TSDR.020421.20240430T215845.20240430T230345.V1001.sample.h5
 )
 
 list( APPEND test_output
@@ -200,6 +201,7 @@ list( APPEND test_output
   testoutput/Pandora57s1_BoulderCO_L2_rnvs3p1-8.nc
   testoutput/obs.20241001T000000Z_PT15M_balloonsonde.nc4
   testoutput/obs.20201001T000000Z_PT1M_tec_groundbased.nc4
+  testoutput/obs.20240430T220600Z_PT2M_cowvr_iss.nc4
 )
 
 if( iodaconv_gnssro_ENABLED )
