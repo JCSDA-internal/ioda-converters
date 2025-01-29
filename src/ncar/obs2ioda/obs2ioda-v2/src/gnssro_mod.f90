@@ -61,16 +61,21 @@ module gnssro_bufr2ioda
 
 contains
 
-   subroutine read_write_gnssro(infile, outdir, nfgat)
+   subroutine read_write_gnssro(infile, outdir, nfgat, hour_fgat)
       character(len = *), intent(in) :: infile, outdir
-      integer(i_kind), intent(in) :: nfgat
+      integer(i_kind), intent(in) :: nfgat, hour_fgat
       type(gnssro_type) :: gnssro_data
       type(bufr_info_type) :: gnssro_bufr_info
+      integer :: idx_window
+      character(:), allocatable :: output_file_name, output_file_date
       call get_buffer_information(trim(adjustl(infile)), gnssro_bufr_info)
       call allocate_gnssro_data_array(gnssro_data, gnssro_bufr_info)
       call read_gnssro_data(trim(adjustl(infile)), gnssro_data, gnssro_bufr_info)
       call assign_gnssro_data_to_time_window(gnssro_bufr_info%analysis_time, nfgat, gnssro_bufr_info%nobs)
-      call write_gnssro_data(gnssro_data, gnssro_bufr_info, outdir)
+      do idx_window = 1, nfgat
+         call get_output_file_name(nfgat, idx_window, hour_fgat, gnssro_bufr_info%analysis_time, outdir, output_file_name, output_file_date)
+         call write_gnssro_data(gnssro_data, gnssro_bufr_info, output_file_date, idx_window, gnssro_bufr_info%nobs_max, output_file_name)
+      enddo
       call deallocate_gnssro_data_array(gnssro_data)
    end subroutine read_write_gnssro
 
@@ -378,28 +383,49 @@ contains
    end subroutine
 
 
-   subroutine write_gnssro_data(gnssro_data, gnssro_bufr_info, outdir)
+   subroutine get_output_file_name(nfgat, idx_window, hour_fgat, anatime, outdir, output_file_name, output_file_date)
+      use define_mod, only: half_bufr_interval
+      use utils_mod, only: da_advance_time
+      integer(i_kind), intent(in) :: nfgat, idx_window, hour_fgat
+      character(len = *), intent(in) :: anatime, outdir
+      character(:), allocatable, intent(out) :: output_file_name, output_file_date
+      character(len = 14) :: delta_time, output_file_date_long  ! delta_time has to be at least 3 characters long
+      if (nfgat > 1) then  ! multiple time windows
+         write(delta_time, '(i2, a)') (hour_fgat * (idx_window - 1)) - half_bufr_interval, 'h'
+         call da_advance_time(anatime, trim(adjustl(delta_time)), output_file_date_long)
+         output_file_date = output_file_date_long(1:10)
+      else  ! single time window
+         output_file_date = anatime
+      endif
+      output_file_name = trim(adjustl(outdir)) // 'gnssro_obs_' // output_file_date // '.h5'
+   end subroutine
+   
+   
+   
+   subroutine write_gnssro_data(gnssro_data, gnssro_bufr_info, datetime_file, idx_window, maxobs, outfile)
       type(gnssro_type), intent(in) :: gnssro_data
       type(bufr_info_type), intent(in) :: gnssro_bufr_info
-      character(len = *), intent(in) :: outdir
-      character(len = datelength) :: cdate
-      character (:), allocatable :: outfile
-      integer :: ndata
+      character(len = *), intent(in) :: datetime_file, outfile
+      integer(i_kind), intent(in) :: idx_window, maxobs
+      logical, dimension(maxobs) :: is_in_window
+      integer(i_kind) :: ndata
       integer :: ncid, nlocs_dimid, grpid_metadata, grpid_obsvalue, grpid_obserror
       integer :: varid_lat, varid_lon, varid_time, varid_epochtime, varid_recn, varid_sclf, varid_ptid, varid_said
       integer :: varid_siid, varid_asce, varid_ogce, varid_msl, varid_impp, varid_imph, varid_azim, varid_geoid, varid_rfict
       integer :: varid_ref, varid_refoe, varid_bnd, varid_bndoe
 
+      ! identify observations in current time window
+      is_in_window = (gnssro_data%idx_window == idx_window)
+      ndata = count(is_in_window, kind = i_kind)
+
       ! create netcdf file and enter define mode
-      outfile = trim(adjustl(outdir)) // 'gnssro_obs_' // gnssro_bufr_info%analysis_time // '.h5'
-      call check(nf90_create(outfile, NF90_NETCDF4, ncid))
+      call check(nf90_create(trim(adjustl(outfile)), NF90_NETCDF4, ncid))
 
       ! create dimensions
-      ndata = gnssro_bufr_info%nobs
       call check(nf90_def_dim(ncid, 'nlocs', ndata, nlocs_dimid))
 
       ! write global attributes
-      call check(nf90_put_att(ncid, NF90_GLOBAL, 'date_time', gnssro_bufr_info%analysis_time))
+      call check(nf90_put_att(ncid, NF90_GLOBAL, 'date_time', datetime_file))
       call check(nf90_put_att(ncid, NF90_GLOBAL, 'ioda_version', 'fortran generated ioda2 file'))
 
       ! create groups
@@ -528,28 +554,28 @@ contains
 
       ! write variables
       call check(nf90_enddef(ncid))  ! enters write mode
-      call check(nf90_put_var(grpid_obsvalue, varid_ref, gnssro_data%ref(1:ndata)))
-      call check(nf90_put_var(grpid_obserror, varid_refoe, gnssro_data%refoe_gsi(1:ndata)))
-      call check(nf90_put_var(grpid_obsvalue, varid_bnd, gnssro_data%bend_ang(1:ndata)))
-      call check(nf90_put_var(grpid_obserror, varid_bndoe, gnssro_data%bndoe_gsi(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_lat, gnssro_data%lat(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_lon, gnssro_data%lon(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_time, gnssro_data%time(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_epochtime, gnssro_data%epochtime(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_recn, gnssro_data%recn(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_said, gnssro_data%said(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_siid, gnssro_data%siid(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_ptid, gnssro_data%ptid(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_sclf, gnssro_data%sclf(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_asce, gnssro_data%asce(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_ogce, gnssro_data%ogce(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_msl, gnssro_data%msl_alt(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_impp, gnssro_data%impact_para(1:ndata)))
+      call check(nf90_put_var(grpid_obsvalue, varid_ref, pack(gnssro_data%ref, is_in_window)))
+      call check(nf90_put_var(grpid_obserror, varid_refoe, pack(gnssro_data%refoe_gsi, is_in_window)))
+      call check(nf90_put_var(grpid_obsvalue, varid_bnd, pack(gnssro_data%bend_ang, is_in_window)))
+      call check(nf90_put_var(grpid_obserror, varid_bndoe, pack(gnssro_data%bndoe_gsi, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_lat, pack(gnssro_data%lat, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_lon, pack(gnssro_data%lon, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_time, pack(gnssro_data%time, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_epochtime, pack(gnssro_data%epochtime, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_recn, pack(gnssro_data%recn, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_said, pack(gnssro_data%said, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_siid, pack(gnssro_data%siid, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_ptid, pack(gnssro_data%ptid, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_sclf, pack(gnssro_data%sclf, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_asce, pack(gnssro_data%asce, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_ogce, pack(gnssro_data%ogce, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_msl, pack(gnssro_data%msl_alt, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_impp, pack(gnssro_data%impact_para, is_in_window)))
       call check(nf90_put_var(grpid_metadata, varid_imph, &
-         gnssro_data%impact_para(1:ndata) - gnssro_data%rfict(1:ndata) - gnssro_data%geoid(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_azim, gnssro_data%azim(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_geoid, gnssro_data%geoid(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_rfict, gnssro_data%rfict(1:ndata)))
+         pack(gnssro_data%impact_para - gnssro_data%rfict - gnssro_data%geoid, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_azim, pack(gnssro_data%azim, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_geoid, pack(gnssro_data%geoid, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_rfict, pack(gnssro_data%rfict, is_in_window)))
 
       ! close file
       call check(nf90_close(ncid))

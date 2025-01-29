@@ -28,6 +28,7 @@ integer(i_kind), parameter :: write_nc_radiance = 2
 integer(i_kind), parameter :: write_nc_radiance_geo = 3
 character(len=3), parameter :: dtime_min = '-3h'
 character(len=3), parameter :: dtime_max = '+3h'
+integer(i_kind), parameter :: half_bufr_interval = 3  ! corresponds to dtime_min = -3h and dtime_max = +3h
 
 ! variables for defining observation types and met variables each type has
 character(len=nstring), dimension(nobtype) :: obtype_list = &

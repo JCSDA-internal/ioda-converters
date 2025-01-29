@@ -86,7 +86,7 @@ do ifile = 1, nfile
          write(*,*) 'Warning: ', trim(inpdir)//trim(filename), ' not found for decoding...'
       else
          write(*,*) '--- processing gnssro.bufr ---'
-         call read_write_gnssro(trim(adjustl(inpdir))//trim(adjustl(filename)), trim(adjustl(outdir)), nfgat)
+         call read_write_gnssro(trim(adjustl(inpdir))//trim(adjustl(filename)), trim(adjustl(outdir)), nfgat, hour_fgat)
       end if
    end if
 
