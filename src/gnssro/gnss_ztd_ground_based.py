@@ -260,6 +260,7 @@ def populate_obsValue(line, local_data, fname):
 
     local_data['dateTime'] = np.append(local_data['dateTime'], dateTime)
     local_data['stationIdentifier'] = np.append(local_data['stationIdentifier'], sid)
+    local_data['stationElevation'] = np.append(local_data['stationElevation'], alt)
     local_data['latitude'] = np.append(local_data['latitude'], float(lat))
     local_data['longitude'] = np.append(local_data['longitude'], float(lon))
     local_data['zenithTotalDelay'] = np.append(local_data['zenithTotalDelay'], float(ztd))
