@@ -19,7 +19,9 @@ namespace Obs2Ioda {
  *                   Defaults to -1 if not provided.
  * @param fileName The name of the source file where the exception occurred.
  *                 Defaults to an empty string if not provided.
- * @return The error code from the NetCDF exception.
+ * @return The error code from the NetCDF exception. If the error code is 0,
+ * which is the case for NcNullGrp, NcNullDim, and NcNullType exceptions,
+ * -1 is returned instead.
  *
  * @note If `fileName` is empty, the file name and line number are not included in the log.
  *       If `lineNumber` is less than or equal to 0, it is ignored in the log.

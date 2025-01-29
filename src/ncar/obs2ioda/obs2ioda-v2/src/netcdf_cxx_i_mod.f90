@@ -43,6 +43,41 @@ module netcdf_cxx_i_mod
             integer(c_int), value, intent(in) :: netcdfID
             integer(c_int) :: c_netcdfClose
         end function
+
+        ! c_netcdfAddGroup:
+        !   Adds a new group to a NetCDF file under a specified parent group.
+        !
+        !   Arguments:
+        !     - netcdfID (integer(c_int), intent(in), value):
+        !       The identifier of the NetCDF file where the group will be added.
+        !     - parentGroupName (type(c_ptr), intent(in), value):
+        !       A C pointer to a null-terminated string specifying the name of the parent
+        !       group under which the new group will be created. If targeting the root
+        !       group, pass a c_null_ptr.
+        !     - groupName (type(c_ptr), intent(in), value):
+        !       A C pointer to a null-terminated string specifying the name of the new group
+        !       to be added under the parent group.
+        !
+        !   Returns:
+        !     - integer(c_int): A status code indicating the outcome of the operation:
+        !         - 0: Success.
+        !         - Non-zero: Failure
+        !
+        !   Notes:
+        !     - This function assumes `netcdfID` is valid and corresponds to an open NetCDF
+        !       file managed by the internal file handling utilities.
+        !     - The parent group must exist; otherwise, the operation will fail with an error.
+        function c_netcdfAddGroup(&
+                netcdfID, parentGroupName, groupName) &
+                bind(C, name = "netcdfAddGroup")
+            import :: c_int
+            import :: c_ptr
+            integer(c_int), value, intent(in) :: netcdfID
+            type(c_ptr), value, intent(in) :: parentGroupName
+            type(c_ptr), value, intent(in) :: groupName
+            integer(c_int) :: c_netcdfAddGroup
+        end function c_netcdfAddGroup
+
     end interface
 
 end module netcdf_cxx_i_mod

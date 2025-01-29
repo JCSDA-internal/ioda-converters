@@ -88,7 +88,6 @@ namespace Obs2Ioda {
         fileMap;
     };
 
-
     extern "C" {
     /**
      * @brief Creates and opens a NetCDF file.

@@ -18,6 +18,6 @@ namespace Obs2Ioda {
         }
         message << std::endl << "Message: " << e.what() << std::endl;
         std::cerr << message.str();
-        return e.errorCode();
+        return e.errorCode() == 0 ? -1 : e.errorCode();
     }
 }
