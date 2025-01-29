@@ -2193,6 +2193,18 @@ endif()
                             -o testrun/obs.20201001T000000Z_PT1M_tec_groundbased.nc4"
                             obs.20201001T000000Z_PT1M_tec_groundbased.nc4 ${IODA_CONV_COMP_TOL})
 
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_cowvr_iss
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/cowvr_hdf5_2ioda.py 
+                            -i testinput/COWVR_TSDR.020421.20240430T215845.20240430T230345.V1001.sample.h5 
+                            -o testrun/obs.20240430T220600Z_PT2M_cowvr_iss.nc4
+                            -d 2024050100"
+                            obs.20240430T220600Z_PT2M_cowvr_iss.nc4 ${IODA_CONV_COMP_TOL})
+
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_osw_cygnss
                     TYPE    SCRIPT
                     ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
