@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #
-# (C) Copyright 2024 UCAR
+# (C) Copyright 2025 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -113,6 +113,9 @@ class AOD(object):
         elif satellite == 'NOAA-20':
             AttrData["platform"] = "noaa_20"
             AttrData["sensor"] = "v.viirs-m_j1"
+        elif satellite == 'NOAA-21':
+            AttrData["platform"] = "noaa_21"
+            AttrData["sensor"] = "v.viirs-m_j2"
 
     def get_s_e_time(self):
         if self.provider == 'noaa':
