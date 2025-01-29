@@ -39,9 +39,8 @@ locationKeyList = [
     ('latitude', 'float', 'degrees_north'),
     ('longitude', 'float', 'degrees_east'),
     ('dateTime', 'long', iso8601_string),
-#   ('stationIdentifierWMO', 'integer', 'WMO assigned number for the site'),
     ('stationIdentifier', 'string', 'GNSS ground-based receiving station name'),
-    ('stationElevation', 'string', 'GNSS ground-based receiving station name'),
+    ('stationElevation', 'float', 'GNSS ground-based receiving station height in meter'),
 ]
 
 meta_keys = [m_item[0] for m_item in locationKeyList]
@@ -217,9 +216,6 @@ def get_header(file_iterator, local_data):
     # Line #1: HIUS1 KJPL 080213
     # SID       LON       LAT       ALT       ZTD gradientE gradientN       ZDD       ZWD        PW
 
-    # Line #2: TENET
-
-
     header_read = False
     # read first line
     line = next(file_iterator)
@@ -243,7 +239,7 @@ def populate_obsValue(line, local_data, fname):
 
     # read data lines beginning at fourth line
     try:
-         sid, lon, lat, alt, ztd, gradiente, gradientn, zdd, zwd, pw = line.split()
+        sid, lon, lat, alt, ztd, gradiente, gradientn, zdd, zwd, pw = line.split()
     except ValueError:
         local_data = fill_data_with_missing(local_data)
         return local_data
@@ -260,7 +256,7 @@ def populate_obsValue(line, local_data, fname):
 
     local_data['dateTime'] = np.append(local_data['dateTime'], dateTime)
     local_data['stationIdentifier'] = np.append(local_data['stationIdentifier'], sid)
-    local_data['stationElevation'] = np.append(local_data['stationElevation'], alt)
+    local_data['stationElevation'] = np.append(local_data['stationElevation'], float(alt))
     local_data['latitude'] = np.append(local_data['latitude'], float(lat))
     local_data['longitude'] = np.append(local_data['longitude'], float(lon))
     local_data['zenithTotalDelay'] = np.append(local_data['zenithTotalDelay'], float(ztd))
