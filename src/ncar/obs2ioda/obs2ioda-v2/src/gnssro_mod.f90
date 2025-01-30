@@ -7,6 +7,7 @@
 
 module gnssro_bufr2ioda
    use netcdf
+   use define_mod, only: ndatetime
    implicit none
    private
    public :: read_write_gnssro
@@ -37,6 +38,7 @@ module gnssro_bufr2ioda
       integer(i_kind), allocatable, dimension(:) :: ogce
       real(r_kind), allocatable, dimension(:) :: time
       integer(i_64),allocatable, dimension(:) :: epochtime
+      character(len = ndatetime), allocatable, dimension(:) :: datetime
       real(r_kind), allocatable, dimension(:) :: lat
       real(r_kind), allocatable, dimension(:) :: lon
       real(r_kind), allocatable, dimension(:) :: rfict
@@ -73,8 +75,8 @@ contains
       call read_gnssro_data(trim(adjustl(infile)), gnssro_data, gnssro_bufr_info)
       call assign_gnssro_data_to_time_window(gnssro_bufr_info%analysis_time, nfgat, gnssro_bufr_info%nobs)
       do idx_window = 1, nfgat
-         call get_output_file_name(nfgat, idx_window, hour_fgat, gnssro_bufr_info%analysis_time, outdir, output_file_name, output_file_date)
-         call write_gnssro_data(gnssro_data, gnssro_bufr_info, output_file_date, idx_window, gnssro_bufr_info%nobs_max, output_file_name)
+         call get_output_file_name(nfgat, idx_window, hour_fgat, gnssro_bufr_info%analysis_time, outdir, output_file_name)
+         call write_gnssro_data(gnssro_data, gnssro_bufr_info, idx_window, gnssro_bufr_info%nobs_max, output_file_name)
       enddo
       call deallocate_gnssro_data_array(gnssro_data)
    end subroutine read_write_gnssro
@@ -136,6 +138,7 @@ contains
       allocate(gnssro_data%ogce(maxobs))
       allocate(gnssro_data%time(maxobs))
       allocate(gnssro_data%epochtime(maxobs))
+      allocate(gnssro_data%datetime(maxobs))
       allocate(gnssro_data%lat(maxobs))
       allocate(gnssro_data%lon(maxobs))
       allocate(gnssro_data%rfict(maxobs))
@@ -167,6 +170,7 @@ contains
       real(r_kind) :: pcc, roc, geoid, timeo, gstime
       integer(i_kind) :: said, siid, ptid, sclf, ogce, minobs, nib, asce
       integer(i_64) :: epochtime
+      character(len = ndatetime) :: datetime
       integer :: refflag, bendflag
       integer(i_kind), dimension(mxib) :: ibit
       integer(i_kind) :: i, k, m
@@ -210,6 +214,8 @@ contains
             call w3fs21(idate5, minobs)
             timeo = real(minobs - gnssro_bufr_info%analysis_epochtime_in_mins, r_kind) / 60.0
             call get_julian_time(idate5(1), idate5(2), idate5(3), idate5(4), idate5(5), idate5(6), gstime, epochtime)
+            write(datetime, '(i4, a, i2.2, a, i2.2, a, i2.2, a, i2.2, a, i2.2, a)')  &
+               idate5(1), '-', idate5(2), '-', idate5(3), 'T', idate5(4), ':', idate5(5), ':', idate5(6), 'Z'
             ! check if values are in valid range
             ! earth radius of curvature
             if (roc > 6450000.0_r_kind .or. roc < 6250000.0_r_kind .or. geoid > 200_r_kind .or. geoid < -200._r_kind) then
@@ -312,6 +318,7 @@ contains
                   gnssro_data%time(ndata) = timeo
                   gnssro_data%epochtime(ndata) = epochtime
                   gnssro_data%gstime(ndata) = gstime
+                  gnssro_data%datetime(ndata) = datetime
                   gnssro_data%said(ndata) = said
                   gnssro_data%siid(ndata) = siid
                   gnssro_data%sclf(ndata) = sclf
@@ -383,13 +390,14 @@ contains
    end subroutine
 
 
-   subroutine get_output_file_name(nfgat, idx_window, hour_fgat, anatime, outdir, output_file_name, output_file_date)
+   subroutine get_output_file_name(nfgat, idx_window, hour_fgat, anatime, outdir, output_file_name)
       use define_mod, only: half_bufr_interval
       use utils_mod, only: da_advance_time
       integer(i_kind), intent(in) :: nfgat, idx_window, hour_fgat
       character(len = *), intent(in) :: anatime, outdir
-      character(:), allocatable, intent(out) :: output_file_name, output_file_date
+      character(:), allocatable, intent(out) :: output_file_name
       character(len = 14) :: delta_time, output_file_date_long  ! delta_time has to be at least 3 characters long
+      character(:), allocatable :: output_file_date
       if (nfgat > 1) then  ! multiple time windows
          write(delta_time, '(i2, a)') (hour_fgat * (idx_window - 1)) - half_bufr_interval, 'h'
          call da_advance_time(anatime, trim(adjustl(delta_time)), output_file_date_long)
@@ -399,16 +407,16 @@ contains
       endif
       output_file_name = trim(adjustl(outdir)) // 'gnssro_obs_' // output_file_date // '.h5'
    end subroutine
-   
-   
-   
-   subroutine write_gnssro_data(gnssro_data, gnssro_bufr_info, datetime_file, idx_window, maxobs, outfile)
+
+
+   subroutine write_gnssro_data(gnssro_data, gnssro_bufr_info, idx_window, maxobs, outfile)
       type(gnssro_type), intent(in) :: gnssro_data
       type(bufr_info_type), intent(in) :: gnssro_bufr_info
-      character(len = *), intent(in) :: datetime_file, outfile
+      character(len = *), intent(in) :: outfile
       integer(i_kind), intent(in) :: idx_window, maxobs
       logical, dimension(maxobs) :: is_in_window
       integer(i_kind) :: ndata
+      integer :: idx_min_time, idx_max_time
       integer :: ncid, nlocs_dimid, grpid_metadata, grpid_obsvalue, grpid_obserror
       integer :: varid_lat, varid_lon, varid_time, varid_epochtime, varid_recn, varid_sclf, varid_ptid, varid_said
       integer :: varid_siid, varid_asce, varid_ogce, varid_msl, varid_impp, varid_imph, varid_azim, varid_geoid, varid_rfict
@@ -421,12 +429,16 @@ contains
       ! create netcdf file and enter define mode
       call check(nf90_create(trim(adjustl(outfile)), NF90_NETCDF4, ncid))
 
-      ! create dimensions
+      ! create dimension and descriptive global attribute
       call check(nf90_def_dim(ncid, 'nlocs', ndata, nlocs_dimid))
+      call check(nf90_put_att(ncid, NF90_GLOBAL, 'nlocs', ndata))  ! analogous to netcdf_mod
 
-      ! write global attributes
-      call check(nf90_put_att(ncid, NF90_GLOBAL, 'date_time', datetime_file))
+      ! write other global attributes (again analogous to netcdf_mod)
+      idx_min_time = minloc(gnssro_data%epochtime, mask = is_in_window, dim = 1)
+      idx_max_time = maxloc(gnssro_data%epochtime, mask = is_in_window, dim = 1)
       call check(nf90_put_att(ncid, NF90_GLOBAL, 'ioda_version', 'fortran generated ioda2 file'))
+      call check(nf90_put_att(ncid, NF90_GLOBAL, 'min_datetime', gnssro_data%datetime(idx_min_time)))
+      call check(nf90_put_att(ncid, NF90_GLOBAL, 'max_datetime', gnssro_data%datetime(idx_max_time)))
 
       ! create groups
       call check(nf90_def_grp(ncid, 'MetaData', grpid_metadata))
@@ -593,6 +605,7 @@ contains
       deallocate(gnssro_data%ogce)
       deallocate(gnssro_data%time)
       deallocate(gnssro_data%epochtime)
+      deallocate(gnssro_data%datetime)
       deallocate(gnssro_data%lat)
       deallocate(gnssro_data%lon)
       deallocate(gnssro_data%rfict)
