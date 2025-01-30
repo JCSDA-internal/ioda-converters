@@ -149,6 +149,8 @@ list( APPEND test_output
   testoutput/viirs_bias.nc
   testoutput/tropomi_no2_total.nc
   testoutput/tropomi_no2_tropo.nc
+  testoutput/tempo_NO2_total.nc
+  testoutput/tempo_NO2_troposphere.nc
   testoutput/mopitt_co.nc
   testoutput/tropess_cris_co.nc
   testoutput/modis_aod.nc
@@ -1322,8 +1324,8 @@ foreach (coltype total tropo)
 endforeach()
 
 foreach (coltype total troposphere)
-  foreach (spec no2) #hcho not tested and o3 not out yet with real data
-    if (NOT (${spec} STREQUAL "hcho" AND (${coltype} STREQUAL "total")))
+	foreach (spec NO2) #hcho not tested and o3 not out yet with real data
+		if (NOT (${spec} STREQUAL "HCHO" AND (${coltype} STREQUAL "total")))
        ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tempo_${spec}_${coltype}
                           TYPE    SCRIPT
                           ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"

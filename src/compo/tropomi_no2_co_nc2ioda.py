@@ -124,6 +124,10 @@ class tropomi(object):
                                  ps[...].ravel())), axis=1)
                 top = ak[nlevs-1, 1] + bk[nlevs-1, 1]*ps[...].ravel()
 
+                # albedo
+                albedo = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].\
+                    groups['INPUT_DATA'].variables['surface_albedo_nitrogendioxide_window'][:].ravel()
+
             elif self.varname == 'co':
                 # grab the averaging kernel and reshape it
                 avg_kernel = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].\
@@ -135,6 +139,19 @@ class tropomi(object):
                     groups['DETAILED_RESULTS'].variables['pressure_levels'][:]
                 preslv = np.reshape(preslv, (nlocs, nlevs))
                 top = np.zeros(nlocs, dtype=np.float32)
+
+                # albedo
+                albedo1 = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].\
+                    groups['DETAILED_RESULTS'].variables['surface_albedo_2325'][:].ravel()
+                albedo2 = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].\
+                    groups['DETAILED_RESULTS'].variables['surface_albedo_2335'][:].ravel()
+                albedo = 0.5 * (albedo1 + albedo2)
+
+            # get angles
+            sza = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].\
+                groups['GEOLOCATIONS'].variables['solar_zenith_angle'][:].ravel()
+            vza = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].\
+                groups['GEOLOCATIONS'].variables['viewing_zenith_angle'][:].ravel()
 
             # assemble presvertices with top vertice
             preslv = np.append(top[:, np.newaxis], preslv, axis=1)
@@ -149,6 +166,9 @@ class tropomi(object):
                 self.outdata[('latitude', 'MetaData')] = lats[flg]
                 self.outdata[('longitude', 'MetaData')] = lons[flg]
                 self.outdata[('qualityFlag', 'MetaData')] = qa_value[flg]
+                self.outdata[('solarZenithAngle', 'MetaData')] = sza[flg]
+                self.outdata[('viewingZenithAngle', 'MetaData')] = vza[flg]
+                self.outdata[('albedo', 'MetaData')] = albedo[flg]
 
                 self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = avg_kernel[flg]
                 self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = preslv[flg]
@@ -162,6 +182,12 @@ class tropomi(object):
                     self.outdata[('longitude', 'MetaData')], lons[flg]))
                 self.outdata[('qualityFlag', 'MetaData')] = np.concatenate((
                     self.outdata[('qualityFlag', 'MetaData')], qa_value[flg]))
+                self.outdata[('solarZenithAngle', 'MetaData')] = np.concatenate((
+                    self.outdata[('solarZenithAngle', 'MetaData')], sza[flg]))
+                self.outdata[('viewingZenithAngle', 'MetaData')] = np.concatenate((
+                    self.outdata[('viewingZenithAngle', 'MetaData')], vza[flg]))
+                self.outdata[('albedo', 'MetaData')] = np.concatenate((
+                    self.outdata[('albedo', 'MetaData')], albedo[flg]))
 
                 self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = np.concatenate((
                     self.outdata[('averagingKernel', 'RetrievalAncillaryData')], avg_kernel[flg]))

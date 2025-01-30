@@ -38,7 +38,7 @@ np.set_printoptions(threshold=np.inf)
 hPa2Pa = 1E+2
 Na = 6.0221408E+23
 cm2m2 = 1E+4
-molarmass = {"no2": 46.0055, "hcho": 30.031, "o3": 48.0}
+molarmass = {"NO2": 46.0055, "HCHO": 30.031, "O3": 48.0}
 
 
 class tempo(object):
@@ -139,7 +139,7 @@ class tempo(object):
             time = np.ma.array(time, mask=mask, dtype=object)
 
             # NO2 and HCHO
-            if self.varname == 'no2' or self.varname == 'hcho':
+            if self.varname == 'NO2' or self.varname == 'HCHO':
 
                 # pressure levels
                 levels = ncd.dimensions['swt_level'].size
@@ -155,16 +155,17 @@ class tempo(object):
                 # there is a mismatch between the mask in the scattering weights/box amf
                 # so we need to reset the mask and replace with the mask that is used
 
-                if self.varname == 'no2':
+                if self.varname == 'NO2':
                     err_name = 'vertical_column_'+self.columnType
                     obs_name = 'vertical_column_'+self.columnType
                     col_amf_name = 'amf_'+self.columnType
                     tot_amf_name = 'amf_total'
+                    if self.columnType == 'total':
                         group_name = 'support_data'
                     else:
                         group_name = 'product'
 
-                if self.varname == 'hcho':
+                if self.varname == 'HCHO':
                     tot_amf_name = 'amf'
                     col_amf_name = 'amf'
                     obs_name = 'vertical_column'
@@ -182,7 +183,7 @@ class tempo(object):
                 avg_kernel = box_amf / tot_amf[:, np.newaxis]
 
                 # for no2 use avk to define strat trop separation
-                if self.varname == 'no2':
+                if self.varname == 'NO2':
                     t_pause = hPa2Pa * ncd.groups['support_data'].variables['tropopause_pressure'][:]\
                         .ravel()
 
@@ -212,7 +213,7 @@ class tempo(object):
                 err = np.ma.array(err, mask=mask)
 
             # O3
-            if self.varname == 'o3':
+            if self.varname == 'O3':
                 print("O3 product converter not ready yet")
                 exit()
 
@@ -383,14 +384,14 @@ def main():
 
     args = parser.parse_args()
 
-    if args.variable == "hcho":
+    if args.variable == "HCHO":
         var_name = 'formaldehyde'
         if args.column != "troposphere":
             print('hcho is only available for troposphere column, reset column to troposphere', flush=1)
             args.column = 'troposphere'
-    elif args.variable == "no2":
+    elif args.variable == "NO2":
         var_name = 'nitrogendioxide'
-    elif args.variable == "o3":
+    elif args.variable == "O3":
         var_name = 'ozone'
 
     if args.column == "troposphere" or args.column == "stratosphere":
@@ -417,7 +418,7 @@ def main():
     varDims['pressureVertice'] = ['Location', 'Vertice']
 
     # Read in the NO2 data
-    var = tempo(args.input, args.variable, args.column, args.qa_value, args.thin, args.version3, obsVar)
+    var = tempo(args.input, args.variable, args.column, args.qa_value, args.thin, obsVar)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
