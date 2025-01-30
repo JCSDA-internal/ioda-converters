@@ -179,7 +179,7 @@ def get_tempest_data(f, obs_data, add_qc=False):
     obs_data[('sensorZenithAngle', metaDataName)] = np.array(f['Geolocation']['earth_inc_ang'], dtype='float32')
     obs_data[('sensorAzimuthAngle', metaDataName)] = np.array(f['Geolocation']['earth_az_ang'], dtype='float32')
     obs_data[('sensorViewAngle', metaDataName)] = compute_scan_angle(
-        np.array(f['GeolocationAndFlags']['instr_scan_ang'], dtype='float32'),
+        np.array(f['Geolocation']['instr_scan_ang'], dtype='float32'),
         sensor_altitude,
         np.array(f['Geolocation']['earth_inc_ang'], dtype='float32'),
         qc_flag=qc_flag)
