@@ -166,29 +166,29 @@ def get_tempest_data(f, obs_data, add_qc=True):
     WMO_sat_ID = get_WMO_satellite_ID(f['Metadata']['InstrumentShortName'][0].decode("utf-8"))
 
     # "Geolocation and flags"
-    sensor_altitude = np.array(f['Geolocation']['sat_alt'], dtype='float32')
-    # sat_alt_flag = np.array(f['Geolocation']['sc_att_flag'], dtype='int32')
-    sat_alt_flag = np.array(f['CalibratedSceneTemperatures']['obs_qual_flag'], dtype='int32')
-    obs_data[('latitude', metaDataName)] = np.array(f['Geolocation']['obs_lat'], dtype='float32')
-    obs_data[('longitude', metaDataName)] = np.array(f['Geolocation']['obs_lon'], dtype='float32')
+    sensor_altitude = np.array(f['GeolocationAndFlags']['sat_alt'], dtype='float32')
+    # sat_alt_flag = np.array(f['GeolocationAndFlags']['sc_att_flag'], dtype='int32')
+    sat_alt_flag = np.array(f['GeolocationAndFlags']['obs_qual_flag'], dtype='int32')
+    obs_data[('latitude', metaDataName)] = np.array(f['GeolocationAndFlags']['obs_lat'], dtype='float32')
+    obs_data[('longitude', metaDataName)] = np.array(f['GeolocationAndFlags']['obs_lon'], dtype='float32')
     obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(5)+1, dtype='int32')
-    obs_data[('sensorScanPosition', metaDataName)] = np.array(f['Geolocation']['scan_pos'], dtype='int32')
-    obs_data[('solarZenithAngle', metaDataName)] = np.array(f['Geolocation']['sat_solar_zen'], dtype='float32')
-    obs_data[('solarAzimuthAngle', metaDataName)] = np.array(f['Geolocation']['sat_solar_az'], dtype='float32')
-    obs_data[('sensorZenithAngle', metaDataName)] = np.array(f['Geolocation']['earth_inc_ang'], dtype='float32')
-    obs_data[('sensorAzimuthAngle', metaDataName)] = np.array(f['Geolocation']['earth_az_ang'], dtype='float32')
-    # instr_scan_angle = np.array(f['Geolocation']['instr_scan_ang'], dtype='float32')
+    obs_data[('sensorScanPosition', metaDataName)] = np.array(f['GeolocationAndFlags']['scan_pos'], dtype='int32')
+    obs_data[('solarZenithAngle', metaDataName)] = np.array(f['GeolocationAndFlags']['sat_solar_zen'], dtype='float32')
+    obs_data[('solarAzimuthAngle', metaDataName)] = np.array(f['GeolocationAndFlags']['sat_solar_az'], dtype='float32')
+    obs_data[('sensorZenithAngle', metaDataName)] = np.array(f['GeolocationAndFlags']['earth_inc_ang'], dtype='float32')
+    obs_data[('sensorAzimuthAngle', metaDataName)] = np.array(f['GeolocationAndFlags']['earth_az_ang'], dtype='float32')
+    # instr_scan_angle = np.array(f['GeolocationAndFlags']['instr_scan_ang'], dtype='float32')
     obs_data[('sensorViewAngle', metaDataName)] = compute_scan_angle(
-        np.array(f['Geolocation']['instr_scan_ang'], dtype='float32'),
+        np.array(f['GeolocationAndFlags']['instr_scan_ang'], dtype='float32'),
         sensor_altitude,
-        np.array(f['Geolocation']['earth_inc_ang'], dtype='float32'),
+        np.array(f['GeolocationAndFlags']['earth_inc_ang'], dtype='float32'),
         qc_flag=sat_alt_flag)
 
     nlocs = len(obs_data[('latitude', metaDataName)])
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
-    obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f['Geolocation']['time_string']), dtype='int64')
-    qc_flag = f['CalibratedSceneTemperatures']['obs_qual_flag']
-    solar_array_flag = f['CalibratedSceneTemperatures']['solar_array_flag']
+    obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f['GeolocationAndFlags']['time_string']), dtype='int64')
+    qc_flag = f['GeolocationAndFlags']['obs_qual_flag']
+    solar_array_flag = f['GeolocationAndFlags']['solar_array_flag']
 
     nchans = len(obs_data[('sensorChannelNumber', metaDataName)])
     obs_data[('brightnessTemperature', obsValName)] = np.array(
@@ -243,12 +243,8 @@ def get_cowvr_data(f, obs_data, add_qc=True):
     obs_data[('longitude', metaDataName)] = np.array(f['GeolocationAndFlags']['obs_lon'], dtype='float32')
     obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(12)+1, dtype='int32')
     obs_data[('sensorScanPosition', metaDataName)] = np.array(np.round(f['GeolocationAndFlags']['instr_scan_ang']), dtype='int32')
-    if level == 1:
-        obs_data[('solarZenithAngle', metaDataName)] = np.array(f['GeolocationAndFlags']['sat_solar_zen'], dtype='float32')
-        obs_data[('solarAzimuthAngle', metaDataName)] = np.array(f['GeolocationAndFlags']['sat_solar_az'], dtype='float32')
-    else:
-        obs_data.pop(('solarZenithAngle', metaDataName))
-        obs_data.pop(('solarAzimuthAngle', metaDataName))
+    obs_data[('solarZenithAngle', metaDataName)] = np.array(f['GeolocationAndFlags']['sat_solar_zen'], dtype='float32')
+    obs_data[('solarAzimuthAngle', metaDataName)] = np.array(f['GeolocationAndFlags']['sat_solar_az'], dtype='float32')
     obs_data[('sensorZenithAngle', metaDataName)] = np.array(f['GeolocationAndFlags']['earth_inc_ang'], dtype='float32')
     obs_data[('sensorAzimuthAngle', metaDataName)] = np.array(f['GeolocationAndFlags']['earth_az_ang'], dtype='float32')
     obs_data[('sensorViewAngle', metaDataName)] = compute_scan_angle(
@@ -260,20 +256,11 @@ def get_cowvr_data(f, obs_data, add_qc=True):
     nlocs = len(obs_data[('latitude', metaDataName)])
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
     obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f['GeolocationAndFlags']['time_string']), dtype='int64')
-    if level == 1:
-        qc_flag = f['CalibratedSceneTemperatures']['obs_qual_flag']  # do not use -- calval team advice
-        solar_array_flag = f['CalibratedSceneTemperatures']['solar_array_flag']
-        support_arm_flag = f['CalibratedSceneTemperatures']['support_arm_flag']
-        rain_flag = None
-        rfi_flag = None
-        ufo_flag = None
-    elif level == 2:
-        qc_flag = f['GeolocationAndFlags']['obs_qual_flag']  # do not use -- calval team advice
-        solar_array_flag = f['GeolocationAndFlags']['solar_array_flag']
-        support_arm_flag = f['GeolocationAndFlags']['support_arm_flag']
-        rain_flag = f['GeolocationAndFlags']['rain_flag']
-        rfi_flag = f['GeolocationAndFlags']['rfi_flag']
-        ufo_flag = f['GeolocationAndFlags']['ufo_obstruct_flag']
+    qc_flag = f['GeolocationAndFlags']['obs_qual_flag']  # initial advice was DO NOT USE -- ask calval team for updated advice
+    solar_array_flag = f['GeolocationAndFlags']['solar_array_flag']
+    support_arm_flag = f['GeolocationAndFlags']['support_arm_flag']
+    rfi_flag = f['GeolocationAndFlags']['rfi_flag']
+    ufo_flag = f['GeolocationAndFlags']['ufo_obstruction_flag']
 
     nchans = len(obs_data[('sensorChannelNumber', metaDataName)])
     obs_data[('brightnessTemperature', obsValName)] = np.array(
@@ -284,12 +271,12 @@ def get_cowvr_data(f, obs_data, add_qc=True):
     obs_data[('brightnessTemperature', qcName)] = np.full((nlocs, nchans), 0, dtype='int32')
 
     if add_qc:
-        obs_data = cowvr_gross_quality_control(obs_data, solar_array_flag, support_arm_flag, rain_flag, rfi_flag, ufo_flag)
+        obs_data = cowvr_gross_quality_control(obs_data, solar_array_flag, support_arm_flag, rfi_flag, ufo_flag)
 
     return obs_data
 
 
-def cowvr_gross_quality_control(obs_data, solar_array_flag, support_arm_flag, rain_flag, rfi_flag, ufo_flag):
+def cowvr_gross_quality_control(obs_data, solar_array_flag, support_arm_flag, rfi_flag, ufo_flag):
 
     tb_key = 'brightnessTemperature'
     good = \
@@ -301,7 +288,7 @@ def cowvr_gross_quality_control(obs_data, solar_array_flag, support_arm_flag, ra
         (solar_array_flag[:] == 0) & (support_arm_flag[:] == 0)
 
     if rfi_flag:
-        good = good & (rain_flag[:] == 0) & (rfi_flag[:] == 0) & (ufo_flag[:] == 0)
+        good = good & (rfi_flag[:] == 0) & (ufo_flag[:] == 0)
 
     for k in obs_data:
         if metaDataName in k[1] and 'sensorChannelNumber' not in k[0]:
