@@ -13,7 +13,6 @@ integer, parameter :: i_kind  = selected_int_kind(8)    !4
 integer, parameter :: i_64    = selected_int_kind(10)   !8
 integer, parameter :: r_kind  = selected_real_kind(15)  !8
 
-integer(i_kind) :: said
 logical :: verbose = .false.
 
 contains
@@ -308,7 +307,7 @@ do while(ireadmg(lnbufr,subset,idate)==0)
        gnssro_data%rfict(ndata) = roc
        gnssro_data%geoid(ndata) = geoid
        gnssro_data%azim(ndata)  = azim
-       CALL bendingangle_err_gsi(rlat,impact-roc, obsErr, ogce)
+       CALL bendingangle_err_gsi(rlat,impact-roc, obsErr, ogce, said)
        gnssro_data%bndoe_gsi(ndata) = obsErr
        if ( ref > r_missing)  then
           CALL refractivity_err_gsi(rlat,height, GlobalModel, obsErr)
@@ -557,9 +556,9 @@ endif
 
 end subroutine refractivity_err_gsi
 
-subroutine  bendingangle_err_gsi(obsLat, obsZ,  obsErr, ogce)
+subroutine  bendingangle_err_gsi(obsLat, obsZ,  obsErr, ogce, said)
 real(r_kind), intent(in)   :: obsLat,  obsZ
-integer,        intent(in) :: ogce
+integer(i_kind), intent(in) :: ogce, said
 real(r_kind), intent(out)  :: obsErr
 real(r_kind)               :: obsZ_km
 
