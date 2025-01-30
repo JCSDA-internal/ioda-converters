@@ -8,7 +8,7 @@
 #
 
 #
-# decode TENET formatted ground-based GNSS Total Electron Content (TEC)
+# decode bespoke ground-based GNSS Zenith Total Delay (ZTD)
 #
 
 import sys
@@ -136,9 +136,9 @@ def main(args):
         units = varDict[key][2]
         varAttrs[(variable, obsValName)]['units'] = units
         varAttrs[(variable, obsErrName)]['units'] = units
-        varAttrs[(variable, obsValName)]['coordinates'] = 'longitude latitude'
-        varAttrs[(variable, obsErrName)]['coordinates'] = 'longitude latitude'
-        varAttrs[(variable, qcName)]['coordinates'] = 'longitude latitude'
+        varAttrs[(variable, obsValName)]['coordinates'] = 'longitude latitude stationElevation'
+        varAttrs[(variable, obsErrName)]['coordinates'] = 'longitude latitude stationElevation'
+        varAttrs[(variable, qcName)]['coordinates'] = 'longitude latitude stationElevation'
         varAttrs[(variable, obsValName)]['_FillValue'] = missing_vals[dtype]
         varAttrs[(variable, obsErrName)]['_FillValue'] = missing_vals[dtype]
         varAttrs[(variable, qcName)]['_FillValue'] = int_missing_value
@@ -161,6 +161,7 @@ def main(args):
             variable = varDict[key][0]
             logging.info(f" the variable: {variable} will be placed into ObsValue of ioda_data")
             ioda_data[(variable, obsValName)] = np.array(data[variable], dtype=np.float32)
+            # observation error is defined here
             ioda_data[(variable, obsErrName)] = np.full(len(ioda_data[(variable, obsValName)]), 0.02, dtype=np.float32)
 
     logging.debug("Writing file: " + output_file)
@@ -230,28 +231,26 @@ def get_header(file_iterator, local_data):
 
 def populate_obsValue(line, local_data, fname):
 
-    # get the electron content retrieved from GNSS transmitter
+    # get the zenith totaly delay retrieved from GNSS transmitter
     # if can correctly parse all fields populate local_data otherwise do nothing
 
     # ObsValue data row (example)
-    # SID       LON       LAT       ALT       ZTD gradientE gradientN       ZDD       ZWD        PW
-    # SSSS     (deg)     (deg)       (m)      (cm)        ()        ()      (cm)      (cm)      (cm)
+    # SID  YYYYMMDD  HHMMSS       LON       LAT       ALT       ZTD gradientE gradientN       ZDD       ZWD        PW
+    #SSSS     (UTC)   (UTC)     (deg)     (deg)       (m)       (m)        ()        ()       (m)       (m)       (m)
 
-    # read data lines beginning at fourth line
+    # read data lines beginning at third line
     try:
-        sid, lon, lat, alt, ztd, gradiente, gradientn, zdd, zwd, pw = line.split()
+        sid, yyyymmdd, hhmmss, lon, lat, alt, ztd, gradiente, gradientn, zdd, zwd, pw = line.split()
     except ValueError:
         local_data = fill_data_with_missing(local_data)
         return local_data
 
+    # get date and time from filename (example)
     # ZTD_2022-06-24_02:00:00
-    _, yymmdd, hhmmss = fname.split('_')
-    yymmdd = yymmdd.replace('-', '')[2:]
-    hhmmss = hhmmss.replace(':', '')
-#   import pdb
-#   pdb.set_trace()
-#   import sys
-#   sys.exit()
+    #_, yymmdd, hhmmss = fname.split('_')
+    #yymmdd = yymmdd.replace('-', '')[2:]
+    #hhmmss = hhmmss.replace(':', '')
+    yymmdd = yyyymmdd[2:]
     dateTime = convert_string_to_dateTime(yymmdd, hhmmss)
 
     local_data['dateTime'] = np.append(local_data['dateTime'], dateTime)
@@ -286,6 +285,7 @@ def fill_data_with_missing(local_data):
     # fill the data records from TENET line 4 with missing
     local_data['dateTime'] = np.append(local_data['dateTime'], int_missing_value)
     local_data['stationIdentifier'] = np.append(local_data['stationIdentifier'], string_missing_value)
+    local_data['stationElevation'] = np.append(local_data['stationElevation'], float_missing_value)
     local_data['latitude'] = np.append(local_data['latitude'], float_missing_value)
     local_data['longitude'] = np.append(local_data['longitude'], float_missing_value)
     local_data['zenithTotalDelay'] = np.append(local_data['zenithTotalDelay'], float_missing_value)
