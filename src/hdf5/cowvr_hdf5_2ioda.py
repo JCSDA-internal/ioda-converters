@@ -161,7 +161,7 @@ def get_data_from_files(zfiles):
     return obs_data
 
 
-def get_tempest_data(f, obs_data, add_qc=False):
+def get_tempest_data(f, obs_data, add_qc=True):
 
     WMO_sat_ID = get_WMO_satellite_ID(f['Metadata']['InstrumentShortName'][0].decode("utf-8"))
 
