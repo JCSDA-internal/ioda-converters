@@ -197,11 +197,6 @@ class AOD(object):
                     print(f'Continuing to next AOD and ADP file (or ending)')
                     continue
 
-                print('Processing the following AOD and ADP files:')
-                print(f)
-                print(self.adp_mask[n])
-                print()
-
                 # open ADP file corresponding to AOD file.
                 try:
                     ncd_adp = nc.Dataset(self.adp_mask[n], 'r')
