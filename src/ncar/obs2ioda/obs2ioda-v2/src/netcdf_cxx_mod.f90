@@ -96,4 +96,43 @@ contains
         netcdfAddGroup = c_netcdfAddGroup(netcdfID, c_parentGroupName, c_groupName)
     end function netcdfAddGroup
 
+    ! netcdfAddDim:
+    !   Adds a new dimension to a NetCDF file, either in a specified group or as a global dimension.
+    !
+    ! Arguments:
+    !   - netcdfID (integer(c_int), intent(in), value):
+    !       Identifier of the NetCDF file.
+    !   - dimName (character(len=*), intent(in)):
+    !       Name of the new dimension.
+    !   - len (integer(c_int), intent(in), value):
+    !       Length of the dimension.
+    !   - groupName (character(len=*), intent(in), optional):
+    !       Name of the target group. If absent, the dimension is added as a global dimension.
+    !
+    ! Returns:
+    !    - integer(c_int): A status code indicating the outcome of the operation:
+    !       - 0: Success.
+    !       - Non-zero: Failure
+    function netcdfAddDim(netcdfID, dimName, len, groupName)
+        integer(c_int), value, intent(in) :: netcdfID
+        character(len = *), intent(in) :: dimName
+        integer(c_int), value, intent(in) :: len
+        character(len = *), optional, intent(in) :: groupName
+        integer(c_int) :: netcdfAddDim
+        type(c_ptr) :: c_groupName
+        type(c_ptr) :: c_dimName
+        type(f_c_string_t) :: f_c_string_groupName
+        type(f_c_string_t) :: f_c_string_dimName
+
+        if (present(groupName)) then
+            c_groupName = f_c_string_groupName%to_c(groupName)
+        else
+            c_groupName = c_null_ptr
+        end if
+        c_dimName = f_c_string_dimName%to_c(dimName)
+
+        netcdfAddDim = c_netcdfAddDim(netcdfID, c_groupName, c_dimName, len)
+
+    end function netcdfAddDim
+
 end module netcdf_cxx_mod

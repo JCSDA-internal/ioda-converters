@@ -78,6 +78,40 @@ module netcdf_cxx_i_mod
             integer(c_int) :: c_netcdfAddGroup
         end function c_netcdfAddGroup
 
+        ! c_netcdfAddDim:
+        !   Adds a new dimension to a NetCDF file
+        !
+        !   Arguments:
+        !     - netcdfID (integer(c_int), intent(in), value):
+        !       The identifier of the NetCDF file to which the dimension will be added.
+        !     - groupName (type(c_ptr), intent(in), value):
+        !       A C pointer to a null-terminated string specifying the name of the group
+        !       where the dimension will be created. If creating a global dimension, pass `c_null_ptr`.
+        !     - dimName (type(c_ptr), intent(in), value):
+        !       A C pointer to a null-terminated string specifying the name of the new dimension.
+        !     - len (integer(c_int), intent(in), value):
+        !
+        !   Returns:
+        !     - integer(c_int): Status code indicating the result of the operation:
+        !         - 0: Success.
+        !         - Non-zero: Failure.
+        !
+        !   Notes:
+        !     - The function assumes that `netcdfID` is valid and corresponds to an open NetCDF file.
+        !     - `dimName` must be valid C pointers pointing to null-terminated strings.
+        !   ```
+        function c_netcdfAddDim(&
+                netcdfID, groupName, dimName, len) &
+                bind(C, name = "netcdfAddDim")
+            import :: c_int
+            import :: c_ptr
+            integer(c_int), value, intent(in) :: netcdfID
+            type(c_ptr), value, intent(in) :: groupName
+            type(c_ptr), value, intent(in) :: dimName
+            integer(c_int), value, intent(in) :: len
+            integer(c_int) :: c_netcdfAddDim
+        end function c_netcdfAddDim
+
     end interface
 
 end module netcdf_cxx_i_mod
