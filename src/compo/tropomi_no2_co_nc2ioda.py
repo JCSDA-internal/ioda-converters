@@ -290,7 +290,7 @@ def main():
     elif args.variable == "no2":
         var_name = 'nitrogendioxide'
 
-    if args.column == "tropophere":
+    if args.column == "troposphere":
 
         obsVar = {
             var_name+'_tropospheric_column': var_name+'Column'

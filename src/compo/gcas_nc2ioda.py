@@ -271,7 +271,7 @@ def get_parser():
 
     required.add_argument(
         '-c', '--column',
-        help="type of column: total or troposphere,
+        help="type of column: total or troposphere",
         type=str, required=True)
 
     optional = parser.add_argument_group(title='optional arguments')
