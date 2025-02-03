@@ -1293,7 +1293,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gcas
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/gcas_nc2ioda.py
                           -i testinput/GCAS_NO2_20230802.nc
                           -o testrun/ioda_GCAS_NO2_20230802.nc
-                          -c tropo
+                          -c troposphere
                           -r 2023080215 2023080321"
                           ioda_GCAS_NO2_20230802.nc ${IODA_CONV_COMP_TOL})
 
@@ -1310,7 +1310,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pandora
                           --site_classification testinput/pandora_site_classification.csv"
                           Pandora57s1_BoulderCO_L2_rnvs3p1-8.nc ${IODA_CONV_COMP_TOL})
 
-foreach (coltype total tropo)
+foreach (coltype total troposphere)
         ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2_${coltype}
                           TYPE    SCRIPT
                           ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"

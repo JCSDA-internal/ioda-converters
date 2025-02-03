@@ -114,7 +114,7 @@ class gcas(object):
                 var_data = (var_data_below+var_data_above) * MOLECCM_2MOLM_2  # change to mol/m2
                 var_name = 'nitrogendioxideTotal'
                 pressure_vertice[:, 0] = np.zeros(time_dim * xtrack_dim, dtype=np.float32)
-            elif (self.column.strip() == 'tropo'):
+            elif (self.column.strip() == 'troposphere'):
                 var_data = dsFlight['no2_vertical_column_below_aircraft'].values.flatten()*MOLECCM_2MOLM_2
                 var_name = 'nitrogendioxideColumn'
                 pressure_vertice[:, 0] = aircraft_p
@@ -271,7 +271,7 @@ def get_parser():
 
     required.add_argument(
         '-c', '--column',
-        help="type of column: total or tropo",
+        help="type of column: total or troposphere,
         type=str, required=True)
 
     optional = parser.add_argument_group(title='optional arguments')

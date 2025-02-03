@@ -105,7 +105,7 @@ class tropomi(object):
                 avg_kernel = ncd.groups['PRODUCT'].variables['averaging_kernel'][:]
                 avg_kernel = np.flip(np.reshape(avg_kernel, (nlocs, nlevs)), axis=1)
 
-                if self.columnType == 'tropo':
+                if self.columnType == 'troposphere':
                     trop_layer = ncd.groups['PRODUCT'].variables['tm5_tropopause_layer_index'][:].ravel()
                     total_airmass = ncd.groups['PRODUCT'].variables['air_mass_factor_total'][:].ravel()
                     trop_airmass = ncd.groups['PRODUCT'].variables['air_mass_factor_troposphere'][:].ravel()
@@ -261,7 +261,7 @@ def main():
         type=str, required=True)
     required.add_argument(
         '-c', '--column',
-        help="type of column: total or tropo",
+        help="type of column: total or tropophere",
         type=str, required=True)
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
@@ -284,13 +284,13 @@ def main():
 
     if args.variable == "co":
         var_name = 'carbonmonoxide'
-        if args.column == "tropo":
+        if args.column == "troposphere":
             print('CO is only available for total column, reset column to total', flush=1)
             args.column = 'total'
     elif args.variable == "no2":
         var_name = 'nitrogendioxide'
 
-    if args.column == "tropo":
+    if args.column == "tropophere":
 
         obsVar = {
             var_name+'_tropospheric_column': var_name+'Column'
