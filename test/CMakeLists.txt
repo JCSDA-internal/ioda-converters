@@ -149,7 +149,7 @@ list( APPEND test_output
   testoutput/viirs_aod.nc
   testoutput/viirs_bias.nc
   testoutput/tropomi_no2_total.nc
-  testoutput/tropomi_no2_tropo.nc
+  testoutput/tropomi_no2_troposphere.nc
   testoutput/tempo_NO2_total.nc
   testoutput/tempo_NO2_troposphere.nc
   testoutput/mopitt_co.nc
