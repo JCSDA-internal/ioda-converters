@@ -125,10 +125,6 @@ def main(args):
     VarAttrs[('dateTime', metaDataName)]['_FillValue'] = long_missing_value
 
     # final write to IODA file
-#   import pdb
-#   pdb.set_trace()
-#   import sys
-#   sys.exit()
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
     # report time
@@ -150,7 +146,7 @@ def get_ssmis_data(afile, add_qc=False):
     with open(afile, 'r') as file:
         # we need metaData information from the filename (which satellite)
         WMO_sat_ID, timestamp = get_file_metadata(file.name)
-        print(f'{timestamp[0]=}  {timestamp[1]=}')
+        print(f'beginning and ending  {timestamp[0] = }  {timestamp[1] = }')
 
         # Create an iterator from the file object
         file_iterator = iter(file)
@@ -164,9 +160,12 @@ def get_ssmis_data(afile, add_qc=False):
             except StopIteration:
                 # If StopIteration is raised, break from the loop
                 break
+            # estimate a per scan line time step
             timestamp[0] = timestamp[0] + timedelta(microseconds=390000)
 
-    print(f'{timestamp[0]=}  {timestamp[1]=}')
+    # local_data[('dateTime', metaDataName)] = np.array(local_data[('dateTime', metaDataName)], dtype='int64')
+    local_data = numpy_obs(local_data)
+    print(f' iterated timestep {timestamp[0] = }    and ending time {timestamp[1] = }')
     return local_data
 
 
@@ -180,6 +179,7 @@ def populate_obsValue(line, local_data, WMO_sat_ID=int_missing_value, ssmis_uas=
     try:
         if ssmis_uas:
             nchans = 5
+            channel_offset = 19
             latitude, longitude, scanline, scanposition, rain_flag, surface_type, \
                 tb_ch01, tb_ch02, tb_ch03, tb_ch04, tb_ch05, \
                 surface_flag, irej, year, julian_day, \
@@ -189,6 +189,7 @@ def populate_obsValue(line, local_data, WMO_sat_ID=int_missing_value, ssmis_uas=
                 eph_lat_1, eph_lon_1, eph_lat_2, eph_lon_2, orbit_angle = line.split()
         else:
             nchans = 24
+            channel_offset = 1
             latitude, longitude, scanline, scanposition, rain_flag, surface_type, \
                 tb_ch01, tb_ch02, tb_ch03, tb_ch04, tb_ch05, tb_ch06, tb_ch07, tb_ch08, \
                 tb_ch09, tb_ch10, tb_ch11, tb_ch12, tb_ch13, tb_ch14, tb_ch15, tb_ch16, \
@@ -200,10 +201,11 @@ def populate_obsValue(line, local_data, WMO_sat_ID=int_missing_value, ssmis_uas=
     except ValueError:
         return local_data
 
+    if len(local_data[('sensorChannelNumber', metaDataName)]) != nchans:
+        local_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(nchans)+channel_offset, dtype="int32")
     # local_data[('sensorAltitude'?  .append(sensor_altitude)
     local_data[('latitude', metaDataName)].append(float(latitude))
     local_data[('longitude', metaDataName)].append(float(longitude))
-    local_data[('sensorChannelNumber', metaDataName)].append(np.arange(nchans)+1)
     local_data[('sensorScanPosition', metaDataName)].append(int(scanposition))
     local_data[('sensorZenithAngle', metaDataName)].append(sensor_zenith)
     # compute from beam position?
@@ -231,7 +233,7 @@ def populate_obsValue(line, local_data, WMO_sat_ID=int_missing_value, ssmis_uas=
              tb_ch09, tb_ch10, tb_ch11, tb_ch12, tb_ch13, tb_ch14, tb_ch15, tb_ch16,
              tb_ch17, tb_ch18, tb_ch19, tb_ch20, tb_ch21, tb_ch22, tb_ch23, tb_ch24], dtype='float32'))
     local_data[('brightnessTemperature', obsErrName)].append(np.full((nchans), 5.0, dtype='float32'))
-    local_data[('brightnessTemperature', qcName)].append(np.full((nchans), 0, dtype='int32'))
+    local_data[('brightnessTemperature', qcName)].append(np.full((nchans), qc_flag, dtype='int32'))
 
     if add_qc:
         local_data = ssmis_gross_quality_control(local_data, qc_flag)
@@ -307,7 +309,7 @@ def get_global_attributes(wmo_satellite_id):
 
 def get_epoch_time(adatetime):
 
-    time_offset = np.int64(round((adatetime - epoch).total_seconds()))
+    time_offset = round((adatetime - epoch).total_seconds())
 
     return time_offset
 
@@ -317,15 +319,15 @@ def init_obs_loc():
         ('brightnessTemperature', obsValName): [],
         ('brightnessTemperature', obsErrName): [],
         ('brightnessTemperature', qcName): [],
-        ('sensorChannelNumber', metaDataName): [],
         ('latitude', metaDataName): [],
         ('longitude', metaDataName): [],
-        ('dateTime', metaDataName): [],
-        ('sensorScanPosition', metaDataName): [],
         ('sensorZenithAngle', metaDataName): [],
         ('sensorAzimuthAngle', metaDataName): [],
         ('sensorViewAngle', metaDataName): [],
+        ('sensorScanPosition', metaDataName): [],
         ('satelliteIdentifier', metaDataName): [],
+        ('sensorChannelNumber', metaDataName): [],
+        ('dateTime', metaDataName): [],
     }
 #       ('solarZenithAngle', metaDataName): [],
 #       ('solarAzimuthAngle', metaDataName): [],
@@ -333,6 +335,28 @@ def init_obs_loc():
     return obs
 
 
+def numpy_obs(obs_data):
+    obs_types = {
+        ('brightnessTemperature', obsValName): 'float32',
+        ('brightnessTemperature', obsErrName):  'float32',
+        ('brightnessTemperature', qcName): 'int32',
+        ('latitude', metaDataName): 'float32',
+        ('longitude', metaDataName): 'float32',
+        ('sensorZenithAngle', metaDataName): 'float32',
+        ('sensorAzimuthAngle', metaDataName): 'float32',
+        ('sensorViewAngle', metaDataName): 'float32',
+        ('sensorScanPosition', metaDataName): 'int32',
+        ('satelliteIdentifier', metaDataName): 'int32',
+        ('sensorChannelNumber', metaDataName): 'int32',
+        ('dateTime', metaDataName): 'int64',
+    }
+    for k in obs_data:
+        if k in obs_types.keys():
+            obs_data[k] = np.array(obs_data[k], dtype=obs_types[k])
+        else:
+            print('{k = }  not found in obs_types keys needs a default type')
+
+    return obs_data
 def get_file_metadata(filename):
 
     # create a datetime object with a start and ending time
