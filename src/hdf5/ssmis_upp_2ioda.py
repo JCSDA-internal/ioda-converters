@@ -12,7 +12,7 @@ Python code to ingest ASCII SSMIS Unified Pre-Processor data and put into IODA f
 """
 
 import argparse
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import glob
 # from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
@@ -28,7 +28,9 @@ from pyiodaconv.def_jedi_utils import compute_scan_angle
 from pyiodaconv.orddicts import DefaultOrderedDict
 
 # globals
-SSMIS_WMO_sat_ID = 806
+DMSPF16_WMO_sat_ID = 249
+DMSPF17_WMO_sat_ID = 285
+DMSPF18_WMO_sat_ID = 286
 
 float_missing_value = iconv.get_default_fill_val(np.float32)
 int_missing_value = iconv.get_default_fill_val(np.int32)
@@ -123,6 +125,10 @@ def main(args):
     VarAttrs[('dateTime', metaDataName)]['_FillValue'] = long_missing_value
 
     # final write to IODA file
+#   import pdb
+#   pdb.set_trace()
+#   import sys
+#   sys.exit()
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
     # report time
@@ -142,6 +148,9 @@ def get_ssmis_data(afile, add_qc=False):
     local_data = init_obs_loc()
     # these files are specific only for the SSMIS and SSMIS UAS data types
     with open(afile, 'r') as file:
+        # we need metaData information from the filename (which satellite)
+        WMO_sat_ID, timestamp = get_file_metadata(file.name)
+
         # Create an iterator from the file object
         file_iterator = iter(file)
         # read the one line header
@@ -150,7 +159,7 @@ def get_ssmis_data(afile, add_qc=False):
         while True:
             try:
                 line = next(file_iterator)
-                local_data = populate_obsValue(line, local_data, ssmis_uas=ssmis_uas, add_qc=add_qc)
+                local_data = populate_obsValue(line, local_data, WMO_sat_ID=WMO_sat_ID, ssmis_uas=ssmis_uas, add_qc=add_qc, timestamp=timestamp)
             except StopIteration:
                 # If StopIteration is raised, break from the loop
                 break
@@ -158,10 +167,9 @@ def get_ssmis_data(afile, add_qc=False):
     return local_data
 
 
-def populate_obsValue(line, local_data, ssmis_uas=False, add_qc=False):
+def populate_obsValue(line, local_data, WMO_sat_ID=int_missing_value, ssmis_uas=False, add_qc=False, timestamp=None):
 
     # this is specifically for SSMIS UPP files
-    WMO_sat_ID = SSMIS_WMO_sat_ID
     sensor_altitude = 550.  # SSMIS satelite altitude approximate
     sensor_zenith = 53.1  # SSMIS zenith
 
@@ -189,12 +197,15 @@ def populate_obsValue(line, local_data, ssmis_uas=False, add_qc=False):
     except ValueError:
         return local_data
 
-    # sensor_altitude = np.append(sensor_altitude)
+    # local_data[('sensorAltitude'?  .append(sensor_altitude)
     local_data[('latitude', metaDataName)].append(float(latitude))
     local_data[('longitude', metaDataName)].append(float(longitude))
     local_data[('sensorChannelNumber', metaDataName)].append(np.arange(nchans)+1)
     local_data[('sensorScanPosition', metaDataName)].append(int(scanposition))
     local_data[('sensorZenithAngle', metaDataName)].append(sensor_zenith)
+    # compute from beam position?
+    local_data[('sensorAzimuthAngle', metaDataName)].append(0.)
+    # confirm view angle computation
     local_data[('sensorViewAngle', metaDataName)].append(sensor_zenith)
 #   local_data[('sensorViewAngle', metaDataName)] = compute_scan_angle(
 #       sensor_zenith,
@@ -204,10 +215,9 @@ def populate_obsValue(line, local_data, ssmis_uas=False, add_qc=False):
 
     nlocs = len(local_data[('latitude', metaDataName)])
     local_data[('satelliteIdentifier', metaDataName)].append(WMO_sat_ID)
-#   local_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f['GeolocationAndFlags']['time_string']), dtype='int64')
+    # will use a single time for now... need to find out seconds between scans?
+    local_data[('dateTime', metaDataName)].append(get_epoch_time(timestamp[0]))
     qc_flag = int(irej)
-
-    nchans = len(local_data[('sensorChannelNumber', metaDataName)])
 
     if ssmis_uas:
         local_data[('brightnessTemperature', obsValName)].append(np.array(
@@ -221,12 +231,12 @@ def populate_obsValue(line, local_data, ssmis_uas=False, add_qc=False):
     local_data[('brightnessTemperature', qcName)].append(np.full((nchans), 0, dtype='int32'))
 
     if add_qc:
-        local_data = ssmis_gross_quality_control(local_data, solar_array_flag, support_arm_flag, rfi_flag, ufo_flag)
+        local_data = ssmis_gross_quality_control(local_data, qc_flag)
 
     return local_data
 
 
-def ssmis_gross_quality_control(obs_data, solar_array_flag, support_arm_flag, rfi_flag, ufo_flag):
+def ssmis_gross_quality_control(obs_data, qc_flag):
 
     tb_key = 'brightnessTemperature'
     good = \
@@ -234,11 +244,7 @@ def ssmis_gross_quality_control(obs_data, solar_array_flag, support_arm_flag, rf
         (obs_data[(tb_key, obsValName)][:, 4] > 10) & (obs_data[(tb_key, obsValName)][:, 4] < 400) & \
         (obs_data[(tb_key, obsValName)][:, 8] > 10) & (obs_data[(tb_key, obsValName)][:, 8] < 400) & \
         (obs_data[('latitude', metaDataName)] >= -90) & (obs_data[('latitude', metaDataName)] <= 90) & \
-        (obs_data[('sensorZenithAngle', metaDataName)] <= 56) & \
-        (solar_array_flag[:] == 0) & (support_arm_flag[:] == 0)
-
-    if rfi_flag:
-        good = good & (rfi_flag[:] == 0) & (ufo_flag[:] == 0)
+        (qc_flag[:] == 0)
 
     for k in obs_data:
         if metaDataName in k[1] and 'sensorChannelNumber' not in k[0]:
@@ -259,7 +265,7 @@ def is_ssmis_uas(sensor_name):
 
 
 def get_global_attributes(wmo_satellite_id):
-    if wmo_satellite_id[0] == SSMIS_WMO_sat_ID:
+    if wmo_satellite_id[0] in (DMSPF16_WMO_sat_ID, DMSPF17_WMO_sat_ID, DMSPF18_WMO_sat_ID):
         GlobalAttrs = {
             "platformCommonName": "SSMIS",
             "platformLongDescription": "SSMIS Brightness Temperature Data",
@@ -296,10 +302,9 @@ def get_global_attributes(wmo_satellite_id):
     return GlobalAttrs
 
 
-def get_epoch_time(obs_time_iso):
+def get_epoch_time(adatetime):
 
-    this_datetime = [datetime.fromisoformat(adate.decode("utf-8")[:-5]) for adate in obs_time_iso]
-    time_offset = [round((adatetime - epoch).total_seconds()) for adatetime in this_datetime]
+    time_offset = np.int64(round((adatetime - epoch).total_seconds()))
 
     return time_offset
 
@@ -314,21 +319,48 @@ def init_obs_loc():
         ('longitude', metaDataName): [],
         ('dateTime', metaDataName): [],
         ('sensorScanPosition', metaDataName): [],
-        ('solarZenithAngle', metaDataName): [],
-        ('solarAzimuthAngle', metaDataName): [],
         ('sensorZenithAngle', metaDataName): [],
         ('sensorAzimuthAngle', metaDataName): [],
         ('sensorViewAngle', metaDataName): [],
         ('satelliteIdentifier', metaDataName): [],
     }
+#       ('solarZenithAngle', metaDataName): [],
+#       ('solarAzimuthAngle', metaDataName): [],
 
     return obs
 
 
-# ----------------------------------------------------------------------
-# Time function
-# ----------------------------------------------------------------------
+def get_file_metadata(filename):
+
+    # create a datetime object with a start and ending time
+    # example filename: tdris_f17_d20240702_s231600_e005900_r91143_uas_cfnoc.asc
+    _, sat_id, YYYYMMDD, startTime, endTime, rev_number, *rest = os.path.basename(filename).split('_')
+    start_datetime_obj = datetime.strptime(YYYYMMDD[1:] + startTime[1:], "%Y%m%d%H%M%S")
+    end_datetime_obj = datetime.strptime(YYYYMMDD[1:] + endTime[1:], "%Y%m%d%H%M%S")
+
+    # If the end time is earlier than the start time, it means it belongs to the next day
+    if end_datetime_obj < start_datetime_obj:
+        end_datetime_obj += timedelta(days=1)
+
+    file_timestamp = [start_datetime_obj, end_datetime_obj]
+
+    if sat_id == 'f16':
+        WMO_sat_ID = DMSPF16_WMO_sat_ID
+    elif sat_id == 'f17':
+        WMO_sat_ID = DMSPF17_WMO_sat_ID
+    elif sat_id == 'f18':
+        WMO_sat_ID = DMSPF18_WMO_sat_ID
+    else:
+        print(f" WARNING could not determine satellite WMO ID from: {file.name}")
+        WMO_sat_ID = int_missing_value
+
+    return WMO_sat_ID, file_timestamp
+
+
 def record_time(tic=None, print_log=True):
+    # ----------------------------------------------------------------------
+    # Time function
+    # ----------------------------------------------------------------------
 
     if not tic:
         tic = time.perf_counter()
