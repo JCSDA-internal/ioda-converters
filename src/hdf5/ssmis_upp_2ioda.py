@@ -150,6 +150,7 @@ def get_ssmis_data(afile, add_qc=False):
     with open(afile, 'r') as file:
         # we need metaData information from the filename (which satellite)
         WMO_sat_ID, timestamp = get_file_metadata(file.name)
+        print(f'{timestamp[0]=}  {timestamp[1]=}')
 
         # Create an iterator from the file object
         file_iterator = iter(file)
@@ -163,7 +164,9 @@ def get_ssmis_data(afile, add_qc=False):
             except StopIteration:
                 # If StopIteration is raised, break from the loop
                 break
+            timestamp[0] = timestamp[0] + timedelta(microseconds=390000)
 
+    print(f'{timestamp[0]=}  {timestamp[1]=}')
     return local_data
 
 
