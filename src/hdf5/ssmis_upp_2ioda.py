@@ -169,7 +169,7 @@ def get_ssmis_data(afile, add_qc=False):
     return local_data
 
 
-def populate_obsValue(line, local_data, WMO_sat_ID=int_missing_value, ssmis_uas=False, add_qc=False, timestamp=None):
+def populate_obsValue(line, local_data, WMO_sat_ID=int_missing_value, ssmis_uas=False, add_qc=True, timestamp=None):
 
     # this is specifically for SSMIS UPP files
     sensor_altitude = 550.  # SSMIS satelite altitude approximate
