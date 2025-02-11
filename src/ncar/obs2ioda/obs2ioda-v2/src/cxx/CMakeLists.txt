@@ -3,6 +3,7 @@ set(obs2ioda_cxx_SOURCES
     netcdf_file.cc
     netcdf_group.cc
     netcdf_dimension.cc
+    netcdf_variable.cc
 )
 set(obs2ioda_cxx_LIBRARIES
     NetCDF::NetCDF_CXX

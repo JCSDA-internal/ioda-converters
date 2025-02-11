@@ -1,8 +1,10 @@
 module netcdf_cxx_mod
-    use iso_c_binding, only : c_int, c_ptr, c_null_ptr
+    use iso_c_binding, only : c_int, c_ptr, c_null_ptr, c_loc, c_float, c_long
     use f_c_string_t_mod, only : f_c_string_t
-    use netcdf_cxx_i_mod, only : c_netcdfCreate, c_netcdfClose, c_netcdfAddGroup, c_netcdfAddDim
-    use netcdf, only : NF90_INT, NF90_REAL
+    use f_c_string_1D_t_mod, only : f_c_string_1D_t
+    use netcdf_cxx_i_mod, only : c_netcdfCreate, c_netcdfClose, c_netcdfAddGroup, c_netcdfAddDim, &
+            c_netcdfAddVar, c_netcdfPutVarInt, c_netcdfPutVarInt64, c_netcdfPutVarReal, c_netcdfPutVarString, &
+            c_netcdfSetFillInt, c_netcdfSetFillInt64, c_netcdfSetFillReal, c_netcdfSetFillString
     implicit none
     public
 
@@ -134,5 +136,185 @@ contains
         netcdfAddDim = c_netcdfAddDim(netcdfID, c_groupName, c_dimName, len)
 
     end function netcdfAddDim
+
+    ! netcdfAddVar:
+    !   Adds a new variable to a NetCDF file, specifying its name, type, dimensions, and target group.
+    !
+    !   Arguments:
+    !     - netcdfID (integer(c_int), intent(in), value):
+    !       The identifier of the NetCDF file to which the variable will be added.
+    !     - varName (character(len=*), intent(in)):
+    !       The name of the new variable to be created.
+    !     - netcdfDataType (integer(c_int), intent(in), value):
+    !       The NetCDF data type of the variable (e.g., `NF90_INT`, `NF90_REAL`).
+    !     - numDims (integer(c_int), intent(in), value):
+    !       The number of dimensions associated with the variable.
+    !     - dimNames (character(len=*), dimension(numDims), intent(in)):
+    !       An array of dimension names that define the variable's shape.
+    !     - groupName (character(len=*), intent(in), optional):
+    !       The name of the group in which the variable will be created.
+    !       If not provided, the variable will be added as a global variable.
+    !
+    !   Returns:
+    !     - integer(c_int): A status code indicating the outcome of the operation:
+    !         - 0: Success.
+    !         - Non-zero: Failure.
+    function netcdfAddVar(netcdfID, varName, netcdfDataType, numDims, dimNames, groupName)
+        integer(c_int), value, intent(in) :: netcdfID
+        character(len = *), intent(in) :: varName
+        integer(c_int), value, intent(in) :: netcdfDataType
+        integer(c_int), value, intent(in) :: numDims
+        character(len = *), dimension(numDims), intent(in) :: dimNames
+        character(len = *), optional, intent(in) :: groupName
+        integer(c_int) :: netcdfAddVar
+        type(c_ptr) :: c_groupName
+        type(c_ptr) :: c_varName
+        type(c_ptr) :: c_dimNames
+        type(f_c_string_t) :: f_c_string_groupName
+        type(f_c_string_t) :: f_c_string_varName
+        type(f_c_string_1D_t) :: f_c_string_1D_dimNames
+
+        if (present(groupName)) then
+            c_groupName = f_c_string_groupName%to_c(groupName)
+        else
+            c_groupName = c_null_ptr
+        end if
+        c_varName = f_c_string_varName%to_c(varName)
+        c_dimNames = f_c_string_1D_dimNames%to_c(dimNames)
+        netcdfAddVar = c_netcdfAddVar(netcdfID, c_groupName, c_varName, &
+                netcdfDataType, numDims, c_dimNames)
+    end function netcdfAddVar
+
+    ! netcdfPutVar:
+    !   Writes data to a variable in a NetCDF file.
+    !
+    !   Arguments:
+    !     - netcdfID (integer(c_int), intent(in), value):
+    !       The identifier of the NetCDF file where the data will be written.
+    !     - varName (character(len=*), intent(in)):
+    !       The name of the variable to which data will be written.
+    !     - values (class(*), dimension(:), intent(in)):
+    !       The data to be written to the variable.
+    !     - groupName (character(len=*), intent(in), optional):
+    !       The name of the group containing the variable.
+    !       If not provided, the variable is assumed to be a global variable.
+    !
+    !   Returns:
+    !     - integer(c_int): A status code indicating the outcome of the operation:
+    !         -  0: Success.
+    !         - -1: NetCDF operation returned an error, but the error code was 0.
+    !         - -2: Unsupported type passed for values.
+    !         - Other nonzero values: Specific NetCDF error codes.
+    function netcdfPutVar(netcdfID, varName, values, groupName)
+        integer(c_int), value, intent(in) :: netcdfID
+        character(len = *), intent(in) :: varName
+        class(*), dimension(:), intent(in) :: values
+        character(len = *), optional, intent(in) :: groupName
+        integer(c_int) :: netcdfPutVar
+        type(f_c_string_t) :: f_c_string_groupName
+        type(f_c_string_t) :: f_c_string_varName
+        type(c_ptr) :: c_groupName
+        type(c_ptr) :: c_varName
+        type(c_ptr) :: c_values
+        type(f_c_string_1D_t) :: f_c_string_1D_values
+
+        if (present(groupName)) then
+            c_groupName = f_c_string_groupName%to_c(groupName)
+        else
+            c_groupName = c_null_ptr
+        end if
+        c_varName = f_c_string_varName%to_c(varName)
+
+        select type (values)
+        type is (integer(c_int))
+            c_values = c_loc(values)
+            netcdfPutVar = c_netcdfPutVarInt(netcdfID, c_groupName, &
+                    c_varName, c_values)
+
+        type is (integer(c_long))
+            c_values = c_loc(values)
+            netcdfPutVar = c_netcdfPutVarInt64(netcdfID, c_groupName, &
+                    c_varName, c_values)
+
+        type is (real(c_float))
+            c_values = c_loc(values)
+            netcdfPutVar = c_netcdfPutVarReal(netcdfID, c_groupName, &
+                    c_varName, c_values)
+
+        type is (character(len = *))
+            c_values = f_c_string_1D_values%to_c(values)
+            netcdfPutVar = c_netcdfPutVarString(netcdfID, c_groupName, &
+                    c_varName, c_values)
+        class default
+            netcdfPutVar = -2
+        end select
+    end function netcdfPutVar
+
+    ! netcdfSetFill:
+    !   Sets the fill mode and fill value for a variable in a NetCDF file.
+    !
+    !   Arguments:
+    !     - netcdfID (integer(c_int), intent(in), value):
+    !       The identifier of the NetCDF file containing the variable.
+    !     - varName (character(len=*), intent(in)):
+    !       The name of the variable for which the fill mode is set.
+    !     - fillMode (integer(c_int), intent(in), value):
+    !       The fill mode to be applied:
+    !         - 0: Turn off fill mode (use uninitialized values).
+    !         - 1: Turn on fill mode (use specified fill value).
+    !     - fillValue (class(*), intent(in)):
+    !       The fill value to be applied when fill mode is enabled.
+    !       Must match the data type of the variable.
+    !     - groupName (character(len=*), intent(in), optional):
+    !       The name of the group containing the variable.
+    !       If not provided, the variable is assumed to be a global variable.
+    !
+    !   Returns:
+    !     - integer(c_int): A status code indicating the outcome of the operation:
+    !         -  0: Success.
+    !         - -1: NetCDF operation returned an error, but the error code was 0.
+    !         - -2: Unsupported type passed for fillValue.
+    !         - Other nonzero values: Specific NetCDF error codes.
+    function netcdfSetFill(netcdfID, varName, fillMode, fillValue, groupName)
+        integer(c_int), value, intent(in) :: netcdfID
+        character(len = *), intent(in) :: varName
+        integer(c_int), value, intent(in) :: fillMode
+        class(*), intent(in) :: fillValue
+        character(len = *), optional, intent(in) :: groupName
+        integer(c_int) :: netcdfSetFill
+        type(f_c_string_t) :: f_c_string_groupName
+        type(f_c_string_t) :: f_c_string_varName
+        type(c_ptr) :: c_groupName
+        type(c_ptr) :: c_varName
+        type(f_c_string_t) :: f_c_string_fillValue
+
+        if (present(groupName)) then
+            c_groupName = f_c_string_groupName%to_c(groupName)
+        else
+            c_groupName = c_null_ptr
+        end if
+        c_varName = f_c_string_varName%to_c(varName)
+
+        select type (fillValue)
+        type is (integer(c_int))
+            netcdfSetFill = c_netcdfSetFillInt(netcdfID, c_groupName, &
+                    c_varName, fillMode, fillValue)
+
+        type is (integer(c_long))
+            netcdfSetFill = c_netcdfSetFillInt64(netcdfID, c_groupName, &
+                    c_varName, fillMode, fillValue)
+
+        type is (real(c_float))
+            netcdfSetFill = c_netcdfSetFillReal(netcdfID, c_groupName, &
+                    c_varName, fillMode, fillValue)
+
+        type is (character(len = *))
+            netcdfSetFill = c_netcdfSetFillString(netcdfID, c_groupName, &
+                    c_varName, fillMode, &
+                    f_c_string_fillValue%to_c(fillValue))
+        class default
+            netcdfSetFill = -2
+        end select
+    end function netcdfSetFill
 
 end module netcdf_cxx_mod
