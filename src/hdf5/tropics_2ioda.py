@@ -263,12 +263,12 @@ def get_data(f, obs_data, skip=1):
 
     # using scanPosition and the forward and aft flag decide while viewAngle gets assigned negative values
     i_forward = np.array(get_normalized_bit(quality_word[:, iband], bit_index=7), dtype='int32')
-    # For i_forward == 1 assign negative to 1-40
-    scan_sign_forward = obs_data[('sensorScanPosition', metaDataName)] < 41
+    # For i_forward == 1 assign negative to 42-81
+    scan_sign_forward = obs_data[('sensorScanPosition', metaDataName)] > 41
     obs_data[('sensorViewAngle', metaDataName)][i_forward == 1] *= 1 - 2 * scan_sign_forward[i_forward == 1]
 
-    # For i_forward == 0 assign negative to 42-82
-    scan_sign_backward = obs_data[('sensorScanPosition', metaDataName)] > 41
+    # For i_forward == 0 assign negative to 1-40
+    scan_sign_backward = obs_data[('sensorScanPosition', metaDataName)] < 41
     obs_data[('sensorViewAngle', metaDataName)][i_forward == 0] *= 1 - 2 * scan_sign_backward[i_forward == 0]
 
     # Bit 5: Ascending/Descending
