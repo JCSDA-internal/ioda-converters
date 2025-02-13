@@ -338,7 +338,7 @@ def init_obs_loc():
 def numpy_obs(obs_data):
     obs_types = {
         ('brightnessTemperature', obsValName): 'float32',
-        ('brightnessTemperature', obsErrName):  'float32',
+        ('brightnessTemperature', obsErrName): 'float32',
         ('brightnessTemperature', qcName): 'int32',
         ('latitude', metaDataName): 'float32',
         ('longitude', metaDataName): 'float32',
@@ -357,6 +357,8 @@ def numpy_obs(obs_data):
             print('{k = }  not found in obs_types keys needs a default type')
 
     return obs_data
+
+
 def get_file_metadata(filename):
 
     # create a datetime object with a start and ending time
