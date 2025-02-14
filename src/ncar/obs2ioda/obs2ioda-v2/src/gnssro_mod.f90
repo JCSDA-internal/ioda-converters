@@ -49,7 +49,6 @@ module gnssro_bufr2ioda
       real(r_kind), allocatable, dimension(:) :: impact_para
       real(r_kind), allocatable, dimension(:) :: bndoe_gsi
    end type gnssro_type
-   type(gnssro_type) :: gnssro_data
 
 contains
 
@@ -58,11 +57,12 @@ contains
       character(len = *), intent(in) :: outdir
       character(len = 10) :: anatime
       integer(i_kind) :: ndata, mincy, maxobs
+      type(gnssro_type) :: gnssro_data
       call get_buffer_information(trim(adjustl(infile)), anatime, mincy, maxobs)
-      call allocate_gnssro_data_array(maxobs)
-      call read_gnssro_data(trim(adjustl(infile)), mincy, ndata)
-      call write_gnssro_data(anatime, ndata, outdir)
-      call deallocate_gnssro_data_array()
+      call allocate_gnssro_data_array(gnssro_data, maxobs)
+      call read_gnssro_data(trim(adjustl(infile)), gnssro_data, mincy, ndata)
+      call write_gnssro_data(gnssro_data, anatime, ndata, outdir)
+      call deallocate_gnssro_data_array(gnssro_data)
    end subroutine read_write_gnssro
 
 
@@ -108,7 +108,8 @@ contains
    end subroutine
 
 
-   subroutine allocate_gnssro_data_array(maxobs)
+   subroutine allocate_gnssro_data_array(gnssro_data, maxobs)
+      type(gnssro_type), intent(out) :: gnssro_data  ! intent(out) automatically deallocates previously allocated arguments
       integer, intent(in) :: maxobs
       allocate(gnssro_data%said(maxobs))
       allocate(gnssro_data%siid(maxobs))
@@ -133,8 +134,9 @@ contains
    end subroutine
 
 
-   subroutine read_gnssro_data(infile, mincy, ndata)
+   subroutine read_gnssro_data(infile, gnssro_data, mincy, ndata)
       character(len = *), intent(in) :: infile
+      type(gnssro_type), intent(inout) :: gnssro_data
       integer(i_kind), intent(in) :: mincy
       integer(i_kind), intent(out) :: ndata
       integer(i_kind), parameter :: lnbufr = 10
@@ -326,7 +328,8 @@ contains
    end subroutine
 
 
-   subroutine write_gnssro_data(anatime, ndata, outdir)
+   subroutine write_gnssro_data(gnssro_data, anatime, ndata, outdir)
+      type(gnssro_type), intent(in) :: gnssro_data
       character(len = *), intent(in) :: anatime, outdir
       integer(i_kind), intent(in) :: ndata
       character(len = datelength) :: cdate
@@ -501,7 +504,8 @@ contains
    end subroutine
 
 
-   subroutine deallocate_gnssro_data_array()
+   subroutine deallocate_gnssro_data_array(gnssro_data)
+      type(gnssro_type), intent(inout) :: gnssro_data
       deallocate(gnssro_data%said)
       deallocate(gnssro_data%siid)
       deallocate(gnssro_data%sclf)
