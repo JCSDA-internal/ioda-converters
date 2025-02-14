@@ -153,7 +153,7 @@ module netcdf_cxx_i_mod
         end function c_netcdfAddVar
 
         ! c_netcdfPutVar:
-        !   Writes integer data to a NetCDF variable in the specified group or as a global variable.
+        !   Writes data to a NetCDF variable in the specified group or as a global variable.
         !
         !   Arguments:
         !     - netcdfID (integer(c_int), intent(in), value):
@@ -222,7 +222,7 @@ module netcdf_cxx_i_mod
         end function c_netcdfPutVarString
 
         ! c_netcdfSetFillInt:
-        !   Sets the fill mode and fill value for an integer NetCDF variable in the specified group
+        !   Sets the fill mode and fill value for an NetCDF variable in the specified group
         !   or as a global variable.
         !
         !   Arguments:
@@ -298,6 +298,54 @@ module netcdf_cxx_i_mod
             integer(c_int), value, intent(in) :: fillMode
             integer(c_int) :: c_netcdfSetFillString
         end function c_netcdfSetFillString
+
+        ! c_netcdfPutAttInt:
+        !   Writes an attribute to a NetCDF variable, group, or as a global attribute.
+        !
+        !   Arguments:
+        !     - netcdfID (integer(c_int), intent(in), value):
+        !       The identifier of the NetCDF file.
+        !     - attName (type(c_ptr), intent(in), value):
+        !       A C pointer to a null-terminated string specifying the attribute name.
+        !     - attValue (type(c_ptr), intent(in), value):
+        !       A C pointer to the integer value to be assigned to the attribute.
+        !     - varName (type(c_ptr), intent(in), value):
+        !       A C pointer to a null-terminated string specifying the variable name. If `c_null_ptr`,
+        !       the attribute is assigned to the group instead.
+        !     - groupName (type(c_ptr), intent(in), value):
+        !       A C pointer to a null-terminated string specifying the group name. If `c_null_ptr`,
+        !       the attribute is assigned to the root group.
+        !
+        !   Returns:
+        !     - integer(c_int): Status code indicating the result of the operation:
+        !         - 0: Success.
+        !         - Non-zero: Failure.
+        function c_netcdfPutAttInt(&
+                netcdfID, attName, attValue, varName, groupName) &
+                bind(C, name = "netcdfPutAttInt")
+            import :: c_int
+            import :: c_ptr
+            integer(c_int), value, intent(in) :: netcdfID
+            type(c_ptr), value, intent(in) :: attName
+            type(c_ptr), value, intent(in) :: attValue
+            type(c_ptr), value, intent(in) :: varName
+            type(c_ptr), value, intent(in) :: groupName
+            integer(c_int) :: c_netcdfPutAttInt
+        end function c_netcdfPutAttInt
+
+        ! See documentation for `c_netcdfPutAttInt`.
+        function c_netcdfPutAttString(&
+                netcdfID, attName, attValue, varName, groupName) &
+                bind(C, name = "netcdfPutAttString")
+            import :: c_int
+            import :: c_ptr
+            integer(c_int), value, intent(in) :: netcdfID
+            type(c_ptr), value, intent(in) :: attName
+            type(c_ptr), value, intent(in) :: attValue
+            type(c_ptr), value, intent(in) :: varName
+            type(c_ptr), value, intent(in) :: groupName
+            integer(c_int) :: c_netcdfPutAttString
+        end function c_netcdfPutAttString
 
     end interface
 
