@@ -50,31 +50,36 @@ module gnssro_bufr2ioda
       real(r_kind), allocatable, dimension(:) :: bndoe_gsi
    end type gnssro_type
 
+   type bufr_info_type
+      character(len = datelength) :: analysis_time
+      integer(i_kind) :: analysis_epochtime_in_mins
+      integer(i_kind) :: nobs_max  ! estimate for maximum number of observations contained in bufr file
+      integer(i_kind) :: nobs  ! effective number of observatios contained in bufr file, nobs <= nobs_max
+   end type
+
 contains
 
    subroutine read_write_gnssro(infile, outdir)
       character(len = *), intent(in) :: infile
       character(len = *), intent(in) :: outdir
-      character(len = 10) :: anatime
-      integer(i_kind) :: ndata, mincy, maxobs
       type(gnssro_type) :: gnssro_data
-      call get_buffer_information(trim(adjustl(infile)), anatime, mincy, maxobs)
-      call allocate_gnssro_data_array(gnssro_data, maxobs)
-      call read_gnssro_data(trim(adjustl(infile)), gnssro_data, mincy, ndata)
-      call write_gnssro_data(gnssro_data, anatime, ndata, outdir)
+      type(bufr_info_type) :: gnssro_bufr_info
+      call get_buffer_information(trim(adjustl(infile)), gnssro_bufr_info)
+      call allocate_gnssro_data_array(gnssro_data, gnssro_bufr_info)
+      call read_gnssro_data(trim(adjustl(infile)), gnssro_data, gnssro_bufr_info)
+      call write_gnssro_data(gnssro_data, gnssro_bufr_info, outdir)
       call deallocate_gnssro_data_array(gnssro_data)
    end subroutine read_write_gnssro
 
 
-   subroutine get_buffer_information(infile, anatime, mincy, maxobs)
+   subroutine get_buffer_information(infile, gnssro_bufr_info)
       character(len = *), intent(in) :: infile
-      character(len = *), intent(out) :: anatime
-      integer(i_kind), intent(out) :: mincy, maxobs
+      type(bufr_info_type), intent(out) :: gnssro_bufr_info
       integer(i_kind), parameter :: lnbufr = 10  ! the bufr library expects a unit number in [0-99] -> can't use newunit
       character(len = 8) :: subset
       integer(i_kind) :: idate, iret, levs
       integer, dimension(6) :: iadate5
-      integer(i_kind) :: ireadmg, ireadsb
+      integer(i_kind) :: maxobs, ireadmg, ireadsb
       real(r_kind), dimension(n1ahdr) :: bfr1ahdr
       real(r_kind), dimension(50, maxlevs) :: data1b
       ! open file and connect to buffer library
@@ -93,8 +98,8 @@ contains
       iadate5(3) = (idate - iadate5(1) * 1000000 - iadate5(2) * 10000) / 100
       iadate5(4) = idate - iadate5(1) * 1000000 - iadate5(2) * 10000 - iadate5(3) * 100
       iadate5(5) = 0
-      call w3fs21(iadate5, mincy)
-      write(anatime, dateformat) idate
+      call w3fs21(iadate5, gnssro_bufr_info%analysis_epochtime_in_mins)
+      write(gnssro_bufr_info%analysis_time, dateformat) idate
       ! estimate total number of observations
       maxobs = 0
       do while (ireadmg(lnbufr, subset, idate) == 0)
@@ -105,12 +110,15 @@ contains
          enddo
       end do
       call closbf(lnbufr)  ! this also closes the frotran file unit
+      gnssro_bufr_info%nobs_max = maxobs
    end subroutine
 
 
-   subroutine allocate_gnssro_data_array(gnssro_data, maxobs)
+   subroutine allocate_gnssro_data_array(gnssro_data, gnssro_bufr_info)
       type(gnssro_type), intent(out) :: gnssro_data  ! intent(out) automatically deallocates previously allocated arguments
-      integer, intent(in) :: maxobs
+      type(bufr_info_type), intent(in) :: gnssro_bufr_info
+      integer(i_kind) :: maxobs
+      maxobs = gnssro_bufr_info%nobs_max
       allocate(gnssro_data%said(maxobs))
       allocate(gnssro_data%siid(maxobs))
       allocate(gnssro_data%sclf(maxobs))
@@ -134,11 +142,10 @@ contains
    end subroutine
 
 
-   subroutine read_gnssro_data(infile, gnssro_data, mincy, ndata)
+   subroutine read_gnssro_data(infile, gnssro_data, gnssro_bufr_info)
       character(len = *), intent(in) :: infile
       type(gnssro_type), intent(inout) :: gnssro_data
-      integer(i_kind), intent(in) :: mincy
-      integer(i_kind), intent(out) :: ndata
+      type(bufr_info_type), intent(inout) :: gnssro_bufr_info
       integer(i_kind), parameter :: lnbufr = 10
       character(len = 8) :: subset
       integer(i_kind) :: idate, iret
@@ -153,7 +160,7 @@ contains
       integer(i_kind), dimension(mxib) :: ibit
       integer(i_kind) :: i, k, m
       real(r_kind), dimension(maxlevs) :: nreps_this_ROSEQ2
-      integer(i_kind) :: nreps_ROSEQ1, levs, levsr, nrec, ndata0, nreps_ROSEQ2_int
+      integer(i_kind) :: nreps_ROSEQ1, levs, levsr, nrec, ndata, ndata0, nreps_ROSEQ2_int
       real(r_kind), dimension(50, maxlevs) :: data1b, data2a
       real(r_kind)  :: rlat, rlon, azim, height, ref, ref_error, ref_pccf
       real(r_kind) :: freq_chk, freq, impact, bend, bend_error, bend_pccf, obsErr
@@ -190,7 +197,7 @@ contains
             sclf = bfr1ahdr(12)  ! Satellite classification
             ogce = bfr1ahdr(13)  ! Identification of originating/generating centre
             call w3fs21(idate5, minobs)
-            timeo = real(minobs - mincy, r_kind) / 60.0
+            timeo = real(minobs - gnssro_bufr_info%analysis_epochtime_in_mins, r_kind) / 60.0
             call epochtimecalculator(idate5, epochtime)  ! calculate epochtime since January 1 1970
             ! check if values are in valid range
             ! earth radius of curvature
@@ -321,6 +328,7 @@ contains
          enddo read_loop
       end do
       call closbf(lnbufr)
+      gnssro_bufr_info%nobs = ndata
       if (nrec == 0) then
          write(6, *) "Error. No valid observations found. Cannot create NetCDF ouput."
          stop 2
@@ -328,26 +336,28 @@ contains
    end subroutine
 
 
-   subroutine write_gnssro_data(gnssro_data, anatime, ndata, outdir)
+   subroutine write_gnssro_data(gnssro_data, gnssro_bufr_info, outdir)
       type(gnssro_type), intent(in) :: gnssro_data
-      character(len = *), intent(in) :: anatime, outdir
-      integer(i_kind), intent(in) :: ndata
+      type(bufr_info_type), intent(in) :: gnssro_bufr_info
+      character(len = *), intent(in) :: outdir
       character(len = datelength) :: cdate
       character (:), allocatable :: outfile
+      integer :: ndata
       integer :: ncid, nlocs_dimid, grpid_metadata, grpid_obsvalue, grpid_obserror
       integer :: varid_lat, varid_lon, varid_time, varid_epochtime, varid_recn, varid_sclf, varid_ptid, varid_said
       integer :: varid_siid, varid_asce, varid_ogce, varid_msl, varid_impp, varid_imph, varid_azim, varid_geoid, varid_rfict
       integer :: varid_ref, varid_refoe, varid_bnd, varid_bndoe
 
       ! create netcdf file and enter define mode
-      outfile = trim(adjustl(outdir)) // 'gnssro_obs_' // anatime // '.h5'
+      outfile = trim(adjustl(outdir)) // 'gnssro_obs_' // gnssro_bufr_info%analysis_time // '.h5'
       call check(nf90_create(outfile, NF90_NETCDF4, ncid))
 
       ! create dimensions
+      ndata = gnssro_bufr_info%nobs
       call check(nf90_def_dim(ncid, 'nlocs', ndata, nlocs_dimid))
 
       ! write global attributes
-      call check(nf90_put_att(ncid, NF90_GLOBAL, 'date_time', anatime))
+      call check(nf90_put_att(ncid, NF90_GLOBAL, 'date_time', gnssro_bufr_info%analysis_time))
       call check(nf90_put_att(ncid, NF90_GLOBAL, 'ioda_version', 'fortran generated ioda2 file'))
 
       ! create groups
