@@ -146,7 +146,6 @@ def get_ssmis_data(afile, add_qc=False):
     with open(afile, 'r') as file:
         # we need metaData information from the filename (which satellite)
         WMO_sat_ID, timestamp = get_file_metadata(file.name)
-        print(f'beginning and ending  {timestamp[0] = }  {timestamp[1] = }')
 
         # Create an iterator from the file object
         file_iterator = iter(file)
@@ -156,24 +155,20 @@ def get_ssmis_data(afile, add_qc=False):
         while True:
             try:
                 line = next(file_iterator)
-                local_data = populate_obsValue(line, local_data, WMO_sat_ID=WMO_sat_ID, ssmis_uas=ssmis_uas, add_qc=add_qc, timestamp=timestamp)
+                local_data = populate_obsValue(line, local_data, WMO_sat_ID=WMO_sat_ID, ssmis_uas=ssmis_uas, add_qc=add_qc)
             except StopIteration:
                 # If StopIteration is raised, break from the loop
                 break
-            # estimate a per scan line time step
-            timestamp[0] = timestamp[0] + timedelta(microseconds=390000)
 
-    # local_data[('dateTime', metaDataName)] = np.array(local_data[('dateTime', metaDataName)], dtype='int64')
     local_data = numpy_obs(local_data)
-    print(f' iterated timestep {timestamp[0] = }    and ending time {timestamp[1] = }')
     return local_data
 
 
-def populate_obsValue(line, local_data, WMO_sat_ID=int_missing_value, ssmis_uas=False, add_qc=True, timestamp=None):
+def populate_obsValue(line, local_data, WMO_sat_ID=int_missing_value, ssmis_uas=False, add_qc=True):
 
     # this is specifically for SSMIS UPP files
     sensor_altitude = 850.  # SSMIS satelite altitude approximate
-    sensor_zenith = 53.1  # SSMIS zenith
+    sensor_zenith = 45.0  # SSMIS zenith
 
     # read data lines beginning at fourth line
     try:
@@ -211,17 +206,23 @@ def populate_obsValue(line, local_data, WMO_sat_ID=int_missing_value, ssmis_uas=
     # compute from beam position?
     local_data[('sensorAzimuthAngle', metaDataName)].append(0.)
     # confirm view angle computation
+    # should call this function and it should provide 
+        # Scene Altitude                 EIA 
+        # Sfc                            53.33
+        # 11 km                          53.20
+        # 60 km                          52.62
     local_data[('sensorViewAngle', metaDataName)].append(sensor_zenith)
 #   local_data[('sensorViewAngle', metaDataName)] = compute_scan_angle(
 #       sensor_zenith,
 #       sensor_altitude,
 #       sensor_zenith,
-#       qc_flag=[int(irej)])
+#       qc_flag=[[int(irej)]])
 
     nlocs = len(local_data[('latitude', metaDataName)])
     local_data[('satelliteIdentifier', metaDataName)].append(WMO_sat_ID)
     # will use a single time for now... need to find out seconds between scans?
-    local_data[('dateTime', metaDataName)].append(get_epoch_time(timestamp[0]))
+    datetime_obj = datetime.strptime(year + month + day + hour + minute + second, "%Y%m%d%H%M%S")
+    local_data[('dateTime', metaDataName)].append(get_epoch_time(datetime_obj))
     qc_flag = int(irej)
 
     if ssmis_uas:
