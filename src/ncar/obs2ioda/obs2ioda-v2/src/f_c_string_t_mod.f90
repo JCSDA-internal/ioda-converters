@@ -78,12 +78,12 @@ contains
         character(len = *), intent(in) :: f_string
         type(c_ptr) :: c_string
         integer :: n
-        n = len(f_string)
+        n = len_trim(f_string)
         if (allocated(this%fc_string)) then
             deallocate(this%fc_string)
         end if
         allocate(character(len = n + 1) :: this%fc_string)
-        this%fc_string = f_string // c_null_char
+        this%fc_string = f_string(1:n) // c_null_char
         c_string = c_loc(this%fc_string)
     end function to_c
 
