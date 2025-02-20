@@ -1468,7 +1468,8 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_j1_l1b_albedo
                           -i testinput/viirs_j1_l1b_albedo_obsval_202108050600.nc
                           -g testinput/viirs_j1_l1b_albedo_geoloc_202108050600.nc
                           --secterm
-                          -o testrun/viirs_j1_l1b_albedo_2021080506.nc"
+                          -o testrun/viirs_j1_l1b_albedo_2021080506.nc
+			  --date_range 2021080503 2021080509"
                           viirs_j1_l1b_albedo_2021080506.nc ${IODA_CONV_COMP_TOL})
 
 
