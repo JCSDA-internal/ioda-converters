@@ -31,7 +31,8 @@ locationKeyList = [
     ("sensorZenithAngle", "float"),
     ("sensorAzimuthAngle", "float"),
     ("sensorViewAngle", "float"),
-    ("sensorScanPosition", "integer")
+    ("sensorScanPosition", "integer"),
+    ("surfaceQualifier", "integer"),
 ]
 
 obsvars = ["albedo"]
@@ -78,8 +79,10 @@ long_missing_value = iconv.get_default_fill_val(np.int64)
 
 
 class viirs_l1b_rf(object):
-    def __init__(self, filenames, thin, apply_secterm):
+    def __init__(self, filenames, date_range, thin, apply_secterm):
         self.filenames = filenames
+        self.wbeg = np.datetime64(str(datetime.strptime(date_range[0], "%Y%m%d%H"))).astype(np.int64)
+        self.wend = np.datetime64(str(datetime.strptime(date_range[1], "%Y%m%d%H"))).astype(np.int64)
         self.thin = thin
         self.apply_secterm = apply_secterm
         self.varDict = defaultdict(lambda: defaultdict(dict))
@@ -114,6 +117,7 @@ class viirs_l1b_rf(object):
         self.outdata[('sensorAzimuthAngle', metaDataName)] = np.array([], dtype=np.float32)
         self.outdata[('sensorScanPosition', metaDataName)] = np.array([], dtype=np.int32)
         self.outdata[('sensorViewAngle', metaDataName)] = np.array([], dtype=np.float32)
+        self.outdata[('surfaceQualifier', metaDataName)] = np.array([], dtype=np.int32)
         for iodavar in obsvars:
             self.outdata[self.varDict[iodavar]['valKey']] = np.array([], dtype=np.float32)
             self.outdata[self.varDict[iodavar]['errKey']] = np.array([], dtype=np.float32)
@@ -155,6 +159,7 @@ class viirs_l1b_rf(object):
             sensor_za = geo_ncd.groups['geolocation_data'].variables['sensor_zenith'][:].data.ravel()
             sensor_aa = geo_ncd.groups['geolocation_data'].variables['sensor_azimuth'][:].data.ravel()
             sensor_va = compute_scan_angle(sensor_za, np.full_like(sensor_za, orbit_height), sensor_za)
+            landwat_mask = geo_ncd.groups['geolocation_data'].variables['land_water_mask'][:].data.ravel()
 
             nlocs = lons.size
 
@@ -187,10 +192,13 @@ class viirs_l1b_rf(object):
                 # NASA VIIRS apply secant if option enabled
                 vals[:, ichan] = obs[:].data.ravel() * sec_term if self.apply_secterm else obs[:].data.ravel()
                 qcfs[:, ichan] = qcf[:].data.ravel()
-                errs[:, ichan] = 1. + err.scale_factor * err[:].data.ravel() ** 2
+                # Convert Uncertainty Index (in percentage) into absolute error
+                errs[:, ichan] = (1. + err.scale_factor * err[:].data.ravel() ** 2) * 0.01 * vals[:, ichan]
 
                 # Apply _FillValue to masked points
                 vals[obs_mask, ichan] = float_missing_value
+                qcfs[obs_mask, ichan] = int_missing_value
+                errs[obs_mask, ichan] = float_missing_value
 
                 ichan += 1
 
@@ -215,32 +223,37 @@ class viirs_l1b_rf(object):
                 sensor_za = sensor_za[mask_thin]
                 sensor_aa = sensor_aa[mask_thin]
                 sensor_va = sensor_va[mask_thin]
+                landwat_mask = landwat_mask[mask_thin]
+
+            winmsk = ((obs_time >= self.wbeg) & (obs_time <= self.wend))
 
             #  Append the data to prepare for output
-            self.outdata[('latitude', metaDataName)] = np.append(self.outdata[('latitude', metaDataName)], np.array(lats, dtype=np.float32))
-            self.outdata[('longitude', metaDataName)] = np.append(self.outdata[('longitude', metaDataName)], np.array(lons, dtype=np.float32))
-            self.outdata[('dateTime', metaDataName)] = np.append(self.outdata[('dateTime', metaDataName)], np.array(obs_time, dtype=np.int64))
+            self.outdata[('latitude', metaDataName)] = np.append(self.outdata[('latitude', metaDataName)], np.array(lats[winmsk], dtype=np.float32))
+            self.outdata[('longitude', metaDataName)] = np.append(self.outdata[('longitude', metaDataName)], np.array(lons[winmsk], dtype=np.float32))
+            self.outdata[('dateTime', metaDataName)] = np.append(self.outdata[('dateTime', metaDataName)], np.array(obs_time[winmsk], dtype=np.int64))
 
             self.outdata[('satelliteAscendingFlag', metaDataName)] = np.append(self.outdata[('satelliteAscendingFlag', metaDataName)],
-                                                                               np.array(orbit_ad, dtype=np.int32))
+                                                                               np.array(orbit_ad[winmsk], dtype=np.int32))
             self.outdata[('solarZenithAngle', metaDataName)] = np.append(self.outdata[('solarZenithAngle', metaDataName)],
-                                                                         np.array(solar_za, dtype=np.float32))
+                                                                         np.array(solar_za[winmsk], dtype=np.float32))
             self.outdata[('solarAzimuthAngle', metaDataName)] = np.append(self.outdata[('solarAzimuthAngle', metaDataName)],
-                                                                          np.array(solar_aa, dtype=np.float32))
+                                                                          np.array(solar_aa[winmsk], dtype=np.float32))
             self.outdata[('sensorZenithAngle', metaDataName)] = np.append(self.outdata[('sensorZenithAngle', metaDataName)],
-                                                                          np.array(sensor_za, dtype=np.float32))
+                                                                          np.array(sensor_za[winmsk], dtype=np.float32))
             self.outdata[('sensorAzimuthAngle', metaDataName)] = np.append(self.outdata[('sensorAzimuthAngle', metaDataName)],
-                                                                           np.array(sensor_aa, dtype=np.float32))
+                                                                           np.array(sensor_aa[winmsk], dtype=np.float32))
             self.outdata[('sensorViewAngle', metaDataName)] = np.append(self.outdata[('sensorViewAngle', metaDataName)],
-                                                                        np.array(sensor_va, dtype=np.float32))
+                                                                        np.array(sensor_va[winmsk], dtype=np.float32))
+            self.outdata[('surfaceQualifier', metaDataName)] = np.append(self.outdata[('surfaceQualifier', metaDataName)],
+                                                                         np.array(landwat_mask[winmsk], dtype=np.int32))
 
             for iodavar in obsvars:
                 self.outdata[self.varDict[iodavar]['valKey']] = np.append(
-                    self.outdata[self.varDict[iodavar]['valKey']], np.array(vals, dtype=np.float32))
+                    self.outdata[self.varDict[iodavar]['valKey']], np.array(vals[winmsk, :], dtype=np.float32))
                 self.outdata[self.varDict[iodavar]['errKey']] = np.append(
-                    self.outdata[self.varDict[iodavar]['errKey']], np.array(errs, dtype=np.float32))
+                    self.outdata[self.varDict[iodavar]['errKey']], np.array(errs[winmsk, :], dtype=np.float32))
                 self.outdata[self.varDict[iodavar]['qcKey']] = np.append(
-                    self.outdata[self.varDict[iodavar]['qcKey']], np.array(qcfs, dtype=np.int32))
+                    self.outdata[self.varDict[iodavar]['qcKey']], np.array(qcfs[winmsk, :], dtype=np.int32))
 
         # Write other MetaData
         self.varAttrs[('dateTime', metaDataName)]['units'] = iso8601_string
@@ -259,6 +272,7 @@ class viirs_l1b_rf(object):
 
         DimDict['Location'] = len(self.outdata[('latitude', metaDataName)])
         DimDict['Channel'] = self.outdata[('sensorChannelNumber', metaDataName)]
+        AttrData['applySecterm'] = self.apply_secterm
         AttrData['sourceFiles'] = AttrData['sourceFiles']
         AttrData['datetimeRange'] = np.array([datetime.fromtimestamp(min_time).strftime("%Y-%m-%dT%H:%M:%SZ"),
                                               datetime.fromtimestamp(max_time).strftime("%Y-%m-%dT%H:%M:%SZ")], dtype=object)
@@ -279,34 +293,44 @@ def main():
                      'and converter of native NetCDF format for observations of TOA reflectance during'
                      ' daytime from VIIRS to IODA NetCDF format.')
     )
-    parser.add_argument(
+
+    required = parser.add_argument_group(title='required arguments')
+    required.add_argument(
         '-i', '--obsinfo',
         help="path of viirs l1b 6-min observation (VJ102MOD) input file(s)",
         type=str, nargs='+', required=True)
-    parser.add_argument(
+    required.add_argument(
         '-g', '--geoinfo',
         help="path of viirs l1b 6-min geolocation (VJ103MOD) input file(s)",
         type=str, nargs='+', required=True)
-    parser.add_argument(
+    required.add_argument(
         '-o', '--output',
         help="name of ioda-v2 output file",
         type=str, required=True)
-    parser.add_argument(
+    required.add_argument(
         '-n', '--thin',
         help="percentage of random thinning fro 0.0 to 1.0. Zero indicates"
         " no thinning is performed. (default: %(default)s)",
         type=float, default=0.0)
-    parser.add_argument(
+    required.add_argument(
         '--secterm',
         help="presence of option will multiply secant of solar zenith angle to get true reflectance",
         action='store_true', default=False)
+
+    optional = parser.add_argument_group(title='optional arguments')
+    optional.add_argument(
+        '--date_range',
+        help="extract a date range to fit the data assimilation window"
+        "format -r YYYYMMDDHH YYYYMMDDHH",
+        type=str, metavar=('begindate', 'enddate'), nargs=2,
+        default=('1970010100', '2170010100'))
 
     args = parser.parse_args()
 
     zipped_list = zip(sorted(args.obsinfo), sorted(args.geoinfo))
 
     # Read in the reflectance factor data
-    toa_rf = viirs_l1b_rf(zipped_list, args.thin, args.secterm)
+    toa_rf = viirs_l1b_rf(zipped_list, args.date_range, args.thin, args.secterm)
 
     # write everything out (albedo)
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
