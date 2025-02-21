@@ -166,29 +166,27 @@ def get_tempest_data(f, obs_data, add_qc=True):
     WMO_sat_ID = get_WMO_satellite_ID(f['Metadata']['InstrumentShortName'][0].decode("utf-8"))
 
     # "Geolocation and flags"
-    sensor_altitude = np.array(f['GeolocationAndFlags']['sat_alt'], dtype='float32')
-    # sat_alt_flag = np.array(f['GeolocationAndFlags']['sc_att_flag'], dtype='int32')
-    sat_alt_flag = np.array(f['GeolocationAndFlags']['obs_qual_flag'], dtype='int32')
-    obs_data[('latitude', metaDataName)] = np.array(f['GeolocationAndFlags']['obs_lat'], dtype='float32')
-    obs_data[('longitude', metaDataName)] = np.array(f['GeolocationAndFlags']['obs_lon'], dtype='float32')
+
+    sensor_altitude = np.array(f['Geolocation']['sat_alt'], dtype='float32')
+    qc_flag = f['CalibratedSceneTemperatures']['obs_qual_flag']
+    solar_array_flag = f['CalibratedSceneTemperatures']['solar_array_flag']
+    obs_data[('latitude', metaDataName)] = np.array(f['Geolocation']['obs_lat'], dtype='float32')
+    obs_data[('longitude', metaDataName)] = np.array(f['Geolocation']['obs_lon'], dtype='float32')
     obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(5)+1, dtype='int32')
-    obs_data[('sensorScanPosition', metaDataName)] = np.array(f['GeolocationAndFlags']['scan_pos'], dtype='int32')
-    obs_data[('solarZenithAngle', metaDataName)] = np.array(f['GeolocationAndFlags']['sat_solar_zen'], dtype='float32')
-    obs_data[('solarAzimuthAngle', metaDataName)] = np.array(f['GeolocationAndFlags']['sat_solar_az'], dtype='float32')
-    obs_data[('sensorZenithAngle', metaDataName)] = np.array(f['GeolocationAndFlags']['earth_inc_ang'], dtype='float32')
-    obs_data[('sensorAzimuthAngle', metaDataName)] = np.array(f['GeolocationAndFlags']['earth_az_ang'], dtype='float32')
-    # instr_scan_angle = np.array(f['GeolocationAndFlags']['instr_scan_ang'], dtype='float32')
+    obs_data[('sensorScanPosition', metaDataName)] = np.array(f['Geolocation']['scan_pos'], dtype='int32')
+    obs_data[('solarZenithAngle', metaDataName)] = np.array(f['Geolocation']['sat_solar_zen'], dtype='float32')
+    obs_data[('solarAzimuthAngle', metaDataName)] = np.array(f['Geolocation']['sat_solar_az'], dtype='float32')
+    obs_data[('sensorZenithAngle', metaDataName)] = np.array(f['Geolocation']['earth_inc_ang'], dtype='float32')
+    obs_data[('sensorAzimuthAngle', metaDataName)] = np.array(f['Geolocation']['earth_az_ang'], dtype='float32')
     obs_data[('sensorViewAngle', metaDataName)] = compute_scan_angle(
-        np.array(f['GeolocationAndFlags']['instr_scan_ang'], dtype='float32'),
+        np.array(f['Geolocation']['instr_scan_ang'], dtype='float32'),
         sensor_altitude,
-        np.array(f['GeolocationAndFlags']['earth_inc_ang'], dtype='float32'),
-        qc_flag=sat_alt_flag)
+        np.array(f['Geolocation']['earth_inc_ang'], dtype='float32'),
+        qc_flag=qc_flag)
 
     nlocs = len(obs_data[('latitude', metaDataName)])
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
-    obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f['GeolocationAndFlags']['time_string']), dtype='int64')
-    qc_flag = f['GeolocationAndFlags']['obs_qual_flag']
-    solar_array_flag = f['GeolocationAndFlags']['solar_array_flag']
+    obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f['Geolocation']['time_string']), dtype='int64')
 
     nchans = len(obs_data[('sensorChannelNumber', metaDataName)])
     obs_data[('brightnessTemperature', obsValName)] = np.array(
