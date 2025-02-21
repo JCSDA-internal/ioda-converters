@@ -36,11 +36,11 @@ for key in varDict.keys():
 
 # these are the MetaData common to each input
 locationKeyList = [
-    ('latitude', 'float', 'degrees_north'),
-    ('longitude', 'float', 'degrees_east'),
+    ('latitude', 'float', 'degree_north'),
+    ('longitude', 'float', 'degree_east'),
     ('dateTime', 'long', iso8601_string),
-    ('stationIdentifier', 'string', 'GNSS ground-based receiving station name'),
-    ('stationElevation', 'float', 'GNSS ground-based receiving station height in meter'),
+    ('stationIdentification', 'string', ''),#, 'GNSS ground-based receiving station name'),
+    ('stationElevation', 'float', 'm'),
 ]
 
 meta_keys = [m_item[0] for m_item in locationKeyList]
@@ -136,6 +136,7 @@ def main(args):
         units = varDict[key][2]
         varAttrs[(variable, obsValName)]['units'] = units
         varAttrs[(variable, obsErrName)]['units'] = units
+        varAttrs[(variable, qcName)]['units'] = units
         varAttrs[(variable, obsValName)]['coordinates'] = 'longitude latitude stationElevation'
         varAttrs[(variable, obsErrName)]['coordinates'] = 'longitude latitude stationElevation'
         varAttrs[(variable, qcName)]['coordinates'] = 'longitude latitude stationElevation'
@@ -254,7 +255,7 @@ def populate_obsValue(line, local_data, fname):
     dateTime = convert_string_to_dateTime(yymmdd, hhmmss)
 
     local_data['dateTime'] = np.append(local_data['dateTime'], dateTime)
-    local_data['stationIdentifier'] = np.append(local_data['stationIdentifier'], sid)
+    local_data['stationIdentification'] = np.append(local_data['stationIdentification'], sid)
     local_data['stationElevation'] = np.append(local_data['stationElevation'], float(alt))
     local_data['latitude'] = np.append(local_data['latitude'], float(lat))
     local_data['longitude'] = np.append(local_data['longitude'], float(lon))
@@ -284,7 +285,7 @@ def convert_string_to_dateTime(yymmdd, hhmmss):
 def fill_data_with_missing(local_data):
     # fill the data records from TENET line 4 with missing
     local_data['dateTime'] = np.append(local_data['dateTime'], int_missing_value)
-    local_data['stationIdentifier'] = np.append(local_data['stationIdentifier'], string_missing_value)
+    local_data['stationIdentification'] = np.append(local_data['stationIdentification'], string_missing_value)
     local_data['stationElevation'] = np.append(local_data['stationElevation'], float_missing_value)
     local_data['latitude'] = np.append(local_data['latitude'], float_missing_value)
     local_data['longitude'] = np.append(local_data['longitude'], float_missing_value)
