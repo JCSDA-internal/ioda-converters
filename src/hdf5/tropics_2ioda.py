@@ -270,17 +270,21 @@ def get_data(f, obs_data, skip=1):
     scan_sign_backward = obs_data[('sensorScanPosition', metaDataName)] < 41
 
     scan_middle = obs_data[('sensorScanPosition', metaDataName)] == 41
+    scan_pre_middle = obs_data[('sensorScanPosition', metaDataName)] == 40
+    scan_post_middle = obs_data[('sensorScanPosition', metaDataName)] == 42
 
-####  for testing purposed only ####
+#   for testing purposes only
 #   obs_data[('sensorViewAngle', metaDataName)][i_forward == 1] *= 1 - 2 * scan_sign_forward[i_forward == 1]
 #   obs_data[('sensorViewAngle', metaDataName)][i_forward == 0] *= 1 - 2 * scan_sign_backward[i_forward == 0]
-####  end testing purposed only ####
-    #  newly adopted strategy by MITLL
+#   end testing purpose
+    #  newly adopted strategy by MIT-LL
     #  Multiply the scan angles for spots 1 to 40 by -1.
     #  For spot 41:  (new spot 40 scan angle + spot 42 scan angle)/2
     obs_data[('sensorViewAngle', metaDataName)][scan_sign_backward == 1] *= -1.
     # ugh what to do here
-    obs_data[('sensorViewAngle', metaDataName)][scan_middle == 1] *= -1.
+    obs_data[('sensorViewAngle', metaDataName)][scan_middle == 1] = (
+        obs_data[('sensorViewAngle', metaDataName)][scan_pre_middle == 1] +
+        + obs_data[('sensorViewAngle', metaDataName)][scan_post_middle == 1]) / 2.
 
     # Bit 5: Ascending/Descending
     obs_data[('satelliteAscendingFlag', metaDataName)] = np.array(get_normalized_bit(quality_word[:, iband], bit_index=5), dtype='int32')
