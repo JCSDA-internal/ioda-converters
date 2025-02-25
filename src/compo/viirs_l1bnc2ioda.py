@@ -312,12 +312,12 @@ def main():
         help="percentage of random thinning fro 0.0 to 1.0. Zero indicates"
         " no thinning is performed. (default: %(default)s)",
         type=float, default=0.0)
-    required.add_argument(
+
+    optional = parser.add_argument_group(title='optional arguments')
+    optional.add_argument(
         '--secterm',
         help="presence of option will multiply secant of solar zenith angle to get true reflectance",
         action='store_true', default=False)
-
-    optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
         '--date_range',
         help="extract a date range to fit the data assimilation window"
