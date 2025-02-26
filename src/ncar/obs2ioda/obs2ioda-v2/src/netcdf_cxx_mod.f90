@@ -3,7 +3,7 @@ module netcdf_cxx_mod
     use f_c_string_t_mod, only : f_c_string_t
     use f_c_string_1D_t_mod, only : f_c_string_1D_t
     use netcdf_cxx_i_mod, only : c_netcdfCreate, c_netcdfClose, c_netcdfAddGroup, c_netcdfAddDim, &
-            c_netcdfAddVar, c_netcdfPutVarInt, c_netcdfPutVarInt64, c_netcdfPutVarReal, c_netcdfPutVarString, &
+            c_netcdfAddVar, c_netcdfPutVarInt, c_netcdfPutVarInt64, c_netcdfPutVarReal, c_netcdfPutVarChar, &
             c_netcdfSetFillInt, c_netcdfSetFillInt64, c_netcdfSetFillReal, c_netcdfSetFillString, &
             c_netcdfPutAttInt, c_netcdfPutAttString
     implicit none
@@ -248,7 +248,7 @@ contains
 
         type is (character(len = *))
             c_values = f_c_string_1D_values%to_c(values)
-            netcdfPutVar = c_netcdfPutVarString(netcdfID, c_groupName, &
+            netcdfPutVar = c_netcdfPutVarChar(netcdfID, c_groupName, &
                     c_varName, c_values)
         class default
             netcdfPutVar = -2

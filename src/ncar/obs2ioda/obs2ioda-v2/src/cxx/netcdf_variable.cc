@@ -1,8 +1,22 @@
 #include "netcdf_variable.h"
 #include "netcdf_file.h"
 #include "netcdf_error.h"
+#include <algorithm>
+#include <cstring>
 
 namespace Obs2Ioda {
+
+    std::vector<char> flattenCharPtrArray(const char *const *values, const int numStrings, const int stringSize) {
+        std::vector<char> contiguousValues(numStrings * stringSize + numStrings, ' ');
+
+        for (int i = 0; i < numStrings; ++i) {
+            int len = std::strlen(values[i]);
+            std::copy_n(values[i], std::min(len, stringSize), contiguousValues.begin() + i * stringSize);
+            contiguousValues[i * stringSize + stringSize] = '\0';
+        }
+        return contiguousValues;
+    }
+
     int netcdfAddVar(
         int netcdfID,
         const char *groupName,
@@ -54,7 +68,18 @@ namespace Obs2Ioda {
                                        netCDF::NcGroup>(
                                        file->getGroup(
                                            groupName));
-            auto var = group->getVar(varName);
+            const auto var = group->getVar(varName);
+            auto varType = var.getType();
+            // Special handling for char arrays
+            if (varType == netCDF::ncChar) {
+                const auto contiguousValues = flattenCharPtrArray(
+                    reinterpret_cast<const char * const *>(values),
+                    static_cast<int>(var.getDims()[0].getSize()),
+                    static_cast<int>(var.getDims()[1].getSize())
+                );
+                var.putVar(contiguousValues.data());
+                return 0;
+            }
             var.putVar(values);
             return 0;
         } catch (netCDF::exceptions::NcException &e) {
@@ -99,6 +124,20 @@ namespace Obs2Ioda {
         const char *groupName,
         const char *varName,
         const float *values
+    ) {
+        return netcdfPutVar(
+            netcdfID,
+            groupName,
+            varName,
+            values
+        );
+    }
+
+    int netcdfPutVarChar(
+        int netcdfID,
+        const char *groupName,
+        const char *varName,
+        const char **values
     ) {
         return netcdfPutVar(
             netcdfID,

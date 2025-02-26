@@ -67,6 +67,13 @@ namespace Obs2Ioda {
         const char **values
     );
 
+    int netcdfPutVarChar(
+        int netcdfID,
+        const char *groupName,
+        const char *varName,
+        const char **values
+    );
+
     /**
     * @brief Sets the fill mode and fill value for a variable in a NetCDF file.
     *
