@@ -90,6 +90,9 @@ module netcdf_cxx_i_mod
         !     - dimName (type(c_ptr), intent(in), value):
         !       A C pointer to a null-terminated string specifying the name of the new dimension.
         !     - len (integer(c_int), intent(in), value):
+        !       The length of the new dimension.
+        !     - dimID (integer(c_int), intent(out)):
+        !      Receives the identifier of the newly created dimension.
         !
         !   Returns:
         !     - integer(c_int): Status code indicating the result of the operation:
@@ -101,7 +104,7 @@ module netcdf_cxx_i_mod
         !     - `dimName` must be valid C pointers pointing to null-terminated strings.
         !   ```
         function c_netcdfAddDim(&
-                netcdfID, groupName, dimName, len) &
+                netcdfID, groupName, dimName, len, dimID) &
                 bind(C, name = "netcdfAddDim")
             import :: c_int
             import :: c_ptr
@@ -109,6 +112,7 @@ module netcdf_cxx_i_mod
             type(c_ptr), value, intent(in) :: groupName
             type(c_ptr), value, intent(in) :: dimName
             integer(c_int), value, intent(in) :: len
+            integer(c_int), intent(out) :: dimID
             integer(c_int) :: c_netcdfAddDim
         end function c_netcdfAddDim
 

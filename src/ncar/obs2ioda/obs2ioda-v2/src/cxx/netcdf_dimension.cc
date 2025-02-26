@@ -7,7 +7,8 @@ namespace Obs2Ioda {
         const int netcdfID,
         const char *groupName,
         const char *dimName,
-        const int len
+        const int len,
+        int *dimID
     ) {
         try {
             const auto file = FileMap::getInstance().getFile(netcdfID);
@@ -18,6 +19,7 @@ namespace Obs2Ioda {
                                        file->getGroup(
                                            groupName));
             auto dim = group->addDim(dimName, len);
+            *dimID = dim.getId();
             return 0;
         } catch (netCDF::exceptions::NcException &e) {
             return netcdfErrorMessage(

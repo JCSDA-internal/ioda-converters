@@ -22,6 +22,9 @@ namespace Obs2Ioda {
 * @param len
 *     The length of the dimension.
 *
+* @param dimID
+*     A pointer to an integer that will be set to the ID of the new dimension.
+*
 * @return
 *     - 0 on success.
 *     - A non-zero error code if an exception is encountered.
@@ -30,7 +33,8 @@ namespace Obs2Ioda {
         int netcdfID,
         const char *groupName,
         const char *dimName,
-        int len
+        int len,
+        int *dimID
     );
     }
 }
