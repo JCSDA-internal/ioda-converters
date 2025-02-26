@@ -23,6 +23,7 @@ sys.path.append(str(IODA_CONV_PATH.resolve()))
 
 import ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
+from pyiodaconv.orddicts import DefaultOrderedDict
 
 t0 = time.perf_counter()
 
@@ -59,11 +60,11 @@ while da_time < datetime_end:
 locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
-    ("datetime", "string")
+    ("dateTime", "string")
 ]
 
 obsvars = {
-    'wind_speed': 'wind_speed',
+    'windSpeed': 'wind_speed',
 }
 
 attr_data = {
@@ -76,7 +77,7 @@ dim_dict = {
 
 # Set up a dictionary which defines the variable dimensions (including metadata variables)
 var_dims = {
-    'wind_speed': ['nlocs'],
+    'windSpeed': ['Location'],
 }
 
 
@@ -114,7 +115,7 @@ class GnssrL2(object):
         self.gnssrData["file_list"] = []
         for root, dirs, files in os.walk(self.gnssr_dir, topdown=True):
             self.gnssrData["file_list"] += [os.path.join(root, filename) for filename in files if "cyg.ddmi"
-                                             in filename and "l2.wind-mss.a31.d32" in filename and
+                                             in filename and "l2.wind-mss.a30.d31" in filename and
                                              datetime.strptime(filename[10:18],'%Y%m%d') <= self.assim_datetimes[-1]
                                              and
                                              datetime.strptime(filename[10:18], '%Y%m%d') >= self.assim_datetimes[0]]
@@ -178,7 +179,7 @@ class GnssrL2(object):
             self.gnssrData["yslf_sample_flags"][ns:ns+nlocs_local] = np.array(dataset_input['yslf_sample_flags'][:])
             self.gnssrData["wind_speed"][ns:ns+nlocs_local] = np.array(dataset_input['wind_speed'][:])
             self.gnssrData["wind_speed_error"][ns:ns+nlocs_local] = np.array(dataset_input['wind_speed_uncertainty'][:])
-            self.gnssrData["wind_speed_bias"][ns:ns+nlocs_local] = np.array(dataset_input['wind_speed_bias'][:])
+            #self.gnssrData["wind_speed_bias"][ns:ns+nlocs_local] = np.array(dataset_input['wind_speed_bias'][:])
             self.gnssrData["lons"][ns:ns+nlocs_local] = np.array(dataset_input['lon'][:])
             self.gnssrData["lats"][ns:ns+nlocs_local] = np.array(dataset_input['lat'][:])
             self.gnssrData["incidence_angle"][ns:ns+nlocs_local] = np.array(dataset_input['incidence_angle'][:])
@@ -192,7 +193,7 @@ class GnssrL2(object):
         loc_idxs = self.loc_idxs
         
         # set up variable names for IODA
-        for iodavar in ['wind_speed']:
+        for iodavar in ['windSpeed']:
             self.varDict[iodavar]['valKey'] = iodavar, iconv.OvalName()
             self.varDict[iodavar]['biasKey'] = iodavar, iconv.ObiastermName()
             self.varDict[iodavar]['errKey'] = iodavar, iconv.OerrName()
@@ -218,8 +219,8 @@ class GnssrL2(object):
         # write global attributes out
         # The 'date_time_string' attribute sets the reference datetime for
         # the observations.
-        dim_dict["nlocs"] = len(loc_idxs)  # nc_dim_dict['sample'].size
-        attr_data["nlocs"] = np.int64(dim_dict["nlocs"])
+        dim_dict["Location"] = len(loc_idxs)  # nc_dim_dict['sample'].size
+        attr_data["nlocs"] = np.int64(dim_dict["Location"])
         attr_data["observation_type"] = self.gnssrData["observation_type"]
         attr_data["satellite"] = self.gnssrData["satellite"]
         attr_data["sensor"] = self.gnssrData["sensor"]
@@ -230,7 +231,7 @@ class GnssrL2(object):
                                  i in self.gnssrData["obs_times"][loc_idxs]], dtype=np.object_)
         print(datetime_str)
         # add observation metadata variables
-        self.outdata[('datetime', 'MetaData')] = datetime_str
+        self.outdata[('dateTime', 'MetaData')] = datetime_str
         self.outdata[('decimal_hour', 'MetaData')] = self.gnssrData["time_decimal_hour"].astype('float32')
         self.outdata[('latitude', 'MetaData')] = self.gnssrData["lats"][loc_idxs].astype('float32')
         self.outdata[('longitude', 'MetaData')] = self.gnssrData["lons"][loc_idxs].astype('float32')
@@ -240,16 +241,16 @@ class GnssrL2(object):
         #self.outdata[('wind_speed_bias','MetaData')] = self.gnssrData["wind_speed_error"][loc_idxs].astype('float32')
 
         # add output variables
-        for iodavar in ['wind_speed']:
+        for iodavar in ['windSpeed']:
             # We populate each preqc variable with the qflg value given in the GNSS-R L2 file. Hence, the qflg MetaData
             # and PreQC/wind_speed in IODA file will have the same values but different dimensions. Each value in the
             # PreQC["wind_speed"][t] = qflg[t] value.
             ws_flat_values= np.array(self.gnssrData["wind_speed"][loc_idxs]).astype('float32')
-            ws_flat_bias= np.array(self.gnsrrData["wind_speed_bias"][loc_idxs]).astype('float32')
+            #ws_flat_bias= np.array(self.gnsrrData["wind_speed_bias"][loc_idxs]).astype('float32')
             ws_flat_errors = np.array(self.gnssrData["wind_speed_error"][loc_idxs]).astype('float32')
             ws_flat_preqc = np.array(self.gnssrData["preqc"][loc_idxs]).astype('int32')
             self.outdata[self.varDict[iodavar]['valKey']] = ws_flat_values
-            self.outdata[self.varDict[iodavar]['biasKey']] = ws_flat_bias
+            #self.outdata[self.varDict[iodavar]['biasKey']] = ws_flat_bias
             self.outdata[self.varDict[iodavar]['errKey']] = ws_flat_errors
             self.outdata[self.varDict[iodavar]['qcKey']] = ws_flat_preqc
 
