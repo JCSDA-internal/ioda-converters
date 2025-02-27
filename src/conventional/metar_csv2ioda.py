@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #
-# (C) Copyright 2020-2022 UCAR
+# (C) Copyright 2020-2025 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -9,6 +9,7 @@
 # author: Greg Thompson gthompsn AT ucar DOT edu
 # This script will work with decoded, CSV files created by gthompsn stored at NCAR
 #   data-access.ucar.edu:/glade/campaign/ral/aap/gthompsn/METARs/2019/20191231/2019123118_metars.csv.gz
+# modified for ISU ASOS-AWOS-METAR files by Ashley Griffin
 #
 
 import os
@@ -129,8 +130,9 @@ class reformatMetar(object):
 
         '''
         Read in the METARs data
-        Header contains: Unix_time,DateString,ICAO,Latitude,Longitude,Elev,Temp,Dewp,Wdir,Wspd,Wgst,Vis,  # noqa
-        Pcp,Pcp3h,Pcp6h,Pcp24h,QcFlag,WxString,WxCode,Altimeter,Cvg1,Bas1,Cvg2,Bas2,Cvg3,Bas3,Length,Raw  # noqa
+        Header contains: station,valid,lon,lat,tmpf,dwpf,relh,drct,sknt,p01i,alti,mslp,vsby,gust,skyc1,
+        skyc2,skyc3,skyc4,skyl1,skyl2,skyl3,skyl4,wxcodes,ice_accretion_1hr,ice_accretion_3hr,
+        ice_accretion_6hr,peak_wind_gust,peak_wind_drct,peak_wind_time,feel,metar,snowdepth
         '''
 
         # open file in read mode
@@ -144,15 +146,17 @@ class reformatMetar(object):
             for row in csv_dict_reader:
                 # row variable is a list that represents a row in csv
 
-                if row['ICAO'] == '':
+                if row['station'] == '':
                     continue
                 else:
-                    icao = str(row['ICAO'])
+                    icao = str(row['station'])
                 try:
-                    utime = int(row['Unix_time'])
-                    lat = float(row['Latitude'])
-                    lon = float(row['Longitude'])
-                    elev = float(row['Elev'])
+                    valid_time = str(row['valid'])
+                    dt = datetime.strptime(valid_time, "%Y-%m-%d %H:%M")
+                    utime = dt.timestamp()
+                    lat = float(row['lat'])
+                    lon = float(row['lon'])
+                    elev = float(row['elevation'])
                     if (elev < -999 or elev > 8450):
                         elev = missing
                         hght = missing
@@ -161,19 +165,19 @@ class reformatMetar(object):
                 except (csv.Error, ValueError):
                     continue
                 try:
-                    temp = float(row['Temp']) + self.meteo_utils.C_2_K
+                    temp = (float(row['tmpf']) - 32) * 5 / 9 + self.meteo_utils.C_2_K
                 except (csv.Error, ValueError):
                     temp = missing
                 try:
-                    dewp = float(row['Dewp']) + self.meteo_utils.C_2_K
+                    dewp = (float(row['dwpf']) - 32) * 5 / 9 + self.meteo_utils.C_2_K
                 except (csv.Error, ValueError):
                     dewp = missing
                 try:
-                    wdir = float(row['Wdir'])
+                    wdir = float(row['drct'])
                 except (csv.Error, ValueError):
                     wdir = missing
                 try:
-                    wspd = float(row['Wspd']) * self.meteo_utils.KTS_2_MS
+                    wspd = float(row['sknt']) * self.meteo_utils.KTS_2_MS
                 except (csv.Error, ValueError):
                     wspd = missing
 
@@ -191,7 +195,7 @@ class reformatMetar(object):
                     vwnd = missing
 
                 try:
-                    altim = float(row['Altimeter'])
+                    altim = float(row['alti'])
                     psfc = self.meteo_utils.altim_2_sfcPressure(altim, elev)
                 except (csv.Error, ValueError):
                     altim = missing
