@@ -1,8 +1,8 @@
 module netcdf_cxx_mod
-    use iso_c_binding, only : c_int, c_ptr, c_null_ptr, c_loc, c_float, c_long
-    use f_c_string_t_mod, only : f_c_string_t
-    use f_c_string_1D_t_mod, only : f_c_string_1D_t
-    use netcdf_cxx_i_mod, only : c_netcdfCreate, c_netcdfClose, c_netcdfAddGroup, c_netcdfAddDim, &
+    use iso_c_binding, only: c_int, c_ptr, c_null_ptr, c_loc, c_float, c_long
+    use f_c_string_t_mod, only: f_c_string_t
+    use f_c_string_1D_t_mod, only: f_c_string_1D_t
+    use netcdf_cxx_i_mod, only: c_netcdfCreate, c_netcdfClose, c_netcdfAddGroup, c_netcdfAddDim, &
             c_netcdfAddVar, c_netcdfPutVarInt, c_netcdfPutVarInt64, c_netcdfPutVarReal, c_netcdfPutVarChar, &
             c_netcdfSetFillInt, c_netcdfSetFillInt64, c_netcdfSetFillReal, c_netcdfSetFillString, &
             c_netcdfPutAttInt, c_netcdfPutAttString
@@ -159,18 +159,21 @@ contains
     !     - groupName (character(len=*), intent(in), optional):
     !       The name of the group in which the variable will be created.
     !       If not provided, the variable will be added as a global variable.
+    !     - fillValue (class(*), intent(in), optional):
+    !       The fill value to be used for the variable.
     !
     !   Returns:
     !     - integer(c_int): A status code indicating the outcome of the operation:
     !         - 0: Success.
     !         - Non-zero: Failure.
-    function netcdfAddVar(netcdfID, varName, netcdfDataType, numDims, dimNames, groupName)
+    function netcdfAddVar(netcdfID, varName, netcdfDataType, numDims, dimNames, groupName, fillValue)
         integer(c_int), value, intent(in) :: netcdfID
         character(len = *), intent(in) :: varName
         integer(c_int), value, intent(in) :: netcdfDataType
         integer(c_int), value, intent(in) :: numDims
         character(len = *), dimension(numDims), intent(in) :: dimNames
         character(len = *), optional, intent(in) :: groupName
+        class(*), intent(in), optional :: fillValue
         integer(c_int) :: netcdfAddVar
         type(c_ptr) :: c_groupName
         type(c_ptr) :: c_varName
@@ -188,6 +191,9 @@ contains
         c_dimNames = f_c_string_1D_dimNames%to_c(dimNames)
         netcdfAddVar = c_netcdfAddVar(netcdfID, c_groupName, c_varName, &
                 netcdfDataType, numDims, c_dimNames)
+        if (present(fillValue)) then
+            netcdfAddVar = netcdfSetFill(netcdfID, varName, 1, fillValue, groupName)
+        end if
     end function netcdfAddVar
 
     ! netcdfPutVar:
