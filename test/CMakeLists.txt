@@ -46,6 +46,8 @@ list( APPEND test_input
   testinput/icartt_DC8_20230627_RA.nc
   testinput/GCAS_NO2_20230802.nc
   testinput/viirs_aod.nc
+  testinput/nasa_viirs_db_aod.nc
+  testinput/nasa_viirs_dt_aod.nc
   testinput/tropomi_no2.nc
   testinput/mopitt_co.he5
   testinput/tropess_cris_co.nc
@@ -147,6 +149,8 @@ list( APPEND test_output
   testoutput/ioda_icartt_DC8_20230627_RA.nc
   testoutput/ioda_GCAS_NO2_20230802.nc
   testoutput/viirs_aod.nc
+  testoutput/viirs_db_aod.nc
+  testoutput/viirs_dt_aod.nc
   testoutput/viirs_bias.nc
   testoutput/tropomi_no2_total.nc
   testoutput/tropomi_no2_troposphere.nc
@@ -1258,10 +1262,42 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_aod
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/viirs_aod2ioda.py
                           -i testinput/viirs_aod.nc
                           -o testrun/viirs_aod.nc
-                          -m nesdis
-                          -k maskout
+                          --provider noaa
+                          --error_method pue
+                          --date_range 2018041504 2018041505
                           -n 0.0"
                           viirs_aod.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_nasa_viirs_db_aod
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/viirs_aod2ioda.py
+                          -i testinput/nasa_viirs_db_aod.nc
+                          -o testrun/viirs_db_aod.nc
+                          --provider nasa
+                          --error_method pue
+                          --retrieval_method DeepBlue
+                          --date_range 2024070315 2024070316
+                          -n 0.0"
+                          viirs_db_aod.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_nasa_viirs_dt_aod
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/viirs_aod2ioda.py
+                          -i testinput/nasa_viirs_dt_aod.nc
+                          -o testrun/viirs_dt_aod.nc
+                          --provider nasa
+                          --retrieval_method DarkTarget
+                          --date_range 2024070315 2024070316
+                          -n 0.0"
+                          viirs_dt_aod.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_satbias_viirs_aod
                   TYPE    SCRIPT
