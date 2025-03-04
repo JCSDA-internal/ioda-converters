@@ -235,7 +235,7 @@ module netcdf_cxx_i_mod
             type(c_ptr), value, intent(in) :: groupName
             type(c_ptr), value, intent(in) :: varName
             type(c_ptr), value, intent(in) :: values
-            integer(c_int) :: c_netcdfPutVarString
+            integer(c_int) :: c_netcdfPutVarChar
         end function c_netcdfPutVarChar
 
         ! c_netcdfSetFillInt:
