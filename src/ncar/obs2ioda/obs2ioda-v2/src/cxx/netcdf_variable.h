@@ -60,6 +60,13 @@ namespace Obs2Ioda {
         const float *values
     );
 
+    int netcdfPutVarDouble(
+        int netcdfID,
+        const char *groupName,
+        const char *varName,
+        const double *values
+    );
+
     int netcdfPutVarString(
         int netcdfID,
         const char *groupName,

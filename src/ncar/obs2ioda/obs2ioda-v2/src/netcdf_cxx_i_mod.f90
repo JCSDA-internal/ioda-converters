@@ -213,6 +213,19 @@ module netcdf_cxx_i_mod
         end function c_netcdfPutVarReal
 
         ! See documentation for `c_netcdfPutVarInt`.
+        function c_netcdfPutVarDouble(&
+           netcdfID, groupName, varName, values) &
+           bind(C, name = "netcdfPutVarDouble")
+            import :: c_int
+            import :: c_ptr
+            integer(c_int), value, intent(in) :: netcdfID
+            type(c_ptr), value, intent(in) :: groupName
+            type(c_ptr), value, intent(in) :: varName
+            type(c_ptr), value, intent(in) :: values
+            integer(c_int) :: c_netcdfPutVarDouble
+        end function c_netcdfPutVarDouble
+
+        ! See documentation for `c_netcdfPutVarInt`.
         function c_netcdfPutVarString(&
                 netcdfID, groupName, varName, values) &
                 bind(C, name = "netcdfPutVarString")

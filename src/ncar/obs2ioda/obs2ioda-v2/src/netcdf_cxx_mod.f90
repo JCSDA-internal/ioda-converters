@@ -1,9 +1,9 @@
 module netcdf_cxx_mod
-    use iso_c_binding, only: c_int, c_ptr, c_null_ptr, c_loc, c_float, c_long
+    use iso_c_binding, only: c_int, c_ptr, c_null_ptr, c_loc, c_float, c_long, c_double
     use f_c_string_t_mod, only: f_c_string_t
     use f_c_string_1D_t_mod, only: f_c_string_1D_t
     use netcdf_cxx_i_mod, only: c_netcdfCreate, c_netcdfClose, c_netcdfAddGroup, c_netcdfAddDim, &
-            c_netcdfAddVar, c_netcdfPutVarInt, c_netcdfPutVarInt64, c_netcdfPutVarReal, c_netcdfPutVarChar, &
+            c_netcdfAddVar, c_netcdfPutVarInt, c_netcdfPutVarInt64, c_netcdfPutVarReal, c_netcdfPutVarDouble, c_netcdfPutVarChar, &
             c_netcdfSetFillInt, c_netcdfSetFillInt64, c_netcdfSetFillReal, c_netcdfSetFillString, &
             c_netcdfPutAttInt, c_netcdfPutAttString
     implicit none
@@ -251,6 +251,11 @@ contains
             c_values = c_loc(values)
             netcdfPutVar = c_netcdfPutVarReal(netcdfID, c_groupName, &
                     c_varName, c_values)
+
+        type is (real(c_double))
+            c_values = c_loc(values)
+            netcdfPutVar = c_netcdfPutVarDouble(netcdfID, c_groupName, &
+               c_varName, c_values)
 
         type is (character(len = *))
             c_values = f_c_string_1D_values%to_c(values)
