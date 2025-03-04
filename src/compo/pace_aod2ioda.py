@@ -70,7 +70,6 @@ class AOD(object):
         self.filenames = in_dict['input']
         self.error_method = in_dict['error_method']
         self.thin = in_dict['thin']
-        self.provider = in_dict['provider']
         self.retrieval_method = in_dict['retrieval_method']
         self.wbeg = np.datetime64(str(datetime.strptime(in_dict['date_range'][0], "%Y%m%d%H"))).astype(np.int64)
         self.wend = np.datetime64(str(datetime.strptime(in_dict['date_range'][1], "%Y%m%d%H"))).astype(np.int64)
@@ -249,7 +248,7 @@ def main():
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
         '--retrieval_method',
-        help="specify the retrieval method when provider is nasa, UAA",
+        help="specify the retrieval method, UAA",
         type=str, default=None)
     optional.add_argument(
         '--error_method',
