@@ -161,7 +161,7 @@ class AOD(object):
             self.outdata[self.varDict[iodavar]['errKey']] = np.array([], dtype=np.float32)
             self.outdata[self.varDict[iodavar]['qcKey']] = np.array([], dtype=np.int32)
 
-        # Define get_data function based on provider and retrieval method (NASA only)
+        # Define get_data function based on retrieval method
         if self.retrieval_method == 'UAA':
             get_paceaod_data = self.get_uaa_data
         AttrData['retrievalMethod'] = self.retrieval_method
@@ -229,7 +229,7 @@ def main():
 
     # get command line arguments
     # Usage: python pace_aod2ioda.py -i /path/to/obs/2021060801.nc /path/to/obs/2021060802.nc ... -o /path/to/ioda/20210608.nc
-    # --provider [noaa/nasa] --retieval_method [UAA] --error_method [pue]
+    # --retieval_method [UAA] --error_method [pue]
     # where the input obs could be for any desired interval to concatenated together.
     parser = argparse.ArgumentParser(
         description=('Read PACE OCI aerosol optical depth file(s) and Converter'
@@ -244,10 +244,6 @@ def main():
     required.add_argument(
         '-o', '--output',
         help="name of ioda-v2 output file",
-        type=str, required=True)
-    required.add_argument(
-        '--provider',
-        help="data source, noaa/nasa",
         type=str, required=True)
 
     optional = parser.add_argument_group(title='optional arguments')

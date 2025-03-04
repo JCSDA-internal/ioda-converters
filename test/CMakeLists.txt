@@ -1263,7 +1263,6 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pace_uaa_aod
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/pace_aod2ioda.py
                           -i testinput/pace_uaa_aod.2024072114.nc
                           -o testrun/pace_uaa_aod.2024072114.nc
-                          --provider nasa
                           --retrieval_method UAA
                           --date_range 2024072114 2024072115
                           -n 0.0"
