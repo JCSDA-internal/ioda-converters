@@ -28,7 +28,6 @@ locationKeyList = [
     ("sensorCentralWavelength", "float", "micron"),
 ]
 
-
 obsvars = ["aerosolOpticalDepth"]
 # A dictionary of global attributes.  More filled in further down.
 AttrData = {}
@@ -38,7 +37,11 @@ AttrData['ioda_object_type'] = 'AOD'
 DimDict = {}
 
 # A dictionary of variable names and their dimensions.
-VarDims = {'aerosolOpticalDepth': ['Location', 'Channel']}
+VarDims = {
+    "aerosolOpticalDepth": ['Location', 'Channel'],
+    "sensorCentralFrequency": ['Channel'],
+    "sensorCentralWavelength": ['Channel'],
+}
 
 # Get the group names we use the most.
 metaDataName = iconv.MetaDataName()
@@ -80,7 +83,6 @@ class AOD(object):
     def setDicts(self):
         meta_keys = [m_item[0] for m_item in locationKeyList]
         # Set units of the MetaData variables and all _FillValues.
-        self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
         for key in meta_keys:
             dtypestr = locationKeyList[meta_keys.index(key)][1]
             if locationKeyList[meta_keys.index(key)][2]:
@@ -136,12 +138,12 @@ class AOD(object):
         self.errs = np.zeros_like(self.vals)
         for n in range(self.channels.size):
             self.errs[:, n] = np.where(land_pts, np.add(0.05, np.multiply(0.2, self.vals[:, n])),
-                             np.add(0.05, np.multiply(0.15, self.vals[:, n])))
-      
+                                       np.add(0.05, np.multiply(0.15, self.vals[:, n])))
+
         if self.error_method == "pue":
             raise Exception("Pixel-level Uncertainty Estimates (PUE) is not ready for PACE UAA")
 
-        # Keep valid data points only 
+        # Keep valid data points only
         valid_pts = np.any(~self.vals.mask, axis=1)
         self.lons = self.lons[valid_pts]
         self.lats = self.lats[valid_pts]
@@ -209,12 +211,12 @@ class AOD(object):
                 self.outdata[self.varDict[iodavar]['errKey']] = np.append(
                     self.outdata[self.varDict[iodavar]['errKey']], np.array(self.errs[winmsk, :], dtype=np.float32))
                 self.outdata[self.varDict[iodavar]['qcKey']] = np.append(
-                    self.outdata[self.varDict[iodavar]['qcKey']], np.array(self.qcfs[winmsk,:], dtype=np.int32))
+                    self.outdata[self.varDict[iodavar]['qcKey']], np.array(self.qcfs[winmsk, :], dtype=np.int32))
 
             self.ncd.close()
 
-        self.outdata[('sensorCentralWavelength', metaDataName)] = self.wavelength
-        self.outdata[('sensorCentralFrequency', metaDataName)] = self.frequency
+        self.outdata[('sensorCentralWavelength', metaDataName)] = self.wavelength.astype(np.float32)
+        self.outdata[('sensorCentralFrequency', metaDataName)] = self.frequency.astype(np.float32)
         AttrData['datetimeRange'] = np.array([datetime.fromtimestamp(min_time).strftime("%Y-%m-%dT%H:%M:%SZ"),
                                               datetime.fromtimestamp(max_time).strftime("%Y-%m-%dT%H:%M:%SZ")], dtype=object)
         print(f"Processed data for datetimeRange: {AttrData['datetimeRange']}")
