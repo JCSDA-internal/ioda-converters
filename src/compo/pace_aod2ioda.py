@@ -271,7 +271,6 @@ def main():
 
     args_in_dict = {'input': args.input,
                     'error_method': args.error_method,
-                    'provider': args.provider,
                     'retrieval_method': args.retrieval_method,
                     'thin': args.thin,
                     'date_range': args.date_range,
