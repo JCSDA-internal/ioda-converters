@@ -5,9 +5,14 @@ module netcdf_cxx_mod
     use netcdf_cxx_i_mod, only: c_netcdfCreate, c_netcdfClose, c_netcdfAddGroup, c_netcdfAddDim, &
             c_netcdfAddVar, c_netcdfPutVarInt, c_netcdfPutVarInt64, c_netcdfPutVarReal, c_netcdfPutVarDouble, c_netcdfPutVarChar, &
             c_netcdfSetFillInt, c_netcdfSetFillInt64, c_netcdfSetFillReal, c_netcdfSetFillString, &
-            c_netcdfPutAttInt, c_netcdfPutAttString
+            c_netcdfPutAttInt, c_netcdfPutAttString, c_netcdfPutAttIntArray
     implicit none
     public
+
+    interface netcdfPutAtt
+        module procedure netcdfPutAtt
+        module procedure netcdfPutAttArray
+    end interface netcdfPutAtt
 
 contains
 
@@ -398,5 +403,72 @@ contains
             netcdfPutAtt = -2
         end select
     end function netcdfPutAtt
+
+    ! netcdfPutAttArray:
+    !   Writes a 1D attribute to a NetCDF variable, group, or as a global attribute.
+    !
+    !   Arguments:
+    !     - netcdfID (integer(c_int), intent(in), value):
+    !       The identifier of the NetCDF file.
+    !     - attName (character(len=*), intent(in)):
+    !       The name of the attribute to be written.
+    !     - attValue (class(*), dimension(:), intent(in)):
+    !       The values of the attribute as a one-dimensional array. Must be of a
+    !       supported NetCDF type, such as integer(c_int) or character(len=*).
+    !       If the type is unsupported, the function will return an error
+    !       status code of -2.
+    !     - attLen (integer(c_int), intent(in), value):
+    !       The length of the attribute array.
+    !     - varName (character(len=*), intent(in), optional):
+    !       The name of the variable to which the attribute will be assigned.
+    !       If not provided, the attribute is assigned to the group instead.
+    !     - groupName (character(len=*), intent(in), optional):
+    !       The name of the group containing the variable.
+    !       If not provided, the attribute is written as a global attribute.
+    !
+    !   Returns:
+    !     - integer(c_int): A status code indicating the outcome of the operation:
+    !         -  0: Success.
+    !         - -1: NetCDF operation returned an error, but the error code was 0.
+    !         - -2: Unsupported type passed for attValue.
+    !         - Other nonzero values: Specific NetCDF error codes.
+    function netcdfPutAttArray(netcdfID, attName, attValue, attLen, varName, groupName)
+        integer(c_int), value, intent(in) :: netcdfID
+        character(len = *), intent(in) :: attName
+        class(*), intent(in) :: attValue(:)
+        integer(c_int), intent(in), value :: attLen
+        character(len = *), optional, intent(in) :: varName
+        character(len = *), optional, intent(in) :: groupName
+        integer(c_int) :: netcdfPutAttArray
+        type(f_c_string_t) :: f_c_string_attName
+        type(f_c_string_t) :: f_c_string_groupName
+        type(f_c_string_t) :: f_c_string_varName
+        type(c_ptr) :: c_attName
+        type(c_ptr) :: c_groupName
+        type(c_ptr) :: c_varName
+        type(c_ptr) :: c_attValue
+
+        if (present(groupName)) then
+            c_groupName = f_c_string_groupName%to_c(groupName)
+        else
+            c_groupName = c_null_ptr
+        end if
+        if (present(varName)) then
+            c_varName = f_c_string_varName%to_c(varName)
+        else
+            c_varName = c_null_ptr
+        end if
+
+        c_attName = f_c_string_attName%to_c(attName)
+
+        select type (attValue)
+        type is (integer(c_int))
+            c_attValue = c_loc(attValue)
+            netcdfPutAttArray = c_netcdfPutAttIntArray(netcdfID, c_attName, c_attValue, attLen, c_varName, c_groupName)
+        class default
+            netcdfPutAttArray = -2
+        end select
+    end function netcdfPutAttArray
+
 
 end module netcdf_cxx_mod

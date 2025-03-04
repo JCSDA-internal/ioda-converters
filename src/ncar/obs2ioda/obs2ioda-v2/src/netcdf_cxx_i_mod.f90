@@ -363,6 +363,20 @@ module netcdf_cxx_i_mod
             integer(c_int) :: c_netcdfPutAttInt
         end function c_netcdfPutAttInt
 
+        function c_netcdfPutAttIntArray(&
+                netcdfID, attName, attValue, attLen, varName, groupName) &
+                bind(C, name = "netcdfPutAttIntArray")
+            import :: c_int
+            import :: c_ptr
+            integer(c_int), value, intent(in) :: netcdfID
+            type(c_ptr), value, intent(in) :: attName
+            type(c_ptr), value, intent(in) :: attValue
+            integer(c_int), value, intent(in) :: attLen
+            type(c_ptr), value, intent(in) :: varName
+            type(c_ptr), value, intent(in) :: groupName
+            integer(c_int) :: c_netcdfPutAttIntArray
+        end function c_netcdfPutAttIntArray
+
         ! See documentation for `c_netcdfPutAttInt`.
         function c_netcdfPutAttString(&
                 netcdfID, attName, attValue, varName, groupName) &
