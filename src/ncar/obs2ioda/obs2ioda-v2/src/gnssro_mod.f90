@@ -69,14 +69,14 @@ contains
       type(gnssro_type) :: gnssro_data
       type(bufr_info_type) :: gnssro_bufr_info
       integer :: idx_window
-      character(:), allocatable :: output_file_name, output_file_date
+      character(:), allocatable :: output_file_name
       call get_buffer_information(trim(adjustl(infile)), gnssro_bufr_info)
       call allocate_gnssro_data_array(gnssro_data, gnssro_bufr_info)
       call read_gnssro_data(trim(adjustl(infile)), gnssro_data, gnssro_bufr_info)
-      call assign_gnssro_data_to_time_window(gnssro_bufr_info%analysis_time, nfgat, gnssro_bufr_info%nobs)
+      call assign_gnssro_data_to_time_window(gnssro_data, gnssro_bufr_info, nfgat)
       do idx_window = 1, nfgat
          call get_output_file_name(nfgat, idx_window, hour_fgat, gnssro_bufr_info%analysis_time, outdir, output_file_name)
-         call write_gnssro_data(gnssro_data, gnssro_bufr_info, idx_window, gnssro_bufr_info%nobs_max, output_file_name)
+         call write_gnssro_data(gnssro_data, gnssro_bufr_info, idx_window, output_file_name)
       enddo
       call deallocate_gnssro_data_array(gnssro_data)
    end subroutine read_write_gnssro
@@ -355,15 +355,20 @@ contains
    end subroutine
 
 
-   subroutine assign_gnssro_data_to_time_window(anatime, nfgat, ndata)
+   subroutine assign_gnssro_data_to_time_window(gnssro_data, gnssro_bufr_info, nfgat)
       use utils_mod, only: da_advance_time, da_get_time_slots
       use define_mod, only: dtime_min, dtime_max
-      character(len = *), intent(in) :: anatime
-      integer(i_kind), intent(in) :: nfgat, ndata
+      type(gnssro_type), intent(inout) :: gnssro_data
+      type(bufr_info_type), intent(in) :: gnssro_bufr_info
+      integer(i_kind), intent(in) :: nfgat
+      integer(i_kind) :: ndata
+      character(:), allocatable :: anatime
       character(len = 14) :: tmin_string, tmax_string
       real(r_kind), dimension(0 : nfgat) :: time_slots
       real(r_kind) :: obs_time
       integer :: idx_obs, j
+      ndata = gnssro_bufr_info%nobs
+      anatime = gnssro_bufr_info%analysis_time
       ! initialize window index with value outside of valid time range
       gnssro_data%idx_window = -1
       ! identify proper window index
@@ -409,12 +414,12 @@ contains
    end subroutine
 
 
-   subroutine write_gnssro_data(gnssro_data, gnssro_bufr_info, idx_window, maxobs, outfile)
+   subroutine write_gnssro_data(gnssro_data, gnssro_bufr_info, idx_window, outfile)
       type(gnssro_type), intent(in) :: gnssro_data
       type(bufr_info_type), intent(in) :: gnssro_bufr_info
       character(len = *), intent(in) :: outfile
-      integer(i_kind), intent(in) :: idx_window, maxobs
-      logical, dimension(maxobs) :: is_in_window
+      integer(i_kind), intent(in) :: idx_window
+      logical, dimension(gnssro_bufr_info%nobs_max) :: is_in_window
       integer(i_kind) :: ndata
       integer :: idx_min_time, idx_max_time
       integer :: ncid, nlocs_dimid, grpid_metadata, grpid_obsvalue, grpid_obserror
