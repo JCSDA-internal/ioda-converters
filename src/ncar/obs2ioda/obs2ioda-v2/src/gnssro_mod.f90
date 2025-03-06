@@ -7,6 +7,7 @@
 
 module gnssro_bufr2ioda
    use netcdf
+   use define_mod, only: ndatetime, output_info_type
    implicit none
    private
    public :: read_write_gnssro
@@ -37,6 +38,7 @@ module gnssro_bufr2ioda
       integer(i_kind), allocatable, dimension(:) :: ogce
       real(r_kind), allocatable, dimension(:) :: time
       integer(i_64),allocatable, dimension(:) :: epochtime
+      character(len = ndatetime), allocatable, dimension(:) :: datetime
       real(r_kind), allocatable, dimension(:) :: lat
       real(r_kind), allocatable, dimension(:) :: lon
       real(r_kind), allocatable, dimension(:) :: rfict
@@ -48,8 +50,11 @@ module gnssro_bufr2ioda
       real(r_kind), allocatable, dimension(:) :: bend_ang
       real(r_kind), allocatable, dimension(:) :: impact_para
       real(r_kind), allocatable, dimension(:) :: bndoe_gsi
+      real(r_kind), allocatable, dimension(:) :: gstime
+      integer(i_kind), allocatable, dimension(:) :: idx_window
    end type gnssro_type
 
+   ! bufr information data structure
    type bufr_info_type
       character(len = datelength) :: analysis_time
       integer(i_kind) :: analysis_epochtime_in_mins
@@ -59,21 +64,26 @@ module gnssro_bufr2ioda
 
 contains
 
-   subroutine read_write_gnssro(infile, outdir)
-      character(len = *), intent(in) :: infile
-      character(len = *), intent(in) :: outdir
+   subroutine read_write_gnssro(input_file_name, file_output_info)
+      character(len = *), intent(in) :: input_file_name
+      type(output_info_type), intent(in) :: file_output_info
       type(gnssro_type) :: gnssro_data
       type(bufr_info_type) :: gnssro_bufr_info
-      call get_buffer_information(trim(adjustl(infile)), gnssro_bufr_info)
+      integer :: idx_window
+      character(:), allocatable :: output_file_name
+      call get_buffer_information(trim(adjustl(input_file_name)), gnssro_bufr_info)
       call allocate_gnssro_data_array(gnssro_data, gnssro_bufr_info)
-      call read_gnssro_data(trim(adjustl(infile)), gnssro_data, gnssro_bufr_info)
-      call write_gnssro_data(gnssro_data, gnssro_bufr_info, outdir)
+      call read_gnssro_data(trim(adjustl(input_file_name)), gnssro_data, gnssro_bufr_info)
+      call assign_gnssro_data_to_time_window(gnssro_data, gnssro_bufr_info, file_output_info)
+      do idx_window = 1, file_output_info%n_windows
+         call write_gnssro_data(gnssro_data, gnssro_bufr_info, file_output_info, idx_window)
+      enddo
       call deallocate_gnssro_data_array(gnssro_data)
    end subroutine read_write_gnssro
 
 
-   subroutine get_buffer_information(infile, gnssro_bufr_info)
-      character(len = *), intent(in) :: infile
+   subroutine get_buffer_information(input_file_name, gnssro_bufr_info)
+      character(len = *), intent(in) :: input_file_name
       type(bufr_info_type), intent(out) :: gnssro_bufr_info
       integer(i_kind), parameter :: lnbufr = 10  ! the bufr library expects a unit number in [0-99] -> can't use newunit
       character(len = 8) :: subset
@@ -83,7 +93,7 @@ contains
       real(r_kind), dimension(n1ahdr) :: bfr1ahdr
       real(r_kind), dimension(50, maxlevs) :: data1b
       ! open file and connect to buffer library
-      open(unit = lnbufr, file = infile, form = 'unformatted')
+      open(unit = lnbufr, file = input_file_name, form = 'unformatted')
       call openbf(lnbufr, 'IN', lnbufr)
       call datelen(datelength)
       ! obtain analysis time
@@ -92,7 +102,7 @@ contains
          write(6, *) 'READ_GNSSRO: can not open gnssro file!'
          stop
       end if
-      write(*, fmt = '(a,i10)') infile // ' file date is: ', idate
+      write(*, fmt = '(a,i10)') input_file_name // ' file date is: ', idate
       iadate5(1) = idate / 1000000
       iadate5(2) = (idate - iadate5(1) * 1000000) / 10000
       iadate5(3) = (idate - iadate5(1) * 1000000 - iadate5(2) * 10000) / 100
@@ -128,6 +138,7 @@ contains
       allocate(gnssro_data%ogce(maxobs))
       allocate(gnssro_data%time(maxobs))
       allocate(gnssro_data%epochtime(maxobs))
+      allocate(gnssro_data%datetime(maxobs))
       allocate(gnssro_data%lat(maxobs))
       allocate(gnssro_data%lon(maxobs))
       allocate(gnssro_data%rfict(maxobs))
@@ -139,11 +150,14 @@ contains
       allocate(gnssro_data%bend_ang(maxobs))
       allocate(gnssro_data%impact_para(maxobs))
       allocate(gnssro_data%bndoe_gsi(maxobs))
+      allocate(gnssro_data%gstime(maxobs))
+      allocate(gnssro_data%idx_window(maxobs))
    end subroutine
 
 
-   subroutine read_gnssro_data(infile, gnssro_data, gnssro_bufr_info)
-      character(len = *), intent(in) :: infile
+   subroutine read_gnssro_data(input_file_name, gnssro_data, gnssro_bufr_info)
+      use utils_mod, only: get_julian_time
+      character(len = *), intent(in) :: input_file_name
       type(gnssro_type), intent(inout) :: gnssro_data
       type(bufr_info_type), intent(inout) :: gnssro_bufr_info
       integer(i_kind), parameter :: lnbufr = 10
@@ -153,9 +167,10 @@ contains
       real(r_kind), dimension(n1ahdr) :: bfr1ahdr
       real(r_kind), dimension(1) :: qfro
       integer(i_kind), dimension(6) :: idate5
-      real(r_kind) :: pcc, roc, geoid, timeo
+      real(r_kind) :: pcc, roc, geoid, timeo, gstime
       integer(i_kind) :: said, siid, ptid, sclf, ogce, minobs, nib, asce
       integer(i_64) :: epochtime
+      character(len = ndatetime) :: datetime
       integer :: refflag, bendflag
       integer(i_kind), dimension(mxib) :: ibit
       integer(i_kind) :: i, k, m
@@ -171,7 +186,7 @@ contains
       ndata = 0
       nrec = 0
       ! open file and attach buffer library to it
-      open(unit = lnbufr, file = infile, form = 'unformatted')
+      open(unit = lnbufr, file = input_file_name, form = 'unformatted')
       call openbf(lnbufr, 'IN', lnbufr)
       call datelen(datelength)
       call readmg(lnbufr, subset, idate, iret)
@@ -198,7 +213,9 @@ contains
             ogce = bfr1ahdr(13)  ! Identification of originating/generating centre
             call w3fs21(idate5, minobs)
             timeo = real(minobs - gnssro_bufr_info%analysis_epochtime_in_mins, r_kind) / 60.0
-            call epochtimecalculator(idate5, epochtime)  ! calculate epochtime since January 1 1970
+            call get_julian_time(idate5(1), idate5(2), idate5(3), idate5(4), idate5(5), idate5(6), gstime, epochtime)
+            write(datetime, '(i4, a, i2.2, a, i2.2, a, i2.2, a, i2.2, a, i2.2, a)')  &
+               idate5(1), '-', idate5(2), '-', idate5(3), 'T', idate5(4), ':', idate5(5), ':', idate5(6), 'Z'
             ! check if values are in valid range
             ! earth radius of curvature
             if (roc > 6450000.0_r_kind .or. roc < 6250000.0_r_kind .or. geoid > 200_r_kind .or. geoid < -200._r_kind) then
@@ -300,6 +317,8 @@ contains
                   gnssro_data%lon(ndata) = rlon
                   gnssro_data%time(ndata) = timeo
                   gnssro_data%epochtime(ndata) = epochtime
+                  gnssro_data%gstime(ndata) = gstime
+                  gnssro_data%datetime(ndata) = datetime
                   gnssro_data%said(ndata) = said
                   gnssro_data%siid(ndata) = siid
                   gnssro_data%sclf(ndata) = sclf
@@ -336,29 +355,105 @@ contains
    end subroutine
 
 
-   subroutine write_gnssro_data(gnssro_data, gnssro_bufr_info, outdir)
+   subroutine assign_gnssro_data_to_time_window(gnssro_data, gnssro_bufr_info, file_output_info)
+      ! Assigns each observation to a time window index in [1, gnssro_bufr_info%n_windows].
+      ! The assignment to a time window is based on the observation time (gnssro_data%gstime).
+      use utils_mod, only: da_advance_time, da_get_time_slots
+      use define_mod, only: dtime_min, dtime_max
+      type(gnssro_type), intent(inout) :: gnssro_data
+      type(bufr_info_type), intent(in) :: gnssro_bufr_info
+      type(output_info_type), intent(in) :: file_output_info
+      integer(i_kind) :: n_windows
+      integer(i_kind) :: ndata
+      character(:), allocatable :: analysis_time
+      character(len = 14) :: tmin_string, tmax_string
+      real(r_kind), dimension(0 : file_output_info%n_windows) :: time_slots
+      real(r_kind) :: obs_time
+      integer :: idx_obs, j
+      ndata = gnssro_bufr_info%nobs
+      analysis_time = gnssro_bufr_info%analysis_time  ! analysis time based on 6h bufr file
+      n_windows = file_output_info%n_windows
+      ! initialize window index with value outside of valid time range
+      gnssro_data%idx_window = -1
+      if (n_windows > 1) then  ! in case the output is split into time windows
+         call da_advance_time(analysis_time, dtime_min, tmin_string)  ! initial time of bufr file
+         call da_advance_time(analysis_time, dtime_max, tmax_string)  ! final time of bufr file
+         call da_get_time_slots(n_windows, tmin_string, tmax_string, time_slots)  ! time windows contained in bufr file
+         do idx_obs = 1, ndata
+            ! identify the time window that contains obs_time
+            obs_time = gnssro_data%gstime(idx_obs)  ! julian time format of gstime is identical to time_slots
+            do j = 1, n_windows
+               ! strictly speaking, the logical expression should contain one <= and one < condition (otherwise the assignment
+               ! at window boundaries is ambiguous). The first and last time windows require a <= at the window start and end,
+               ! respectively. The use of two <= statements accommodates this and implies that observations at intermediate
+               ! domain boundaries are assigned to the preceeding window.
+               if (time_slots(j-1) <= obs_time .and. obs_time <= time_slots(j)) then
+                  gnssro_data%idx_window(idx_obs) = j
+                  exit
+               endif
+            enddo
+         enddo
+      else  ! in case the output is not split into time windows
+         gnssro_data%idx_window(1 : ndata) = 1  ! all valid obs have the same index
+      endif
+   end subroutine
+
+
+   subroutine get_output_file_name(gnssro_bufr_info, file_output_info, idx_window, output_file_name)
+      use define_mod, only: half_bufr_interval
+      use utils_mod, only: da_advance_time
+      type(bufr_info_type), intent(in) :: gnssro_bufr_info
+      type(output_info_type), intent(in) :: file_output_info
+      integer(i_kind), intent(in) :: idx_window
+      character(:), allocatable, intent(out) :: output_file_name
+      character(len = 14) :: delta_time, output_file_date_long  ! delta_time has to be at least 3 characters long
+      character(:), allocatable :: output_file_date, analysis_time
+      analysis_time = gnssro_bufr_info%analysis_time  ! analysis time based on 6h bufr files
+      if (file_output_info%n_windows > 1) then  ! multiple time windows
+         ! obtain the central time for this time window by adding the appropriate multiple of the window length to the
+         ! initial time of the 6h bufr interval
+         write(delta_time, '(i2, a)') (file_output_info%window_length_in_h * (idx_window - 1)) - half_bufr_interval, 'h'
+         call da_advance_time(analysis_time, trim(adjustl(delta_time)), output_file_date_long)
+         output_file_date = output_file_date_long(1:10)
+      else  ! single time window: central time corresponds to 6h bufr file analysis time
+         output_file_date = analysis_time
+      endif
+      output_file_name = trim(adjustl(file_output_info%output_dir)) // 'gnssro_obs_' // output_file_date // '.h5'
+   end subroutine
+
+
+   subroutine write_gnssro_data(gnssro_data, gnssro_bufr_info, file_output_info, idx_window)
       type(gnssro_type), intent(in) :: gnssro_data
       type(bufr_info_type), intent(in) :: gnssro_bufr_info
-      character(len = *), intent(in) :: outdir
-      character(len = datelength) :: cdate
-      character (:), allocatable :: outfile
-      integer :: ndata
+      type(output_info_type), intent(in) :: file_output_info
+      integer(i_kind), intent(in) :: idx_window
+      logical, dimension(gnssro_bufr_info%nobs_max) :: is_in_window
+      integer(i_kind) :: ndata
+      integer :: idx_min_time, idx_max_time
       integer :: ncid, nlocs_dimid, grpid_metadata, grpid_obsvalue, grpid_obserror
       integer :: varid_lat, varid_lon, varid_time, varid_epochtime, varid_recn, varid_sclf, varid_ptid, varid_said
       integer :: varid_siid, varid_asce, varid_ogce, varid_msl, varid_impp, varid_imph, varid_azim, varid_geoid, varid_rfict
       integer :: varid_ref, varid_refoe, varid_bnd, varid_bndoe
+      character(:), allocatable :: output_file_name
+
+      ! identify observations in current time window
+      is_in_window = (gnssro_data%idx_window == idx_window)
+      ndata = count(is_in_window, kind = i_kind)
 
       ! create netcdf file and enter define mode
-      outfile = trim(adjustl(outdir)) // 'gnssro_obs_' // gnssro_bufr_info%analysis_time // '.h5'
-      call check(nf90_create(outfile, NF90_NETCDF4, ncid))
+      call get_output_file_name(gnssro_bufr_info, file_output_info, idx_window, output_file_name)
+      call check(nf90_create(trim(adjustl(output_file_name)), NF90_NETCDF4, ncid))
 
-      ! create dimensions
-      ndata = gnssro_bufr_info%nobs
+      ! create dimension and descriptive global attribute
       call check(nf90_def_dim(ncid, 'nlocs', ndata, nlocs_dimid))
+      call check(nf90_put_att(ncid, NF90_GLOBAL, 'nlocs', ndata))  ! analogous to netcdf_mod
 
-      ! write global attributes
-      call check(nf90_put_att(ncid, NF90_GLOBAL, 'date_time', gnssro_bufr_info%analysis_time))
+      ! write other global attributes (again analogous to netcdf_mod)
+      idx_min_time = minloc(gnssro_data%epochtime, mask = is_in_window, dim = 1)
+      idx_max_time = maxloc(gnssro_data%epochtime, mask = is_in_window, dim = 1)
       call check(nf90_put_att(ncid, NF90_GLOBAL, 'ioda_version', 'fortran generated ioda2 file'))
+      call check(nf90_put_att(ncid, NF90_GLOBAL, 'min_datetime', gnssro_data%datetime(idx_min_time)))
+      call check(nf90_put_att(ncid, NF90_GLOBAL, 'max_datetime', gnssro_data%datetime(idx_max_time)))
 
       ! create groups
       call check(nf90_def_grp(ncid, 'MetaData', grpid_metadata))
@@ -484,30 +579,30 @@ contains
       call check(nf90_put_att(grpid_metadata, varid_rfict, "valid_range", real((/ 6200000.0, 6600000.0 /))))
       call check(nf90_def_var_fill(grpid_metadata, varid_rfict, 0, real(r_missing)))
 
-      ! write variables
+      ! write variables in current time window
       call check(nf90_enddef(ncid))  ! enters write mode
-      call check(nf90_put_var(grpid_obsvalue, varid_ref, gnssro_data%ref(1:ndata)))
-      call check(nf90_put_var(grpid_obserror, varid_refoe, gnssro_data%refoe_gsi(1:ndata)))
-      call check(nf90_put_var(grpid_obsvalue, varid_bnd, gnssro_data%bend_ang(1:ndata)))
-      call check(nf90_put_var(grpid_obserror, varid_bndoe, gnssro_data%bndoe_gsi(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_lat, gnssro_data%lat(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_lon, gnssro_data%lon(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_time, gnssro_data%time(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_epochtime, gnssro_data%epochtime(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_recn, gnssro_data%recn(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_said, gnssro_data%said(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_siid, gnssro_data%siid(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_ptid, gnssro_data%ptid(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_sclf, gnssro_data%sclf(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_asce, gnssro_data%asce(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_ogce, gnssro_data%ogce(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_msl, gnssro_data%msl_alt(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_impp, gnssro_data%impact_para(1:ndata)))
+      call check(nf90_put_var(grpid_obsvalue, varid_ref, pack(gnssro_data%ref, is_in_window)))
+      call check(nf90_put_var(grpid_obserror, varid_refoe, pack(gnssro_data%refoe_gsi, is_in_window)))
+      call check(nf90_put_var(grpid_obsvalue, varid_bnd, pack(gnssro_data%bend_ang, is_in_window)))
+      call check(nf90_put_var(grpid_obserror, varid_bndoe, pack(gnssro_data%bndoe_gsi, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_lat, pack(gnssro_data%lat, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_lon, pack(gnssro_data%lon, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_time, pack(gnssro_data%time, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_epochtime, pack(gnssro_data%epochtime, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_recn, pack(gnssro_data%recn, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_said, pack(gnssro_data%said, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_siid, pack(gnssro_data%siid, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_ptid, pack(gnssro_data%ptid, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_sclf, pack(gnssro_data%sclf, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_asce, pack(gnssro_data%asce, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_ogce, pack(gnssro_data%ogce, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_msl, pack(gnssro_data%msl_alt, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_impp, pack(gnssro_data%impact_para, is_in_window)))
       call check(nf90_put_var(grpid_metadata, varid_imph, &
-         gnssro_data%impact_para(1:ndata) - gnssro_data%rfict(1:ndata) - gnssro_data%geoid(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_azim, gnssro_data%azim(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_geoid, gnssro_data%geoid(1:ndata)))
-      call check(nf90_put_var(grpid_metadata, varid_rfict, gnssro_data%rfict(1:ndata)))
+         pack(gnssro_data%impact_para - gnssro_data%rfict - gnssro_data%geoid, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_azim, pack(gnssro_data%azim, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_geoid, pack(gnssro_data%geoid, is_in_window)))
+      call check(nf90_put_var(grpid_metadata, varid_rfict, pack(gnssro_data%rfict, is_in_window)))
 
       ! close file
       call check(nf90_close(ncid))
@@ -525,6 +620,7 @@ contains
       deallocate(gnssro_data%ogce)
       deallocate(gnssro_data%time)
       deallocate(gnssro_data%epochtime)
+      deallocate(gnssro_data%datetime)
       deallocate(gnssro_data%lat)
       deallocate(gnssro_data%lon)
       deallocate(gnssro_data%rfict)
@@ -536,6 +632,8 @@ contains
       deallocate(gnssro_data%bend_ang)
       deallocate(gnssro_data%impact_para)
       deallocate(gnssro_data%bndoe_gsi)
+      deallocate(gnssro_data%gstime)
+      deallocate(gnssro_data%idx_window)
    end subroutine
 
 
@@ -657,38 +755,5 @@ contains
       NMIN = NDAYS * 1440 + IDATE(4) * 60 + IDATE(5)
       RETURN
    END SUBROUTINE W3FS21
-
-   
-   !-------------------------------------------------------------
-   ! written by H. ZHANG based w3nco_v2.0.6/w3fs21.f and iw3jdn.f
-   ! calculating epoch time since January 1, 1970
-   SUBROUTINE epochtimecalculator(IDATE, EPOCHTIME)
-      INTEGER    IDATE(6)
-      INTEGER    NMIN
-      INTEGER    IYEAR, NDAYS, IJDN
-      INTEGER(8) epochtime
-      INTEGER    JDN1970
-      DATA  JDN1970 / 2440588 /
-
-      NMIN  = 0
-      IYEAR = IDATE(1)
-      IF (IYEAR.LE.99) THEN
-         IF (IYEAR.LT.78) THEN
-            IYEAR = IYEAR + 2000
-         ELSE
-            IYEAR = IYEAR + 1900
-         ENDIF
-      ENDIF
-      ! COMPUTE JULIAN DAY NUMBER FROM YEAR, MONTH, DAY
-      IJDN  = IDATE(3) - 32075      &
-         + 1461 * (IYEAR + 4800 + (IDATE(2) - 14) / 12) / 4  &
-         + 367 * (IDATE(2)- 2 - (IDATE(2) -14) / 12 * 12) / 12   &
-         - 3 * ((IYEAR + 4900 + (IDATE(2) - 14) / 12) / 100) / 4
-      ! SUBTRACT JULIAN DAY NUMBER OF JAN 1,1970 TO GET THE
-      ! NUMBER OF DAYS BETWEEN DATES
-      NDAYS = IJDN - JDN1970
-      NMIN = NDAYS * 1440 + IDATE(4) * 60 + IDATE(5)
-      EPOCHTIME = NMIN * 60 + IDATE(6)
-   END SUBROUTINE epochtimecalculator
 
 end module gnssro_bufr2ioda
