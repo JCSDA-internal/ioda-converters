@@ -54,6 +54,7 @@ module gnssro_bufr2ioda
       integer(i_kind), allocatable, dimension(:) :: idx_window
    end type gnssro_type
 
+   ! bufr information data structure
    type bufr_info_type
       character(len = datelength) :: analysis_time
       integer(i_kind) :: analysis_epochtime_in_mins
@@ -63,16 +64,16 @@ module gnssro_bufr2ioda
 
 contains
 
-   subroutine read_write_gnssro(infile, file_output_info)
-      character(len = *), intent(in) :: infile
+   subroutine read_write_gnssro(input_file_name, file_output_info)
+      character(len = *), intent(in) :: input_file_name
       type(output_info_type), intent(in) :: file_output_info
       type(gnssro_type) :: gnssro_data
       type(bufr_info_type) :: gnssro_bufr_info
       integer :: idx_window
       character(:), allocatable :: output_file_name
-      call get_buffer_information(trim(adjustl(infile)), gnssro_bufr_info)
+      call get_buffer_information(trim(adjustl(input_file_name)), gnssro_bufr_info)
       call allocate_gnssro_data_array(gnssro_data, gnssro_bufr_info)
-      call read_gnssro_data(trim(adjustl(infile)), gnssro_data, gnssro_bufr_info)
+      call read_gnssro_data(trim(adjustl(input_file_name)), gnssro_data, gnssro_bufr_info)
       call assign_gnssro_data_to_time_window(gnssro_data, gnssro_bufr_info, file_output_info)
       do idx_window = 1, file_output_info%n_windows
          call write_gnssro_data(gnssro_data, gnssro_bufr_info, file_output_info, idx_window)
@@ -81,8 +82,8 @@ contains
    end subroutine read_write_gnssro
 
 
-   subroutine get_buffer_information(infile, gnssro_bufr_info)
-      character(len = *), intent(in) :: infile
+   subroutine get_buffer_information(input_file_name, gnssro_bufr_info)
+      character(len = *), intent(in) :: input_file_name
       type(bufr_info_type), intent(out) :: gnssro_bufr_info
       integer(i_kind), parameter :: lnbufr = 10  ! the bufr library expects a unit number in [0-99] -> can't use newunit
       character(len = 8) :: subset
@@ -92,7 +93,7 @@ contains
       real(r_kind), dimension(n1ahdr) :: bfr1ahdr
       real(r_kind), dimension(50, maxlevs) :: data1b
       ! open file and connect to buffer library
-      open(unit = lnbufr, file = infile, form = 'unformatted')
+      open(unit = lnbufr, file = input_file_name, form = 'unformatted')
       call openbf(lnbufr, 'IN', lnbufr)
       call datelen(datelength)
       ! obtain analysis time
@@ -101,7 +102,7 @@ contains
          write(6, *) 'READ_GNSSRO: can not open gnssro file!'
          stop
       end if
-      write(*, fmt = '(a,i10)') infile // ' file date is: ', idate
+      write(*, fmt = '(a,i10)') input_file_name // ' file date is: ', idate
       iadate5(1) = idate / 1000000
       iadate5(2) = (idate - iadate5(1) * 1000000) / 10000
       iadate5(3) = (idate - iadate5(1) * 1000000 - iadate5(2) * 10000) / 100
@@ -154,9 +155,9 @@ contains
    end subroutine
 
 
-   subroutine read_gnssro_data(infile, gnssro_data, gnssro_bufr_info)
+   subroutine read_gnssro_data(input_file_name, gnssro_data, gnssro_bufr_info)
       use utils_mod, only: get_julian_time
-      character(len = *), intent(in) :: infile
+      character(len = *), intent(in) :: input_file_name
       type(gnssro_type), intent(inout) :: gnssro_data
       type(bufr_info_type), intent(inout) :: gnssro_bufr_info
       integer(i_kind), parameter :: lnbufr = 10
@@ -185,7 +186,7 @@ contains
       ndata = 0
       nrec = 0
       ! open file and attach buffer library to it
-      open(unit = lnbufr, file = infile, form = 'unformatted')
+      open(unit = lnbufr, file = input_file_name, form = 'unformatted')
       call openbf(lnbufr, 'IN', lnbufr)
       call datelen(datelength)
       call readmg(lnbufr, subset, idate, iret)
@@ -355,6 +356,8 @@ contains
 
 
    subroutine assign_gnssro_data_to_time_window(gnssro_data, gnssro_bufr_info, file_output_info)
+      ! Assigns each observation to a time window index in [1, gnssro_bufr_info%n_windows].
+      ! The assignment to a time window is based on the observation time (gnssro_data%gstime).
       use utils_mod, only: da_advance_time, da_get_time_slots
       use define_mod, only: dtime_min, dtime_max
       type(gnssro_type), intent(inout) :: gnssro_data
@@ -362,22 +365,22 @@ contains
       type(output_info_type), intent(in) :: file_output_info
       integer(i_kind) :: n_windows
       integer(i_kind) :: ndata
-      character(:), allocatable :: anatime
+      character(:), allocatable :: analysis_time
       character(len = 14) :: tmin_string, tmax_string
       real(r_kind), dimension(0 : file_output_info%n_windows) :: time_slots
       real(r_kind) :: obs_time
       integer :: idx_obs, j
       ndata = gnssro_bufr_info%nobs
-      anatime = gnssro_bufr_info%analysis_time
+      analysis_time = gnssro_bufr_info%analysis_time  ! analysis time based on 6h bufr file
       n_windows = file_output_info%n_windows
       ! initialize window index with value outside of valid time range
       gnssro_data%idx_window = -1
-      ! identify proper window index
       if (n_windows > 1) then  ! in case the output is split into time windows
-         call da_advance_time(anatime, dtime_min, tmin_string)  ! initial time of bufr file
-         call da_advance_time(anatime, dtime_max, tmax_string)  ! final time of bufr file
-         call da_get_time_slots(n_windows, tmin_string, tmax_string, time_slots)
+         call da_advance_time(analysis_time, dtime_min, tmin_string)  ! initial time of bufr file
+         call da_advance_time(analysis_time, dtime_max, tmax_string)  ! final time of bufr file
+         call da_get_time_slots(n_windows, tmin_string, tmax_string, time_slots)  ! time windows contained in bufr file
          do idx_obs = 1, ndata
+            ! identify the time window that contains obs_time
             obs_time = gnssro_data%gstime(idx_obs)  ! julian time format of gstime is identical to time_slots
             do j = 1, n_windows
                ! strictly speaking, the logical expression should contain one <= and one < condition (otherwise the assignment
@@ -404,14 +407,16 @@ contains
       integer(i_kind), intent(in) :: idx_window
       character(:), allocatable, intent(out) :: output_file_name
       character(len = 14) :: delta_time, output_file_date_long  ! delta_time has to be at least 3 characters long
-      character(:), allocatable :: output_file_date, anatime
-      anatime = gnssro_bufr_info%analysis_time
+      character(:), allocatable :: output_file_date, analysis_time
+      analysis_time = gnssro_bufr_info%analysis_time  ! analysis time based on 6h bufr files
       if (file_output_info%n_windows > 1) then  ! multiple time windows
+         ! obtain the central time for this time window by adding the appropriate multiple of the window length to the
+         ! initial time of the 6h bufr interval
          write(delta_time, '(i2, a)') (file_output_info%window_length_in_h * (idx_window - 1)) - half_bufr_interval, 'h'
-         call da_advance_time(anatime, trim(adjustl(delta_time)), output_file_date_long)
+         call da_advance_time(analysis_time, trim(adjustl(delta_time)), output_file_date_long)
          output_file_date = output_file_date_long(1:10)
-      else  ! single time window
-         output_file_date = anatime
+      else  ! single time window: central time corresponds to 6h bufr file analysis time
+         output_file_date = analysis_time
       endif
       output_file_name = trim(adjustl(file_output_info%output_dir)) // 'gnssro_obs_' // output_file_date // '.h5'
    end subroutine
@@ -574,7 +579,7 @@ contains
       call check(nf90_put_att(grpid_metadata, varid_rfict, "valid_range", real((/ 6200000.0, 6600000.0 /))))
       call check(nf90_def_var_fill(grpid_metadata, varid_rfict, 0, real(r_missing)))
 
-      ! write variables
+      ! write variables in current time window
       call check(nf90_enddef(ncid))  ! enters write mode
       call check(nf90_put_var(grpid_obsvalue, varid_ref, pack(gnssro_data%ref, is_in_window)))
       call check(nf90_put_var(grpid_obserror, varid_refoe, pack(gnssro_data%refoe_gsi, is_in_window)))
