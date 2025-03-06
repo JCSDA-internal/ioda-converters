@@ -55,6 +55,16 @@ namespace Obs2Ioda {
         );
     }
 
+    int netcdfPutAttRealArray(
+        int netcdfID, const char *attName, const float *attValue,
+        const int attLen, const char *varName, const char *groupName
+    ) {
+        return netcdfPutAtt(
+            netcdfID, attName, attValue, varName, groupName,
+            netCDF::NcType(netCDF::ncFloat), attLen
+        );
+    }
+
     int netcdfPutAttInt(
         int netcdfID, const char *attName, const int *attValue,
         const char *varName, const char *groupName

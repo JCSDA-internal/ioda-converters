@@ -5,7 +5,7 @@ module netcdf_cxx_mod
     use netcdf_cxx_i_mod, only: c_netcdfCreate, c_netcdfClose, c_netcdfAddGroup, c_netcdfAddDim, &
             c_netcdfAddVar, c_netcdfPutVarInt, c_netcdfPutVarInt64, c_netcdfPutVarReal, c_netcdfPutVarDouble, c_netcdfPutVarChar, &
             c_netcdfSetFillInt, c_netcdfSetFillInt64, c_netcdfSetFillReal, c_netcdfSetFillString, &
-            c_netcdfPutAttInt, c_netcdfPutAttString, c_netcdfPutAttIntArray
+            c_netcdfPutAttInt, c_netcdfPutAttString, c_netcdfPutAttIntArray, c_netcdfPutAttRealArray
     implicit none
     public
 
@@ -465,6 +465,9 @@ contains
         type is (integer(c_int))
             c_attValue = c_loc(attValue)
             netcdfPutAttArray = c_netcdfPutAttIntArray(netcdfID, c_attName, c_attValue, attLen, c_varName, c_groupName)
+        type is (real(c_float))
+            c_attValue = c_loc(attValue)
+            netcdfPutAttArray = c_netcdfPutAttRealArray(netcdfID, c_attName, c_attValue, attLen, c_varName, c_groupName)
         class default
             netcdfPutAttArray = -2
         end select
