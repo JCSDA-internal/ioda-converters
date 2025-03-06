@@ -234,6 +234,12 @@ end type xdata_type
 type(xdata_type), allocatable, dimension(:,:) :: xdata  ! dim 1: number of ob types
                                                         ! dim 2: number of time slots
 
+type output_info_type
+   character(:), allocatable :: output_dir
+   integer :: n_windows
+   integer :: window_length_in_h
+end type
+
 contains
 
 subroutine set_obtype_conv(t29, obtype)
@@ -448,5 +454,14 @@ subroutine set_ahi_obserr(name_inst, nchan, obserrors)
       return
    end if
 end subroutine set_ahi_obserr
+
+subroutine set_output_info(file_output_info, output_dir, n_windows, window_length_in_h)
+   type(output_info_type), intent(out) :: file_output_info
+   character(len = *), intent(in) :: output_dir
+   integer, intent(in) :: n_windows, window_length_in_h
+   file_output_info%output_dir = trim(adjustl(output_dir))
+   file_output_info%n_windows = n_windows
+   file_output_info%window_length_in_h = window_length_in_h
+end subroutine
 
 end module define_mod

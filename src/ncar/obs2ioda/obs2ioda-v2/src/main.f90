@@ -1,7 +1,7 @@
 program obs2ioda
 
 use define_mod, only: write_nc_conv, write_nc_radiance, write_nc_radiance_geo, StrLen, xdata, &
-   ninst
+   ninst, output_info_type, set_output_info
 use kinds, only: i_kind
 use prepbufr_mod, only: read_prepbufr, sort_obs_conv, filter_obs_conv, do_tv_to_ts
 use radiance_mod, only: read_amsua_amsub_mhs, read_airs_colocate_amsua, sort_obs_radiance, &
@@ -56,6 +56,7 @@ integer(i_kind)         :: itmp
 integer(i_kind)         :: itime
 integer(i_kind)         :: superob_halfwidth
 character (len=DateLen14) :: dtime, datetmp
+type(output_info_type) :: file_output_info
 
 
 do_tv_to_ts = .true.
@@ -76,6 +77,8 @@ else
    nfgat = 1
 end if
 
+call set_output_info(file_output_info, outdir, nfgat, hour_fgat)
+
 do ifile = 1, nfile
 
    filename = flist(ifile)
@@ -86,7 +89,7 @@ do ifile = 1, nfile
          write(*,*) 'Warning: ', trim(inpdir)//trim(filename), ' not found for decoding...'
       else
          write(*,*) '--- processing gnssro.bufr ---'
-         call read_write_gnssro(trim(adjustl(inpdir))//trim(adjustl(filename)), trim(adjustl(outdir)), nfgat, hour_fgat)
+         call read_write_gnssro(trim(adjustl(inpdir))//trim(adjustl(filename)), file_output_info)
       end if
    end if
 

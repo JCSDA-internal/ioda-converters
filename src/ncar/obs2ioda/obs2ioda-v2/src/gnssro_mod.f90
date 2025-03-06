@@ -7,7 +7,7 @@
 
 module gnssro_bufr2ioda
    use netcdf
-   use define_mod, only: ndatetime
+   use define_mod, only: ndatetime, output_info_type
    implicit none
    private
    public :: read_write_gnssro
@@ -63,9 +63,9 @@ module gnssro_bufr2ioda
 
 contains
 
-   subroutine read_write_gnssro(infile, outdir, nfgat, hour_fgat)
-      character(len = *), intent(in) :: infile, outdir
-      integer(i_kind), intent(in) :: nfgat, hour_fgat
+   subroutine read_write_gnssro(infile, file_output_info)
+      character(len = *), intent(in) :: infile
+      type(output_info_type), intent(in) :: file_output_info
       type(gnssro_type) :: gnssro_data
       type(bufr_info_type) :: gnssro_bufr_info
       integer :: idx_window
@@ -73,10 +73,9 @@ contains
       call get_buffer_information(trim(adjustl(infile)), gnssro_bufr_info)
       call allocate_gnssro_data_array(gnssro_data, gnssro_bufr_info)
       call read_gnssro_data(trim(adjustl(infile)), gnssro_data, gnssro_bufr_info)
-      call assign_gnssro_data_to_time_window(gnssro_data, gnssro_bufr_info, nfgat)
-      do idx_window = 1, nfgat
-         call get_output_file_name(nfgat, idx_window, hour_fgat, gnssro_bufr_info%analysis_time, outdir, output_file_name)
-         call write_gnssro_data(gnssro_data, gnssro_bufr_info, idx_window, output_file_name)
+      call assign_gnssro_data_to_time_window(gnssro_data, gnssro_bufr_info, file_output_info)
+      do idx_window = 1, file_output_info%n_windows
+         call write_gnssro_data(gnssro_data, gnssro_bufr_info, file_output_info, idx_window)
       enddo
       call deallocate_gnssro_data_array(gnssro_data)
    end subroutine read_write_gnssro
@@ -355,30 +354,32 @@ contains
    end subroutine
 
 
-   subroutine assign_gnssro_data_to_time_window(gnssro_data, gnssro_bufr_info, nfgat)
+   subroutine assign_gnssro_data_to_time_window(gnssro_data, gnssro_bufr_info, file_output_info)
       use utils_mod, only: da_advance_time, da_get_time_slots
       use define_mod, only: dtime_min, dtime_max
       type(gnssro_type), intent(inout) :: gnssro_data
       type(bufr_info_type), intent(in) :: gnssro_bufr_info
-      integer(i_kind), intent(in) :: nfgat
+      type(output_info_type), intent(in) :: file_output_info
+      integer(i_kind) :: n_windows
       integer(i_kind) :: ndata
       character(:), allocatable :: anatime
       character(len = 14) :: tmin_string, tmax_string
-      real(r_kind), dimension(0 : nfgat) :: time_slots
+      real(r_kind), dimension(0 : file_output_info%n_windows) :: time_slots
       real(r_kind) :: obs_time
       integer :: idx_obs, j
       ndata = gnssro_bufr_info%nobs
       anatime = gnssro_bufr_info%analysis_time
+      n_windows = file_output_info%n_windows
       ! initialize window index with value outside of valid time range
       gnssro_data%idx_window = -1
       ! identify proper window index
-      if (nfgat > 1) then  ! in case the output is split into time windows
+      if (n_windows > 1) then  ! in case the output is split into time windows
          call da_advance_time(anatime, dtime_min, tmin_string)  ! initial time of bufr file
          call da_advance_time(anatime, dtime_max, tmax_string)  ! final time of bufr file
-         call da_get_time_slots(nfgat, tmin_string, tmax_string, time_slots)
+         call da_get_time_slots(n_windows, tmin_string, tmax_string, time_slots)
          do idx_obs = 1, ndata
             obs_time = gnssro_data%gstime(idx_obs)  ! julian time format of gstime is identical to time_slots
-            do j = 1, nfgat
+            do j = 1, n_windows
                ! strictly speaking, the logical expression should contain one <= and one < condition (otherwise the assignment
                ! at window boundaries is ambiguous). The first and last time windows require a <= at the window start and end,
                ! respectively. The use of two <= statements accommodates this and implies that observations at intermediate
@@ -395,29 +396,31 @@ contains
    end subroutine
 
 
-   subroutine get_output_file_name(nfgat, idx_window, hour_fgat, anatime, outdir, output_file_name)
+   subroutine get_output_file_name(gnssro_bufr_info, file_output_info, idx_window, output_file_name)
       use define_mod, only: half_bufr_interval
       use utils_mod, only: da_advance_time
-      integer(i_kind), intent(in) :: nfgat, idx_window, hour_fgat
-      character(len = *), intent(in) :: anatime, outdir
+      type(bufr_info_type), intent(in) :: gnssro_bufr_info
+      type(output_info_type), intent(in) :: file_output_info
+      integer(i_kind), intent(in) :: idx_window
       character(:), allocatable, intent(out) :: output_file_name
       character(len = 14) :: delta_time, output_file_date_long  ! delta_time has to be at least 3 characters long
-      character(:), allocatable :: output_file_date
-      if (nfgat > 1) then  ! multiple time windows
-         write(delta_time, '(i2, a)') (hour_fgat * (idx_window - 1)) - half_bufr_interval, 'h'
+      character(:), allocatable :: output_file_date, anatime
+      anatime = gnssro_bufr_info%analysis_time
+      if (file_output_info%n_windows > 1) then  ! multiple time windows
+         write(delta_time, '(i2, a)') (file_output_info%window_length_in_h * (idx_window - 1)) - half_bufr_interval, 'h'
          call da_advance_time(anatime, trim(adjustl(delta_time)), output_file_date_long)
          output_file_date = output_file_date_long(1:10)
       else  ! single time window
          output_file_date = anatime
       endif
-      output_file_name = trim(adjustl(outdir)) // 'gnssro_obs_' // output_file_date // '.h5'
+      output_file_name = trim(adjustl(file_output_info%output_dir)) // 'gnssro_obs_' // output_file_date // '.h5'
    end subroutine
 
 
-   subroutine write_gnssro_data(gnssro_data, gnssro_bufr_info, idx_window, outfile)
+   subroutine write_gnssro_data(gnssro_data, gnssro_bufr_info, file_output_info, idx_window)
       type(gnssro_type), intent(in) :: gnssro_data
       type(bufr_info_type), intent(in) :: gnssro_bufr_info
-      character(len = *), intent(in) :: outfile
+      type(output_info_type), intent(in) :: file_output_info
       integer(i_kind), intent(in) :: idx_window
       logical, dimension(gnssro_bufr_info%nobs_max) :: is_in_window
       integer(i_kind) :: ndata
@@ -426,13 +429,15 @@ contains
       integer :: varid_lat, varid_lon, varid_time, varid_epochtime, varid_recn, varid_sclf, varid_ptid, varid_said
       integer :: varid_siid, varid_asce, varid_ogce, varid_msl, varid_impp, varid_imph, varid_azim, varid_geoid, varid_rfict
       integer :: varid_ref, varid_refoe, varid_bnd, varid_bndoe
+      character(:), allocatable :: output_file_name
 
       ! identify observations in current time window
       is_in_window = (gnssro_data%idx_window == idx_window)
       ndata = count(is_in_window, kind = i_kind)
 
       ! create netcdf file and enter define mode
-      call check(nf90_create(trim(adjustl(outfile)), NF90_NETCDF4, ncid))
+      call get_output_file_name(gnssro_bufr_info, file_output_info, idx_window, output_file_name)
+      call check(nf90_create(trim(adjustl(output_file_name)), NF90_NETCDF4, ncid))
 
       ! create dimension and descriptive global attribute
       call check(nf90_def_dim(ncid, 'nlocs', ndata, nlocs_dimid))
