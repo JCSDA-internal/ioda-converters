@@ -10,7 +10,7 @@ namespace Obs2Ioda {
      *
      * @param netcdfID The identifier of the NetCDF file where the variable will be added.
      * @param groupName The name of the group in which the variable should be created.
-     *                  If nullptr, the variable is added to the root group.
+     *                  If NULL, the variable is added as a global variable.
      * @param varName The name of the variable to be created.
      * @param netcdfDataType The NetCDF data type of the variable (e.g., NC_INT, NC_FLOAT).
      * @param numDims The number of dimensions associated with the variable.
@@ -32,7 +32,7 @@ namespace Obs2Ioda {
     * @brief Writes data to a variable in a NetCDF file.
     *
     * @param netcdfID The identifier of the NetCDF file where the data will be written.
-    * @param groupName The name of the group containing the variable. If nullptr, the variable is assumed to be in the root group.
+    * @param groupName The name of the group containing the variable. If NULL, the variable is assumed to be a global variable.
     * @param varName The name of the variable to which data will be written.
     * @param values A pointer to the data to be written to the variable.
     * @return int A status code indicating the outcome of the operation:
@@ -85,7 +85,7 @@ namespace Obs2Ioda {
     * @brief Sets the fill mode and fill value for a variable in a NetCDF file.
     *
     * @param netcdfID The identifier of the NetCDF file containing the variable.
-    * @param groupName The name of the group containing the variable. If nullptr, the variable is assumed to be in the root group.
+    * @param groupName The name of the group containing the variable. If NULL, the variable is assumed to be a global variable.
     * @param varName The name of the variable for which the fill mode is set.
     * @param fillMode The fill mode to be applied:
     *         - 0: Disable fill mode (use uninitialized values).
