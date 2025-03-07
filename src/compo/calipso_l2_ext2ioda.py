@@ -41,7 +41,11 @@ metaKeyList = [
 DimDict = {
 }
 
-VarDims = {'extinctionCoefficient': ['Location', 'Level', 'Channel'],
+VarDims = {
+    'extinctionCoefficient': ['Location', 'Channel', 'Layer'],
+    'pressure': ['Location', 'Layer'],
+    'sequenceNumber': ['Location'],
+    'sensorCentralWavelength': ['Channel'],
 }
 
 obsvars = ["extinctionCoefficient"]
@@ -54,11 +58,11 @@ varsKeyList = [('valKey', iconv.OvalName(), 'float', 'longitude latitude', 'km-1
                ('qcKey', iconv.OqcName(), 'integer', 'longitude latitude', None)]
 
 
-float_missing_value = nc.default_fillvals['f4']
-int_missing_value = nc.default_fillvals['i4']
-double_missing_value = nc.default_fillvals['f8']
-long_missing_value = nc.default_fillvals['i8']
-string_missing_value = '_'
+float_missing_value = iconv.get_default_fill_val(np.float32)
+double_missing_value = iconv.get_default_fill_val(np.float64)
+int_missing_value = iconv.get_default_fill_val(np.int32)
+long_missing_value = iconv.get_default_fill_val(np.int64)
+string_missing_value = iconv.get_default_fill_val(np.str_)
 
 missing_vals = {'string': string_missing_value,
                 'integer': int_missing_value,
@@ -102,8 +106,8 @@ class calipso_l2ext(object):
 
     def _read(self):
         # default missing value in CALIPSO file
-        default_missing_value = -9999.
-        calipso_ref_time = datetime(1993, 1, 1, 0, 0, 0)
+        caliop_missing_value = -9999.
+        caliop_ref_time = datetime(1993, 1, 1, 0, 0, 0)
         nchan = len(channels)
         output_chidx = np.array(channels, dtype=np.int32) - 1
 
@@ -119,46 +123,41 @@ class calipso_l2ext(object):
             self.outdata[self.varDict[iodavar]['qcKey']] = np.array([], dtype=np.int32)
 
         for f in self.filenames:
-            hdf = SD(f, SDC.READ)
+            sd = SD(f, SDC.READ)
 
-            pres = hdf.select('Pressure').get() * 1e2 # hPa to Pa
-            nlocs = pres.shape[0]
-            nlevs = pres.shape[1] 
+            pres = sd.select('Pressure').get() * 1e2 # hPa to Pa
+            nloc = pres.shape[0]
+            nlev = pres.shape[1] 
             pres = pres.ravel()
-            lats = hdf.select('Latitude').get()[:,1]
-            lats = np.tile(lats[:, np.newaxis], (1, nlevs)).ravel()
-            lons = hdf.select('Longitude').get()[:,1]
-            lons = np.tile(lons[:, np.newaxis], (1, nlevs)).ravel()
-            profidx = np.arange(nlocs)
-            profidx = np.tile(profidx[:, np.newaxis], (1, nlevs)).ravel()
-            proftime = hdf.select('Profile_Time').get()[:,1]
-            obs_time = (proftime + calipso_ref_time.timestamp()).astype('datetime64[s]')
-            obs_time = np.tile(obs_time[:, np.newaxis], (1, nlevs)).ravel()
+            lats = sd.select('Latitude').get()[:,1]
+            #lats = np.tile(lats[:, np.newaxis], (1, nlevs)).ravel()
+            lons = sd.select('Longitude').get()[:,1]
+            #lons = np.tile(lons[:, np.newaxis], (1, nlevs)).ravel()
+            profidx = np.arange(nloc)
+            #profidx = np.tile(profidx[:, np.newaxis], (1, nlevs)).ravel()
+            proftime = sd.select('Profile_Time').get()[:,1]
+            obs_time = (proftime + caliop_ref_time.timestamp()).astype('datetime64[s]')
             winmsk = ((obs_time >= self.wbeg) & (obs_time <= self.wend))
-            print(lats.shape)
 
-            obs = np.zeros(pres.shape)
-            err = np.zeros(pres.shape)
-            qcf = np.zeros(pres.shape)
+            obs = np.zeros((nloc, nchan, nlev))
+            err = np.zeros_like(obs)
+            qcf = np.zeros_like(obs)
             for i, chidx in enumerate(output_chidx):
                 wavelength_str = str(int(wavelength[chidx] * 1e3))
                 obsvarname = f"Extinction_Coefficient_{wavelength_str}"
                 errvarname = f"Extinction_Coefficient_Uncertainty_{wavelength_str}"
                 qcfvarname = f"Extinction_QC_Flag_{wavelength_str}"
+                tmpqcf = sd.select(qcfvarname).get()
+                tmpqcf = np.where(tmpqcf[:, :,)
 
-                if i==0:
-                    obs = hdf.select(obsvarname).get().ravel()[:, np.newaxis]
-                    err = hdf.select(errvarname).get().ravel()[:, np.newaxis]
-                    qcf = hdf.select(qcfvarname).get().ravel()[:, np.newaxis]
-                else:
-                    obs = np.concatenate((obs, hdf.select(obsvarname).get().ravel()[:, np.newaxis]), axis=1)
-                    err = np.concatenate((err, hdf.select(errvarname).get().ravel()[:, np.newaxis]), axis=1)
-                    qcf = np.concatenate((qcf, hdf.select(qcfvarname).get().ravel()[:, np.newaxis]), axis=1)
+                obs[:, i, :] = sd.select(obsvarname).get()
+                err[:, i, :] = sd.select(errvarname).get()
+                qcf[:, i, :] = sd.select(qcfvarname).get()
 
             # Below 8.3 km, QC flag needs to consider the rightmost dimension
 
-            obs = np.where(obs < 0, float_missing_value, obs)
-            err = np.where(err < 0, float_missing_value, err)
+            obs = np.where(obs = caliop_missing_value, float_missing_value, obs)
+            err = np.where(err = caliop_missing_value, float_missing_value, err)
             pres = np.where(pres < 0, float_missing_value, pres)
                 
             self.outdata[('latitude', metaDataName)] = np.append(self.outdata[('latitude', metaDataName)],
@@ -168,121 +167,26 @@ class calipso_l2ext(object):
             self.outdata[('dateTime', metaDataName)] = np.append(self.outdata[('dateTime', metaDataName)],
                                                                  np.array(obs_time[winmsk], dtype=np.int64))
             self.outdata[('pressure', metaDataName)] = np.append(self.outdata[('pressure', metaDataName)],
-                                                                 np.array(pres[winmsk], dtype=np.float32))
+                                                                 np.array(pres[winmsk, :], dtype=np.float32))
 
             for iodavar in obsvars:
-                self.outdata[self.varDict[iodavar]['valKey']] = np.append(self.outdata[self.varDict[iodavar]['valKey']],
-                                                                          np.array(obs[winmsk, :], dtype=np.float32))
-                self.outdata[self.varDict[iodavar]['errKey']] = np.append(self.outdata[self.varDict[iodavar]['errKey']],
-                                                                          np.array(err[winmsk, :], dtype=np.float32))
-                self.outdata[self.varDict[iodavar]['qcKey']] = np.append(self.outdata[self.varDict[iodavar]['qcKey']],
-                                                                         np.array(qcf[winmsk, :], dtype=np.int32))
+                self.outdata[self.varDict[iodavar]['valKey']] = np.append(
+                        self.outdata[self.varDict[iodavar]['valKey']], np.array(obs[winmsk, :, :], dtype=np.float32))
+                self.outdata[self.varDict[iodavar]['errKey']] = np.append(
+                        self.outdata[self.varDict[iodavar]['errKey']], np.array(err[winmsk, :, :], dtype=np.float32))
+                self.outdata[self.varDict[iodavar]['qcKey']] = np.append(
+                        self.outdata[self.varDict[iodavar]['qcKey']],  np.array(qcf[winmsk, :, :], dtype=np.int32))
 
-            hdf.end()
+            sd.end()
 
         self.outdata[('sensorCentralWavelength', metaDataName)] = np.array(wavelength, dtype=np.float32)[output_chidx]
+        self.outdata[('sensorCentralFrequency', metaDataName)] = np.array(wavelength, dtype=np.float32)[output_chidx]
         DimDict['Location'] = len(self.outdata[('dateTime', metaDataName)])
         DimDict['Channel'] = nchan
-
-def get_hdf_meta_dict(vs):
-    # Reference: https://forum.earthdata.nasa.gov/viewtopic.php?f=7&t=2452#confirm_external_link-modal
-    hdfmeta = vs.attach('metadata')
-    hdfmeta_fields=hdfmeta.fieldinfo()
-    hdfmeta_values=hdfmeta.read(hdfmeta._nrecs)[0]
-    hdfmeta.detach()
-    meta_dict={}
-    fld_idx=0
-    for fld, data in zip(hdfmeta_fields,hdfmeta_values):
-        meta_dict[fld[fld_idx]]=data
-
-    return meta_dict
-
-def get_data(f, obs_data, meta_dict):
-
-    #nchans = 2
-    nlevs = f.select('Pressure').get().shape[1]
-    
-    obs_data[('latitude', 'MetaData')] = np.array(f.select('Latitude').get()[:,1], dtype='float32')
-    obs_data[('longitude', 'MetaData')] = np.array(f.select('Longitude').get()[:,1], dtype='float32')
-    obs_data[('level', 'MetaData')] = np.array(np.arange(nlevs)+1, dtype='int32')
-  
-    nlocs = len(obs_data[('latitude', 'MetaData')])
-    obs_data[('satelliteId', 'MetaData')] = np.full((nlocs), CALIPSO_WMO_sat_ID, dtype='int32')
-    
-    obs_data[('Lidar_Data_Altitudes', 'MetaData')] = np.array(meta_dict['Lidar_Data_Altitudes'],dtype='float32')
-    obs_data[('profileTime', 'MetaData')] = np.array(f.select('Profile_Time').get()[:,1], dtype='float32')
-    obs_data[('Pressure', 'MetaData')] = np.array(f.select('Pressure').get(), dtype='float32')
-    obs_data[('Temperature', 'MetaData')] = np.array(f.select('Temperature').get(), dtype='float32')
-
-    obs_data[('ExtinctionCoeff_532', "ObsValue")] = np.array(f.select("Extinction_Coefficient_532").get(),dtype='float32')
-    obs_data[('ExtinctionCoeff_1064',"ObsValue")] = np.array(f.select("Extinction_Coefficient_1064").get(),dtype='float32')
-    obs_data[('ExtinctionCoeff_532', "ObsError")] = np.array(f.select("Extinction_Coefficient_Uncertainty_532").get(),dtype='float32')
-    obs_data[('ExtinctionCoeff_1064',"ObsError")] = np.array(f.select("Extinction_Coefficient_Uncertainty_1064").get(),dtype='float32')
-
-    obs_data[('Extinction_QC_Flag_532', "ObsValue")] = np.array(f.select("Extinction_QC_Flag_532").get(),dtype='int16')
-    obs_data[('Extinction_QC_Flag_1064',"ObsValue")] = np.array(f.select("Extinction_QC_Flag_1064").get(),dtype='int16')
-
-    # For PreQC, the value of -9999. and -333. of Extinction and Backscatter can be rejected.
-
-    #obs_data[(k, "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
-    #quality_word = np.vstack(np.stack(f['calQualityFlag'], axis=2))
-    #obs_data[('ascending_flag', 'MetaData')] = np.array(get_normalized_bit(quality_word[:, 0], bit_index=6), dtype='int32')
-    #obs_key = (k, "ObsValue")
-    #obs_data = set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data)
-
-    return obs_data
-
-
-def set_missing_value(nchans, chk_geolocation, quality_word, obs_key, obs_data):
-    # use quality word to determine where to set for missing values
-    for jchan in np.arange(nchans):
-        i_land = get_normalized_bit(quality_word[:, jchan], bit_index=1)
-        i_intrusion = get_normalized_bit(quality_word[:, jchan], bit_index=2)
-        i_maneuver = get_normalized_bit(quality_word[:, jchan], bit_index=3)
-        i_cold_cal = get_normalized_bit(quality_word[:, jchan], bit_index=4)
-        i_hot_cal = get_normalized_bit(quality_word[:, jchan], bit_index=5)
-        i_asc = get_normalized_bit(quality_word[:, jchan], bit_index=6)
-        i_day = get_normalized_bit(quality_word[:, jchan], bit_index=7)
-        i_forward = get_normalized_bit(quality_word[:, jchan], bit_index=8)
-        chk_ob = (i_cold_cal + i_hot_cal + i_intrusion + i_maneuver + chk_geolocation) > 0
-        obs_data[obs_key][:, jchan][chk_ob] = float_missing_value
-
-    return obs_data
-
+        DimDict['Level'] = nlev
 
 def get_normalized_bit(value, bit_index):
     return (value >> bit_index) & 1
-
-
-def init_obs_loc():
-    obs = {
-        ( 'ExtinctionCoeff_532', "ObsValue"): [],
-        ( 'ExtinctionCoeff_1064', "ObsValue"): [],
-        ( 'ExtinctionCoeff_532', "ObsError"): [],
-        ( 'ExtinctionCoeff_1064', "ObsError"): [],
-        ( 'Extinction_QC_Flag_532', "ObsValue"): [],
-        ( 'Extinction_QC_Flag_1064', "ObsValue"): [],
-        ('latitude', 'MetaData'): [],
-        ('longitude', 'MetaData'): [],
-        ('level', 'MetaData'): [],
-        ('Lidar_Data_Altitudes', 'MetaData'): [],
-        ('profileTime', 'MetaData'): [],
-        ('satelliteId', 'MetaData'): [],
-    }
-
-    return obs
-
-
-def concat_obs_dict(obs_data, append_obs_data):
-    # For now we are assuming that the obs_data dictionary has the "golden" list
-    # of variables. If one is missing from append_obs_data, a warning will be issued.
-    append_keys = list(append_obs_data.keys())
-    for gv_key in obs_data.keys():
-        if gv_key in append_keys:
-            obs_data[gv_key] = np.append(obs_data[gv_key], append_obs_data[gv_key], axis=0)
-        else:
-            print("WARNING: ", gv_key, " is missing from append_obs_data dictionary")
-
 
 def main():
     parser = argparse.ArgumentParser(
