@@ -79,12 +79,12 @@ long_missing_value = iconv.get_default_fill_val(np.int64)
 
 
 class viirs_l1b_rf(object):
-    def __init__(self, filenames, date_range, thin, apply_secterm):
+    def __init__(self, filenames, date_range, thinning_ratio, stored_refl):
         self.filenames = filenames
         self.wbeg = np.datetime64(str(datetime.strptime(date_range[0], "%Y%m%d%H"))).astype(np.int64)
         self.wend = np.datetime64(str(datetime.strptime(date_range[1], "%Y%m%d%H"))).astype(np.int64)
-        self.thin = thin
-        self.apply_secterm = apply_secterm
+        self.thinning_ratio = thinning_ratio
+        self.stored_refl = stored_refl
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -190,7 +190,7 @@ class viirs_l1b_rf(object):
                 err.set_auto_scale(False)
 
                 # NASA VIIRS apply secant if option enabled
-                vals[:, ichan] = obs[:].data.ravel() * sec_term if self.apply_secterm else obs[:].data.ravel()
+                vals[:, ichan] = obs[:].data.ravel() * sec_term if not self.stored_refl else obs[:].data.ravel()
                 qcfs[:, ichan] = qcf[:].data.ravel()
                 # Convert Uncertainty Index (in percentage) into absolute error
                 errs[:, ichan] = (1. + err.scale_factor * err[:].data.ravel() ** 2) * 0.01 * vals[:, ichan]
@@ -209,8 +209,8 @@ class viirs_l1b_rf(object):
             obs_ncd.close()
 
             # apply thinning mask
-            if self.thin > 0.0:
-                mask_thin = np.random.uniform(size=len(lons)) > self.thin
+            if self.thinning_ratio > 0.0:
+                mask_thin = np.random.uniform(size=len(lons)) > self.thinning_ratio
                 lons = lons[mask_thin]
                 lats = lats[mask_thin]
                 vals = vals[mask_thin, :]
@@ -272,7 +272,7 @@ class viirs_l1b_rf(object):
 
         DimDict['Location'] = len(self.outdata[('latitude', metaDataName)])
         DimDict['Channel'] = self.outdata[('sensorChannelNumber', metaDataName)]
-        AttrData['applySecterm'] = self.apply_secterm
+        AttrData['storedReflectance'] = self.stored_refl
         AttrData['sourceFiles'] = AttrData['sourceFiles']
         AttrData['datetimeRange'] = np.array([datetime.fromtimestamp(min_time).strftime("%Y-%m-%dT%H:%M:%SZ"),
                                               datetime.fromtimestamp(max_time).strftime("%Y-%m-%dT%H:%M:%SZ")], dtype=object)
@@ -307,17 +307,18 @@ def main():
         '-o', '--output',
         help="name of ioda-v2 output file",
         type=str, required=True)
-    required.add_argument(
-        '-n', '--thin',
-        help="percentage of random thinning fro 0.0 to 1.0. Zero indicates"
-        " no thinning is performed. (default: %(default)s)",
-        type=float, default=0.0)
 
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
-        '--secterm',
-        help="presence of option will multiply secant of solar zenith angle to get true reflectance",
+        '--stored_reflectance',
+        help="presence of option will directly convert VIIRS stored reflectance"
+        " (not scaling by cosine of solar zenith angle)",
         action='store_true', default=False)
+    optional.add_argument(
+        '--random_thinning_ratio',
+        help="percentage of random thinning fro 0.0 to 1.0. Zero indicates"
+        " no thinning is performed. (default: %(default)s)",
+        type=float, default=0.0)
     optional.add_argument(
         '--date_range',
         help="extract a date range to fit the data assimilation window"
@@ -330,7 +331,7 @@ def main():
     zipped_list = zip(sorted(args.obsinfo), sorted(args.geoinfo))
 
     # Read in the reflectance factor data
-    toa_rf = viirs_l1b_rf(zipped_list, args.date_range, args.thin, args.secterm)
+    toa_rf = viirs_l1b_rf(zipped_list, args.date_range, args.random_thinning_ratio, args.stored_reflectance)
 
     # write everything out (albedo)
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
