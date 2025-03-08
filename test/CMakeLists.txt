@@ -1263,9 +1263,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pace_uaa_aod
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/pace_aod2ioda.py
                           -i testinput/pace_uaa_aod.2024072114.nc
                           -o testrun/pace_uaa_aod.2024072114.nc
-                          --retrieval_method UAA
                           --date_range 2024072114 2024072115
-                          -n 0.0"
                           pace_uaa_aod.2024072114.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_aod
@@ -1280,7 +1278,6 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_aod
                           --provider noaa
                           --error_method pue
                           --date_range 2018041504 2018041505
-                          -n 0.0"
                           viirs_aod.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_nasa_viirs_db_aod
@@ -1296,7 +1293,6 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_nasa_viirs_db_aod
                           --error_method pue
                           --retrieval_method DeepBlue
                           --date_range 2024070315 2024070316
-                          -n 0.0"
                           viirs_db_aod.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_nasa_viirs_dt_aod
@@ -1311,7 +1307,6 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_nasa_viirs_dt_aod
                           --provider nasa
                           --retrieval_method DarkTarget
                           --date_range 2024070315 2024070316
-                          -n 0.0"
                           viirs_dt_aod.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_satbias_viirs_aod

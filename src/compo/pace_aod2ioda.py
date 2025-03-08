@@ -32,6 +32,7 @@ obsvars = ["aerosolOpticalDepth"]
 # A dictionary of global attributes.  More filled in further down.
 AttrData = {}
 AttrData['ioda_object_type'] = 'AOD'
+AttrData['retrievalMethod'] = 'Unified Aerosol Algorithm (UAA)'
 
 # A dictionary of variable dimensions.
 DimDict = {}
@@ -69,8 +70,7 @@ class AOD(object):
     def __init__(self, in_dict):
         self.filenames = in_dict['input']
         self.error_method = in_dict['error_method']
-        self.thin = in_dict['thin']
-        self.retrieval_method = in_dict['retrieval_method']
+        self.thinning_ratio = in_dict['thinning_ratio']
         self.wbeg = np.datetime64(str(datetime.strptime(in_dict['date_range'][0], "%Y%m%d%H"))).astype(np.int64)
         self.wend = np.datetime64(str(datetime.strptime(in_dict['date_range'][1], "%Y%m%d%H"))).astype(np.int64)
         self.varDict = defaultdict(lambda: defaultdict(dict))
@@ -161,9 +161,7 @@ class AOD(object):
             self.outdata[self.varDict[iodavar]['qcKey']] = np.array([], dtype=np.int32)
 
         # Define get_data function based on retrieval method
-        if self.retrieval_method == 'UAA':
-            get_paceaod_data = self.get_uaa_data
-        AttrData['retrievalMethod'] = self.retrieval_method
+        get_paceaod_data = self.get_uaa_data
 
         min_time = -int_missing_value
         max_time = int_missing_value
@@ -190,8 +188,8 @@ class AOD(object):
             winmsk = ((self.obs_time >= self.wbeg) & (self.obs_time <= self.wend))
 
             # apply thinning mask
-            if self.thin > 0.0:
-                mask_thin = np.random.uniform(size=len(self.lons)) > self.thin
+            if self.thinning_ratio > 0.0:
+                mask_thin = np.random.uniform(size=len(self.lons)) > self.thinning_ratio
                 self.lons = self.lons[mask_thin]
                 self.lats = self.lats[mask_thin]
                 self.vals = self.vals[mask_thin]
@@ -200,9 +198,12 @@ class AOD(object):
                 self.obs_time = self.obs_time[mask_thin]
 
             #  Write out data
-            self.outdata[('latitude', metaDataName)] = np.append(self.outdata[('latitude', metaDataName)], np.array(self.lats[winmsk], dtype=np.float32))
-            self.outdata[('longitude', metaDataName)] = np.append(self.outdata[('longitude', metaDataName)], np.array(self.lons[winmsk], dtype=np.float32))
-            self.outdata[('dateTime', metaDataName)] = np.append(self.outdata[('dateTime', metaDataName)], np.array(self.obs_time[winmsk], dtype=np.int64))
+            self.outdata[('latitude', metaDataName)] = np.append(
+                self.outdata[('latitude', metaDataName)], np.array(self.lats[winmsk], dtype=np.float32))
+            self.outdata[('longitude', metaDataName)] = np.append(
+                self.outdata[('longitude', metaDataName)], np.array(self.lons[winmsk], dtype=np.float32))
+            self.outdata[('dateTime', metaDataName)] = np.append(
+                self.outdata[('dateTime', metaDataName)], np.array(self.obs_time[winmsk], dtype=np.int64))
 
             for iodavar in obsvars:
                 self.outdata[self.varDict[iodavar]['valKey']] = np.append(
@@ -228,12 +229,12 @@ def main():
 
     # get command line arguments
     # Usage: python pace_aod2ioda.py -i /path/to/obs/2021060801.nc /path/to/obs/2021060802.nc ... -o /path/to/ioda/20210608.nc
-    # --retieval_method [UAA] --error_method [pue]
+    # --error_method [pue]
     # where the input obs could be for any desired interval to concatenated together.
     parser = argparse.ArgumentParser(
         description=('Read PACE OCI aerosol optical depth file(s) and Converter'
                      ' of native NetCDF format for observations of optical'
-                     ' depth from PACE OCI AOD to IODA-V2 netCDF format.')
+                     ' depth from PACE OCI UAA AOD to IODA-V2 netCDF format.')
     )
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
@@ -247,16 +248,12 @@ def main():
 
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
-        '--retrieval_method',
-        help="specify the retrieval method, UAA",
-        type=str, default=None)
-    optional.add_argument(
         '--error_method',
         help="calculation error method: pue/default, Expected Error for NASA product",
         type=str, default=None)
     optional.add_argument(
-        '-n', '--thin',
-        help="percentage of random thinning fro 0.0 to 1.0. Zero indicates"
+        '--thinning_ratio',
+        help="percentage of random thinning from 0.0 to 1.0. Zero indicates"
         " no thinning is performed. (default: %(default)s)",
         type=float, default=0.0)
     optional.add_argument(
@@ -270,8 +267,7 @@ def main():
 
     args_in_dict = {'input': args.input,
                     'error_method': args.error_method,
-                    'retrieval_method': args.retrieval_method,
-                    'thin': args.thin,
+                    'thinning_ratio': args.thinning_ratio,
                     'date_range': args.date_range,
                     }
 
