@@ -315,7 +315,7 @@ def main():
         " (not scaling by cosine of solar zenith angle)",
         action='store_true', default=False)
     optional.add_argument(
-        '--random_thinning_ratio',
+        '--thinning_ratio',
         help="percentage of random thinning fro 0.0 to 1.0. Zero indicates"
         " no thinning is performed. (default: %(default)s)",
         type=float, default=0.0)
@@ -331,7 +331,7 @@ def main():
     zipped_list = zip(sorted(args.obsinfo), sorted(args.geoinfo))
 
     # Read in the reflectance factor data
-    toa_rf = viirs_l1b_rf(zipped_list, args.date_range, args.random_thinning_ratio, args.stored_reflectance)
+    toa_rf = viirs_l1b_rf(zipped_list, args.date_range, args.thinning_ratio, args.stored_reflectance)
 
     # write everything out (albedo)
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
