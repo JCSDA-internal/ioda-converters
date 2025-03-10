@@ -147,14 +147,14 @@ class calipso_l2ext(object):
                 obsvarname = f"Extinction_Coefficient_{wavelength_str}"
                 errvarname = f"Extinction_Coefficient_Uncertainty_{wavelength_str}"
                 qcfvarname = f"Extinction_QC_Flag_{wavelength_str}"
+                # Level 2 QC flag stores 30m level 1 QC flag below 8.3 km in the rightmost dimension
                 tmpqcf = sd.select(qcfvarname).get()
-                tmpqcf = np.where(tmpqcf[:, :,)
+                tmpqcf = np.where(qcf[:, :, 0]==qcf[:, :, 1], qcf[:, :, 0], qcf.sum(axis=2))
 
                 obs[:, i, :] = sd.select(obsvarname).get()
                 err[:, i, :] = sd.select(errvarname).get()
-                qcf[:, i, :] = sd.select(qcfvarname).get()
+                qcf[:, i, :] = tmpqcf
 
-            # Below 8.3 km, QC flag needs to consider the rightmost dimension
 
             obs = np.where(obs = caliop_missing_value, float_missing_value, obs)
             err = np.where(err = caliop_missing_value, float_missing_value, err)
