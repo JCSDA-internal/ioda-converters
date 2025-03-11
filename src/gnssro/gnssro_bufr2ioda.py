@@ -17,6 +17,7 @@ import numpy as np
 import os
 from itertools import repeat
 import netCDF4 as nc
+import re
 
 import pyiodaconv.ioda_conv_engines as iconv
 from pyiodaconv.def_jedi_utils import ioda_int_type, ioda_float_type
@@ -39,6 +40,24 @@ locationKeyList = [
     ("dateTime", "long")
 ]
 
+# Data used in fill_missing_satellite_subidentifier from file
+# names that use satDAAC identifiers, like the UCAR/COSMIC archive.
+# The first parentheses in the pattern should match the satId
+# and the second parentheses should match the number (subidentifier).
+# Satellite subidentifiers are typically not needed for government
+# missions. For example, Cosmic1 (C[0-9]{3}) and Cosmic2 (C2E[0-9]) 
+# do not use subidentifiers.
+satIdPatterns = [
+    '^(GN)([0-9]{2})$',     # PlanetiQ
+    '^(S)([0-9]{3})$',      # Spire
+    '^(GO)([0-9]{2})$'      # GeoOptics
+]
+
+satIdLists = [
+    [267, 268],             # PlanetiQ
+    [269],                  # Spire
+    [265, 266]              # GeoOptics
+]
 
 def main(args):
 
@@ -46,6 +65,7 @@ def main(args):
     qc = args.qualitycontrol
     addLSW = args.localspectralwidth
     only_bang = args.onlybendingangle
+    no_tp_drift = args.no_tp_drift
 
     # read / process files in parallel
     pool_input_01 = args.input
@@ -54,7 +74,7 @@ def main(args):
     obs_data = {}
     # create a thread pool
     with ProcessPoolExecutor(max_workers=args.threads) as executor:
-        for file_obs_data in executor.map(read_input, pool_inputs, repeat(qc), repeat(addLSW), repeat(only_bang)):
+        for file_obs_data in executor.map(read_input, pool_inputs, repeat(qc), repeat(addLSW), repeat(only_bang), repeat(no_tp_drift)):
             if not file_obs_data:
                 print(f"INFO: non-nominal file skipping")
                 continue
@@ -119,8 +139,42 @@ def main(args):
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
+def fill_missing_satellite_subidentifier(input_file, profile_meta_data):
+    "Extract missing satelliteSubIdentifier from filename, if possible"
+    #  Handle special case of satelliteSubIdentifier. This attribute was a late
+    #  addition to the BUFR RO specification, so it is consider optional and is not 
+    #  always included in the BUFR message. If it is missing, look to see if the
+    #  value can be deduced from the input filename.
+    satSubIdName = 'satelliteSubIdentifier'
+    satIdName = 'satelliteIdentifier'
+    if satSubIdName in profile_meta_data:
+        return
+    if satIdName not in profile_meta_data:
+        return
+    
+    filename = os.path.basename(input_file)  # Strip the directory from the path.
+    match = re.search('^[a-z]+Prf_([A-Z][A-Z0-9]{3})[\._]', filename)
+    if match:
+        # Parse the leo_id from the "IIII" group of the UCAR filenaming convention, documented 
+        # here: https://cdaac-www.cosmic.ucar.edu/cdaac/cgi_bin/fileFormats.cgi?type=bfrPrf
+        # Confirm the satelliteIdentifier from BUFR is consistent with the satellite id in the filename.
+        leo_id = match.group(1)
+        leo_match = None 
+        satId = profile_meta_data[satIdName]
+        for (pattern, satIdList) in zip(satIdPatterns, satIdLists):
+            leo_match = re.search(pattern, leo_id)
+            if leo_match:
+                profile_meta_data[satSubIdName] = int(leo_match.group(2))
+                print(f"  NOTICE: Set missing {satSubIdName} to {profile_meta_data[satSubIdName]}"
+                      f" from leo_id {leo_id} parsed from filename {input_file}")
+                break
 
-def read_input(input_file_and_record, add_qc, addLSW, only_bang):
+        if not leo_match: 
+            print(f"  WARNING: Could not deduce missing {satSubIdName} from leo_id {leo_id} "
+                  f"parsed from filename {input_file}")
+    return
+
+def read_input(input_file_and_record, add_qc, addLSW, only_bang, no_tp_drift):
     """
     Reads/converts input file(s)
 
@@ -135,16 +189,22 @@ def read_input(input_file_and_record, add_qc, addLSW, only_bang):
     """
     input_file = input_file_and_record[0]
     record_number = input_file_and_record[1]
-    print("Reading: %s" % input_file)
+    print(f"Reading: {input_file} (record_number {record_number})")
     f = open(input_file, 'rb')
     bufr = codes_bufr_new_from_file(f)
     codes_set(bufr, 'unpack', 1)
 
     profile_meta_data = get_meta_data(bufr)
     if not profile_meta_data:
+        f.close()
         return None
 
-    obs_data = get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=record_number, only_bang=only_bang)
+    #  Special case if satelliteSubIdentifier is missing in BUFR message.
+    fill_missing_satellite_subidentifier(input_file, profile_meta_data)
+
+    obs_data = get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=record_number, only_bang=only_bang, no_tp_drift=no_tp_drift)
+
+    f.close()
 
     return obs_data
 
@@ -180,7 +240,7 @@ def get_meta_data(bufr):
     return profile_meta_data
 
 
-def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None, only_bang=False):
+def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None, only_bang=False, no_tp_drift=False):
 
     # allocate space for output depending on which variables are to be saved
     obs_data = {}
@@ -203,6 +263,14 @@ def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None, on
     # get the bending angle
     lats = codes_get_array(bufr, 'latitude')[1:]                     # geolocation -- first value is the average
     lons = codes_get_array(bufr, 'longitude')[1:]
+    if no_tp_drift:  
+        #  Override all lat-lons with average value
+        avg_lat = codes_get_array(bufr, 'latitude')[0]
+        avg_lon = codes_get_array(bufr, 'longitude')[0]
+        print(f"Overriding lat, lon with {avg_lat}, {avg_lon}")
+        lats[:] = avg_lat
+        lons[:] = avg_lon
+
     impact = codes_get_array(bufr, 'impactParameter')[offset::drepfac[0]]
     bang = codes_get_array(bufr, 'bendingAngle')[offset*2::drepfac[0]*2]
     bang_err = codes_get_array(bufr, 'bendingAngle')[offset*2+1::drepfac[0]*2]
@@ -454,6 +522,12 @@ if __name__ == "__main__":
     optional.add_argument(
         '--onlybendingangle',
         help='only encode bending angle ignore refractivity and profiles',
+        action='store_true', required=False)
+
+    optional.add_argument(
+        '--no-tp-drift',
+        help='Disable tangent point drift by using the average lat, lon as tangent '
+             'point for all rays in a profile',
         action='store_true', required=False)
 
     args = parser.parse_args()
