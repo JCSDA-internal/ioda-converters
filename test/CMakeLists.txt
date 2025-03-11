@@ -84,6 +84,7 @@ list( APPEND test_input
   testinput/satwinds_ssec2021080103.txt
   testinput/pace_oc_l2.nc
   testinput/pace_radiance_L1B.nc
+  testinput/pace_uaa_aod.2024072114.nc
   testinput/modis_aqua_Rrs_OC_L2.nc
   testinput/mls_o3_l2.he5
   testinput/omi_o3_l2.he5
@@ -185,6 +186,7 @@ list( APPEND test_output
   testoutput/satwinds_ssec2021080103.nc
   testoutput/pace_oc_l2.nc
   testoutput/pace_radiance_L1B.nc
+  testoutput/pace_uaa_aod.2024072114.nc
   testoutput/modis_water_leaving_radiance_L2.nc
   testoutput/mls_o3_l2.nc
   testoutput/omi_o3_l2.nc
@@ -1252,6 +1254,18 @@ endif()
 # Atmospheric Composition converters
 #==============================================================================
 
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pace_uaa_aod
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/pace_aod2ioda.py
+                          -i testinput/pace_uaa_aod.2024072114.nc
+                          -o testrun/pace_uaa_aod.2024072114.nc
+                          --date_range 2024072114 2024072115"
+                          pace_uaa_aod.2024072114.nc ${IODA_CONV_COMP_TOL})
+
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_aod
                   TYPE    SCRIPT
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
@@ -1263,8 +1277,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_aod
                           -o testrun/viirs_aod.nc
                           --provider noaa
                           --error_method pue
-                          --date_range 2018041504 2018041505
-                          -n 0.0"
+                          --date_range 2018041504 2018041505"
                           viirs_aod.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_nasa_viirs_db_aod
@@ -1279,8 +1292,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_nasa_viirs_db_aod
                           --provider nasa
                           --error_method pue
                           --retrieval_method DeepBlue
-                          --date_range 2024070315 2024070316
-                          -n 0.0"
+                          --date_range 2024070315 2024070316"
                           viirs_db_aod.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_nasa_viirs_dt_aod
@@ -1294,8 +1306,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_nasa_viirs_dt_aod
                           -o testrun/viirs_dt_aod.nc
                           --provider nasa
                           --retrieval_method DarkTarget
-                          --date_range 2024070315 2024070316
-                          -n 0.0"
+                          --date_range 2024070315 2024070316"
                           viirs_dt_aod.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_satbias_viirs_aod
