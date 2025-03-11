@@ -627,7 +627,7 @@ if __name__ == "__main__":
     optional.add_argument(
         '--skip',
         help="default pixel skip factor to be applied",
-        type=int, default=1)
+        type=int, default=1)  # TROPICS 13 is a good number
 
     args = parser.parse_args()
 
