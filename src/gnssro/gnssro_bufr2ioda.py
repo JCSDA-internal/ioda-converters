@@ -45,12 +45,12 @@ locationKeyList = [
 # The first parentheses in the pattern should match the satId
 # and the second parentheses should match the number (subidentifier).
 # Satellite subidentifiers are typically not needed for government
-# missions. For example, Cosmic1 (C[0-9]{3}) and Cosmic2 (C2E[0-9]) 
+# missions. For example, Cosmic1 (C[0-9]{3}) and Cosmic2 (C2E[0-9])
 # do not use subidentifiers.
 satIdPatterns = [
-    '^(GN)([0-9]{2})$',     # PlanetiQ
-    '^(S)([0-9]{3})$',      # Spire
-    '^(GO)([0-9]{2})$'      # GeoOptics
+    r'^(GN)([0-9]{2})$',     # PlanetiQ
+    r'^(S)([0-9]{3})$',      # Spire
+    r'^(GO)([0-9]{2})$'      # GeoOptics
 ]
 
 satIdLists = [
@@ -59,8 +59,8 @@ satIdLists = [
     [265, 266]              # GeoOptics
 ]
 
-def main(args):
 
+def main(args):
     dtg = datetime.strptime(args.date, '%Y%m%d%H')
     qc = args.qualitycontrol
     addLSW = args.localspectralwidth
@@ -139,10 +139,11 @@ def main(args):
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
+
 def fill_missing_satellite_subidentifier(input_file, profile_meta_data):
     "Extract missing satelliteSubIdentifier from filename, if possible"
     #  Handle special case of satelliteSubIdentifier. This attribute was a late
-    #  addition to the BUFR RO specification, so it is consider optional and is not 
+    #  addition to the BUFR RO specification, so it is consider optional and is not
     #  always included in the BUFR message. If it is missing, look to see if the
     #  value can be deduced from the input filename.
     satSubIdName = 'satelliteSubIdentifier'
@@ -151,15 +152,15 @@ def fill_missing_satellite_subidentifier(input_file, profile_meta_data):
         return
     if satIdName not in profile_meta_data:
         return
-    
+
     filename = os.path.basename(input_file)  # Strip the directory from the path.
-    match = re.search('^[a-z]+Prf_([A-Z][A-Z0-9]{3})[\._]', filename)
+    match = re.search(r'^[a-z]+Prf_([A-Z][A-Z0-9]{3})[\._]', filename)
     if match:
-        # Parse the leo_id from the "IIII" group of the UCAR filenaming convention, documented 
+        # Parse the leo_id from the "IIII" group of the UCAR filenaming convention, documented
         # here: https://cdaac-www.cosmic.ucar.edu/cdaac/cgi_bin/fileFormats.cgi?type=bfrPrf
         # Confirm the satelliteIdentifier from BUFR is consistent with the satellite id in the filename.
         leo_id = match.group(1)
-        leo_match = None 
+        leo_match = None
         satId = profile_meta_data[satIdName]
         for (pattern, satIdList) in zip(satIdPatterns, satIdLists):
             leo_match = re.search(pattern, leo_id)
@@ -169,10 +170,11 @@ def fill_missing_satellite_subidentifier(input_file, profile_meta_data):
                       f" from leo_id {leo_id} parsed from filename {input_file}")
                 break
 
-        if not leo_match: 
+        if not leo_match:
             print(f"  WARNING: Could not deduce missing {satSubIdName} from leo_id {leo_id} "
                   f"parsed from filename {input_file}")
     return
+
 
 def read_input(input_file_and_record, add_qc, addLSW, only_bang, no_tp_drift):
     """
@@ -263,7 +265,7 @@ def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None, on
     # get the bending angle
     lats = codes_get_array(bufr, 'latitude')[1:]                     # geolocation -- first value is the average
     lons = codes_get_array(bufr, 'longitude')[1:]
-    if no_tp_drift:  
+    if no_tp_drift:
         #  Override all lat-lons with average value
         avg_lat = codes_get_array(bufr, 'latitude')[0]
         avg_lon = codes_get_array(bufr, 'longitude')[0]
