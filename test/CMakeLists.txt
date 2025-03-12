@@ -52,7 +52,7 @@ list( APPEND test_input
   testinput/mopitt_co.he5
   testinput/tropess_cris_co.nc
   testinput/modis_aod.hdf
-  testinput/2020100106_metars_small.csv
+  testinput/2025022218_metars_small.csv
   testinput/singleob.yaml
   testinput/ghcn_20200228.csv
   testinput/SMAP_L2_SM_P_NRT_24342_A_20190822T224858_N16023_002.h5
@@ -158,7 +158,7 @@ list( APPEND test_output
   testoutput/mopitt_co.nc
   testoutput/tropess_cris_co.nc
   testoutput/modis_aod.nc
-  testoutput/2020100106_metars_small.nc
+  testoutput/2025022218_metars_small.nc
   testoutput/singleob.nc
   testoutput/ghcn_snod_20200228.nc
   testoutput/ionosonde_edp_20201003T203000Z.nc4
@@ -945,10 +945,10 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_metar
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/metar_csv2ioda.py
-                          -i testinput/2020100106_metars_small.csv
-                          -o testrun/2020100106_metars_small.nc
-                          -d 2020100106"
-                          2020100106_metars_small.nc ${IODA_CONV_COMP_TOL})
+                          -i testinput/2025022218_metars_small.csv
+                          -o testrun/2025022218_metars_small.nc
+                          -d 2025022218"
+                          2025022218_metars_small.nc ${IODA_CONV_COMP_TOL})
 
 #===============================================================================
 # Conventional data, radiosonde, text/alpha (legacy) converter
