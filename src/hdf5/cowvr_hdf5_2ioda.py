@@ -188,7 +188,6 @@ def get_tempest_data(f, obs_data, add_qc=True):
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
     obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f['Geolocation']['time_string']), dtype='int64')
 
-
     nchans = len(obs_data[('sensorChannelNumber', metaDataName)])
     obs_data[('brightnessTemperature', obsValName)] = np.array(
         np.column_stack((f['CalibratedSceneTemperatures']['tb89'],
