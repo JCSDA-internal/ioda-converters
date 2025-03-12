@@ -229,7 +229,6 @@ gsi_add_vars_allsky = {
     'hxdbz': 'GsiHofX',
     'hxrw': 'GsiHofX',
     'standard_deviation_clear_bt': 'ClearSkyStdDev',
-    'Emissivity': 'GsiEmissivity',
 }
 
 gsi_add_qcvars_allsky = {
