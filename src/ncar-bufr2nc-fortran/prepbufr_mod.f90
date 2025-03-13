@@ -455,12 +455,10 @@ contains
          call plink%init()
 
          plink%msg_type(1:8) = subset
+         plink%stid = trim(adjustl(csid(1:8)))
          plink%rptype = kx
          plink%t29 = t29
          call set_obtype_conv(plink%t29, plink%obtype)
-         ! could we use the obtype to conditionally use all 8 characters
-         ! plink%stid(1:5) = csid(1:5)    ! csid has a limit of 8 characters
-         plink%stid = trim(adjustl(csid(1:8)))
          plink%lon = hdr(2)
          plink%lat = hdr(3)
          plink%dhr = hdr(4)    ! difference in hour
