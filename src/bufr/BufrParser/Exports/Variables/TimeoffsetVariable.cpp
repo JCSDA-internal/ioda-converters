@@ -58,7 +58,7 @@ namespace Ingester
 
         // Convert the reference time (ISO8601 string) to time struct
         std::tm ref_time = {};
-	std::string time_str = conf_.getString(ConfKeys::Referencetime);
+        std::string time_str = conf_.getString(ConfKeys::Referencetime);
         if (strptime(time_str.c_str(), "%Y-%m-%dT%H:%M:%S", &ref_time) == NULL)
         {
             std::ostringstream errStr;
