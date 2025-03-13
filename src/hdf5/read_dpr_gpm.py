@@ -138,7 +138,7 @@ def read_dpr_gpm(fname, seqNumber_offset=None):
     atime_obj = datetime.utcfromtimestamp(atime.item())
     # this will use hour and minute to offset files in serial processing
     if not seqNumber_offset:
-        seqNumber_offset = 100000*np.int(atime_obj.strftime('%H%M'))
+        seqNumber_offset = 100000*int(atime_obj.strftime('%H%M'))
 
     dpr_data["sequenceNumber"] = xr.DataArray(seqNumber_offset + np.arange(dpr_data.obs_id.size), dpr_data.obs_id.coords)
 
