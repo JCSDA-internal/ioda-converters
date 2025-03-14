@@ -65,7 +65,7 @@ def main(args):
     qc = args.qualitycontrol
     addLSW = args.localspectralwidth
     only_bang = args.onlybendingangle
-    no_tp_drift = args.no_tp_drift
+    use_average_tangent_point = args.use_average_tangent_point
 
     # read / process files in parallel
     pool_input_01 = args.input
@@ -74,7 +74,7 @@ def main(args):
     obs_data = {}
     # create a thread pool
     with ProcessPoolExecutor(max_workers=args.threads) as executor:
-        for file_obs_data in executor.map(read_input, pool_inputs, repeat(qc), repeat(addLSW), repeat(only_bang), repeat(no_tp_drift)):
+        for file_obs_data in executor.map(read_input, pool_inputs, repeat(qc), repeat(addLSW), repeat(only_bang), repeat(use_average_tangent_point)):
             if not file_obs_data:
                 print(f"INFO: non-nominal file skipping")
                 continue
@@ -176,7 +176,7 @@ def fill_missing_satellite_subidentifier(input_file, profile_meta_data):
     return
 
 
-def read_input(input_file_and_record, add_qc, addLSW, only_bang, no_tp_drift):
+def read_input(input_file_and_record, add_qc, addLSW, only_bang, use_average_tangent_point):
     """
     Reads/converts input file(s)
 
@@ -204,7 +204,7 @@ def read_input(input_file_and_record, add_qc, addLSW, only_bang, no_tp_drift):
     #  Special case if satelliteSubIdentifier is missing in BUFR message.
     fill_missing_satellite_subidentifier(input_file, profile_meta_data)
 
-    obs_data = get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=record_number, only_bang=only_bang, no_tp_drift=no_tp_drift)
+    obs_data = get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=record_number, only_bang=only_bang, use_average_tangent_point=use_average_tangent_point)
 
     f.close()
 
@@ -242,7 +242,7 @@ def get_meta_data(bufr):
     return profile_meta_data
 
 
-def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None, only_bang=False, no_tp_drift=False):
+def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None, only_bang=False, use_average_tangent_point=False):
 
     # allocate space for output depending on which variables are to be saved
     obs_data = {}
@@ -265,7 +265,7 @@ def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None, on
     # get the bending angle
     lats = codes_get_array(bufr, 'latitude')[1:]                     # geolocation -- first value is the average
     lons = codes_get_array(bufr, 'longitude')[1:]
-    if no_tp_drift:
+    if use_average_tangent_point:
         #  Override all lat-lons with average value
         avg_lat = codes_get_array(bufr, 'latitude')[0]
         avg_lon = codes_get_array(bufr, 'longitude')[0]
@@ -527,7 +527,7 @@ if __name__ == "__main__":
         action='store_true', required=False)
 
     optional.add_argument(
-        '--no-tp-drift',
+        '--use-average-tangent-point',
         help='Disable tangent point drift by using the average lat, lon as tangent '
              'point for all rays in a profile',
         action='store_true', required=False)
