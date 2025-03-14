@@ -137,13 +137,12 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
 
       status = netcdfAddDim(netcdfID, trim(ncname), val_ncdim(1), ncid_ncdim(1))
       status = netcdfPutAtt(netcdfID, trim(ncname), val_ncdim(ncid_ncdim(1)))
-      if ( trim(ncname) == 'nchans' ) then
-         status = netcdfAddVar(netcdfID, trim(ncname), NF90_INT, 1, [trim(ncname)], fillValue = -999)
-      end if
+      status = netcdfAddVar(netcdfID, trim(ncname), NF90_INT, 1, [trim(ncname)])
 
       do i = 2, n_ncdim
          status = netcdfAddDim(netcdfID, trim(name_ncdim(i)), val_ncdim(i), ncid_ncdim(i))
-         status = netcdfPutAtt(netcdfID, trim(name_ncdim(ncid_ncdim(i))), val_ncdim(i))
+         status = netcdfPutAtt(netcdfID, trim(name_ncdim(i)), val_ncdim(i))
+         status = netcdfAddVar(netcdfID, trim(name_ncdim(i)), NF90_INT, 1, [trim(name_ncdim(i))])
       end do
 
       ! define global attributes
