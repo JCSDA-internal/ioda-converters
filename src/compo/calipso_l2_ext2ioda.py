@@ -139,6 +139,7 @@ class calipso_l2ext(object):
             obs_time = (proftime + caliop_ref_time.timestamp()).astype('datetime64[s]')
             winmsk = ((obs_time >= self.wbeg) & (obs_time <= self.wend))
 
+            # TODO: CAD score is needed
             obs = np.zeros((nloc, nchan, nlev))
             err = np.zeros_like(obs)
             qcf = np.zeros_like(obs)
@@ -156,8 +157,8 @@ class calipso_l2ext(object):
                 qcf[:, i, :] = tmpqcf
 
 
-            obs = np.where(obs = caliop_missing_value, float_missing_value, obs)
-            err = np.where(err = caliop_missing_value, float_missing_value, err)
+            obs = np.where(obs==caliop_missing_value, float_missing_value, obs)
+            err = np.where(err==caliop_missing_value, float_missing_value, err)
             pres = np.where(pres < 0, float_missing_value, pres)
                 
             self.outdata[('latitude', metaDataName)] = np.append(self.outdata[('latitude', metaDataName)],
@@ -184,9 +185,6 @@ class calipso_l2ext(object):
         DimDict['Location'] = len(self.outdata[('dateTime', metaDataName)])
         DimDict['Channel'] = nchan
         DimDict['Level'] = nlev
-
-def get_normalized_bit(value, bit_index):
-    return (value >> bit_index) & 1
 
 def main():
     parser = argparse.ArgumentParser(
