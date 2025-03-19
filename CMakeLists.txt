@@ -113,6 +113,8 @@ endif()
 
 if( eckit_FOUND AND oops_FOUND AND ioda_FOUND AND bufr_FOUND )
     set(iodaconv_bufr_query_ENABLED True)
+    find_package( bufr_query REQUIRED )
+    find_package( NetCDF QUIET COMPONENTS CXX )
     message(STATUS "Found: eckit")
     message(STATUS "Found: oops")
     message(STATUS "Found: ioda")
