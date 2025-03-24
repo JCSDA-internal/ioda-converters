@@ -7,7 +7,7 @@ use define_mod, only: nobtype, nvar_info, n_ncdim, n_ncgrp, nstring, ndatetime, 
    write_nc_radiance_geo, ninst_geo, geoinst_list, &
    var_tb, nsen_info, type_var_info, type_sen_info, dim_var_info, dim_sen_info, &
    unit_var_met, iflag_conv, iflag_radiance, set_brit_obserr, set_ahi_obserr
-use netcdf, only: nf90_int, nf90_float, nf90_char, nf90_int64
+use netcdf, only: nf90_int, nf90_float, nf90_char, nf90_int64, nf90_string
 use ufo_vars_mod, only: ufo_vars_getindex
 use netcdf_cxx_mod, only: netcdfCreate, netcdfAddDim, netcdfPutAtt, netcdfAddVar, &
    netcdfSetFill, netcdfAddGroup, netcdfPutVar, netcdfClose
@@ -210,18 +210,19 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
          idim = ufo_vars_getindex(name_ncdim, dim_var_info(1,i))
          dim1 = ncid_ncdim(idim)
          dim1_name = get_dim_name(dim1, nchans_nvars_flag)
-         if ( ufo_vars_getindex(name_ncdim, dim_var_info(2,i)) > 0 ) then
-            idim = ufo_vars_getindex(name_ncdim, dim_var_info(2,i))
-            dim2 = ncid_ncdim(idim)
-            dim2_name = get_dim_name(dim2, nchans_nvars_flag)
-            status = netcdfAddVar(netcdfID, ncname, type_var_info(i), 2, &
-               [dim2_name, dim1_name], "MetaData")
+         if (ncname == 'dateTime') then
+            status = netcdfAddVar(netcdfID, ncname, type_var_info(i), 1, &
+               [dim1_name], "MetaData")
+            status = netcdfPutAtt(netcdfID, "units", "seconds since 1970-01-01T00:00:00Z", varName = trim(ncname), &
+               groupName = "MetaData")
          else
-            if (ncname == 'dateTime') then
-               status = netcdfAddVar(netcdfID, ncname, type_var_info(i), 1, &
-                  [dim1_name], "MetaData")
-               status = netcdfPutAtt(netcdfID, "units", "seconds since 1970-01-01T00:00:00Z", varName = trim(ncname), &
-                  groupName = "MetaData")
+            if (type_var_info(i) == nf90_char) then
+               idim = ufo_vars_getindex(name_ncdim, dim_var_info(2,i))
+               dim2 = ncid_ncdim(idim)
+               dim2_name = get_dim_name(dim2, nchans_nvars_flag)
+               status = netcdfAddVar(netcdfID, ncname, nf90_string, 1, &
+                  [dim2_name], "MetaData")
+               status = netcdfSetFill(netcdfID, ncname, 1, " ", "MetaData")
             else
                status = netcdfAddVar(netcdfID, ncname, type_var_info(i), 1, &
                   [dim1_name], "MetaData")
