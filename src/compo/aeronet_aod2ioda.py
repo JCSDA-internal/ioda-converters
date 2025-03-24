@@ -4,8 +4,8 @@
 #        This code reads an AERONET AOD ASCII file downloaded from
 #        from NASA website and writes AOD  at wavelengths
 #        (340/380/440/500/675/870/1020/1640 nm) into IODA format.
-#        AERONET input is downloaded with
-#        wget --no-check-certificate -q -O $aeronet_aod \
+#        AERONET input can be retieved via
+#        wget --no-check-certificate --content-disposition -q -O $aeronet_aod \
 #             "https://aeronet.gsfc.nasa.gov/cgi-bin/print_web_data_v3?year=2000&month=6&day=1&hour=9&year2=2000&month2=6&day2=1&hour2=15&AOD20=1&AVG=10&if_no_html=1"
 #
 # Usage:
@@ -35,12 +35,6 @@ missing_vals = {'string': string_missing_value,
                 'long': long_missing_value,
                 'float': float_missing_value,
                 'double': double_missing_value}
-
-dtypes = {'string': object,
-          'integer': np.int32,
-          'long': np.int64,
-          'float': np.float32,
-          'double': np.float64}
 
 
 def dateparse(x):

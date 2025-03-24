@@ -8,6 +8,7 @@
 #        Inversion products here include conicident AOT data with almucantar
 #        retrieval (CAD), AOD aborption (TAB) for inversion types of ALM15 or ALM20
 #        at wavelengths of 440/675/870/1020nm)
+#        CAD and TAB files can be retrieved via
 #        wget --no-check-certificate --content-disposition -q -O aeronet_lsm15.out \
 #             "https://aeronet.gsfc.nasa.gov/cgi-bin/print_web_data_inv_v3?year=2000&month=6&day=1&hour=10&year2=2000&month2=6&day2=1&hour2=11&product=CAD&AVG=10&ALM15=1&if_no_html=1"
 #
@@ -43,12 +44,6 @@ missing_vals = {'string': string_missing_value,
                 'long': long_missing_value,
                 'float': float_missing_value,
                 'double': double_missing_value}
-
-dtypes = {'string': object,
-          'integer': np.int32,
-          'long': np.int64,
-          'float': np.float32,
-          'double': np.float64}
 
 
 def dateparse(x):
