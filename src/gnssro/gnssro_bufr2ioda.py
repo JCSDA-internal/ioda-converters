@@ -204,7 +204,10 @@ def read_input(input_file_and_record, add_qc, addLSW, only_bang, use_average_tan
     #  Special case if satelliteSubIdentifier is missing in BUFR message.
     fill_missing_satellite_subidentifier(input_file, profile_meta_data)
 
-    obs_data = get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=record_number, only_bang=only_bang, use_average_tangent_point=use_average_tangent_point)
+    obs_data = get_obs_data(bufr, profile_meta_data, add_qc, addLSW,
+                            record_number=record_number,
+                            only_bang=only_bang,
+                            use_average_tangent_point=use_average_tangent_point)
 
     f.close()
 
