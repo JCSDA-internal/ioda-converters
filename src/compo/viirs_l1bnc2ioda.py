@@ -79,12 +79,11 @@ long_missing_value = iconv.get_default_fill_val(np.int64)
 
 
 class viirs_l1b_rf(object):
-    def __init__(self, filenames, date_range, thinning_ratio, stored_refl):
+    def __init__(self, filenames, date_range, thinning_ratio):
         self.filenames = filenames
         self.wbeg = np.datetime64(str(datetime.strptime(date_range[0], "%Y%m%d%H"))).astype(np.int64)
         self.wend = np.datetime64(str(datetime.strptime(date_range[1], "%Y%m%d%H"))).astype(np.int64)
         self.thinning_ratio = thinning_ratio
-        self.stored_refl = stored_refl
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -173,9 +172,8 @@ class viirs_l1b_rf(object):
                 orbit_ad[:] = 1
             self.varAttrs['satelliteAscendingFlag', metaDataName]['description'] = '0=descending, 1=ascending'
 
-            # secant of solar zenith angle to get true reflectance (apply_secterm option)
+            # Calculate cosine of solar zenith angle
             cos_za = np.cos(solar_za * np.pi / 180.)
-            sec_term = np.where(cos_za != 0., 1. / cos_za, 1.)
 
             ichan = 0
             for chan in channels:
@@ -189,11 +187,16 @@ class viirs_l1b_rf(object):
                 err = obsgrp.variables[errname]
                 err.set_auto_scale(False)
 
-                # NASA VIIRS apply secant if option enabled
-                vals[:, ichan] = obs[:].data.ravel() * sec_term if not self.stored_refl else obs[:].data.ravel()
+                vals[:, ichan] = obs[:].data.ravel()
                 qcfs[:, ichan] = qcf[:].data.ravel()
-                # Convert Uncertainty Index (in percentage) into absolute error
-                errs[:, ichan] = (1. + err.scale_factor * err[:].data.ravel() ** 2) * 0.01 * vals[:, ichan]
+
+                # Setup observation error:
+                # 1. Convert Uncertainty Index to uncertainty in percentage, which is
+                #    described in section 2.5 in the L1B User Guide v3.0 available on
+                #    https://ladsweb.modaps.eosdis.nasa.gov/missions-and-measurements/science-domain/viirs-L0-L1/
+                # 2. Multiplying obs value to get absolute error
+                # 3. Apply the cosine of solar zenith angle to obs error instead of obs and hofx
+                errs[:, ichan] = (1. + err.scale_factor * err[:].data.ravel() ** 2) * 0.01 * vals[:, ichan] * cos_za
 
                 # Apply _FillValue to masked points
                 vals[obs_mask, ichan] = float_missing_value
@@ -272,7 +275,6 @@ class viirs_l1b_rf(object):
 
         DimDict['Location'] = len(self.outdata[('latitude', metaDataName)])
         DimDict['Channel'] = self.outdata[('sensorChannelNumber', metaDataName)]
-        AttrData['storedReflectance'] = self.stored_refl
         AttrData['sourceFiles'] = AttrData['sourceFiles']
         AttrData['datetimeRange'] = np.array([datetime.fromtimestamp(min_time).strftime("%Y-%m-%dT%H:%M:%SZ"),
                                               datetime.fromtimestamp(max_time).strftime("%Y-%m-%dT%H:%M:%SZ")], dtype=object)
@@ -282,9 +284,9 @@ class viirs_l1b_rf(object):
 def main():
 
     # get command line arguments
-    # Usage: python blah.py -i /path/to/obs/2021060801.nc /path/to/obs/2021060802.nc ...
-    #                       -g /path/to/geo/2021060801.nc /path/to/geo/2021060802.nc ...
-    #                       -o /path/to/ioda/20210608.nc
+    # Usage: python viirs_l1bnc2ioda.py -i /path/to/obs/2021060801.nc /path/to/obs/2021060802.nc ...
+    #                                   -g /path/to/geo/2021060801.nc /path/to/geo/2021060802.nc ...
+    #                                   -o /path/to/ioda/20210608.nc
     # where the input obs could be for any desired interval to concatenated together.
     parser = argparse.ArgumentParser(
         description=('Read NASA VIIRS M-band Level 1b file(s) from:'
@@ -310,11 +312,6 @@ def main():
 
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
-        '--stored_reflectance',
-        help="presence of option will directly convert VIIRS stored reflectance"
-        " (not scaling by cosine of solar zenith angle)",
-        action='store_true', default=False)
-    optional.add_argument(
         '--thinning_ratio',
         help="percentage of random thinning fro 0.0 to 1.0. Zero indicates"
         " no thinning is performed. (default: %(default)s)",
@@ -331,7 +328,7 @@ def main():
     zipped_list = zip(sorted(args.obsinfo), sorted(args.geoinfo))
 
     # Read in the reflectance factor data
-    toa_rf = viirs_l1b_rf(zipped_list, args.date_range, args.thinning_ratio, args.stored_reflectance)
+    toa_rf = viirs_l1b_rf(zipped_list, args.date_range, args.thinning_ratio)
 
     # write everything out (albedo)
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
