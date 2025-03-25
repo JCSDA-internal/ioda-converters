@@ -224,7 +224,7 @@ contains
     function netcdfPutVar(netcdfID, varName, values, groupName)
         integer(c_int), value, intent(in) :: netcdfID
         character(len = *), intent(in) :: varName
-        class(*), dimension(:), intent(in) :: values
+        class(*), dimension(:), target, intent(in) :: values
         character(len = *), optional, intent(in) :: groupName
         integer(c_int) :: netcdfPutVar
         type(f_c_string_t) :: f_c_string_groupName
@@ -300,7 +300,7 @@ contains
         integer(c_int), value, intent(in) :: netcdfID
         character(len = *), intent(in) :: varName
         integer(c_int), value, intent(in) :: fillMode
-        class(*), intent(in) :: fillValue
+        class(*), target, intent(in) :: fillValue
         character(len = *), optional, intent(in) :: groupName
         integer(c_int) :: netcdfSetFill
         type(f_c_string_t) :: f_c_string_groupName
@@ -366,7 +366,7 @@ contains
     function netcdfPutAtt(netcdfID, attName, attValue, varName, groupName)
         integer(c_int), value, intent(in) :: netcdfID
         character(len = *), intent(in) :: attName
-        class(*), intent(in) :: attValue
+        class(*), target, intent(in) :: attValue
         character(len = *), optional, intent(in) :: varName
         character(len = *), optional, intent(in) :: groupName
         integer(c_int) :: netcdfPutAtt
@@ -435,7 +435,7 @@ contains
     function netcdfPutAttArray(netcdfID, attName, attValue, attLen, varName, groupName)
         integer(c_int), value, intent(in) :: netcdfID
         character(len = *), intent(in) :: attName
-        class(*), intent(in) :: attValue(:)
+        class(*), target, intent(in) :: attValue(:)
         integer(c_int), intent(in), value :: attLen
         character(len = *), optional, intent(in) :: varName
         character(len = *), optional, intent(in) :: groupName
