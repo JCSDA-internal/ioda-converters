@@ -26,6 +26,7 @@ locationKeyList = [
     ("dateTime", "long", iso8601_string),
     ("sensorCentralFrequency", "float", "Hz"),
     ("sensorCentralWavelength", "float", "micron"),
+    ("surfaceQualifier", "integer", "")
 ]
 
 obsvars = ["aerosolOpticalDepth"]
@@ -42,6 +43,7 @@ VarDims = {
     "aerosolOpticalDepth": ['Location', 'Channel'],
     "sensorCentralFrequency": ['Channel'],
     "sensorCentralWavelength": ['Channel'],
+    "surfcaeQualifier": ['Location'],
 }
 
 # Get the group names we use the most.
@@ -125,6 +127,7 @@ class AOD(object):
         # PACE UAA retrieval
         self.lons = self.ncd.groups['geolocation_data'].variables['longitude'][:].ravel()
         self.lats = self.ncd.groups['geolocation_data'].variables['latitude'][:].ravel()
+        self.lsfs = self.ncd.groups['geophysical_data'].variables['Land_Sea_Flag'][:].ravel()
         vals = self.ncd.groups['geophysical_data'].variables['Aerosol_Optical_Depth'][:]
         self.vals = vals.reshape(-1, vals.shape[2])
         qcfs = self.ncd.groups['geophysical_data'].variables['Quality_flag_Aerosol_Optical_Depth'][:].ravel()
@@ -133,7 +136,7 @@ class AOD(object):
         # Temporarily use expected error (EE) of Dark Target ATBD (March 2024)
         # https://darktarget.gsfc.nasa.gov/sites/default/files/users/user9/ATBD_DarkTarget_April3.pdf
         AttrData['errorMethod'] = 'Expected Error (EE)'
-        land_pts = self.ncd.groups['geophysical_data'].variables['Land_Sea_Flag'][:].ravel() == 1
+        land_pts = (self.lsfs == 1)
         self.errs = np.zeros_like(self.vals)
         for n in range(self.channels.size):
             self.errs[:, n] = np.where(land_pts, np.add(0.05, np.multiply(0.2, self.vals[:, n])),
@@ -146,6 +149,7 @@ class AOD(object):
         valid_pts = np.any(~self.vals.mask, axis=1)
         self.lons = self.lons[valid_pts]
         self.lats = self.lats[valid_pts]
+        self.lsfs = self.lsfs[valid_pts]
         self.vals = self.vals[valid_pts, :]
         self.errs = self.errs[valid_pts, :]
         self.qcfs = self.qcfs[valid_pts, :]
@@ -192,6 +196,7 @@ class AOD(object):
                 mask_thin = np.random.uniform(size=len(self.lons)) > self.thinning_ratio
                 self.lons = self.lons[mask_thin]
                 self.lats = self.lats[mask_thin]
+                self.lsfs = self.lsfs[mask_thin]
                 self.vals = self.vals[mask_thin]
                 self.errs = self.errs[mask_thin]
                 self.qcfs = self.qcfs[mask_thin]
@@ -204,6 +209,8 @@ class AOD(object):
                 self.outdata[('longitude', metaDataName)], np.array(self.lons[winmsk], dtype=np.float32))
             self.outdata[('dateTime', metaDataName)] = np.append(
                 self.outdata[('dateTime', metaDataName)], np.array(self.obs_time[winmsk], dtype=np.int64))
+            self.outdata[('surfaceQualifier', metaDataName)] = np.append(
+                self.outdata[('surfaceQualifier', metaDataName)], np.array(self.lsfs[winmsk], dtype=np.int32))
 
             for iodavar in obsvars:
                 self.outdata[self.varDict[iodavar]['valKey']] = np.append(
