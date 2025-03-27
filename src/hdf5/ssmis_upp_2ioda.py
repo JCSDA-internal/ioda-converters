@@ -206,11 +206,11 @@ def populate_obsValue(line, local_data, WMO_sat_ID=int_missing_value, ssmis_uas=
     # compute from beam position?
     local_data[('sensorAzimuthAngle', metaDataName)].append(0.)
     # confirm view angle computation
-    # should call this function and it should provide 
-        # Scene Altitude                 EIA 
-        # Sfc                            53.33
-        # 11 km                          53.20
-        # 60 km                          52.62
+    # should call this function and it should provide
+    # Scene Altitude                 EIA
+    # Sfc                            53.33
+    # 11 km                          53.20
+    # 60 km                          52.62
     local_data[('sensorViewAngle', metaDataName)].append(sensor_zenith)
 #   local_data[('sensorViewAngle', metaDataName)] = compute_scan_angle(
 #       sensor_zenith,
