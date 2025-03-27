@@ -455,7 +455,7 @@ contains
          call plink%init()
 
          plink%msg_type(1:8) = subset
-         plink%stid(1:5) = csid(1:5)
+         plink%stid = trim(adjustl(csid(1:8)))
          plink%rptype = kx
          plink%t29 = t29
          call set_obtype_conv(plink%t29, plink%obtype)
