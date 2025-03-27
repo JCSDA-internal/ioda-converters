@@ -8,6 +8,9 @@
 #        Inversion products here include conicident AOT data with almucantar
 #        retrieval (CAD), AOD aborption (TAB) for inversion types of ALM15 or ALM20
 #        at wavelengths of 440/675/870/1020nm)
+#        CAD and TAB files can be retrieved via
+#        wget --no-check-certificate --content-disposition -q -O aeronet_lsm15.out \
+#             "https://aeronet.gsfc.nasa.gov/cgi-bin/print_web_data_inv_v3?year=2000&month=6&day=1&hour=10&year2=2000&month2=6&day2=1&hour2=11&product=CAD&AVG=10&ALM15=1&if_no_html=1"
 #
 # Usage:
 #        python aeronet_aaod2ioda.py -c 'testinput/aeronet_cad.dat'
@@ -25,10 +28,22 @@ import pandas as pd
 from datetime import datetime
 from builtins import str
 
-
 import pyiodaconv.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from pyiodaconv.orddicts import DefaultOrderedDict
+from pyiodaconv.def_jedi_utils import iso8601_string, epoch
+
+float_missing_value = iconv.get_default_fill_val(np.float32)
+double_missing_value = iconv.get_default_fill_val(np.float64)
+int_missing_value = iconv.get_default_fill_val(np.int32)
+long_missing_value = iconv.get_default_fill_val(np.int64)
+string_missing_value = iconv.get_default_fill_val(np.str_)
+
+missing_vals = {'string': string_missing_value,
+                'integer': int_missing_value,
+                'long': long_missing_value,
+                'float': float_missing_value,
+                'double': double_missing_value}
 
 
 def dateparse(x):
@@ -68,6 +83,21 @@ def add_data(infile):
 
 
 if __name__ == '__main__':
+    # Get the group names we use the most.
+    metaDataName = iconv.MetaDataName()
+    obsValName = iconv.OvalName()
+    obsErrName = iconv.OerrName()
+    qcName = iconv.OqcName()
+
+    locationKeyList = [
+        ("latitude", "float", "degrees_north"),
+        ("longitude", "float", "degrees_east"),
+        ("dateTime", "long", iso8601_string),
+        ("stationElevation", "float", "m"),
+        ("stationIdentification", "string", None),
+        ("sensorCentralFrequency", "float", "Hz"),
+    ]
+
     parser = argparse.ArgumentParser(
         description=(
             "Reads AERONET inversion files downloaded from NASA website "
@@ -117,18 +147,23 @@ if __name__ == '__main__':
     print(aeronetinv_chan)
     print(frequency)
 
-    long_missing_value = nc.default_fillvals['i8']
-
     nlocs, columns = f3.shape
     nchans = len(aeronetinv_chan)
     if nlocs == 0:
         print('No AERONET inversion data available in input files')
         exit(0)
 
-    locationKeyList = [("latitude", "float"), ("longitude", "float"), ("datetime", "string")]
     varDict = defaultdict(lambda: defaultdict(dict))
     outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
     varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+
+    # Setup MetaData attributes
+    meta_keys = [m_item[0] for m_item in locationKeyList]
+    for key in meta_keys:
+        dtypestr = locationKeyList[meta_keys.index(key)][1]
+        if locationKeyList[meta_keys.index(key)][2]:
+            varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
+        varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtypestr]
 
     obsvars = {'aerosolOpticalDepth': ['aod_coincident_input[440nm]', 'aod_coincident_input[675nm]',
                                        'aod_coincident_input[870nm]', 'aod_coincident_input[1020nm]'],
@@ -151,12 +186,6 @@ if __name__ == '__main__':
         'sensorChannelNumber': ['Channel']
     }
 
-    # Get the group names we use the most.
-    metaDataName = iconv.MetaDataName()
-    obsValName = iconv.OvalName()
-    obsErrName = iconv.OerrName()
-    qcName = iconv.OqcName()
-
     # Define varDict variables
     for key, value in obsvars.items():
         varDict[key]['valKey'] = key, obsValName
@@ -165,26 +194,25 @@ if __name__ == '__main__':
         varAttrs[key, obsValName]['coordinates'] = 'longitude latitude stationElevation'
         varAttrs[key, obsErrName]['coordinates'] = 'longitude latitude stationElevation'
         varAttrs[key, qcName]['coordinates'] = 'longitude latitude stationElevation'
-        varAttrs[key, obsValName]['_FillValue'] = -9999.
-        varAttrs[key, obsErrName]['_FillValue'] = -9999.
-        varAttrs[key, qcName]['_FillValue'] = -9999
+        varAttrs[key, obsValName]['_FillValue'] = float_missing_value
+        varAttrs[key, obsErrName]['_FillValue'] = float_missing_value
+        varAttrs[key, qcName]['_FillValue'] = int_missing_value
         varAttrs[key, obsValName]['units'] = '1'
         varAttrs[key, obsErrName]['units'] = '1'
 
     for key, value in obsvars.items():
-        outdata[varDict[key]['valKey']] = np.array(np.float32(f3[value].fillna(np.float32(-9999.))))
-        outdata[varDict[key]['qcKey']] = np.where(outdata[varDict[key]['valKey']] == np.float32(-9999.),
-                                                  1, 0)
+        outdata[varDict[key]['valKey']] = np.array(np.float32(f3[value].fillna(float_missing_value)))
+        outdata[varDict[key]['qcKey']] = np.int32(np.where(outdata[varDict[key]['valKey']] == float_missing_value,
+                                                           1, 0))
         if key in ["aerosolOpticalDepth"]:
-            outdata[varDict[key]['errKey']] = np.where(outdata[varDict[key]['valKey']] == np.float32(-9999.),
-                                                       np.float32(-9999.), np.float32(0.02))
+            outdata[varDict[key]['errKey']] = np.float32(np.where(outdata[varDict[key]['valKey']] == float_missing_value,
+                                                                  float_missing_value, np.float32(0.02)))
         else:
-            outdata[varDict[key]['errKey']] = np.full((nlocs, nchans), np.float32(-9999.))
+            outdata[varDict[key]['errKey']] = np.full((nlocs, nchans), float_missing_value, dtype=np.float32)
 
     outdata[('latitude', metaDataName)] = np.array(np.float32(f3['latitude']))
     outdata[('longitude', metaDataName)] = np.array(np.float32(f3['longitude']))
     outdata[('stationElevation', metaDataName)] = np.array(np.float32(f3['elevation']))
-    varAttrs[('stationElevation', metaDataName)]['units'] = 'm'
 
     # Whether Coincident_AOD440nm in aeronet_cad.txt reaches Level 2.0 (0: yes, 1: no)
     qcL2Aod = np.where(f3['if_aod_is_l2'] == 1, 0, 1)
@@ -195,7 +223,7 @@ if __name__ == '__main__':
     # Whether aaod reaches Level 2.0 without the threshold of aod440 >= 0.4 (0: yes, 1: no)
     qcL2Aaod2 = np.where(f3['if_retrieval_is_l2(without_l2_0.4_aod_440_threshold)'] == 1, 0, 1)
 
-    qcAll = np.full(len(qcL2Aod), long_missing_value, dtype=np.int32)
+    qcAll = np.full(len(qcL2Aod), int_missing_value, dtype=np.int32)
     for i in range(len(qcL2Aod)):
         qc1 = qcL2Aod[i]
         qc2 = qcL2Aaod[i]
@@ -235,13 +263,12 @@ if __name__ == '__main__':
     c[:] = np.array(f3.siteid)
     outdata[('stationIdentification', metaDataName)] = c
 
-    d = np.empty([nlocs], dtype=object)
-    for i in range(nlocs):
-        d[i] = f3.time[i].strftime('%Y-%m-%dT%H:%M:%SZ')
-    outdata[('dateTime', metaDataName)] = d
+    f3['time'] = f3['time'].dt.tz_localize('UTC')
+    f3['time'] = f3['time'].dt.to_pydatetime()
+    time_offset = round((f3['time'] - epoch).dt.total_seconds())
+    outdata[('dateTime', metaDataName)] = np.int64(time_offset)
 
     outdata[('sensorCentralFrequency', metaDataName)] = np.float32(frequency)
-    varAttrs[('sensorCentralFrequency', metaDataName)]['units'] = 'Hz'
     outdata[('sensorChannelNumber', metaDataName)] = np.int32(aeronetinv_chan)
 
     # Add global atrributes
