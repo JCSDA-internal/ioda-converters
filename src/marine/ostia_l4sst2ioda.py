@@ -50,7 +50,7 @@ class ostia(object):
         self.lats = self.lats.ravel()
         self.sst = np.squeeze(ncd.variables['analysed_sst'][:]).ravel()
         self.err = np.squeeze(ncd.variables['analysis_error'][:]).ravel()
-        this_datetime = ncd.variables['time'][:].astype(np.int)
+        this_datetime = ncd.variables['time'][:].astype(np.int64)
         ncd.close()
 
         # Same time stamp for all obs within 1 file
