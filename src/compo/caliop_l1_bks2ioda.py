@@ -35,27 +35,31 @@ metaKeyList = [
     ("dateTime", "long", iso8601_string),
     ("pressure", "float", "Pa"),
     ("sensorCentralWavelength", "float", "micron"),
-    ("sequenceNumber", "integer", None),
+    ("height", "float", "m"),
 ]
 
 DimDict = {
 }
 
 VarDims = {
-    'extinctionCoefficient': ['Location', 'Channel', 'Layer'],
+    'attenuatedBackscatter': ['Location', 'Layer', 'Channel'],
     'pressure': ['Location', 'Layer'],
-    'sequenceNumber': ['Location'],
+    'height': ['Layer'],
     'sensorCentralWavelength': ['Channel'],
 }
 
-obsvars = ["extinctionCoefficient"]
+obsvars = ["attenuatedBackscatter"]
 channels = [1, 2]
 wavelength = [0.532, 1.064]
 
 metaDataName = iconv.MetaDataName()
-varsKeyList = [('valKey', iconv.OvalName(), 'float', 'longitude latitude', 'km-1'),
-               ('errKey', iconv.OerrName(), 'float', 'longitude latitude', 'km-1'),
-               ('qcKey', iconv.OqcName(), 'integer', 'longitude latitude', None)]
+obsValName = iconv.OvalName()
+obsErrName = iconv.OerrName()
+qcName = iconv.OqcName()
+
+varsKeyList = [('valKey', obsValName, 'float', 'longitude latitude', 'km-1'),
+               ('errKey', obsErrName, 'float', 'longitude latitude', 'km-1'),
+               ('qcKey', qcName, 'integer', 'longitude latitude', None)]
 
 
 float_missing_value = iconv.get_default_fill_val(np.float32)
@@ -116,11 +120,22 @@ class calipso_l2ext(object):
         self.outdata[('longitude', metaDataName)] = np.array([], dtype=np.float32)
         self.outdata[('dateTime', metaDataName)] = np.array([], dtype=np.int64)
         self.outdata[('pressure', metaDataName)] = np.array([], dtype=np.float32)
-        self.outdata[('sequenceNumber', metaDataName)] = np.array([], dtype=np.int64)
+        self.outdata[('cloudAerosolDiscrimination', metaDataName)] = np.array([], dtype=np.int32)
         for iodavar in obsvars:
             self.outdata[self.varDict[iodavar]['valKey']] = np.array([], dtype=np.float32)
             self.outdata[self.varDict[iodavar]['errKey']] = np.array([], dtype=np.float32)
             self.outdata[self.varDict[iodavar]['qcKey']] = np.array([], dtype=np.int32)
+
+        # Get the lidar data altitude
+        tmpfile = self.filenames[0]
+        tmphdf = HDF(tmpfile)
+        vs = tmphdf.vstart()
+        metaid = vs.find('metadata')
+        vd = vs.attach(metaid)
+        vd.setfields('Lidar_Data_Altitudes')
+        alt = np.array(vd.read()[0][0]) * 1000.
+        vd.detach()
+        vs.end()
 
         for f in self.filenames:
             sd = SD(f, SDC.READ)
@@ -128,34 +143,27 @@ class calipso_l2ext(object):
             pres = sd.select('Pressure').get() * 1e2 # hPa to Pa
             nloc = pres.shape[0]
             nlev = pres.shape[1] 
-            pres = pres.ravel()
+            #pres = pres.ravel()
             lats = sd.select('Latitude').get()[:,1]
-            #lats = np.tile(lats[:, np.newaxis], (1, nlevs)).ravel()
             lons = sd.select('Longitude').get()[:,1]
-            #lons = np.tile(lons[:, np.newaxis], (1, nlevs)).ravel()
             profidx = np.arange(nloc)
-            #profidx = np.tile(profidx[:, np.newaxis], (1, nlevs)).ravel()
             proftime = sd.select('Profile_Time').get()[:,1]
             obs_time = (proftime + caliop_ref_time.timestamp()).astype('datetime64[s]')
             winmsk = ((obs_time >= self.wbeg) & (obs_time <= self.wend))
 
-            # TODO: CAD score is needed
-            obs = np.zeros((nloc, nchan, nlev))
+            obs = np.zeros((nloc, nlev, nchan))
             err = np.zeros_like(obs)
             qcf = np.zeros_like(obs)
+            l1varlist = ['Total_Attenuated_Backscatter_532', 'Attenuated_Backscatter_1064']
+            
             for i, chidx in enumerate(output_chidx):
-                wavelength_str = str(int(wavelength[chidx] * 1e3))
-                obsvarname = f"Extinction_Coefficient_{wavelength_str}"
-                errvarname = f"Extinction_Coefficient_Uncertainty_{wavelength_str}"
-                qcfvarname = f"Extinction_QC_Flag_{wavelength_str}"
-                # Level 2 QC flag stores 30m level 1 QC flag below 8.3 km in the rightmost dimension
-                tmpqcf = sd.select(qcfvarname).get()
-                tmpqcf = np.where(qcf[:, :, 0]==qcf[:, :, 1], qcf[:, :, 0], qcf.sum(axis=2))
-
-                obs[:, i, :] = sd.select(obsvarname).get()
-                err[:, i, :] = sd.select(errvarname).get()
-                qcf[:, i, :] = tmpqcf
-
+                obsvarname = l1varlist[i]
+                obs[:, :, i] = sd.select(obsvarname).get()
+                err[:, :, i] = obs[:, :, i] * 0.05
+                
+            # QC flag in Level 1 backscatter is only on each pixel rather than vertical
+            for 
+                qcf[:, :, i] = 
 
             obs = np.where(obs==caliop_missing_value, float_missing_value, obs)
             err = np.where(err==caliop_missing_value, float_missing_value, err)
@@ -182,9 +190,10 @@ class calipso_l2ext(object):
 
         self.outdata[('sensorCentralWavelength', metaDataName)] = np.array(wavelength, dtype=np.float32)[output_chidx]
         self.outdata[('sensorCentralFrequency', metaDataName)] = np.array(wavelength, dtype=np.float32)[output_chidx]
+        self.outdata[('height', metaDataName)] = np.array(alt, dtype=np.float32)
         DimDict['Location'] = len(self.outdata[('dateTime', metaDataName)])
         DimDict['Channel'] = nchan
-        DimDict['Level'] = nlev
+        DimDict['Layer'] = nlev
 
 def main():
     parser = argparse.ArgumentParser(
