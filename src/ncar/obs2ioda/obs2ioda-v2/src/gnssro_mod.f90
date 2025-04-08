@@ -451,6 +451,7 @@ contains
       dim_name = 'nlocs'
       call check(netcdfAddDim(ncid, dim_name, ndata, dim_id))
       call check(netcdfPutAtt(ncid, dim_name, ndata))
+      call check(netcdfAddVar(ncid, trim(dim_name), NF90_INT, 1, [trim(dim_name)]))
 
       ! Write other global attributes (again analogous to netcdf_mod)
       idx_min_time = minloc(gnssro_data%epochtime, mask = is_in_window, dim = 1)
