@@ -1,0 +1,95 @@
+# (C) Copyright 2024 NOAA/NWS/NCEP/EMC
+# (C) Copyright 2024 UCAR
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+observations:
+  - obs space:
+      name: bufr
+      obsdatain: "./gdas.gpsipw.t00z.20241213.bufr"
+
+      exports:
+        variables:
+          # MetaData
+          timestamp:
+            datetime:
+              year: "*/YEAR"
+              month: "*/MNTH"
+              day: "*/DAYS"
+              hour: "*/HOUR"
+              minute: "*/MINU"
+
+          latitude:
+            query: "*/CLATH"
+
+          longitude:
+            query: "*/CLONH"
+
+          stationName:
+            query: "*/STSN"
+
+          heightOfStation:
+            query: "*/SELV"
+
+#         # ObsValue
+#         precipitableWater:
+#           query: "*/TPWT"
+#           type: float
+
+          # ObsValue
+          zenithTotalDelay:
+            query: "*/TDEL"
+            type: float
+
+    ioda:
+      backend: netcdf
+      obsdataout: "./20241212T21Z_PT6H_ztd_gnssgb_ncep.nc"
+
+      globals:
+        - name: "platformCommonName"
+          type: string
+          value: "GPSZTD"
+
+        - name: "platformLongDescription"
+          type: string
+          value: "GNSS ground based - Zenith Total Delay"
+
+      variables:
+        # MetaData
+        - name: "MetaData/dateTime"
+          source: variables/timestamp
+          longName: "Datetime"
+          units: "seconds since 1970-01-01T00:00:00Z" 
+
+        - name: "MetaData/latitude"
+          source: variables/latitude
+          longName: "Latitude"
+          units: "degree_north"
+          range: [-90, 90]
+
+        - name: "MetaData/longitude"
+          source: variables/longitude
+          longName: "Longitude"
+          units: "degree_east"
+
+        - name: "MetaData/stationIdentification"
+          source: variables/stationName
+          longName: "Station Identification"
+
+        - name: "MetaData/heightOfStation"
+          source: variables/heightOfStation
+          longName: "Height of Station"
+          units: "m"
+
+#       # ObsValue
+#       - name: "ObsValue/precipitableWater"
+#         source: variables/precipitableWater
+#         longName: "GPS IPW"
+#         units: "kg m-2"
+
+        # ObsValue
+        - name: "ObsValue/zenithTotalDelay"
+          source: variables/zenithTotalDelay
+          longName: "GPS ZTD"
+          units: "cm"
