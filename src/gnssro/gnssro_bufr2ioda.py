@@ -48,13 +48,13 @@ locationKeyList = [
 # missions. For example, Cosmic1 (C[0-9]{3}) and Cosmic2 (C2E[0-9])
 # do not use subidentifiers.
 satIdPatterns = [
-    r'^(GN)([0-9]{2})$',     # PlanetiQ
+    r'^(GN|YM)([0-9]{2})$',     # PlanetiQ
     r'^(S)([0-9]{3})$',      # Spire
     r'^(GO)([0-9]{2})$'      # GeoOptics
 ]
 
 satIdLists = [
-    [267, 268],             # PlanetiQ
+    [267, 268, 768],             # PlanetiQ
     [269],                  # Spire
     [265, 266]              # GeoOptics
 ]
