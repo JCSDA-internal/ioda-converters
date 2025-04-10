@@ -23,6 +23,7 @@ locationKeyList = [
     ("latitude", "float", "degrees_north"),
     ("longitude", "float", "degrees_east"),
     ("dateTime", "long", iso8601_string),
+    ("surfaceQualifier", "integer", ""),
 ]
 
 obsvars = ["aerosolOpticalDepth"]
@@ -37,7 +38,10 @@ AttrData = {
 DimDict = {}
 
 # A dictionary of variable names and their dimensions.
-VarDims = {'aerosolOpticalDepth': ['Location', 'Channel']}
+VarDims = {
+    'aerosolOpticalDepth': ['Location', 'Channel'],
+    'surfaceQualifier': ['Location'],
+}
 channels = [4]
 
 # Get the group names we use the most.
@@ -105,6 +109,7 @@ class AOD(object):
         self.outdata[('latitude', metaDataName)] = np.array([], dtype=np.float32)
         self.outdata[('longitude', metaDataName)] = np.array([], dtype=np.float32)
         self.outdata[('dateTime', metaDataName)] = np.array([], dtype=np.int64)
+        self.outdata[('surfaceQualifier', metaDataName)] = np.array([], dtype=np.int32)
         for iodavar in obsvars:
             self.outdata[self.varDict[iodavar]['valKey']] = np.array([], dtype=np.float32)
             self.outdata[self.varDict[iodavar]['errKey']] = np.array([], dtype=np.float32)
@@ -176,6 +181,8 @@ class AOD(object):
                                                                   np.array(lons[winmsk], dtype=np.float32))
             self.outdata[('dateTime', metaDataName)] = np.append(self.outdata[('dateTime', metaDataName)],
                                                                  np.array(obs_time[winmsk], dtype=np.int64))
+            self.outdata[('surfaceQualifier', metaDataName)] = np.append(self.outdata[('surfaceQualifier', metaDataName)],
+                                                                         np.array(land_sea_flag[winmsk], dtype=np.int32))
 
             for iodavar in obsvars:
                 self.outdata[self.varDict[iodavar]['valKey']] = np.append(self.outdata[self.varDict[iodavar]['valKey']],
@@ -209,12 +216,12 @@ def main():
         help="path of MODIS AOD hdf4 input file(s)",
         type=str, nargs='+', required=True)
     required.add_argument(
-        '-p', '--platform',
-        help="AQUA or TERRA satellite?",
-        type=str, required=True)
-    required.add_argument(
         '-o', '--output',
         help="path of IODA output file",
+        type=str, required=True)
+    required.add_argument(
+        '--platform',
+        help="AQUA or TERRA satellite?",
         type=str, required=True)
 
     optional = parser.add_argument_group(title='optional arguments')

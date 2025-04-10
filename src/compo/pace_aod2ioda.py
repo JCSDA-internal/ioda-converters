@@ -26,7 +26,7 @@ locationKeyList = [
     ("dateTime", "long", iso8601_string),
     ("sensorCentralFrequency", "float", "Hz"),
     ("sensorCentralWavelength", "float", "micron"),
-    ("surfaceQualifier", "integer", "")
+    ("surfaceQualifier", "integer", ""),
 ]
 
 obsvars = ["aerosolOpticalDepth"]
@@ -43,7 +43,7 @@ VarDims = {
     "aerosolOpticalDepth": ['Location', 'Channel'],
     "sensorCentralFrequency": ['Channel'],
     "sensorCentralWavelength": ['Channel'],
-    "surfcaeQualifier": ['Location'],
+    "surfaceQualifier": ['Location'],
 }
 
 # Get the group names we use the most.
@@ -159,6 +159,7 @@ class AOD(object):
         self.outdata[('latitude', metaDataName)] = np.array([], dtype=np.float32)
         self.outdata[('longitude', metaDataName)] = np.array([], dtype=np.float32)
         self.outdata[('dateTime', metaDataName)] = np.array([], dtype=np.int64)
+        self.outdata[('surfaceQualifier', metaDataName)] = np.array([], dtype=np.int32)
         for iodavar in obsvars:
             self.outdata[self.varDict[iodavar]['valKey']] = np.array([], dtype=np.float32)
             self.outdata[self.varDict[iodavar]['errKey']] = np.array([], dtype=np.float32)
@@ -172,6 +173,7 @@ class AOD(object):
 
         # loop through input filenamess
         for n, f in enumerate(self.filenames):
+            print(f'processing file: {f}')
             self.ncd = nc.Dataset(f, 'r')
             self.glb_attrs = {attr: getattr(self.ncd, attr) for attr in self.ncd.ncattrs()}
 
