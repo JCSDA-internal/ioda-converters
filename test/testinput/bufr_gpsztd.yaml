@@ -55,7 +55,7 @@ observations:
           
     ioda:
       backend: netcdf
-      obsdataout: "./testoutput/20240806T00Z_PT1M_ztd_gnssgb_ncep.nc"
+      obsdataout: "./testrun/20240806T00Z_PT1M_ztd_gnssgb_ncep.nc"
 
       variables:
         # MetaData
