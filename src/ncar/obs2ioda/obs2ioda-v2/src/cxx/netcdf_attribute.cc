@@ -17,7 +17,8 @@ namespace Obs2Ioda {
                 ) : file;
 
             if (varName) {
-                auto var = group->getVar(varName);
+                auto iodaVarName = iodaSchema.getVariable(varName)->getValidName();
+                auto var = group->getVar(iodaVarName);
                 if (netcdfDataType == netCDF::ncString) {
                     var.putAtt(
                         attName, std::string(

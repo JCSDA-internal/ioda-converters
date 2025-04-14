@@ -18,7 +18,8 @@ namespace Obs2Ioda {
                                        netCDF::NcGroup>(
                                        file->getGroup(
                                            groupName));
-            auto dim = group->addDim(dimName, len);
+            auto iodaDimName = iodaSchema.getDimension(dimName)->getValidName();
+            auto dim = group->addDim(iodaDimName, len);
             *dimID = dim.getId();
             return 0;
         } catch (netCDF::exceptions::NcException &e) {

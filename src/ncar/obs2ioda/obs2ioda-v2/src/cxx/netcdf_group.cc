@@ -18,7 +18,8 @@ namespace Obs2Ioda {
                                              netCDF::NcGroup>(
                                              file->getGroup(
                                                  parentGroupName));
-            const auto group = parentGroup->addGroup(groupName);
+            auto iodaGroupName = iodaSchema.getGroup(groupName)->getValidName();
+            const auto group = parentGroup->addGroup(iodaGroupName);
             return 0;
         } catch (netCDF::exceptions::NcException &e) {
             return netcdfErrorMessage(

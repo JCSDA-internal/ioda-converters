@@ -2,7 +2,10 @@
 #include "netcdf_error.h"
 #include <memory>
 
+
 namespace Obs2Ioda {
+    IodaObsSchema iodaSchema(YAML::LoadFile(IODA_SCHEMA_YAML));
+
     FileMap &FileMap::getInstance() {
         static FileMap instance;
         return instance;

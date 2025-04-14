@@ -32,14 +32,15 @@ namespace Obs2Ioda {
                                    : std::make_shared<
                                        netCDF::NcGroup>(
                                        file->getGroup(
-                                           groupName));
+                                           iodaSchema.getGroup(groupName)->getValidName()));
             std::vector<netCDF::NcDim> dims;
             dims.reserve(numDims);
             for (int i = 0; i < numDims; i++) {
-                dims.push_back(file->getDim(dimNames[i]));;
+                dims.push_back(file->getDim(iodaSchema.getDimension(dimNames[i])->getValidName()));;
             }
+            auto iodaVarName = iodaSchema.getVariable(varName)->getValidName();
             auto var = group->addVar(
-                varName,
+                iodaVarName,
                 netCDF::NcType(netcdfDataType),
                 dims
             );
@@ -67,8 +68,9 @@ namespace Obs2Ioda {
                                    : std::make_shared<
                                        netCDF::NcGroup>(
                                        file->getGroup(
-                                           groupName));
-            const auto var = group->getVar(varName);
+                                           iodaSchema.getGroup(groupName)->getValidName()));
+            auto iodaVarName = iodaSchema.getVariable(varName)->getValidName();
+            const auto var = group->getVar(iodaVarName);
             auto varType = var.getType();
             // Special handling for char arrays
             if (varType == netCDF::ncChar) {
@@ -190,8 +192,9 @@ namespace Obs2Ioda {
                                    : std::make_shared<
                                        netCDF::NcGroup>(
                                        file->getGroup(
-                                           groupName));
-            auto var = group->getVar(varName);
+                                           iodaSchema.getGroup(groupName)->getValidName()));
+            auto iodaVarName = iodaSchema.getVariable(varName)->getValidName();
+            auto var = group->getVar(iodaVarName);
             var.setFill(
                 fillMode,
                 fillValue
