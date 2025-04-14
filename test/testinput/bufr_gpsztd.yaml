@@ -1,0 +1,146 @@
+# (C) Copyright 2025 NOAA/NWS/NCEP/EMC
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+observations:
+  - obs space:
+      name: bufr of gpsipw dump
+      obsdatain: "./testinput/obs.20240806T00Z.ipw_gnssgb.ncep.bufr"
+
+      exports:
+        subsets:
+          - NC012004
+        variables:
+          # MetaData
+          timestamp:
+            datetime:
+              year: "*/YEAR"
+              month: "*/MNTH"
+              day: "*/DAYS"
+              hour: "*/HOUR"
+              minute: "*/MINU"
+          stationName:
+            query: "*/STSN"
+          latitude:
+            query: "*/CLATH"
+          longitude:
+            query: "*/CLONH"
+          stationElevation:
+            query: "*/SELV"
+          height:
+            query: "*/SELV"
+          pressure:
+            query: "*/PRES"
+          airTemperature:
+            query: "*/TMDBST"
+          pathAzimuth:
+            query: "*/GNSSRPSQ{1}/BEARAZ"
+          pathElevation:
+            query: "*/GNSSRPSQ{1}/ELEV"
+
+          # ObsError
+          zenithTotalDelayErr:
+            query: "*/GNSSRPSQ{1}/APDE"
+
+          # QualityMarker 
+          zenithTotalDelayQM:
+            query: "*/GNSSRPSQ{1}/APDE"
+            transforms:
+              - scale: 1000.0
+
+          # ObsValue
+          zenithTotalDelay:
+            query: "*/GNSSRPSQ{1}/APDS"
+          
+    ioda:
+      backend: netcdf
+      obsdataout: "./testrun/20240806T00Z_PT1M_ztd_gnssgb_ncep.nc"
+
+      variables:
+        # MetaData
+        - name: "MetaData/dateTime"
+          coordinates: "longitude latitude"
+          source: variables/timestamp
+          longName: "Datetime"
+          units: "seconds since 1970-01-01T00:00:00Z"
+
+        - name: "MetaData/latitude"
+          coordinates: "longitude latitude"
+          source: variables/latitude
+          longName: "Latitude"
+          units: "degree_north"
+          range: [-90, 90]
+
+        - name: "MetaData/longitude"
+          coordinates: "longitude latitude"
+          source: variables/longitude
+          longName: "Longitude"
+          units: "degree_east"
+          range: [-180, 180]
+
+        - name: "MetaData/stationName"
+          coordinates: "longitude latitude"
+          source: variables/stationName
+          longName: "Station Name"
+
+        - name: "MetaData/stationElevation"
+          coordinates: "longitude latitude"
+          source: variables/stationElevation
+          longName: "Station Elevation/height above MSL"
+          units: "m"
+
+        - name: "MetaData/pressure"
+          coordinates: "longitude latitude"
+          source: variables/pressure
+          longName: "Pressure at Station height"
+          units: "Pa"
+
+        - name: "MetaData/height"
+          coordinates: "longitude latitude"
+          source: variables/height
+          longName: "Station height"
+          units: "m"
+
+        - name: "MetaData/airTemperature"
+          coordinates: "longitude latitude"
+          source: variables/airTemperature
+          longName: "Temperature at Station height"
+          units: "K"
+
+        - name: "MetaData/pathAzimuth"
+          coordinates: "longitude latitude"
+          source: variables/pathAzimuth
+          longName: "Signal path clockwise from True North"
+          units: "Degree_from_north"
+          range: [0, 360]
+
+        - name: "MetaData/pathElevation"
+          coordinates: "longitude latitude"
+          source: variables/pathElevation
+          longName: "Signal path angle above horizon"
+          units: "Degree_above_horizon"
+          range: [-90, 90]
+
+        # Observation
+        - name: "ObsValue/zenithTotalDelay"
+          coordinates: "longitude latitude"
+          source: variables/zenithTotalDelay
+          longName: "Atmospheric Path Delay in satellite Signal (APDS)"
+          units: "m"
+          range: [0.0001, 5]
+
+        - name: "ObsError/zenithTotalDelay"
+          coordinates: "longitude latitude"
+          source: variables/zenithTotalDelayErr
+          longName: "Estimated Error in Atmospheric Path Delay (APDE)"
+          units: "m"
+          range: [0.0, 10.0]
+
+        # QualityMarker 
+        - name: "QualityMarker/zenithTotalDelay"
+          coordinates: "longitude latitude"
+          source: variables/zenithTotalDelayQM
+          longName: "Quality Flags for ZTD data"
+          units: "0-20"
+
