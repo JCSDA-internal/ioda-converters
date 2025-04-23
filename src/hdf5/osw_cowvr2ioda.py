@@ -25,7 +25,6 @@ import h5py
 import numpy as np
 
 import pyiodaconv.ioda_conv_engines as iconv
-from pyiodaconv.def_jedi_utils import compute_scan_angle
 from pyiodaconv.orddicts import DefaultOrderedDict
 
 # globals
@@ -44,6 +43,8 @@ locationKeyList = [
     ("latitude", "float"),
     ("longitude", "float"),
     ("dateTime", "long"),
+    ("sensorIdentification", "string"),
+    ("height", "float"),
 ]
 
 iso8601_string = "seconds since 1970-01-01T00:00:00Z"
@@ -103,32 +104,38 @@ def main(args):
 
     # pass parameters to the IODA writer
     VarDims = {
-        'brightnessTemperature': ['Location', 'Channel'],
-        'sensorChannelNumber': ['Channel'],
+        'windSpeed': ['Location'],
+        'windDirection': ['Location'],
     }
+    # num_wind_amb
+    # wind_dir
+    # wind_dir_amb
+    # wind_dir_flag
+    # wind_error
+    # wind_error_amb
+    # wind_speed
+    # wind_speed_flag
 
     DimDict = {
         'Location': nlocs,
-        'Channel': obs_data[('sensorChannelNumber', metaDataName)],
     }
     writer = iconv.IodaWriter(output_filename, locationKeyList, DimDict)
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-    VarAttrs[('sensorZenithAngle', metaDataName)]['units'] = 'degree'
-    VarAttrs[('sensorViewAngle', metaDataName)]['units'] = 'degree'
-    VarAttrs[('sensorAzimuthAngle', metaDataName)]['units'] = 'degree'
-    if ('solarZenithAngle', metaDataName) in obs_data.keys():
-        VarAttrs[('solarZenithAngle', metaDataName)]['units'] = 'degree'
-        VarAttrs[('solarAzimuthAngle', metaDataName)]['units'] = 'degree'
     VarAttrs[('dateTime', metaDataName)]['units'] = iso8601_string
     VarAttrs[('dateTime', metaDataName)]['_FillValue'] = long_missing_value
 
-    VarAttrs[('brightnessTemperature', obsValName)]['units'] = 'K'
-    VarAttrs[('brightnessTemperature', obsErrName)]['units'] = 'K'
+    VarAttrs[('windSpeed', obsValName)]['units'] = 'm s-1'
+    VarAttrs[('windSpeed', obsErrName)]['units'] = 'm s-1'
+    VarAttrs[('windDirection', obsValName)]['units'] = 'degree'
+    VarAttrs[('windDirection', obsErrName)]['units'] = 'degree'
 
-    VarAttrs[('brightnessTemperature', obsValName)]['_FillValue'] = float_missing_value
-    VarAttrs[('brightnessTemperature', obsErrName)]['_FillValue'] = float_missing_value
-    VarAttrs[('brightnessTemperature', qcName)]['_FillValue'] = int_missing_value
+    VarAttrs[('windSpeed', obsValName)]['_FillValue'] = float_missing_value
+    VarAttrs[('windSpeed', obsErrName)]['_FillValue'] = float_missing_value
+    VarAttrs[('windSpeed', qcName)]['_FillValue'] = int_missing_value
+    VarAttrs[('windDirection', obsValName)]['_FillValue'] = float_missing_value
+    VarAttrs[('windDirection', obsErrName)]['_FillValue'] = float_missing_value
+    VarAttrs[('windDirection', qcName)]['_FillValue'] = int_missing_value
 
     VarAttrs[('dateTime', metaDataName)]['units'] = iso8601_string
     VarAttrs[('dateTime', metaDataName)]['_FillValue'] = long_missing_value
@@ -148,8 +155,6 @@ def get_data_from_files(zfiles):
     # for afile in zfiles:
     afile = zfiles
     f = h5py.File(afile, 'r')
-    import sys
-    sys.exit()
     sensor_name = f['Metadata']['InstrumentShortName'][0].decode("utf-8")
     if 'COWVR' in sensor_name:
         obs_data = get_osw_cowvr_data(f, obs_data)
@@ -164,49 +169,32 @@ def get_osw_cowvr_data(f, obs_data):
 
     WMO_sat_ID = get_WMO_satellite_ID(f['Metadata']['InstrumentShortName'][0].decode("utf-8"))
 
-    level = get_processing_level(f)
-    # "Geolocation and flags"
-    # fore: instr_scan_ang < 180 and aft: instr_scan_ang > 180
-    # fore_aft = np.array(f['GeolocationAndFlags']['fore_aft_flag'], dtype='float32')
-    sensor_altitude = np.array(f['GeolocationAndFlags']['sat_alt'], dtype='float32')
-    sat_alt_flag = np.array(f['GeolocationAndFlags']['sc_att_flag'], dtype='int32')
-    obs_data[('latitude', metaDataName)] = np.array(f['GeolocationAndFlags']['obs_lat'], dtype='float32')
-    obs_data[('longitude', metaDataName)] = np.array(f['GeolocationAndFlags']['obs_lon'], dtype='float32')
-    obs_data[('sensorChannelNumber', metaDataName)] = np.array(np.arange(12)+1, dtype='int32')
-    obs_data[('sensorScanPosition', metaDataName)] = np.array(np.round(f['GeolocationAndFlags']['instr_scan_ang']), dtype='int32')
-    obs_data[('solarZenithAngle', metaDataName)] = np.array(f['GeolocationAndFlags']['sat_solar_zen'], dtype='float32')
-    obs_data[('solarAzimuthAngle', metaDataName)] = np.array(f['GeolocationAndFlags']['sat_solar_az'], dtype='float32')
-    obs_data[('sensorZenithAngle', metaDataName)] = np.array(f['GeolocationAndFlags']['earth_inc_ang'], dtype='float32')
-    obs_data[('sensorAzimuthAngle', metaDataName)] = np.array(f['GeolocationAndFlags']['earth_az_ang'], dtype='float32')
-    obs_data[('sensorViewAngle', metaDataName)] = compute_scan_angle(
-        np.array(f['GeolocationAndFlags']['instr_scan_ang'], dtype='float32'),
-        sensor_altitude,
-        np.array(f['GeolocationAndFlags']['earth_inc_ang'], dtype='float32'),
-        qc_flag=sat_alt_flag)
+    # import pdb
+    # pdb.set_trace()
+    # import sys
+    # sys.exit()
+    # obs is on a grid (601, 1801)
+    windSpeed = f['EnvDataRecords']['wind_speed'][:]
 
+    # Get the shape of the wind speed data
+    rows, cols = windSpeed.shape
+
+    obs_data[('latitude', metaDataName)] = np.array(np.repeat(f['GriddedGeolocationAndFlags']['grid_lat'][:], cols), dtype='float32')
+    obs_data[('longitude', metaDataName)] = np.array(np.tile(f['GriddedGeolocationAndFlags']['grid_lon'][:], rows), dtype='float32')
     nlocs = len(obs_data[('latitude', metaDataName)])
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
-    obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f['GeolocationAndFlags']['time_string']), dtype='int64')
-    qc_flag = f['GeolocationAndFlags']['obs_qual_flag']  # initial advice was DO NOT USE -- ask calval team for updated advice
-    solar_array_flag = f['GeolocationAndFlags']['solar_array_flag']
-    support_arm_flag = f['GeolocationAndFlags']['support_arm_flag']
-    rfi_flag = f['GeolocationAndFlags']['rfi_flag']
-    ufo_flag = f['GeolocationAndFlags']['ufo_obstruction_flag']
+    obs_data[('height', metaDataName)] = np.full((nlocs), 17.0, dtype='float32')
+    # obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f['GeolocationAndFlags']['time_string']), dtype='int64')
+    obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f['GriddedGeolocationAndFlags']['grid_time_tai93_fore']), dtype='int64')
 
-    nchans = len(obs_data[('sensorChannelNumber', metaDataName)])
-    obs_data[('brightnessTemperature', obsValName)] = np.array(
-        np.column_stack((f['CalibratedSceneTemperatures']['tb18_cfov'],
-                        f['CalibratedSceneTemperatures']['tb23_cfov'],
-                        f['CalibratedSceneTemperatures']['tb34_cfov'])), dtype='float32')
-    obs_data[('brightnessTemperature', obsErrName)] = np.full((nlocs, nchans), 5.0, dtype='float32')
-    obs_data[('brightnessTemperature', qcName)] = np.full((nlocs, nchans), 0, dtype='int32')
+    obs_data[('windSpeed', obsValName)] = np.array(windSpeed.flatten(), dtype='float32')
+    obs_data[('windDirection', obsValName)] = np.array(f['EnvDataRecords']['wind_dir'][:].flatten(), dtype='float32')
+    obs_data[('windSpeed', obsErrName)] = np.array(f['EnvDataRecords']['wind_error'][:].flatten(), dtype='float32')
+    obs_data[('windDirection', obsErrName)] = np.full((nlocs), 180, dtype='float32')
+    obs_data[('windSpeed', qcName)] = np.array(f['EnvDataRecords']['wind_speed_flag'][:].flatten(), dtype='int32')
+    obs_data[('windDirection', qcName)] = np.array(f['EnvDataRecords']['wind_dir_flag'][:].flatten(), dtype='int32')
 
     return obs_data
-
-
-def get_processing_level(f):
-    processing_level = int(f['Metadata']['ProcessingLevel'][0].decode("utf-8").split()[1])
-    return processing_level
 
 
 def get_WMO_satellite_ID(sensor_name):
@@ -232,41 +220,23 @@ def get_global_attributes(wmo_satellite_id):
     return GlobalAttrs
 
 
-def get_epoch_time(obs_time_iso):
+def get_epoch_time(obs_time_tai93):
 
-    this_datetime = [datetime.fromisoformat(adate.decode("utf-8")[:-5]) for adate in obs_time_iso]
-    time_offset = [round((adatetime - epoch).total_seconds()) for adatetime in this_datetime]
+    # use approximate offset of 725846427s between 01Jan1970 and 01Jan1993
+    time_offset = obs_time_tai93[:].flatten() 
+    time_offset += 725846427
 
     return time_offset
 
 
-def get_string_dtg(obs_time_utc):
-
-    dtg = []
-    for adate in obs_time_utc:
-        cdtg = adate[:-5].decode("utf-8") + 'Z'
-        if "655" in cdtg:
-            cdtg = ("%4i-%.2i-%.2iT%.2i:%.2i:00Z" % (2200, 1, 1, 0, 0))
-        dtg.append(cdtg)
-
-    return dtg
-
-
 def init_obs_loc():
     obs = {
-        ('brightnessTemperature', obsValName): [],
-        ('brightnessTemperature', obsErrName): [],
-        ('brightnessTemperature', qcName): [],
-        ('sensorChannelNumber', metaDataName): [],
+        ('windSpeed', obsValName): [],
+        ('windDirection', obsValName): [],
         ('latitude', metaDataName): [],
         ('longitude', metaDataName): [],
         ('dateTime', metaDataName): [],
-        ('sensorScanPosition', metaDataName): [],
-        ('solarZenithAngle', metaDataName): [],
-        ('solarAzimuthAngle', metaDataName): [],
-        ('sensorZenithAngle', metaDataName): [],
-        ('sensorAzimuthAngle', metaDataName): [],
-        ('sensorViewAngle', metaDataName): [],
+        ('height', metaDataName): [],
         ('satelliteIdentifier', metaDataName): [],
     }
 
