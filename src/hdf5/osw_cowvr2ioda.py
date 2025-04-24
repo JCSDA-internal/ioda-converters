@@ -47,6 +47,8 @@ locationKeyList = [
     ("height", "float"),
 ]
 
+variableKeyList = ["windSpeed", "windDirection", "windEastward", "windNorthward"]
+
 iso8601_string = "seconds since 1970-01-01T00:00:00Z"
 epoch = datetime.fromisoformat(iso8601_string[14:-1])
 
@@ -103,18 +105,9 @@ def main(args):
     GlobalAttrs['converter'] = os.path.basename(__file__)
 
     # pass parameters to the IODA writer
-    VarDims = {
-        'windSpeed': ['Location'],
-        'windDirection': ['Location'],
-    }
-    # num_wind_amb
-    # wind_dir
-    # wind_dir_amb
-    # wind_dir_flag
-    # wind_error
-    # wind_error_amb
-    # wind_speed
-    # wind_speed_flag
+    VarDims = {}
+    for k in variableKeyList:
+        VarDims[k] = ['Location']
 
     DimDict = {
         'Location': nlocs,
@@ -125,17 +118,16 @@ def main(args):
     VarAttrs[('dateTime', metaDataName)]['units'] = iso8601_string
     VarAttrs[('dateTime', metaDataName)]['_FillValue'] = long_missing_value
 
-    VarAttrs[('windSpeed', obsValName)]['units'] = 'm s-1'
-    VarAttrs[('windSpeed', obsErrName)]['units'] = 'm s-1'
-    VarAttrs[('windDirection', obsValName)]['units'] = 'degree'
-    VarAttrs[('windDirection', obsErrName)]['units'] = 'degree'
-
-    VarAttrs[('windSpeed', obsValName)]['_FillValue'] = float_missing_value
-    VarAttrs[('windSpeed', obsErrName)]['_FillValue'] = float_missing_value
-    VarAttrs[('windSpeed', qcName)]['_FillValue'] = int_missing_value
-    VarAttrs[('windDirection', obsValName)]['_FillValue'] = float_missing_value
-    VarAttrs[('windDirection', obsErrName)]['_FillValue'] = float_missing_value
-    VarAttrs[('windDirection', qcName)]['_FillValue'] = int_missing_value
+    for k in variableKeyList:
+        if 'Direction' not in k:
+            VarAttrs[(k, obsValName)]['units'] = 'm s-1'
+            VarAttrs[(k, obsErrName)]['units'] = 'm s-1'
+        else:
+            VarAttrs[(k, obsValName)]['units'] = 'degree'
+            VarAttrs[(k, obsErrName)]['units'] = 'degree'
+        VarAttrs[(k, obsValName)]['_FillValue'] = float_missing_value
+        VarAttrs[(k, obsErrName)]['_FillValue'] = float_missing_value
+        VarAttrs[(k, qcName)]['_FillValue'] = int_missing_value
 
     VarAttrs[('dateTime', metaDataName)]['units'] = iso8601_string
     VarAttrs[('dateTime', metaDataName)]['_FillValue'] = long_missing_value
@@ -169,11 +161,7 @@ def get_osw_cowvr_data(f, obs_data):
 
     WMO_sat_ID = get_WMO_satellite_ID(f['Metadata']['InstrumentShortName'][0].decode("utf-8"))
 
-    # import pdb
-    # pdb.set_trace()
-    # import sys
-    # sys.exit()
-    # obs is on a grid (601, 1801)
+    # obs is on a grid (e.g. [601, 1801])
     windSpeed = f['EnvDataRecords']['wind_speed'][:]
 
     # Get the shape of the wind speed data
@@ -183,17 +171,36 @@ def get_osw_cowvr_data(f, obs_data):
     obs_data[('longitude', metaDataName)] = np.array(np.tile(f['GriddedGeolocationAndFlags']['grid_lon'][:], rows), dtype='float32')
     nlocs = len(obs_data[('latitude', metaDataName)])
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
+    mean_sat_alt = get_mean_satellite_altitude(f)
+    obs_data[('stationElevation', metaDataName)] = np.full((nlocs), mean_sat_alt, dtype='float32')
     obs_data[('height', metaDataName)] = np.full((nlocs), 17.0, dtype='float32')
-    # obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f['GeolocationAndFlags']['time_string']), dtype='int64')
-    obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f['GriddedGeolocationAndFlags']['grid_time_tai93_fore']), dtype='int64')
+    obs_time = combine_fore_aft_time(f)
+    obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(obs_time), dtype='int64')
 
     obs_data[('windSpeed', obsValName)] = np.array(windSpeed.flatten(), dtype='float32')
     obs_data[('windDirection', obsValName)] = np.array(f['EnvDataRecords']['wind_dir'][:].flatten(), dtype='float32')
-    obs_data[('windSpeed', obsErrName)] = np.array(f['EnvDataRecords']['wind_error'][:].flatten(), dtype='float32')
+    obs_data[('windSpeed', obsErrName)] = np.array(0.01*f['EnvDataRecords']['wind_error'][:].flatten(), dtype='float32')
     obs_data[('windDirection', obsErrName)] = np.full((nlocs), 180, dtype='float32')
     obs_data[('windSpeed', qcName)] = np.array(f['EnvDataRecords']['wind_speed_flag'][:].flatten(), dtype='int32')
     obs_data[('windDirection', qcName)] = np.array(f['EnvDataRecords']['wind_dir_flag'][:].flatten(), dtype='int32')
+    # get the windEastward and windNorthward
+    u, v, u_err, v_err = wind_speed_direction_to_uv(obs_data[('windSpeed', obsValName)],
+                                                    obs_data[('windDirection', obsValName)],
+                                                    obs_data[('windSpeed', obsErrName)])
+    obs_data[('windEastward', obsValName)] = np.array(u, dtype='float32')
+    obs_data[('windNorthward', obsValName)] = np.array(v, dtype='float32')
+    obs_data[('windEastward', obsErrName)] = np.array(u_err, dtype='float32')
+    obs_data[('windNorthward', obsErrName)] = np.array(v_err, dtype='float32')
+    # Create flags for eastward and northward wind: 1 if either speed or direction flag is > 0, otherwise 0
+    windEastward_flag = np.zeros_like(obs_data[('windSpeed', qcName)], dtype='int32')
+    windNorthward_flag = np.zeros_like(obs_data[('windSpeed', qcName)], dtype='int32')
+    flag_mask = (obs_data[('windSpeed', qcName)] > 0) | (obs_data[('windDirection', qcName)] > 0)
+    windEastward_flag[flag_mask] = 1
+    windNorthward_flag[flag_mask] = 1
+    obs_data[('windEastward', qcName)] = np.array(windEastward_flag, dtype='int32')
+    obs_data[('windNorthward', qcName)] = np.array(windNorthward_flag, dtype='int32')
 
+    obs_data = apply_gross_qc(obs_data)
     return obs_data
 
 
@@ -220,23 +227,115 @@ def get_global_attributes(wmo_satellite_id):
     return GlobalAttrs
 
 
-def get_epoch_time(obs_time_tai93):
+def combine_fore_aft_time(f):
+    # get the tai93 times from both fore and aft and combine into single array
+    # use fore value by default and aft value if fore is missing
+    # missing value assumed minimum (e.g. -9999.0)
+    fore_data = f['GriddedGeolocationAndFlags']['grid_time_tai93_fore'][:]
+    aft_data = f['GriddedGeolocationAndFlags']['grid_time_tai93_aft'][:]
+    missing_value = np.min(fore_data)
+    combined_data = np.copy(fore_data)
+    mask_fore_missing_aft_valid = (fore_data == missing_value) & (aft_data != missing_value)
+    combined_data[mask_fore_missing_aft_valid] = aft_data[mask_fore_missing_aft_valid]
 
+    return combined_data
+
+
+def get_mean_satellite_altitude(f):
+    # compute the mean satellite altitude
+    # this array is not the same dimension as OSW observation
+    sat_alt = f['GeolocationAndFlags']['sat_alt'][:]
+    missing_value = np.min(sat_alt)
+    mean_sat_alt = np.mean(sat_alt[sat_alt != missing_value])
+
+    return mean_sat_alt
+
+
+def get_epoch_time(obs_time_tai93):
     # use approximate offset of 725846427s between 01Jan1970 and 01Jan1993
-    time_offset = obs_time_tai93[:].flatten() 
-    time_offset += 725846427
+    # missing value assumed minimum (e.g. -9999.0)
+    time_offset = obs_time_tai93[:].flatten()
+    missing_value = np.min(time_offset)
+    time_offset[time_offset != missing_value] += 725846427
 
     return time_offset
+
+
+import numpy as np
+
+
+def wind_speed_direction_to_uv(windSpeed, windDirection, windSpeedError):
+    """
+    Converts wind speed and direction (in degrees) to eastward (u) and
+    northward (v) wind components.
+
+    Args:
+      windSpeed (numpy.ndarray): Array of wind speeds (magnitude).
+      windDirection (numpy.ndarray): Array of wind directions in meteorological
+                                     degrees (0/360 is North, 90 is East, 180 is
+                                     South, 270 is West).
+
+    Returns:
+      tuple: A tuple containing two numpy.ndarrays:
+             - windEastward (u): Eastward wind component. Positive is wind
+                                 blowing towards the East.
+             - windNorthward (v): Northward wind component. Positive is wind
+                                  blowing towards the North.
+    """
+    # Convert wind direction from degrees to radians (meteorological to standard)
+    # Meteorological direction is the direction from which the wind is blowing
+    # standard angle conventions (0 degrees at East, increasing counter-clockwise)
+
+    # use minimum as missing value
+    missing_value = np.min(windSpeed)
+    # Create a mask where both windSpeed and windDirection are valid
+    valid_mask = (windSpeed != missing_value) & (windDirection != missing_value)
+
+    # Initialize output arrays with the same shape and missing values
+    windEastward = np.full_like(windSpeed, missing_value, dtype=np.float64)
+    windNorthward = np.full_like(windSpeed, missing_value, dtype=np.float64)
+    windEastwardError = np.full_like(windSpeed, missing_value, dtype=np.float64)
+    windNorthwardError = np.full_like(windSpeed, missing_value, dtype=np.float64)
+
+    # Convert valid wind directions to radians (meteorological to standard)
+    rad = np.deg2rad(windDirection[valid_mask] - 90)
+
+    # Calculate eastward and northward components only for valid data
+    windEastward[valid_mask] = windSpeed[valid_mask] * np.cos(rad)
+    windNorthward[valid_mask] = windSpeed[valid_mask] * np.sin(rad)
+    windEastwardError[valid_mask] = windSpeedError[valid_mask] * np.cos(rad)
+    windNorthwardError[valid_mask] = windSpeedError[valid_mask] * np.sin(rad)
+
+    return windEastward, windNorthward, windEastwardError, windNorthwardError
+
+
+def apply_gross_qc(obs_data):
+    # remove the missing values from the output
+    missing_value_data = np.min(obs_data[('windSpeed', 'ObsValue')])
+    missing_value_time = np.min(obs_data[('dateTime', 'MetaData')])
+    valid_mask = (obs_data[('windSpeed', 'ObsValue')] != missing_value_data) & \
+                 (obs_data[('windDirection', 'ObsValue')] != missing_value_data) & \
+                 (obs_data[('dateTime', 'MetaData')] != missing_value_time) & \
+                 (obs_data[('windSpeed', 'PreQC')] == 0) & \
+                 (obs_data[('windDirection', 'PreQC')] == 0)
+    for k in obs_data.keys():
+        obs_data[k] = obs_data[k][valid_mask]
+        # print(f"{k=}  {np.min(obs_data[k])=}   {np.max(obs_data[k])=}")
+
+    return obs_data
 
 
 def init_obs_loc():
     obs = {
         ('windSpeed', obsValName): [],
         ('windDirection', obsValName): [],
+        ('windEastward', obsValName): [],
+        ('windNorthward', obsValName): [],
         ('latitude', metaDataName): [],
         ('longitude', metaDataName): [],
         ('dateTime', metaDataName): [],
         ('height', metaDataName): [],
+        ('stationElevation', metaDataName): [],
         ('satelliteIdentifier', metaDataName): [],
     }
 
