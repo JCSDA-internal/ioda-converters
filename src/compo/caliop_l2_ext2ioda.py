@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
-"""
-Python code to ingest HDF4 CALIPSO L2 APro data
-"""
+#
+# (C) Copyright 2025 UCAR
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+#
 
 import argparse
 from datetime import datetime, timedelta
@@ -35,7 +38,6 @@ metaKeyList = [
     ("dateTime", "long", iso8601_string),
     ("pressure", "float", "Pa"),
     ("sensorCentralWavelength", "float", "micron"),
-    #("sequenceNumber", "integer", None),
     ("height", "float", "m"),
     ("cloudAerosolDiscrimination", "integer", ""),
 ]
@@ -47,7 +49,6 @@ VarDims = {
     'extinctionCoefficient': ['Location', 'Layer', 'Channel'],
     'pressure': ['Location', 'Layer'],
     'height': ['Layer'],
-    'sequenceNumber': ['Location'],
     'sensorCentralWavelength': ['Channel'],
     'cloudAerosolDiscrimination': ['Location', 'Layer', 'Channel'],
 }
@@ -61,9 +62,9 @@ obsValName = iconv.OvalName()
 obsErrName = iconv.OerrName()
 qcName = iconv.OqcName()
 
-varsKeyList = [('valKey', obsValName, 'float', 'longitude latitude', 'km-1'),
-               ('errKey', obsErrName, 'float', 'longitude latitude', 'km-1'),
-               ('qcKey', qcName, 'integer', 'longitude latitude', None)]
+varsKeyList = [('valKey', obsValName, 'float', 'longitude latitude height', None),
+               ('errKey', obsErrName, 'float', 'longitude latitude height', None),
+               ('qcKey', qcName, 'integer', 'longitude latitude height', None)]
 
 
 float_missing_value = iconv.get_default_fill_val(np.float32)
@@ -165,9 +166,11 @@ class calipso_l2ext(object):
                 errvarname = f"Extinction_Coefficient_Uncertainty_{wavelength_str}"
                 qcfvarname = f"Extinction_QC_Flag_{wavelength_str}"
                 # Level 2 QC flag stores 30m level 1 QC flag below 8.3 km in the rightmost dimension
+                # Based on Young et al. (2018): qc flag value 0, 1, 2, 16, and 18 should be used.
                 tmpqcf = sd.select(qcfvarname).get()
                 tmpqcf = np.where(tmpqcf[:, :, 0]==tmpqcf[:, :, 1], tmpqcf[:, :, 0], 
                                   np.maximum(tmpqcf[:, :, 0], tmpqcf[:, :, 1]))
+                tmpqcf = np.where(np.isin(tmpqcf, [0, 1, 2, 16, 18]), 0, 1)
 
                 obs[:, :, i] = sd.select(obsvarname).get()
                 err[:, :, i] = sd.select(errvarname).get()

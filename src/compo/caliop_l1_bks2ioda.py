@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
 
-"""
-Python code to ingest HDF4 CALIPSO L2 APro data
-"""
-
 import argparse
 from datetime import datetime, timedelta
 import os, sys
@@ -26,7 +22,7 @@ CALIPSO_WMO_sat_ID = 787
 AttrData = {
     'converter': os.path.basename(__file__),
     "platformCommonName": "CALIPSO",
-    "platformLongDescription": "CALIPSO L2 Lidar Data",
+    "platformLongDescription": "CALIPSO L1 Lidar Backscatter",
 }
 
 metaKeyList = [
@@ -57,9 +53,9 @@ obsValName = iconv.OvalName()
 obsErrName = iconv.OerrName()
 qcName = iconv.OqcName()
 
-varsKeyList = [('valKey', obsValName, 'float', 'longitude latitude', 'km-1'),
-               ('errKey', obsErrName, 'float', 'longitude latitude', 'km-1'),
-               ('qcKey', qcName, 'integer', 'longitude latitude', None)]
+varsKeyList = [('valKey', obsValName, 'float', 'longitude latitude height', 'km-1 sr-1'),
+               ('errKey', obsErrName, 'float', 'longitude latitude height', 'km-1 sr-1'),
+               ('qcKey', qcName, 'integer', 'longitude latitude height', None)]
 
 
 float_missing_value = iconv.get_default_fill_val(np.float32)
@@ -75,7 +71,7 @@ missing_vals = {'string': string_missing_value,
                 'double': double_missing_value}
 
 
-class calipso_l2ext(object):
+class calipso_l1bks(object):
     def __init__(self, filenames, date_range):
         self.filenames = filenames
         self.wbeg = np.datetime64(datetime.strptime(date_range[0], "%Y%m%d%H"))
@@ -108,6 +104,9 @@ class calipso_l2ext(object):
                 if varsKeyList[var_keys.index(key)][4]:
                     self.varAttrs[iodavar, varGroupName]['units'] = varsKeyList[var_keys.index(key)][4]
 
+    def get_normalized_bit(value, bit_index):
+        return (value >> bit_index) & 1
+
     def _read(self):
         # default missing value in CALIPSO file
         caliop_missing_value = -9999.
@@ -120,7 +119,6 @@ class calipso_l2ext(object):
         self.outdata[('longitude', metaDataName)] = np.array([], dtype=np.float32)
         self.outdata[('dateTime', metaDataName)] = np.array([], dtype=np.int64)
         self.outdata[('pressure', metaDataName)] = np.array([], dtype=np.float32)
-        self.outdata[('cloudAerosolDiscrimination', metaDataName)] = np.array([], dtype=np.int32)
         for iodavar in obsvars:
             self.outdata[self.varDict[iodavar]['valKey']] = np.array([], dtype=np.float32)
             self.outdata[self.varDict[iodavar]['errKey']] = np.array([], dtype=np.float32)
@@ -159,14 +157,16 @@ class calipso_l2ext(object):
             for i, chidx in enumerate(output_chidx):
                 obsvarname = l1varlist[i]
                 obs[:, :, i] = sd.select(obsvarname).get()
-                err[:, :, i] = obs[:, :, i] * 0.05
                 
-            # QC flag in Level 1 backscatter is only on each pixel rather than vertical
-            for 
+            # Level 1 backscatter QC flags are only on each pixel rather than all vertical layers
+            # So, apply to all levels for now.
+            for i, 
                 qcf[:, :, i] = 
 
+            # TODO: Obs error can refer
+            # https://www-calipso.larc.nasa.gov/resources/calipso_users_guide/tools/idl/AttenBksUncertainties.pdf
             obs = np.where(obs==caliop_missing_value, float_missing_value, obs)
-            err = np.where(err==caliop_missing_value, float_missing_value, err)
+            err = np.where(obs==caliop_missing_value, float_missing_value, obs * 0.05)
             pres = np.where(pres < 0, float_missing_value, pres)
                 
             self.outdata[('latitude', metaDataName)] = np.append(self.outdata[('latitude', metaDataName)],
@@ -224,7 +224,7 @@ def main():
     args = parser.parse_args()
 
     # Read CALIPSO extinction profile data
-    calipsol2 = calipso_l2ext(args.input, args.date_range)
+    calipsol1 = calipso_l1bks(args.input, args.date_range)
 
     # write everything out
     writer = iconv.IodaWriter(args.output, metaKeyList, DimDict)
