@@ -1,6 +1,6 @@
 # obs2ioda
 
-### To convert NCEP PREPBUFR/BUFR files and Himawari Standard Data FLDK files to ioda-v1 or ioda-v2 format.  
+### To convert NCEP PREPBUFR/BUFR files and Himawari Standard Data FLDK files to ioda-v3 format.  
 
 ### To convert GOES-ABI netCDF to ioda-v1 format.  
 
@@ -17,11 +17,9 @@ File types that obs2ioda can handle:
 * HS_H08_YYYYMMDD_HH00_BNN_FLDK_R20_S0210.DAT  
 * OR_ABI-L1b-Rad nc files  
 
-## See [obs2ioda-v1/README.md](https://github.com/jamiebresch/obs2ioda/blob/main/obs2ioda-v1/README.md) for compilation and usage.
+## See [obs2ioda-v3/README.md](https://github.com/NCAR/obs2ioda/blob/main/obs2ioda-v3/README.md) for compilation and usage.
 
-## See [obs2ioda-v2/README.md](https://github.com/jamiebresch/obs2ioda/blob/main/obs2ioda-v2/README.md) for compilation and usage.
-
-## See [goes_abi/README.md](https://github.com/jamiebresch/obs2ioda/blob/main/goes_abi/README.md) for compilation and usage.
+## See [goes_abi/README.md](https://github.com/NCAR/obs2ioda/blob/main/goes_abi/README.md) for compilation and usage.
 
 ## Observation data sources:
 * https://nomads.ncep.noaa.gov/pub/data/nccf/com/gfs/prod/
@@ -32,5 +30,12 @@ File types that obs2ioda can handle:
 
 ## Contributors
 * Primary original developer: Jamie Bresch (@jamiebresch)
+* Current developers
+  * Junmei Ban (@junmeiban)  
+  * Ivette Hernández Baños (@ibanos90)
+  * Jake Liu (@liujake)
+  * Andy Stokely (@amstokely)
+  * Simon Toedtli (@st-ncar)
+  * Zhuming Ying (@zhumingying)
 
 Original repository can be found at https://github.com/jamiebresch/obs2ioda
