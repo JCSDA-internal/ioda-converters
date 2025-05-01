@@ -14,7 +14,7 @@ module ahi_HSD_mod
 
 !https://www.jstage.jst.go.jp/article/jmsj/94/2/94_2016-009/_pdf/-char/en
 
-   use iodaconv_kinds, only: i_byte, i_short, i_long, i_llong, i_kind, r_single, r_double, r_kind
+   use iodaconv_kinds, only: i_byte, i_int, i_short, i_long, i_llong, i_kind, r_single, r_double, r_kind
    use define_mod, only: missing_r, missing_i, nstring, ndatetime, &
                          ninst, inst_list, set_name_satellite, set_name_sensor, xdata, name_sen_info, &
                          nvar_info, name_var_info, type_var_info, nsen_info, type_sen_info, set_brit_obserr, strlen
@@ -58,8 +58,8 @@ module ahi_HSD_mod
       real(r_double)     :: obsStartTime   ! Modified Julian Date
       real(r_double)     :: obsEndTime     ! Modified Julian Date
       real(r_double)     :: fileCreateTime ! Modified Julian Date
-      integer(i_long)    :: totalHeaderLen
-      integer(i_long)    :: dataLen
+      integer(i_int)     :: totalHeaderLen
+      integer(i_int)     :: dataLen
       integer(i_byte)    :: qcflag1
       integer(i_byte)    :: qcflag2
       integer(i_byte)    :: qcflag3
@@ -83,8 +83,8 @@ module ahi_HSD_mod
       integer(i_byte)    :: headerNum      ! header block number = 3
       integer(i_short)   :: blockLen       ! block length = 127 bytes
       real(r_double)     :: subLon         ! 140.7 degree
-      integer(i_long)    :: cfac           ! column scaling factor
-      integer(i_long)    :: lfac           ! line scaling factor
+      integer(i_int)     :: cfac           ! column scaling factor
+      integer(i_int)     :: lfac           ! line scaling factor
       real(r_single)     :: coff           ! column offset
       real(r_single)     :: loff           ! line offset
       real(r_double)     :: satDis         ! distance from earth's center to virtual satellite = 42164 km
@@ -181,7 +181,7 @@ module ahi_HSD_mod
 
    type error_info
       integer(i_byte)    :: headerNum      ! header block number = 10
-      integer(i_long)    :: blockLen       ! block length = 47
+      integer(i_int)     :: blockLen       ! block length = 47
       integer(i_short)   :: errorNum       ! number of error information data = 0
 !  integer(i_short), allocatable :: lineNo(:)    !(errorNum)
 !  integer(i_short), allocatable :: errPixNum(:) !(errorNum)
@@ -255,7 +255,7 @@ contains
       integer(i_kind) :: startLine, endLine
       integer(i_kind) :: radcount, i, ii, jj, ij, iv
       integer(i_kind) :: iband, isegm
-      integer(i_kind) :: ierr
+      integer(i_kind) :: ierr, ierrr
       integer(i_kind) :: nlocs, nvars, iloc
       integer(i_kind) :: ihh, imm, idd, jday, flength, rvalue, offset
       integer(i_kind) :: iunit = 21
@@ -332,7 +332,7 @@ fnames(ij) = trim(inpdir)//'HS_'//satellite//'_'//ccyymmdd//'_'//hhnn//'_'//band
    open (iunit, file=trim(fnames(ifile)), form='unformatted', action='read', access='stream', status='old', convert='little_endian')
             print *, 'Reading from ', trim(fnames(ifile))
 
-            read (iunit) header%basic%headerNum, &
+            read (iunit,iostat=ierrr) header%basic%headerNum, &
                header%basic%blockLen, &
                header%basic%numHeader, &
                header%basic%byteOrder, &
@@ -353,14 +353,23 @@ fnames(ij) = trim(inpdir)//'HS_'//satellite//'_'//ccyymmdd//'_'//hhnn//'_'//band
                header%basic%version, &
                header%basic%fileName, &
                header%basic%dummy40
-            read (iunit) header%data%headerNum, &
+               call read_error(ierrr)
+            read (iunit,iostat=ierrr) header%data%headerNum, &
                header%data%blockLen, &
                header%data%bitPix, &
                header%data%nPix, &
                header%data%nLin, &
                header%data%compression, &
                header%data%dummy40
-            read (iunit) header%proj%headerNum, &
+            write (*,*) header%data%headerNum, &
+               header%data%blockLen, &
+               header%data%bitPix, &
+               header%data%nPix, &
+               header%data%nLin, &
+               header%data%compression, &
+               header%data%dummy40
+               call read_error(ierrr)
+            read (iunit,iostat=ierrr) header%proj%headerNum, &
                header%proj%blockLen, &
                header%proj%subLon, &
                header%proj%cfac, &
@@ -377,7 +386,8 @@ fnames(ij) = trim(inpdir)//'HS_'//satellite//'_'//ccyymmdd//'_'//hhnn//'_'//band
                header%proj%resampleKind, &
                header%proj%resampleSize, &
                header%proj%dummy40
-            read (iunit) header%navi%headerNum, &
+               call read_error(ierrr)
+            read (iunit,iostat=ierrr) header%navi%headerNum, &
                header%navi%blockLen, &
                header%navi%navTime, &
                header%navi%sspLon, &
@@ -392,7 +402,8 @@ fnames(ij) = trim(inpdir)//'HS_'//satellite//'_'//ccyymmdd//'_'//hhnn//'_'//band
                header%navi%moonPos_y, &
                header%navi%moonPos_z, &
                header%navi%dummy40
-            read (iunit) header%calib%headerNum, &
+               call read_error(ierrr)
+            read (iunit,iostat=ierrr) header%calib%headerNum, &
                header%calib%blockLen, &
                header%calib%bandNo, &
                header%calib%waveLen, &
@@ -411,61 +422,84 @@ fnames(ij) = trim(inpdir)//'HS_'//satellite//'_'//ccyymmdd//'_'//hhnn//'_'//band
                header%calib%planckConst, &
                header%calib%bolzConst, &
                header%calib%dummy40
-            read (iunit) header%interCalib%headerNum, &
+               call read_error(ierrr)
+            read (iunit,iostat=ierrr) header%interCalib%headerNum, &
                header%interCalib%blockLen, &
                header%interCalib%dummy256
-            read (iunit) header%segm%headerNum, &
+               call read_error(ierrr)
+            read (iunit,iostat=ierrr) header%segm%headerNum, &
                header%segm%blockLen, &
                header%segm%totalSegNum, &
                header%segm%segSeqNo, &
                header%segm%startLineNo, &
                header%segm%dummy40
-            read (iunit) header%navicorr%headerNum, &
+               call read_error(ierrr)
+            read (iunit,iostat=ierrr) header%navicorr%headerNum, &
                header%navicorr%blockLen, &
                header%navicorr%RoCenterColumn, &
                header%navicorr%RoCenterLine, &
                header%navicorr%RoCorrection, &
                header%navicorr%correctNum
+               call read_error(ierrr)
             if (header%navicorr%correctNum > 0) then
                numCorrect = header%navicorr%correctNum
                allocate (header%navicorr%lineNo(numCorrect))
                allocate (header%navicorr%columnShift(numCorrect))
                allocate (header%navicorr%lineShift(numCorrect))
+            else
+               write(*,'(3A,I)') " Error reading file ",trim(fnames(ifile)),&
+                                 " correctNum = ",header%navicorr%correctNum
+               call abort()
             end if
-            read (iunit) header%navicorr%lineNo(numCorrect), &
+            read (iunit,iostat=ierrr) header%navicorr%lineNo(numCorrect), &
                header%navicorr%columnShift(numCorrect), &
                header%navicorr%lineShift(numCorrect), &
                header%navicorr%dummy40
+               call read_error(ierrr)
             rewind (iunit)
-            read (iunit) header%obstime%headerNum, &
+            read (iunit,iostat=ierrr) header%obstime%headerNum, &
                header%obstime%blockLen, &
                header%obstime%obsNum
+               call read_error(ierrr)
             if (header%obsTime%obsNum > 0) then
                numObs = header%obsTime%obsNum
                allocate (header%obsTime%lineNo(numObs))
                allocate (header%obsTime%obsMJD(numObs))
+            else
+               write(*,'(3A,I)') " Error reading file ",trim(fnames(ifile)),&
+                                 " obsNum = ",header%obsTime%obsNum
+               call abort()
             end if
-            read (iunit) header%obstime%lineNo, &
+            read (iunit,iostat=ierrr) header%obstime%lineNo, &
                header%obstime%obsMJD, &
                header%obstime%dummy40
-            read (iunit) header%error%headerNum, &
+               call read_error(ierrr)
+            read (iunit,iostat=ierrr) header%error%headerNum, &
                header%error%blockLen, &
                header%error%errorNum, &
                header%error%dummy40
-            read (iunit) header%dummy%headerNum, &
+               call read_error(ierrr)
+            read (iunit,iostat=ierrr) header%dummy%headerNum, &
                header%dummy%blockLen, &
                header%dummy%dummy256
+               call read_error(ierrr)
             npix = header%data%nPix
             nlin = header%data%nLin
             ntotal = npix*nlin
-            allocate (idata(ntotal))
+            if (ntotal > 0) then
+                allocate (idata(ntotal))
+            else
+               write(*,'(A,I)') " Error allocating idata, ntotal = ",ntotal
+               call abort()
+            end if
 
             inquire (file=trim(fnames(ifile)), size=flength)
             ! Offset relative to the beginning of the file
             offset = flength - (npix*nlin*2)
             ! Reposition the file to the offset value for reading
             call fseek(iunit, offset, 0, rvalue)
-            read (iunit) idata(:)
+            read (iunit,iostat=ierrr) idata(:)
+            call read_error(ierrr)
 
             startLine = header%segm%startLineNo
             endLine = startLine + header%data%nLin - 1
@@ -761,6 +795,7 @@ fnames(ij) = trim(inpdir)//'HS_'//satellite//'_'//ccyymmdd//'_'//hhnn//'_'//band
          end if
 
          ! do thinning every subsample pixels
+         iloc = 0
          do jj = 1, nline, subsample
             do ii = 1, npixel, subsample
                if (.not. valid(ii, jj)) cycle
@@ -999,5 +1034,18 @@ fnames(ij) = trim(inpdir)//'HS_'//satellite//'_'//ccyymmdd//'_'//hhnn//'_'//band
       end if
       return
    end subroutine hisd_radiance_to_tbb
+
+   subroutine read_error(ierr)
+
+    integer(i_kind) :: ierr
+
+    if (ierr /= 0) then
+       write(*,'(A,I6)') "Error file reading, ierr = ",ierr
+       call abort()
+    endif
+
+    return
+
+    end subroutine read_error
 
 end module ahi_HSD_mod
