@@ -361,7 +361,6 @@ fnames(ij) = trim(inpdir)//'HS_'//satellite//'_'//ccyymmdd//'_'//hhnn//'_'//band
                header%data%nLin, &
                header%data%compression, &
                header%data%dummy40
-            write (*,*) header%data%headerNum, &
                header%data%blockLen, &
                header%data%bitPix, &
                header%data%nPix, &
