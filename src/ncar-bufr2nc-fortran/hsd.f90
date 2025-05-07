@@ -361,12 +361,6 @@ fnames(ij) = trim(inpdir)//'HS_'//satellite//'_'//ccyymmdd//'_'//hhnn//'_'//band
                header%data%nLin, &
                header%data%compression, &
                header%data%dummy40
-               header%data%blockLen, &
-               header%data%bitPix, &
-               header%data%nPix, &
-               header%data%nLin, &
-               header%data%compression, &
-               header%data%dummy40
                call read_error(ierrr)
             read (iunit,iostat=ierrr) header%proj%headerNum, &
                header%proj%blockLen, &
@@ -446,8 +440,8 @@ fnames(ij) = trim(inpdir)//'HS_'//satellite//'_'//ccyymmdd//'_'//hhnn//'_'//band
                allocate (header%navicorr%columnShift(numCorrect))
                allocate (header%navicorr%lineShift(numCorrect))
             else
-               write(*,'(3A,I)') " Error reading file ",trim(fnames(ifile)),&
-                                 " correctNum = ",header%navicorr%correctNum
+               write(*,'(3A,I6)') " Error reading file ",trim(fnames(ifile)),&
+                                  " correctNum = ",header%navicorr%correctNum
                call abort()
             end if
             read (iunit,iostat=ierrr) header%navicorr%lineNo(numCorrect), &
@@ -465,8 +459,8 @@ fnames(ij) = trim(inpdir)//'HS_'//satellite//'_'//ccyymmdd//'_'//hhnn//'_'//band
                allocate (header%obsTime%lineNo(numObs))
                allocate (header%obsTime%obsMJD(numObs))
             else
-               write(*,'(3A,I)') " Error reading file ",trim(fnames(ifile)),&
-                                 " obsNum = ",header%obsTime%obsNum
+               write(*,'(3A,I6)') " Error reading file ",trim(fnames(ifile)),&
+                                  " obsNum = ",header%obsTime%obsNum
                call abort()
             end if
             read (iunit,iostat=ierrr) header%obstime%lineNo, &
@@ -488,7 +482,7 @@ fnames(ij) = trim(inpdir)//'HS_'//satellite//'_'//ccyymmdd//'_'//hhnn//'_'//band
             if (ntotal > 0) then
                 allocate (idata(ntotal))
             else
-               write(*,'(A,I)') " Error allocating idata, ntotal = ",ntotal
+               write(*,'(A,I6)') " Error allocating idata, ntotal = ",ntotal
                call abort()
             end if
 
