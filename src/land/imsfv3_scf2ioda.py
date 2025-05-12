@@ -84,14 +84,17 @@ class imsFV3(object):
         ncd = nc.Dataset(self.filename)
         lons = ncd.variables['lon'][:].ravel()
         lats = ncd.variables['lat'][:].ravel()
+        stid = ncd.variables['stid'][:].ravel()
         oros = ncd.variables['oro'][:].ravel()
         sncv = ncd.variables['IMSscf'][:].ravel()
         sncv[sncv == -999.] = float_missing_value
         sndv = ncd.variables['IMSsnd'][:].ravel()
         sndv[sndv == -999.] = float_missing_value
+        strstid = np.empty_like(lons, dtype=object)
 
         lons = lons.astype('float32')
         lats = lats.astype('float32')
+        stid = stid.astype('int64')
         oros = oros.astype('float32')
         sncv = sncv.astype('float32')
         sndv = sndv.astype('float32')
@@ -104,6 +107,9 @@ class imsFV3(object):
 
         times = get_observation_time(self.filename, sncv, ncd)
 
+        for i in range(len(lons)):
+            strstid[i] = str(stid[i])
+
         ncd.close()
 
         # add metadata variables
@@ -112,6 +118,7 @@ class imsFV3(object):
         self.varAttrs[('dateTime', metaDataName)]['_FillValue'] = long_missing_value
         self.outdata[('latitude', metaDataName)] = lats
         self.outdata[('longitude', metaDataName)] = lons
+        self.outdata[('stationIdentification', metaDataName)] = strstid
         self.outdata[('stationElevation', metaDataName)] = oros
         self.varAttrs[('stationElevation', metaDataName)]['units'] = 'm'
 
