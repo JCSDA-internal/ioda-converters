@@ -8,7 +8,7 @@
 #
 
 import argparse
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import netCDF4 as nc
 import numpy as np
 import os
@@ -33,7 +33,6 @@ obsvars = ["aerosolOpticalDepth"]
 # A dictionary of global attributes.  More filled in further down.
 AttrData = {}
 AttrData['ioda_object_type'] = 'AOD'
-AttrData['retrievalMethod'] = 'Unified Aerosol Algorithm (UAA)'
 
 # A dictionary of variable dimensions.
 DimDict = {}
@@ -71,6 +70,7 @@ speed_light = 2.99792458E8
 class AOD(object):
     def __init__(self, in_dict):
         self.filenames = in_dict['input']
+        self.retrieval_method = in_dict['retrieval_method']
         self.error_method = in_dict['error_method']
         self.thinning_ratio = in_dict['thinning_ratio']
         self.wbeg = np.datetime64(str(datetime.strptime(in_dict['date_range'][0], "%Y%m%d%H"))).astype(np.int64)
@@ -106,11 +106,18 @@ class AOD(object):
     def get_platform_sensor_names(self):
         satellite = self.glb_attrs["platform"]
         sensor = self.glb_attrs["instrument"]
-        AttrData["platform"] = "oci_pace"
-        AttrData["sensor"] = "v.oci_pace"
+        if self.retrieval_method == 'uaa':
+            AttrData["platform"] = "oci_pace"
+            AttrData["sensor"] = "v.oci_pace"
+        elif self.retrieval_method == 'remotap':
+            AttrData["platform"] = "spexone_pace"
+            AttrData["sensor"] = "v.spexone_pace"
 
     def get_s_e_time(self):
-        timeformat = '%Y-%m-%dT%H:%M:%S.%fZ'
+        if self.retrieval_method == 'uaa':
+            timeformat = '%Y-%m-%dT%H:%M:%S.%fZ'
+        elif self.retrieval_method == 'remotap':
+            timeformat = '%Y-%m-%dT%H:%M:%SZ'
         this_starttime = datetime.strptime(self.glb_attrs["time_coverage_start"], timeformat)
         this_starttime = this_starttime.replace(tzinfo=timezone.utc)
         self.s_time = round((this_starttime - epoch).total_seconds())
@@ -120,6 +127,7 @@ class AOD(object):
         self.e_time = round((this_endtime - epoch).total_seconds())
 
     def get_uaa_data(self):
+        AttrData['retrievalMethod'] = 'Unified Aerosol Algorithm (UAA)'
         self.wavelength = np.array([0.354, 0.388, 0.48, 0.55, 0.67, 0.87, 1.24, 1.64, 2.2])
         self.frequency = speed_light * 1.0E6 / self.wavelength
         self.channels = np.arange(self.wavelength.size) + 1
@@ -154,6 +162,54 @@ class AOD(object):
         self.errs = self.errs[valid_pts, :]
         self.qcfs = self.qcfs[valid_pts, :]
 
+    def get_remotap_data(self):
+        AttrData['retrievalMethod'] = 'Remote Sensing of Trace Gases and Aerosol Products (RemoTAP)'
+        # Process RemoTAP AOD retrieval from SPEXone (dim name: wavelength3d)
+        self.wavelength = np.array([0.340, 0.355, 0.380, 0.440, 0.490, 0.500, 0.532, 0.550,
+                                    0.565, 0.670, 0.675, 0.765, 0.865, 0.870, 1.020, 1.064,
+                                    1.600, 2.000])
+        self.frequency = speed_light * 1.0E6 / self.wavelength
+        self.channels = np.arange(self.wavelength.size) + 1
+
+        self.lons = self.ncd.groups['geolocation_data'].variables['longitude'][:].ravel()
+        self.lats = self.ncd.groups['geolocation_data'].variables['latitude'][:].ravel()
+        if 'OCEAN' in self.ncd.product_name:
+            self.lsfs = np.zeros_like(self.lats, dtype=np.int32)
+        elif 'LAND' in self.ncd.product_name:
+            self.lsfs = np.ones_like(self.lats, dtype=np.int32)
+        vals = self.ncd.groups['geophysical_data'].variables['aot'][:]
+        self.vals = vals.reshape(-1, vals.shape[2])
+        qcfs = self.ncd.groups['diagnostic_data'].variables['quality_flag'][:].ravel()
+        self.qcfs = np.repeat(qcfs[:, np.newaxis], self.channels.size, axis=1)
+
+        # Setup observation time with utc_date and fracday
+        datet = self.ncd.groups['geolocation_data'].variables['utc_date'][:].ravel()
+        fracd = self.ncd.groups['geolocation_data'].variables['fracday'][:].ravel()
+        d = np.round(np.mod(datet, 100)).astype(np.int32)
+        m = np.round(np.mod((datet-d), 10000)).astype(np.int32)
+        y = np.round(datet-m-d).astype(np.int32)
+        dtarr = [datetime(yi//10000, mi//100, di, tzinfo=timezone.utc)
+                 for yi, mi, di in zip(y, m, d)]
+        delta = [timedelta(float(f)) for f in fracd]
+        tmparr = [dt + dl for dt, dl in zip(dtarr, delta)]
+        self.obs_time = np.array([pt.timestamp() for pt in tmparr], dtype=np.int64)
+
+        # Uncertainty is determined during inversion procedure, Section 2.1.7 from
+        # RemoTAP ATBD (June 2024) https://www.earthdata.nasa.gov/apt/documents/remotap/v1.0#references
+        AttrData['errorMethod'] = 'Uncertainty Estimates'
+        errs = self.ncd.groups['geophysical_data'].variables['aot_uncertainty'][:]
+        self.errs = errs.reshape(-1, errs.shape[2])
+
+        # Keep valid data points only
+        valid_pts = np.any(~self.vals.mask, axis=1)
+        self.lons = self.lons[valid_pts]
+        self.lats = self.lats[valid_pts]
+        self.obs_time = self.obs_time[valid_pts]
+        self.lsfs = self.lsfs[valid_pts]
+        self.vals = self.vals[valid_pts, :]
+        self.errs = self.errs[valid_pts, :]
+        self.qcfs = self.qcfs[valid_pts, :]
+
     def read(self):
         # Make empty lists for the output vars
         self.outdata[('latitude', metaDataName)] = np.array([], dtype=np.float32)
@@ -166,7 +222,10 @@ class AOD(object):
             self.outdata[self.varDict[iodavar]['qcKey']] = np.array([], dtype=np.int32)
 
         # Define get_data function based on retrieval method
-        get_paceaod_data = self.get_uaa_data
+        if self.retrieval_method == 'uaa':
+            get_paceaod_data = self.get_uaa_data
+        elif self.retrieval_method == 'remotap':
+            get_paceaod_data = self.get_remotap_data
 
         min_time = -int_missing_value
         max_time = int_missing_value
@@ -190,7 +249,9 @@ class AOD(object):
             get_paceaod_data()
 
             # assign the observation time based on time coverage
-            self.obs_time = np.full(np.shape(self.lons), round(0.5*(self.s_time + self.e_time)), dtype=np.int64)
+            if self.retrieval_method in ['uaa']:
+                self.obs_time = np.full(np.shape(self.lons), round(0.5*(self.s_time + self.e_time)), dtype=np.int64)
+
             winmsk = ((self.obs_time >= self.wbeg) & (self.obs_time <= self.wend))
 
             # apply thinning mask
@@ -254,6 +315,10 @@ def main():
         '-o', '--output',
         help="name of ioda-v2 output file",
         type=str, required=True)
+    required.add_argument(
+        '--retrieval_method',
+        help="name of retrieval method: uaa, remotap",
+        type=str, required=True)
 
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
@@ -275,6 +340,7 @@ def main():
     args = parser.parse_args()
 
     args_in_dict = {'input': args.input,
+                    'retrieval_method': args.retrieval_method,
                     'error_method': args.error_method,
                     'thinning_ratio': args.thinning_ratio,
                     'date_range': args.date_range,
