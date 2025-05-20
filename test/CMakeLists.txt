@@ -1266,6 +1266,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pace_remotap_aod
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/pace_aod2ioda.py
                           -i testinput/pace_remotap_aod.2024072114.nc
                           -o testrun/pace_remotap_aod.2024072114.nc
+                          --retrieval_method remotap
                           --date_range 2024110507 2024110508"
                           pace_remotap_aod.2024110507.nc ${IODA_CONV_COMP_TOL})
 
@@ -1278,6 +1279,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pace_uaa_aod
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/pace_aod2ioda.py
                           -i testinput/pace_uaa_aod.2024072114.nc
                           -o testrun/pace_uaa_aod.2024072114.nc
+                          --retrieval_method uaa
                           --date_range 2024072114 2024072115"
                           pace_uaa_aod.2024072114.nc ${IODA_CONV_COMP_TOL})
 
