@@ -196,8 +196,6 @@ list( APPEND test_output
   testoutput/sst_ostia.nc
   testoutput/2021081612_sonde_small.nc
   testoutput/tropomi_co_total.nc
-  testoutput/tempo_no2_total.nc
-  testoutput/tempo_no2_troposphere.nc
   testoutput/gdas.t18z.abias_air_ascent.csv
   testoutput/mrms_reflectivity_Z1500m.nc
   testoutput/omps_o3_nm.nc
@@ -345,6 +343,7 @@ if( iodaconv_bufr_query_ENABLED )
     testinput/bufr_ncep_rtma_adpupa.yaml
     testinput/rtma.t00z.adpupa.tm00.bufr_d
     testinput/bufr_gpsipw.yaml
+    testinput/bufr_gpsztd.yaml
     testinput/obs.20240806T00Z.ipw_gnssgb.ncep.bufr
   )
 
@@ -413,6 +412,7 @@ if( iodaconv_bufr_query_ENABLED )
     testoutput/gdas.t00z.rtma_adpupa.prepbufr.nc
     testoutput/rtma.t00z.adpupa.tm00.nc
     testoutput/20240806T00Z_PT1M_ipw_gnssgb_ncep.nc
+    testoutput/20240806T00Z_PT1M_ztd_gnssgb_ncep.nc
   )
 endif()
 
@@ -1965,6 +1965,15 @@ if(iodaconv_bufr_query_ENABLED)
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_gpsipw.yaml"
                             20240806T00Z_PT1M_ipw_gnssgb_ncep.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_gpsztd
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_gpsztd.yaml"
+                            20240806T00Z_PT1M_ztd_gnssgb_ncep.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
 #  FIXME: Greg Thompson
