@@ -1264,8 +1264,8 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pace_remotap_aod
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/pace_aod2ioda.py
-                          -i testinput/pace_remotap_aod.2024072114.nc
-                          -o testrun/pace_remotap_aod.2024072114.nc
+                          -i testinput/pace_remotap_aod.2024110507.nc
+                          -o testrun/pace_remotap_aod.2024110507.nc
                           --retrieval_method remotap
                           --date_range 2024110507 2024110508"
                           pace_remotap_aod.2024110507.nc ${IODA_CONV_COMP_TOL})
