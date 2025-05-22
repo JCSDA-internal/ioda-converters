@@ -14,23 +14,55 @@ If you have an environment preconfigured for `mpas-jedi`, simply source that env
    ```bash
    git clone https://github.com/NCAR/obs2ioda.git <OBS2IODA_ROOT_DIR>
    ```
-2. Create a new directory `build` and navigate into it:
+1. Create a new directory `build` and navigate into it:
    ```bash
    mkdir build && cd build
    ```
-3. Locate the NCEP BUFR library by executing the following command in the `NCEP BUFR` library's build directory:
+1. Locate the NCEP BUFR library by executing the following command in the `NCEP BUFR` library's build directory:
    ```bash
    find . -name *libbufr*
    ```
-4. Next, run CMake to configure the build. Specify the `CMAKE_BUILD_TYPE` option to set the build type. Currently, the supported types are `Release`, `RelWithDebInfo`, and `Debug`. Don't forget to include the path to the NCEP BUFR library:
+1. Next, run CMake to configure the build. Specify the `CMAKE_BUILD_TYPE` option to set the build type. Currently, the supported types are `Release`, `RelWithDebInfo`, and `Debug`. Don't forget to include the path to the NCEP BUFR library:
    ```bash
    cmake <OBS2IODA_ROOT_DIR> -DNCEP_BUFR_LIB=<NCEP_BUFR_LIB_PATH> -DCMAKE_BUILD_TYPE=<BUILD_TYPE>
    ```
-5. Finally, build `obs2ioda` using `CMake`'s build tool. In this case, we use `GNU Make`, but other build tools supported by `CMake` can be used:
+1. Finally, build `obs2ioda` using `CMake`'s build tool. In this case, we use `GNU Make`, but other build tools supported by `CMake` can be used:
    ```bash
    make
    ```
 The `obs2ioda-v3` executable will reside in the `bin` directory within the build directory.
+
+### Running the Obs2Ioda Test Suite
+#### Running the Unit Test Suite
+1. **Run the unit test suite** using `ctest`. To see detailed output and the list of tests being executed, add the `--verbose` flag:
+   ```bash
+   ctest --verbose
+   ```
+    *(The `--verbose` flag is optional.)*
+
+#### Running the Validation Test Suite
+**Steps 1–2 are optional** if you already have a Python environment with `pytest`, `netcdf4`, and `requests` installed.
+
+1. **Create and activate a virtual environment** in the `obs2ioda` root directory:
+
+   ```bash
+   python3 -m venv .obs2ioda
+   source .obs2ioda/bin/activate
+   ```
+
+1. **Install required dependencies**:
+
+   ```bash
+   pip install pytest netcdf4 requests
+   ```
+
+1. **Run the test suite** from the `obs2ioda` build directory. To display detailed output and see which tests are being run, use the `--verbose` flag:
+
+```bash
+pytest --verbose
+```
+
+*(The `--verbose` flag is optional.)*
 
 ---
 ## Installing NCEP BUFR Library
@@ -40,19 +72,19 @@ To install the NCEP BUFR library, follow these steps:
    ```bash
    git clone https://github.com/NOAA-EMC/NCEPLIBS-bufr.git <NCEP_BUFR_ROOT_DIR>
    ```
-2. Create a new directory `build` and navigate into it:
+1. Create a new directory `build` and navigate into it:
    ```bash
    mkdir build && cd build
    ```
-3. Run CMake to configure the build (Ensure NetCDF is installed):
+1. Run CMake to configure the build (Ensure NetCDF is installed):
    ```bash
    cmake <NCEP_BUFR_ROOT_DIR>
    ```
-4. Build the library with the command:
+1. Build the library with the command:
    ```bash
    make
    ```
-5. To locate the NCEP BUFR library, run:
+1. To locate the NCEP BUFR library, run:
    ```bash
    find . -name *libbufr*
    ```

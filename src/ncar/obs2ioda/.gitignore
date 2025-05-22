@@ -1,3 +1,9 @@
 
 .DS_Store
 .DS_Store
+**/__pycache__
+test/validation/data
+test/validation/data.tar.gz
+test/validation/FilePathConfig.py
+.obs2ioda
+build
