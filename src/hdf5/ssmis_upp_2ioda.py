@@ -221,14 +221,13 @@ def populate_obsValue(line, local_data, WMO_sat_ID=int_missing_value, ssmis_uas=
     nlocs = len(local_data[('latitude', metaDataName)])
     local_data[('satelliteIdentifier', metaDataName)].append(WMO_sat_ID)
     # will use a single time for now... need to find out seconds between scans?
-    datetime_obj = datetime.strptime(
-        f"{int(year):04d}"
-        f"{int(month):02d}"
-        f"{int(day):02d}"
-        f"{int(hour):02d}"
-        f"{int(minute):02d}"
-        f"{int(second):02d}",
-        "%Y%m%d%H%M%S"
+    datetime_obj = datetime(
+        year=int(year),
+        month=int(month),
+        day=int(day),
+        hour=int(hour),
+        minute=int(minute),
+        second=int(second)
     )
     local_data[('dateTime', metaDataName)].append(get_epoch_time(datetime_obj))
     qc_flag = int(irej)
