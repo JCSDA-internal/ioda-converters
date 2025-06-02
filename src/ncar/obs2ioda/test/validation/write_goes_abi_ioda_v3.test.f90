@@ -39,7 +39,7 @@ contains
     subroutine init(self)
         class(write_goes_abi_ioda_v3_test_t), intent(inout) :: self
         integer :: i, j
-        character(len=100) :: output_dir
+        character(len=512) :: output_dir
 
         call get_command_argument(1, output_dir)
         if (trim(output_dir) == '') then
