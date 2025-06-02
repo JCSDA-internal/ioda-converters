@@ -1,6 +1,6 @@
 program Goes_ReBroadcast_converter
 !
-! Purpose: Convert GOES ReBroadcast netCDF files to ioda-v1 format.
+! Purpose: Convert GOES ReBroadcast netCDF files to ioda-v3 format.
 !          Currently only processes bands 7-16.
 !
 ! input files:
@@ -16,9 +16,8 @@ program Goes_ReBroadcast_converter
 !          n_subsample = 1
 !        /
 
-   use netcdf_mod, only: open_netcdf_for_write, close_netcdf, &
-      def_netcdf_dims, def_netcdf_var, def_netcdf_end, &
-      put_netcdf_var, missing_r
+   use define_mod, only:  missing_r
+   use goes_abi_converter_mod, only: write_iodav3_netcdf
 
    implicit none
    include 'netcdf.inc'
@@ -30,8 +29,6 @@ program Goes_ReBroadcast_converter
    integer, parameter  :: i_long   = selected_int_kind(8)   ! long integer
    integer, parameter  :: i_kind   = i_long                 ! default integer
    integer, parameter  :: r_kind   = r_single               ! default real
-
-   ! prefix of Clear Sky Mask (Binary Cloud Mask) output of cspp-geo-aitf package
    character(len=14), parameter :: BCM_id = 'CG_ABI-L2-ACMC'
 
    integer(i_kind), parameter :: nband      = 10  ! IR bands 7-16
@@ -82,7 +79,7 @@ program Goes_ReBroadcast_converter
    logical                         :: do_superob
    integer(i_kind)                 :: superob_halfwidth
    logical                         :: do_thinning
-   logical                         :: write_iodav1
+   logical                         :: write_iodav3
 
    namelist /data_nml/ nc_list_file, data_dir, data_id, sat_id, do_thinning, n_subsample, do_superob, superob_halfwidth
 
@@ -122,7 +119,7 @@ program Goes_ReBroadcast_converter
    do_superob        = .false.
    superob_halfwidth = 1
    !
-   write_iodav1      = .true.
+   write_iodav3      = .true.
    !
    ! read namelist
    !
@@ -343,15 +340,15 @@ program Goes_ReBroadcast_converter
    if ( allocated(qf_2d) )  deallocate(qf_2d)
    if ( allocated(cm_2d) )  deallocate(cm_2d)
 
-   if ( write_iodav1 ) then
+   if ( write_iodav3 ) then
       do it = 1, ntime
          out_fname = trim(data_id)//'_'//sat_id//'_'//time_start(it)//'.nc4'
          write(0,*) 'Writing ', trim(out_fname)
          if ( allocated(rdata(it)%cm) ) then
-            call output_iodav1(trim(out_fname), time_start(it), nx, ny, nband, got_latlon, &
+            call output_iodav3(trim(out_fname), time_start(it), nx, ny, nband, got_latlon, &
                glat, glon, gzen, solzen, rdata(it)%bt, rdata(it)%qf, rdata(it)%sd, rdata(it)%cm)
          else
-            call output_iodav1(trim(out_fname), time_start(it), nx, ny, nband, got_latlon, &
+            call output_iodav3(trim(out_fname), time_start(it), nx, ny, nband, got_latlon, &
                glat, glon, gzen, solzen, rdata(it)%bt, rdata(it)%qf, rdata(it)%sd)
          end if
       end do
@@ -631,10 +628,10 @@ subroutine read_GRB(ncid, nx, ny, rad, bt, qf, sd, band_id, time_start)
          if ( itmp_short_2d(i,j) /= ifill ) then
             rad(i,j) = offset + itmp_short_2d(i,j) * scalef
             if ( planck_fk1 /= rfill .and. planck_fk2 /= rfill .and. &
-                 planck_bc1 /= rfill .and. planck_bc2 /= rfill ) then
-              if ( rad(i,j) > 0.0 ) then
-               bt(i,j) = (planck_fk2/(log((planck_fk1/rad(i,j))+1.0))-planck_bc1)/planck_bc2
-              end if
+                    planck_bc1 /= rfill .and. planck_bc2 /= rfill ) then
+               if ( rad(i,j) > 0.0 ) then
+                  bt(i,j) = (planck_fk2/(log((planck_fk1/rad(i,j))+1.0))-planck_bc1)/planck_bc2
+               end if
             end if
          end if
       end do
@@ -644,148 +641,150 @@ subroutine read_GRB(ncid, nx, ny, rad, bt, qf, sd, band_id, time_start)
    return
 end subroutine read_GRB
 
-subroutine read_L2_BCM(ncid, nx, ny, cm, time_start)
-   implicit none
-   integer(i_kind),   intent(in)    :: ncid
-   integer(i_kind),   intent(in)    :: nx, ny
-   integer(i_kind),   intent(inout) :: cm(nx,ny)
-   character(len=22), intent(out)   :: time_start  ! 2017-10-01T18:02:19.6Z
-   integer(i_byte),  allocatable    :: itmp_byte_2d(:,:)
-   integer(i_kind)                  :: nf_status
-   integer(i_kind)                  :: istart(2), icount(2)
-   integer(i_kind)                  :: varid, i, j
-   integer(i_kind)                  :: imiss = -999
-   integer(i_kind)                  :: qf(nx,ny)
-   continue
+   subroutine read_L2_BCM(ncid, nx, ny, cm, time_start)
+      implicit none
+      integer(i_kind),   intent(in)    :: ncid
+      integer(i_kind),   intent(in)    :: nx, ny
+      integer(i_kind),   intent(inout) :: cm(nx,ny)
+      character(len=22), intent(out)   :: time_start  ! 2017-10-01T18:02:19.6Z
+      integer(i_byte),  allocatable    :: itmp_byte_2d(:,:)
+      integer(i_kind)                  :: nf_status
+      integer(i_kind)                  :: istart(2), icount(2)
+      integer(i_kind)                  :: varid, i, j
+      integer(i_kind)                  :: imiss = -999
+      integer(i_kind)                  :: qf(nx,ny)
+      continue
 
-   ! time_start is the same for all bands, but time_end is not
-   nf_status = nf_GET_ATT_TEXT(ncid, nf_GLOBAL, 'time_coverage_start', time_start)
-   !nf_status = nf_GET_ATT_TEXT(ncid, nf_GLOBAL, 'time_coverage_end',   time_end)
+      ! time_start is the same for all bands, but time_end is not
+      nf_status = nf_GET_ATT_TEXT(ncid, nf_GLOBAL, 'time_coverage_start', time_start)
+      !nf_status = nf_GET_ATT_TEXT(ncid, nf_GLOBAL, 'time_coverage_end',   time_end)
 
-   istart(1) = 1
-   icount(1) = nx
-   istart(2) = 1
-   icount(2) = ny
-   allocate(itmp_byte_2d(nx,ny))
-   nf_status = nf_INQ_VARID(ncid, 'DQF', varid)
-   nf_status = nf_GET_VARA_INT1(ncid, varid, istart(1:2), icount(1:2), itmp_byte_2d(:,:))
-   qf(:,:) = imiss
-   do j = 1, ny
-      do i = 1, nx
-         qf(i,j) = itmp_byte_2d(i,j)
+      istart(1) = 1
+      icount(1) = nx
+      istart(2) = 1
+      icount(2) = ny
+      allocate(itmp_byte_2d(nx,ny))
+      nf_status = nf_INQ_VARID(ncid, 'DQF', varid)
+      nf_status = nf_GET_VARA_INT1(ncid, varid, istart(1:2), icount(1:2), itmp_byte_2d(:,:))
+      qf(:,:) = imiss
+      do j = 1, ny
+         do i = 1, nx
+            qf(i,j) = itmp_byte_2d(i,j)
+         end do
       end do
-   end do
-   deallocate(itmp_byte_2d)
+      deallocate(itmp_byte_2d)
 
-   istart(1) = 1
-   icount(1) = nx
-   istart(2) = 1
-   icount(2) = ny
-   allocate(itmp_byte_2d(nx,ny))
-   nf_status = nf_INQ_VARID(ncid, 'BCM', varid)
-   nf_status = nf_GET_VARA_INT1(ncid, varid, istart(1:2), icount(1:2), itmp_byte_2d(:,:))
-   cm(:,:) = imiss
-   do j = 1, ny
-      do i = 1, nx
-         if ( qf(i,j) == 0 ) then ! good quality
-            cm(i,j) = itmp_byte_2d(i,j)
+      istart(1) = 1
+      icount(1) = nx
+      istart(2) = 1
+      icount(2) = ny
+      allocate(itmp_byte_2d(nx,ny))
+      nf_status = nf_INQ_VARID(ncid, 'BCM', varid)
+      nf_status = nf_GET_VARA_INT1(ncid, varid, istart(1:2), icount(1:2), itmp_byte_2d(:,:))
+      cm(:,:) = imiss
+      do j = 1, ny
+         do i = 1, nx
+            if ( qf(i,j) == 0 ) then ! good quality
+               cm(i,j) = itmp_byte_2d(i,j)
+            end if
+         end do
+      end do
+      deallocate(itmp_byte_2d)
+
+      return
+   end subroutine read_L2_BCM
+
+   subroutine decode_nc_fname(fname, finfo, scan_mode, is_BCM, band_id, sat_id, start_time, jday)
+      implicit none
+      character(len=*),  intent(in)  :: fname
+      character(len=18), intent(out) :: finfo
+      character(len=2),  intent(out) :: scan_mode
+      logical,           intent(out) :: is_BCM
+      integer(i_kind),   intent(out) :: band_id
+      character(len=3),  intent(out) :: sat_id
+      character(len=22), intent(out) :: start_time
+      integer(i_kind),   intent(out) :: jday
+      integer(i_kind) :: year, month, day, hour, minute, sec1, sec2
+
+      if ( fname( 1:14) == BCM_id ) then
+         is_BCM = .true.
+         band_id = -99
+      else
+         is_BCM = .false.
+      end if
+      !CG_ABI-L2-ACMC-M3_G16_s20180351202275_e20180351205060_c20180351205106.nc
+      !OR_ABI-L1b-RadC-M3C16_G16_s20172741802196_e20172741804580_c20172741805015.nc
+      !1234567890123456789012345678901234567890123456789012345678901234567890123456
+      if ( .not. is_BCM ) then
+         read(fname( 1:18), '(a18)') finfo
+         read(fname(17:18), '(a2)')  scan_mode
+         read(fname(20:21), '(i2)')  band_id
+         read(fname(23:25), '(a3)')  sat_id
+         read(fname(28:31), '(i4)')  year
+         read(fname(32:34), '(i3)')  jday
+         read(fname(35:36), '(i2)')  hour
+         read(fname(37:38), '(i2)')  minute
+         read(fname(39:40), '(i2)')  sec1   ! integer part of second
+         read(fname(41:41), '(i1)')  sec2   ! decimal part of second
+         ! get month and day from julian day
+         call get_date(year, jday, month, day)
+         ! 2017-10-01T18:02:19.6Z
+         write(start_time,'(i4.4,4(a,i2.2),a,i2.2,a,i1,a)') &
+                 year, '-', month, '-', day, 'T', hour, ':',  minute, ':', sec1, '.', sec2, 'Z'
+      else
+         read(fname( 1:17), '(a17)') finfo
+         read(fname(16:17), '(a2)')  scan_mode
+         read(fname(19:21), '(a3)')  sat_id
+         read(fname(24:27), '(i4)')  year
+         read(fname(28:30), '(i3)')  jday
+         read(fname(31:32), '(i2)')  hour
+         read(fname(33:34), '(i2)')  minute
+         read(fname(35:36), '(i2)')  sec1   ! integer part of second
+         read(fname(37:37), '(i1)')  sec2   ! decimal part of second
+         ! get month and day from julian day
+         call get_date(year, jday, month, day)
+         ! 2017-10-01T18:02:19.6Z
+         write(start_time,'(i4.4,4(a,i2.2),a,i2.2,a,i1,a)') &
+                 year, '-', month, '-', day, 'T', hour, ':',  minute, ':', sec1, '.', sec2, 'Z'
+      end if
+      return
+   end subroutine decode_nc_fname
+
+   subroutine get_date(ccyy, jday, month, day)
+      implicit none
+      integer(i_kind), intent(in)  :: ccyy, jday
+      integer(i_kind), intent(out) :: month, day
+      integer(i_kind) :: mmday(12) = (/31,28,31,30,31,30,31,31,30,31,30,31/)
+      integer(i_kind) :: i, jdtmp
+      continue
+
+      if ( MOD(ccyy,4) == 0 ) then
+         mmday(2) = 29
+         if ( MOD(ccyy,100) == 0 ) then
+            mmday(2) = 28
+         end if
+         if ( MOD(ccyy,400) == 0 ) then
+            mmday(2) = 29
+         end if
+      end if
+
+      jdtmp = 0
+      do i = 1, 12
+         jdtmp = jdtmp + mmday(i)
+         if ( jday <= jdtmp ) then
+            month = i
+            day = jday - ( jdtmp - mmday(i) )
+            exit
          end if
       end do
-   end do
-   deallocate(itmp_byte_2d)
 
-   return
-end subroutine read_L2_BCM
+      return
+   end subroutine get_date
 
-subroutine decode_nc_fname(fname, finfo, scan_mode, is_BCM, band_id, sat_id, start_time, jday)
-   implicit none
-   character(len=*),  intent(in)  :: fname
-   character(len=18), intent(out) :: finfo
-   character(len=2),  intent(out) :: scan_mode
-   logical,           intent(out) :: is_BCM
-   integer(i_kind),   intent(out) :: band_id
-   character(len=3),  intent(out) :: sat_id
-   character(len=22), intent(out) :: start_time
-   integer(i_kind),   intent(out) :: jday
-   integer(i_kind) :: year, month, day, hour, minute, sec1, sec2
-
-   if ( fname( 1:14) == BCM_id ) then
-      is_BCM = .true.
-      band_id = -99
-   else
-      is_BCM = .false.
-   end if
-   !CG_ABI-L2-ACMC-M3_G16_s20180351202275_e20180351205060_c20180351205106.nc
-   !OR_ABI-L1b-RadC-M3C16_G16_s20172741802196_e20172741804580_c20172741805015.nc
-   !1234567890123456789012345678901234567890123456789012345678901234567890123456
-   if ( .not. is_BCM ) then
-      read(fname( 1:18), '(a18)') finfo
-      read(fname(17:18), '(a2)')  scan_mode
-      read(fname(20:21), '(i2)')  band_id
-      read(fname(23:25), '(a3)')  sat_id
-      read(fname(28:31), '(i4)')  year
-      read(fname(32:34), '(i3)')  jday
-      read(fname(35:36), '(i2)')  hour
-      read(fname(37:38), '(i2)')  minute
-      read(fname(39:40), '(i2)')  sec1   ! integer part of second
-      read(fname(41:41), '(i1)')  sec2   ! decimal part of second
-      ! get month and day from julian day
-      call get_date(year, jday, month, day)
-      ! 2017-10-01T18:02:19.6Z
-      write(start_time,'(i4.4,4(a,i2.2),a,i2.2,a,i1,a)') &
-            year, '-', month, '-', day, 'T', hour, ':',  minute, ':', sec1, '.', sec2, 'Z'
-   else
-      read(fname( 1:17), '(a17)') finfo
-      read(fname(16:17), '(a2)')  scan_mode
-      read(fname(19:21), '(a3)')  sat_id
-      read(fname(24:27), '(i4)')  year
-      read(fname(28:30), '(i3)')  jday
-      read(fname(31:32), '(i2)')  hour
-      read(fname(33:34), '(i2)')  minute
-      read(fname(35:36), '(i2)')  sec1   ! integer part of second
-      read(fname(37:37), '(i1)')  sec2   ! decimal part of second
-      ! get month and day from julian day
-      call get_date(year, jday, month, day)
-      ! 2017-10-01T18:02:19.6Z
-      write(start_time,'(i4.4,4(a,i2.2),a,i2.2,a,i1,a)') &
-            year, '-', month, '-', day, 'T', hour, ':',  minute, ':', sec1, '.', sec2, 'Z'
-   end if
-   return
-end subroutine decode_nc_fname
-
-subroutine get_date(ccyy, jday, month, day)
-   implicit none
-   integer(i_kind), intent(in)  :: ccyy, jday
-   integer(i_kind), intent(out) :: month, day
-   integer(i_kind) :: mmday(12) = (/31,28,31,30,31,30,31,31,30,31,30,31/)
-   integer(i_kind) :: i, jdtmp
-   continue
-
-   if ( MOD(ccyy,4) == 0 ) then
-      mmday(2) = 29
-      if ( MOD(ccyy,100) == 0 ) then
-         mmday(2) = 28
-      end if
-      if ( MOD(ccyy,400) == 0 ) then
-         mmday(2) = 29
-      end if
-   end if
-
-   jdtmp = 0
-   do i = 1, 12
-      jdtmp = jdtmp + mmday(i)
-      if ( jday <= jdtmp ) then
-         month = i
-         day = jday - ( jdtmp - mmday(i) )
-         exit
-      end if
-   end do
-
-   return
-end subroutine get_date
-
-subroutine output_iodav1(fname, time_start, nx, ny, nband, got_latlon, lat, lon, sat_zen, sun_zen, bt, qf, sdtb, cloudmask)
-
+   subroutine output_iodav3(fname, time_start, nx, ny, nband, got_latlon, lat, lon, sat_zen, sun_zen, bt, qf, sdtb, cloudmask)
+   use define_mod, only: i_kind, r_kind, missing_i, missing_r
+   use kinds, only: i_llong, r_double
+   use utils_mod, only: get_julian_time
    implicit none
 
    character(len=*),   intent(in) :: fname
@@ -802,11 +801,10 @@ subroutine output_iodav1(fname, time_start, nx, ny, nband, got_latlon, lat, lon,
    integer(i_kind),    intent(in), optional :: cloudmask(nx,ny)
 
    integer(i_kind), parameter :: nstring = 50
-   integer(i_kind), parameter :: ndatetime = 20
-   integer(i_kind) :: nvars
    integer(i_kind) :: nlocs
+   integer(i_kind) :: nchans
 
-   character(len=ndatetime), allocatable  :: datetime(:)   ! ccyy-mm-ddThh:mm:ssZ
+   integer(i_llong), allocatable :: datetime(:)
    real(r_kind), allocatable :: lat_out(:)
    real(r_kind), allocatable :: lon_out(:)
    real(r_kind), allocatable :: scan_pos_out(:)
@@ -819,20 +817,17 @@ subroutine output_iodav1(fname, time_start, nx, ny, nband, got_latlon, lat, lon,
    real(r_kind), allocatable :: qf_out(:,:)
 
    integer(i_kind) :: ncid_nlocs
-   integer(i_kind) :: ncid_nvars
-   integer(i_kind) :: ncid_nstring
-   integer(i_kind) :: ncid_ndatetime
    integer(i_kind) :: ncfileid
    character(len=nstring) :: ncname
+   real(r_kind), allocatable :: rtmp1d(:)
+   real(r_double) :: gstime
 
-   character(len=nstring), allocatable :: name_var_tb(:)
    character(len=4) :: c4
 
    integer(i_kind) :: iline, isample, iband
    integer(i_kind) :: iloc
    integer(i_kind) :: iyear, imonth, iday, ihour, imin, isec
-
-   character(len=60), parameter :: var_tb = "brightness_temperature"
+   integer(i_kind) :: nlocs_dimid, nchans_dimid
 
    integer            :: superob_width ! Must be ≥ 0
    integer            :: first_boxcenter, last_boxcenter_x, last_boxcenter_y, box_bottom, box_upper, box_left, box_right
@@ -840,7 +835,7 @@ subroutine output_iodav1(fname, time_start, nx, ny, nband, got_latlon, lat, lon,
    real(r_kind)       :: temp1 = 0.0
    real(r_kind),    allocatable :: bt_sup(:,:,:)   ! superobbed brightness temperature(nband,nx,ny)
 
-   nvars = nband
+   nchans = nband
 
    if ( do_thinning ) then
      nlocs = 0
@@ -862,7 +857,6 @@ subroutine output_iodav1(fname, time_start, nx, ny, nband, got_latlon, lat, lon,
         return
      end if
 
-     allocate (name_var_tb(1:nband))
      allocate (datetime(nlocs))
      allocate (lat_out(nlocs))
      allocate (lon_out(nlocs))
@@ -890,8 +884,8 @@ subroutine output_iodav1(fname, time_start, nx, ny, nband, got_latlon, lat, lon,
            if ( all(qf(:,isample,iline) > 1) ) cycle
            if ( all(bt(:,isample,iline)<0.0) ) cycle
            iloc = iloc + 1
-           write(unit=datetime(iloc), fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
-                 iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
+
+           call get_julian_time(iyear, imonth, iday, ihour, imin, isec, gstime, datetime(iloc))
            lat_out(iloc) = lat(isample,iline)
            lon_out(iloc) = lon(isample,iline)
            sat_zen_out(iloc) = sat_zen(isample,iline)
@@ -901,7 +895,7 @@ subroutine output_iodav1(fname, time_start, nx, ny, nband, got_latlon, lat, lon,
            scan_pos_out(iloc) = isample
            sat_azi_out(iloc) = missing_r
            sun_azi_out(iloc) = missing_r
-           err_out(1:nband,iloc) = 1.0 !missing_r
+           err_out(1:nband,iloc) = 1.0
         end do
      end do
    end if
@@ -934,7 +928,6 @@ subroutine output_iodav1(fname, time_start, nx, ny, nband, got_latlon, lat, lon,
         return
      end if
 
-     allocate (name_var_tb(1:nband))
      allocate (datetime(nlocs))
      allocate (lat_out(nlocs))
      allocate (lon_out(nlocs))
@@ -1027,79 +1020,9 @@ subroutine output_iodav1(fname, time_start, nx, ny, nband, got_latlon, lat, lon,
       end do scan_loop
    end if
 
-   call open_netcdf_for_write(trim(fname),ncfileid)
-   call def_netcdf_dims(ncfileid,'nvars',nvars,ncid_nvars)
-   call def_netcdf_dims(ncfileid,'nlocs',nlocs,ncid_nlocs)
-   call def_netcdf_dims(ncfileid,'nstring',nstring,ncid_nstring)
-   call def_netcdf_dims(ncfileid,'ndatetime',ndatetime,ncid_ndatetime)
-   do i = 1, nvars
-      write(unit=c4, fmt='(i4)') i+6
-      name_var_tb(i) = trim(var_tb)//'_'//trim(adjustl(c4))
-      ncname = trim(name_var_tb(i))//'@ObsValue'
-      call def_netcdf_var(ncfileid,ncname,(/ncid_nlocs/),NF_FLOAT,'units','K')
-      ncname = trim(name_var_tb(i))//'@ObsError'
-      call def_netcdf_var(ncfileid,ncname,(/ncid_nlocs/),NF_FLOAT)
-      ncname = trim(name_var_tb(i))//'@PreQC'
-      call def_netcdf_var(ncfileid,ncname,(/ncid_nlocs/),NF_INT)
-   end do
-   ncname = 'latitude@MetaData'
-   call def_netcdf_var(ncfileid,ncname,(/ncid_nlocs/),NF_FLOAT)
-   ncname = 'longitude@MetaData'
-   call def_netcdf_var(ncfileid,ncname,(/ncid_nlocs/),NF_FLOAT)
-   ncname = 'solar_azimuth_angle@MetaData'
-   call def_netcdf_var(ncfileid,ncname,(/ncid_nlocs/),NF_FLOAT)
-   ncname = 'scan_position@MetaData'
-   call def_netcdf_var(ncfileid,ncname,(/ncid_nlocs/),NF_FLOAT)
-   ncname = 'sensor_azimuth_angle@MetaData'
-   call def_netcdf_var(ncfileid,ncname,(/ncid_nlocs/),NF_FLOAT)
-   ncname = 'solar_zenith_angle@MetaData'
-   call def_netcdf_var(ncfileid,ncname,(/ncid_nlocs/),NF_FLOAT)
-   ncname = 'sensor_zenith_angle@MetaData'
-   call def_netcdf_var(ncfileid,ncname,(/ncid_nlocs/),NF_FLOAT)
-   ncname = 'sensor_view_angle@MetaData'
-   call def_netcdf_var(ncfileid,ncname,(/ncid_nlocs/),NF_FLOAT)
-   ncname = 'sensor_channel@VarMetaData'
-   call def_netcdf_var(ncfileid,ncname,(/ncid_nvars/),NF_INT)
-   ncname = 'datetime@MetaData'
-   call def_netcdf_var(ncfileid,ncname,(/ncid_ndatetime,ncid_nlocs/),NF_CHAR)
-   ncname = 'variable_names@VarMetaData'
-   call def_netcdf_var(ncfileid,ncname,(/ncid_nstring,ncid_nvars/),NF_CHAR)
-   call def_netcdf_end(ncfileid)
-
-   do i = 1, nvars
-      ncname = trim(name_var_tb(i))//'@ObsValue'
-      call put_netcdf_var(ncfileid,ncname,bt_out(i,:))
-      ncname = trim(name_var_tb(i))//'@ObsError'
-      call put_netcdf_var(ncfileid,ncname,err_out(i,:))
-      ncname = trim(name_var_tb(i))//'@PreQC'
-      call put_netcdf_var(ncfileid,ncname,qf_out(i,:))
-   end do
-
-   ncname = 'latitude@MetaData'
-   call put_netcdf_var(ncfileid,ncname,lat_out)
-   ncname = 'longitude@MetaData'
-   call put_netcdf_var(ncfileid,ncname,lon_out)
-   ncname = 'solar_azimuth_angle@MetaData'
-   call put_netcdf_var(ncfileid,ncname,sun_azi_out)
-   ncname = 'scan_position@MetaData'
-   call put_netcdf_var(ncfileid,ncname,scan_pos_out)
-   ncname = 'sensor_azimuth_angle@MetaData'
-   call put_netcdf_var(ncfileid,ncname,sat_azi_out)
-   ncname = 'solar_zenith_angle@MetaData'
-   call put_netcdf_var(ncfileid,ncname,sun_zen_out)
-   ncname = 'sensor_zenith_angle@MetaData'
-   call put_netcdf_var(ncfileid,ncname,sat_zen_out)
-   ncname = 'sensor_view_angle@MetaData'
-   call put_netcdf_var(ncfileid,ncname,sat_zen_out)
-   ncname = 'sensor_channel@VarMetaData'
-   call put_netcdf_var(ncfileid,ncname,(/7,8,9,10,11,12,13,14,15,16/))
-   ncname = 'datetime@MetaData'
-   call put_netcdf_var(ncfileid,ncname,datetime)
-   ncname = 'variable_names@VarMetaData'
-   call put_netcdf_var(ncfileid,ncname,name_var_tb(1:nband))
-   call close_netcdf(trim(fname),ncfileid)
-
-   deallocate (name_var_tb)
+   call write_iodav3_netcdf(fname, nlocs, nchans, missing_r, missing_i, &
+           datetime, lat_out, lon_out, scan_pos_out, sat_zen_out, sat_azi_out, &
+           sun_zen_out, sun_azi_out, bt_out, err_out, qf_out)
    deallocate (datetime)
    deallocate (lat_out)
    deallocate (lon_out)
@@ -1112,7 +1035,7 @@ subroutine output_iodav1(fname, time_start, nx, ny, nband, got_latlon, lat, lon,
    deallocate (err_out)
    deallocate (qf_out)
 
-end subroutine output_iodav1
+end subroutine output_iodav3
 
 subroutine calc_solar_zenith_angle(nx, ny, xlat, xlon, xtime, julian, solzen, got_latlon)
 

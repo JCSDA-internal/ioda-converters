@@ -66,7 +66,7 @@ endfunction()
 #
 # This ensures that the target has the correct runtime library paths and is properly linked with its public dependencies.
 function(obs2ioda_fortran_executable target public_link_libraries)
-    set_target_properties(${target} PROPERTIES INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+    set_target_properties(${target} PROPERTIES LINKER_LANGUAGE Fortran INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
     target_link_libraries(${target} PUBLIC ${public_link_libraries})
 endfunction()
 

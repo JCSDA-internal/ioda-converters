@@ -11,7 +11,6 @@ public :: get_julian_time
 public :: da_get_time_slots
 
 contains
-
 subroutine da_advance_time (date_in, dtime, date_out)
 
    ! HISTORY: 11/17/2008 modified and simplified from da_util/da_advance_time.f90

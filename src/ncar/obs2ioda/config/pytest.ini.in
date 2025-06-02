@@ -1,2 +1,5 @@
 [pytest]
+markers =
+    ncep_prepbufr_bufr: run NCEP PREPBUFR/BUFR test suite
+    goes_abi: run GOES ABI converter tests
 testpaths = @VALIDATION_TEST_DIRECTORY@

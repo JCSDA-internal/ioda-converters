@@ -2,7 +2,7 @@ module define_mod
 
 use kinds, only: r_kind, i_kind, i_llong
 use ufo_vars_mod, only: var_ps, var_prs, var_u, var_v, var_ts, var_tv, var_q, var_tb
-use netcdf, only: nf90_float, nf90_int, nf90_char, nf90_int64
+use netcdf, only: nf90_float, nf90_int64, nf90_char, nf90_int
 
 implicit none
 
