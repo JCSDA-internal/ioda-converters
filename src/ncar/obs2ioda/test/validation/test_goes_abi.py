@@ -1,3 +1,5 @@
+from numpy.ma.core import masked_equal
+
 from test_utils.utils import extract_structure, format_netcdf_assert_msg
 
 import pytest
@@ -110,7 +112,7 @@ def test_data_match(goes_abi_file_pair):
             test = test_struct[group][varname]
 
             if np.issubdtype(ref["dtype"], np.number):
-                assert np.allclose(ref["data"], test["data"], rtol=1e-5, atol=1e-6), format_netcdf_assert_msg(
+                assert np.ma.allclose(ref["data"], test["data"], rtol=1e-5, atol=1e-6, masked_equal=True), format_netcdf_assert_msg(
                     output_file.name, group, varname, "Numerical data mismatch", ref["data"], test["data"]
                 )
             elif np.issubdtype(ref["dtype"], np.str_):

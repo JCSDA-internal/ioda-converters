@@ -105,7 +105,10 @@ contains
         call check(netcdfAddGroup(ncid, 'MetaData'))
 
         call check(netcdfAddDim(ncid, 'nlocs', nlocs, nlocs_dimid))
+        call check(netcdfAddVar(ncid, 'nlocs', NF90_INT, 1, ['nlocs']))
+
         call check(netcdfAddDim(ncid, 'nchans', nchans, nchans_dimid))
+        call check(netcdfAddVar(ncid, 'nchans', NF90_INT, 1, ['nchans']))
 
         ! Define variables
         call check(netcdfAddVar(ncid, "brightness_temperature", NF90_REAL, 2, ['nlocs ', 'nchans'], 'ObsValue', fillValue=missing_r))
