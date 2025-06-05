@@ -59,10 +59,6 @@ The `obs2ioda-v3` executable will reside in the `bin` directory within the build
    pip install pytest netcdf4 requests
    ```
 
-Here’s the updated README instructions with the `-m` flag usage included and clarified:
-
----
-
 1. **Run the test suite** from the `obs2ioda` build directory. To display detailed output and see which tests are being run, use the `--verbose` flag:
 
    ```bash
