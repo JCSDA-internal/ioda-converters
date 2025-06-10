@@ -196,6 +196,8 @@ class reformatMetar(object):
 
                 try:
                     altim = float(row['alti'])
+                    if altim <= 0:
+                        raise ValueError("Invalid altimeter setting")
                     psfc = self.meteo_utils.altim_2_sfcPressure(altim, elev)
                 except (csv.Error, ValueError):
                     altim = missing

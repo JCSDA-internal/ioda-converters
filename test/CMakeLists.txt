@@ -196,8 +196,6 @@ list( APPEND test_output
   testoutput/sst_ostia.nc
   testoutput/2021081612_sonde_small.nc
   testoutput/tropomi_co_total.nc
-  testoutput/tempo_no2_total.nc
-  testoutput/tempo_no2_troposphere.nc
   testoutput/gdas.t18z.abias_air_ascent.csv
   testoutput/mrms_reflectivity_Z1500m.nc
   testoutput/omps_o3_nm.nc
