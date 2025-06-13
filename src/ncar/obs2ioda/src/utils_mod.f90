@@ -9,6 +9,7 @@ private
 public :: da_advance_time
 public :: get_julian_time
 public :: da_get_time_slots
+public :: to_lower
 
 contains
 subroutine da_advance_time (date_in, dtime, date_out)
@@ -337,5 +338,35 @@ subroutine da_get_time_slots(nt,tmin,tmax,time_slots)
    end if
 
 end subroutine da_get_time_slots
+
+   ! @brief Converts a string to lowercase.
+   !
+   ! This function takes a string as input and converts all uppercase
+   ! alphabetical characters to their corresponding lowercase characters.
+   ! Non-alphabetical characters are left unchanged.
+   !
+   ! @param s The input string to be converted.
+   !          It is passed as an argument with intent(in) and remains unchanged.
+   !
+   ! @return The string in lowercase. The function returns a new string
+   !         with the same length as the input, but with all uppercase
+   !         characters converted to lowercase.
+   !
+   ! @note This function does not handle locale-specific conversions and
+   !       assumes that the characters in the string are ASCII.
+   !
+   function to_lower(s)
+      character(len=*), intent(in) :: s  ! The input string to be converted.
+      character(len=len(s)) :: to_lower  ! The output string in lowercase.
+      integer :: i  ! Loop variable.
+
+      to_lower = s  ! Initialize output string as input string.
+      do i = 1, len(s)
+         if (iachar(to_lower(i:i)) >= iachar('A') .and. iachar(to_lower(i:i)) <= iachar('Z')) then
+            ! Convert uppercase letters to lowercase.
+            to_lower(i:i) = achar(iachar(to_lower(i:i)) - iachar('A') + iachar('a'))
+         end if
+      end do
+   end function to_lower
 
 end module utils_mod

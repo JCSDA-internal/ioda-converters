@@ -27,3 +27,31 @@ function(add_cxx_ctest name sources include_directories library_dependencies)
             COMMAND ${name} --gtest_filter=*
     )
 endfunction()
+
+# Adds a Fortran test executable and registers it as a CTest.
+#
+# This function creates an executable target for a Fortran test, sets up
+# library dependencies, and registers the test with CTest.
+#
+# Arguments:
+#   name                 - Name of the test executable.
+#   sources              - List of source files for the test.
+#   library_dependencies - Libraries that the test executable should link against.
+#
+# The function does the following:
+#   1. Creates an executable target with the given name and sources.
+#   3. Links the target against the specified libraries.
+#   4. Registers the executable as a CTest.
+#
+# Example usage:
+#   add_fortran_ctest(my_test "test.f90" "<library_dependencies>")
+#
+function(add_fortran_ctest name sources library_dependencies)
+    add_executable(${name} ${sources})
+    set_target_properties(${name} PROPERTIES LINKER_LANGUAGE Fortran)
+    target_link_libraries(${name} PUBLIC ${library_dependencies})
+    add_test(
+            NAME ${name}
+            COMMAND ${name}
+    )
+endfunction()

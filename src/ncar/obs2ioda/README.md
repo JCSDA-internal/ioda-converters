@@ -38,6 +38,7 @@ The `obs2ioda-v3` executable will reside in the `bin` directory within the build
 ### Running the Obs2Ioda Test Suite
 #### Running the Unit Test Suite
 1. **Run the unit test suite** using `ctest`. To see detailed output and the list of tests being executed, add the `--verbose` flag:
+1. **Run the unit test suite** using `ctest` from the `obs2ioda` build directory. To see detailed output and the list of tests being executed, add the `--verbose` flag:
    ```bash
    ctest --verbose
    ```

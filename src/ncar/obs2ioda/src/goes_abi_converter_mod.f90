@@ -44,6 +44,43 @@ contains
         flat_mat_trans = reshape(transpose(mat), [m*n])
     end subroutine transpose_and_flatten
 
+    ! @brief Sets the output filename for GOES ABI data based on satellite ID and time.
+    !
+    ! This subroutine generates the output filename for GOES ABI data by combining the
+    ! satellite ID and the start time. The satellite ID is converted to lowercase,
+    ! and the start time is formatted into the filename as "yyyyMMddhh_mm". The filename
+    ! follows the format:
+    !
+    !   abi_<sat_id_lower>_obs_<time_str>.h5
+    !
+    ! @param fname (inout) The output filename. It will be updated with the generated
+    !        filename based on the satellite ID and time.
+    ! @param sat_id (in) The satellite ID (e.g., "G16") to be used in the filename.
+    ! @param time_start (in) The start time in ISO 8601 format (e.g., "2018-04-15T00:00:41.9Z").
+    !
+    ! @note The satellite ID is converted to lowercase and only the year, month, day,
+    !       and hour from the `time_start` string are used in the generated filename.
+    !       The minute value is extracted from `time_start` and included in the filename.
+    subroutine set_goes_abi_out_fname(fname, sat_id, time_start)
+        use utils_mod, only : to_lower
+        implicit none
+        character(len=*), intent(inout) :: fname
+        character(len=*), intent(in) :: sat_id, time_start
+        character(len=:), allocatable :: sat_id_lower
+        integer :: iyear, imonth, iday, ihour, imin
+        character(len=32) :: time_str
+
+        ! Set the output filename based on satellite ID and time string
+        read(time_start( 1: 4), '(i4)') iyear
+        read(time_start( 6: 7), '(i2)') imonth
+        read(time_start( 9:10), '(i2)') iday
+        read(time_start(12:13), '(i2)') ihour
+        write(time_str, '(i4.4, i2.2, i2.2, i2.2)') iyear, imonth, iday, ihour
+        time_str = trim(time_str) // '_' // time_start(15:16)
+        sat_id_lower = to_lower(trim(sat_id))
+        fname = 'abi_' // trim(sat_id_lower) // '_obs_' // trim(time_str)  // '.h5'
+    end subroutine set_goes_abi_out_fname
+
     ! write_iodav3_netcdf:
     !   Writes GOES-ABI observation data into a NetCDF file formatted for IODA-v3.
     !
@@ -125,8 +162,11 @@ contains
         call check(netcdfAddVar(ncid, 'solar_zenith_angle', NF90_REAL, 1, ['nlocs'], 'MetaData', fillValue=missing_r))
         call check(netcdfAddVar(ncid, 'sensor_zenith_angle', NF90_REAL, 1, ['nlocs'], 'MetaData', fillValue=missing_r))
         call check(netcdfAddVar(ncid, 'sensor_view_angle', NF90_REAL, 1, ['nlocs'], 'MetaData', fillValue=missing_r))
-        call check(netcdfAddVar(ncid, 'datetime', NF90_INT64, 1, ['nlocs'], 'MetaData', fillValue=missing_i))
+        call check(netcdfAddVar(ncid, 'dateTime', NF90_INT64, 1, ['nlocs'], 'MetaData'))
+        call check(netcdfPutAtt(ncid, "units", "seconds since 1970-01-01T00:00:00Z", 'dateTime', 'MetaData'))
         call check(netcdfAddVar(ncid, 'sensor_channel', NF90_INT, 1, ['nchans'], 'MetaData', fillValue=missing_i))
+
+        call check(netcdfPutVar(ncid, 'nchans', (/7,8,9,10,11,12,13,14,15,16/)))
 
         call transpose_and_flatten(bt_out, rtmp1d)
         call check(netcdfPutVar(ncid, 'brightness_temperature', rtmp1d, 'ObsValue'))
@@ -144,7 +184,7 @@ contains
         call check(netcdfPutVar(ncid, 'sensor_zenith_angle', sat_zen_out, 'MetaData'))
         call check(netcdfPutVar(ncid, 'sensor_view_angle', sat_zen_out, 'MetaData'))
         call check(netcdfPutVar(ncid, 'sensor_channel', (/7,8,9,10,11,12,13,14,15,16/), 'MetaData'))
-        call check(netcdfPutVar(ncid, 'datetime', datetime, 'MetaData'))
+        call check(netcdfPutVar(ncid, 'dateTime', datetime, 'MetaData'))
         call check(netcdfClose(ncid))
         deallocate(rtmp1d)
     end subroutine write_iodav3_netcdf

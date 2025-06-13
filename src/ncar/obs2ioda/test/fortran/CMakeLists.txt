@@ -4,13 +4,9 @@ set(test_transpose_and_flatten_SOURCES
 set(test_transpose_and_flatten_LIBRARY_DEPENDENCIES
         v3
 )
-add_executable(test_transpose_and_flatten ${test_transpose_and_flatten_SOURCES})
-target_link_libraries(test_transpose_and_flatten
-        PRIVATE
+add_fortran_ctest(test_transpose_and_flatten
+        ${test_transpose_and_flatten_SOURCES}
         ${test_transpose_and_flatten_LIBRARY_DEPENDENCIES}
-)
-add_test(NAME test_transpose_and_flatten
-        COMMAND test_transpose_and_flatten
 )
 
 set(test_get_julian_time_SOURCES
@@ -19,11 +15,28 @@ set(test_get_julian_time_SOURCES
 set(test_get_julian_time_LIBRARY_DEPENDENCIES
         v3
 )
-add_executable(test_get_julian_time ${test_get_julian_time_SOURCES})
-target_link_libraries(test_get_julian_time
-        PRIVATE
+add_fortran_ctest(test_get_julian_time
+        ${test_get_julian_time_SOURCES}
         ${test_get_julian_time_LIBRARY_DEPENDENCIES}
 )
-add_test(NAME test_get_julian_time
-        COMMAND test_get_julian_time
+set(test_to_lower_SOURCES
+        to_lower.test.f90
+)
+set(test_to_lower_LIBRARY_DEPENDENCIES
+        v3
+)
+add_fortran_ctest(test_to_lower
+        ${test_to_lower_SOURCES}
+        ${test_to_lower_LIBRARY_DEPENDENCIES}
+)
+
+set(test_set_goes_abi_out_fname_SOURCES
+        set_goes_abi_out_fname.test.f90
+)
+set(test_set_goes_abi_out_fname_LIBRARY_DEPENDENCIES
+        v3
+)
+add_fortran_ctest(test_set_goes_abi_out_fname
+        ${test_set_goes_abi_out_fname_SOURCES}
+        ${test_set_goes_abi_out_fname_LIBRARY_DEPENDENCIES}
 )

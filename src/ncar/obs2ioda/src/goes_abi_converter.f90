@@ -17,7 +17,7 @@ program Goes_ReBroadcast_converter
 !        /
 
    use define_mod, only:  missing_r
-   use goes_abi_converter_mod, only: write_iodav3_netcdf
+   use goes_abi_converter_mod, only: write_iodav3_netcdf, set_goes_abi_out_fname
 
    implicit none
    include 'netcdf.inc'
@@ -29,7 +29,8 @@ program Goes_ReBroadcast_converter
    integer, parameter  :: i_long   = selected_int_kind(8)   ! long integer
    integer, parameter  :: i_kind   = i_long                 ! default integer
    integer, parameter  :: r_kind   = r_single               ! default real
-   character(len=14), parameter :: BCM_id = 'CG_ABI-L2-ACMC'
+   !   character(len=14), parameter :: BCM_id = 'CG_ABI-L2-ACMC'
+   character(len=14), parameter :: BCM_id = 'OR_ABI-L2-ACMF'
 
    integer(i_kind), parameter :: nband      = 10  ! IR bands 7-16
    integer(i_kind) :: band_start = 7
@@ -342,7 +343,7 @@ program Goes_ReBroadcast_converter
 
    if ( write_iodav3 ) then
       do it = 1, ntime
-         out_fname = trim(data_id)//'_'//sat_id//'_'//time_start(it)//'.nc4'
+         call set_goes_abi_out_fname(out_fname, trim(sat_id), time_start(it))
          write(0,*) 'Writing ', trim(out_fname)
          if ( allocated(rdata(it)%cm) ) then
             call output_iodav3(trim(out_fname), time_start(it), nx, ny, nband, got_latlon, &
@@ -984,8 +985,7 @@ end subroutine read_GRB
             end if
 
             iloc = iloc + 1
-            write(unit=datetime(iloc), fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
-                  iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
+            call get_julian_time(iyear, imonth, iday, ihour, imin, isec, gstime, datetime(iloc))
 
             ! Super-ob BT for this channel
             do k = 1, nband
