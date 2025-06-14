@@ -261,7 +261,7 @@ real(r_double)  :: lon_sat, h_sat, r_eq
 integer(i_kind) :: nodivisionsegm = 1
 integer         :: superob_width ! Must be ≥ 0
 integer         :: first_boxcenter, last_boxcenter_x, last_boxcenter_y, box_bottom, box_upper, box_left, box_right
-integer         :: ibox, jbox, nkeep, ix, iy, tb, k
+integer         :: ibox, jbox, nkeep, ix, iy, k
 real(r_kind)    :: temp1 = 0.0
 ! end of declaration
 continue
@@ -530,7 +530,6 @@ do iband = 1, nband
          deallocate(header%navicorr%lineShift)
       end if
       close(iunit)
-
    end do
 end do
 
@@ -637,16 +636,7 @@ if ( do_superob ) then
         iloc = iloc + 1
         ! Super-ob BT for this channel
         do k = 1, nband
-           nkeep = count(brit(box_left:box_right,box_bottom:box_upper,k) > 0.0 )
-           temp1 = sum  (brit(box_left:box_right,box_bottom:box_upper,k), &
-                         brit(box_left:box_right,box_bottom:box_upper,k) > 0.0 )
-           if (superob_halfwidth .gt.0 .and. nkeep .gt. 0) then
-              tb = temp1 / real(nkeep,8)
-           else
-              ! Extract single pixel BT and radiance value for this channel
-              tb = brit(ix,iy,k)
-           end if
-           bt_sup(ix,iy,k) = tb
+           bt_sup(ix,iy,k) = compute_bt_superob(brit(box_left:box_right,box_bottom:box_upper,k), brit(ix, iy, k))
         end do
   !print*,ix,iy, latitude(ix,iy), longitude(ix,iy), satzen(ix,iy), solzen(ix,iy), bt_sup(ix,iy,2)
 
@@ -979,5 +969,32 @@ subroutine hisd_radiance_to_tbb (radiance, tbb)
  end if
  return
 end subroutine hisd_radiance_to_tbb
+
+!> @brief Compute the superobbed brightness temperature from a slice of BT values.
+!!
+!! This function takes a 2D slice of brightness temperature (BT) values and returns the
+!! mean of all values greater than a small threshold (`atol`). If no such values exist,
+!! it returns the provided fallback value (typically the center pixel's BT).
+!!
+!! @param[in]  brit_slice        A 2D array of BT values in Kelvin. Values ≤ atol are treated as invalid.
+!! @param[in]  center_pixel_bt   Fallback BT value to use if no valid values exist in the slice.
+!!
+!! @return     tb                The superobbed brightness temperature.
+pure function compute_bt_superob(brit_slice, center_pixel_bt) result(tb)
+    use kinds, only: r_kind
+    implicit none
+    real(r_kind), intent(in) :: brit_slice(:,:)
+    real(r_kind), intent(in) :: center_pixel_bt
+    real(r_kind) :: tb
+    integer :: nkeep
+    real(r_kind), parameter :: atol = 0.1e-5_r_kind
+
+    nkeep = count(brit_slice > atol)
+    if (nkeep > 0) then
+        tb = sum(brit_slice, brit_slice > atol) / real(nkeep, r_kind)
+    else
+        tb = center_pixel_bt
+    end if
+end function compute_bt_superob
 
 end module ahi_HSD_mod

@@ -7,17 +7,34 @@ Please make sure the following libraries are installed:
 - NetCDF
 - NCEP BUFR library. (Instructions for installing the NCEP BUFR library are provided in a subsequent section)
 
-If you have an environment preconfigured for `mpas-jedi`, simply source that environment prior to building `obs2ioda`.
-
 ### Build Instructions
+**If you are building `obs2ioda` on a platform other than Derecho, skip Step 2.**
 1. First, clone the repository into your preferred directory (`<OBS2IODA_ROOT_DIR>`):
    ```bash
    git clone https://github.com/NCAR/obs2ioda.git <OBS2IODA_ROOT_DIR>
    ```
+1. To build `obs2ioda` on **Derecho**, navigate to the `obs2ioda/env-setup` directory and source the appropriate environment script based on your **compiler** and **shell**:
+     * For **GNU** compiler and **Bash** shell:
+       ```bash
+       source gnu_derecho.sh
+       ```
+     * For **GNU** compiler and **C Shell**:
+       ```csh
+       source gnu_derecho.csh
+       ```
+     * For **Intel** compiler and **Bash** shell:
+        ```bash
+        source intel_derecho.sh
+        ```
+     * For **Intel** compiler and **C Shell**:
+        ```csh
+        source intel_derecho.csh
+        ```
 1. Create a new directory `build` and navigate into it:
    ```bash
    mkdir build && cd build
    ```
+   
 1. Locate the NCEP BUFR library by executing the following command in the `NCEP BUFR` library's build directory:
    ```bash
    find . -name *libbufr*
@@ -37,7 +54,6 @@ The `obs2ioda-v3` executable will reside in the `bin` directory within the build
 
 ### Running the Obs2Ioda Test Suite
 #### Running the Unit Test Suite
-1. **Run the unit test suite** using `ctest`. To see detailed output and the list of tests being executed, add the `--verbose` flag:
 1. **Run the unit test suite** using `ctest` from the `obs2ioda` build directory. To see detailed output and the list of tests being executed, add the `--verbose` flag:
    ```bash
    ctest --verbose
@@ -45,7 +61,7 @@ The `obs2ioda-v3` executable will reside in the `bin` directory within the build
    *(The `--verbose` flag is optional.)*
 
 #### Running the Validation Test Suite
-**Steps 1–2 are optional** if you already have a Python environment with `pytest`, `netcdf4`, and `requests` installed.
+**Steps 1–2 are optional** if you already have a Python environment with `pytest`, `netCDF4`, and `requests` installed.
 
 1. **Create and activate a virtual environment** in the `obs2ioda` root directory:
 
@@ -57,7 +73,7 @@ The `obs2ioda-v3` executable will reside in the `bin` directory within the build
 1. **Install required dependencies**:
 
    ```bash
-   pip install pytest netcdf4 requests
+   pip install pytest netCDF4 requests
    ```
 
 1. **Run the test suite** from the `obs2ioda` build directory. To display detailed output and see which tests are being run, use the `--verbose` flag:
@@ -191,12 +207,15 @@ gnssro_obs_YYYYMMDDHH.h5
 
 ## Converting Himawari Standard Data (HSD) FLDK files
 ```
-Usage: obs2ioda-v3 -i input_dir -ahi -t YYYYMMDDHHNN [-s 1]
+Usage: obs2ioda-v3 -i input_dir -ahi -t YYYYMMDDHHNN -s num_pixels_to_skip [-superob half_width]
 ```
 
-Input files are a list of Himawari Standard Data, e.g. HS_H08_20200815_0000_B14_FLDK_R20_S0210.DAT in the input_dir.  
-Minute must be specified in the time (-t) option.  
-Number of pixels to skip must be specified in the (-s) option. The default value of 1 means no pixels will be skipped.
+* Input files are a list of Himawari Standard Data, e.g. HS_H08_20200815_0000_B14_FLDK_R20_S0210.DAT in the input_dir.  
+* Minute must be specified in the time (-t) option.  
+* Number of pixels to skip must be specified in the (-s) option.
+* By providing the optional -superob argument, the code enables superobbing for AHI observations. The superob_halfwidth parameter 
+sets the half-width of the superobbing grid. Based on this value, the code defines a grid box and calculates the average 
+brightness temperature within that box.
 
 ## Notes
 * The output prefix (before _obs) is defined in define_mod.f90

@@ -40,3 +40,14 @@ add_fortran_ctest(test_set_goes_abi_out_fname
         ${test_set_goes_abi_out_fname_SOURCES}
         ${test_set_goes_abi_out_fname_LIBRARY_DEPENDENCIES}
 )
+
+set(test_compute_bt_superob_SOURCES
+        compute_bt_superob.test.f90
+)
+set(test_compute_bt_superob_LIBRARY_DEPENDENCIES
+        v3
+)
+add_fortran_ctest(test_compute_bt_superob
+        ${test_compute_bt_superob_SOURCES}
+        ${test_compute_bt_superob_LIBRARY_DEPENDENCIES}
+)

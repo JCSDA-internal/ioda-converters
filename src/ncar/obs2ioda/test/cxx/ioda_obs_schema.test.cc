@@ -1,6 +1,17 @@
 #include <gtest/gtest.h>
 #include <yaml-cpp/yaml.h>
-#include "fixture/IodaObsSchemaFixture.h"
+#include "ioda_obs_schema.h"
+
+
+class IodaObsSchemaFixture : public ::testing::Test {
+protected:
+    void SetUp() override {
+        this->schema = YAML::LoadFile(Obs2Ioda::IODA_SCHEMA_YAML);
+        this->iodaSchema = std::make_shared<IodaObsSchema>(this->schema);
+    }
+    YAML::Node schema;
+    std::shared_ptr<IodaObsSchema> iodaSchema;
+};
 
 /**
  * @brief Tests variable alias resolution and canonical name mapping.
