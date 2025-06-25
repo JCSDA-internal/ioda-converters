@@ -92,9 +92,9 @@ list( APPEND test_input
   testinput/sst_ostia.nc
   testinput/2021081612_RAOB_small.txt
   testinput/tropomi_co.nc
-  testinput/TEMPO_no2_L2_V01_20231101T210834Z_S011G08.nc
-  testinput/TEMPO_no2_L2_V01_20231101T211511Z_S011G09.nc
-  testinput/TEMPO_no2_L2_V01_20231101T210157Z_S011G07.nc  
+  testinput/TEMPO_NO2_L2_V03_20230802T151249Z_S001G01.nc
+  testinput/TEMPO_NO2_L2_V03_20230802T151902Z_S001G02.nc
+  testinput/TEMPO_NO2_L2_V03_20230802T152515Z_S001G03.nc
   testinput/gdas.t18z.abias_air
   testinput/MRMS_MergedReflectivityQC_01.50_20230712-152241.grib2
   testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t162415_small.h5
@@ -154,7 +154,9 @@ list( APPEND test_output
   testoutput/viirs_dt_aod.nc
   testoutput/viirs_bias.nc
   testoutput/tropomi_no2_total.nc
-  testoutput/tropomi_no2_tropo.nc
+  testoutput/tropomi_no2_troposphere.nc
+  testoutput/tempo_NO2_total.nc
+  testoutput/tempo_NO2_troposphere.nc
   testoutput/mopitt_co.nc
   testoutput/tropess_cris_co.nc
   testoutput/modis_aod.nc
@@ -194,9 +196,6 @@ list( APPEND test_output
   testoutput/sst_ostia.nc
   testoutput/2021081612_sonde_small.nc
   testoutput/tropomi_co_total.nc
-  testoutput/tempo_no2_total.nc
-  testoutput/tempo_no2_troposphere.nc
-  testoutput/tempo_no2_stratosphere.nc
   testoutput/gdas.t18z.abias_air_ascent.csv
   testoutput/mrms_reflectivity_Z1500m.nc
   testoutput/omps_o3_nm.nc
@@ -344,6 +343,7 @@ if( iodaconv_bufr_query_ENABLED )
     testinput/bufr_ncep_rtma_adpupa.yaml
     testinput/rtma.t00z.adpupa.tm00.bufr_d
     testinput/bufr_gpsipw.yaml
+    testinput/bufr_gpsztd.yaml
     testinput/obs.20240806T00Z.ipw_gnssgb.ncep.bufr
   )
 
@@ -412,6 +412,7 @@ if( iodaconv_bufr_query_ENABLED )
     testoutput/gdas.t00z.rtma_adpupa.prepbufr.nc
     testoutput/rtma.t00z.adpupa.tm00.nc
     testoutput/20240806T00Z_PT1M_ipw_gnssgb_ncep.nc
+    testoutput/20240806T00Z_PT1M_ztd_gnssgb_ncep.nc
   )
 endif()
 
@@ -1339,7 +1340,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gcas
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/gcas_nc2ioda.py
                           -i testinput/GCAS_NO2_20230802.nc
                           -o testrun/ioda_GCAS_NO2_20230802.nc
-                          -c tropo
+                          -c troposphere
                           -r 2023080215 2023080321"
                           ioda_GCAS_NO2_20230802.nc ${IODA_CONV_COMP_TOL})
 
@@ -1356,7 +1357,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pandora
                           --site_classification testinput/pandora_site_classification.csv"
                           Pandora57s1_BoulderCO_L2_rnvs3p1-8.nc ${IODA_CONV_COMP_TOL})
 
-foreach (coltype total tropo)
+foreach (coltype total troposphere)
         ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2_${coltype}
                           TYPE    SCRIPT
                           ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
@@ -1371,9 +1372,9 @@ foreach (coltype total tropo)
                                   tropomi_no2_${coltype}.nc ${IODA_CONV_COMP_TOL})
 endforeach()
 
-foreach (coltype total troposphere stratosphere)
-  foreach (spec no2) #hcho not tested and o3 not out yet with real data
-    if (NOT (${spec} STREQUAL "hcho" AND (${coltype} STREQUAL "total" OR ${coltype} STREQUAL "stratosphere")))
+foreach (coltype total troposphere)
+  foreach (spec NO2) #hcho not tested and o3 not out yet with real data
+    if (NOT (${spec} STREQUAL "HCHO" AND (${coltype} STREQUAL "total")))
        ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tempo_${spec}_${coltype}
                           TYPE    SCRIPT
                           ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
@@ -1381,9 +1382,9 @@ foreach (coltype total troposphere stratosphere)
                           ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                                   netcdf
                                   "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tempo_nc2ioda.py
-				  -i testinput/TEMPO_${spec}_L2_V01_20231101T210157Z_S011G07.nc
-				     testinput/TEMPO_${spec}_L2_V01_20231101T210834Z_S011G08.nc
-				     testinput/TEMPO_${spec}_L2_V01_20231101T211511Z_S011G09.nc
+				  -i testinput/TEMPO_${spec}_L2_V03_20230802T151249Z_S001G01.nc
+				     testinput/TEMPO_${spec}_L2_V03_20230802T151902Z_S001G02.nc
+				     testinput/TEMPO_${spec}_L2_V03_20230802T152515Z_S001G03.nc
 				  -o testrun/tempo_${spec}_${coltype}.nc
                                   -v ${spec}
                                   -c ${coltype}"
@@ -1964,6 +1965,15 @@ if(iodaconv_bufr_query_ENABLED)
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_gpsipw.yaml"
                             20240806T00Z_PT1M_ipw_gnssgb_ncep.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_gpsztd
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_gpsztd.yaml"
+                            20240806T00Z_PT1M_ztd_gnssgb_ncep.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
 #  FIXME: Greg Thompson
