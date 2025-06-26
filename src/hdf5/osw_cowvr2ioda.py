@@ -298,7 +298,7 @@ def wind_speed_direction_to_uv(windSpeed, windDirection, windSpeedError):
     windNorthwardError = np.full_like(windSpeed, missing_value, dtype=np.float64)
 
     # Convert valid wind directions to radians (meteorological to standard)
-    rad = np.deg2rad(windDirection[valid_mask] - 90)
+    rad = np.deg2rad(windDirection[valid_mask])
 
     # Calculate eastward and northward components only for valid data
     windEastward[valid_mask] = windSpeed[valid_mask] * np.cos(rad)
