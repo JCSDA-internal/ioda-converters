@@ -271,9 +271,7 @@ def wind_speed_direction_to_uv(windSpeed, windDirection, windSpeedError):
 
     Args:
       windSpeed (numpy.ndarray): Array of wind speeds (magnitude).
-      windDirection (numpy.ndarray): Array of wind directions in meteorological
-                                     degrees (0/360 is North, 90 is East, 180 is
-                                     South, 270 is West).
+      windDirection (numpy.ndarray): Array of wind directions
 
     Returns:
       tuple: A tuple containing two numpy.ndarrays:
@@ -282,7 +280,6 @@ def wind_speed_direction_to_uv(windSpeed, windDirection, windSpeedError):
              - windNorthward (v): Northward wind component. Positive is wind
                                   blowing towards the North.
     """
-    # Convert wind direction from degrees to radians (meteorological to standard)
     # Meteorological direction is the direction from which the wind is blowing
     # standard angle conventions (0 degrees at East, increasing counter-clockwise)
 
