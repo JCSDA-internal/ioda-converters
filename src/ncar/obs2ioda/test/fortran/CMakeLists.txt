@@ -51,3 +51,14 @@ add_fortran_ctest(test_compute_bt_superob
         ${test_compute_bt_superob_SOURCES}
         ${test_compute_bt_superob_LIBRARY_DEPENDENCIES}
 )
+
+set(test_calc_solar_zenith_angle_SOURCES
+        calc_solar_zenith_angle.test.f90
+)
+set(test_calc_solar_zenith_angle_LIBRARY_DEPENDENCIES
+        v3
+)
+add_fortran_ctest(test_calc_solar_zenith_angle
+        ${test_calc_solar_zenith_angle_SOURCES}
+        ${test_calc_solar_zenith_angle_LIBRARY_DEPENDENCIES}
+)

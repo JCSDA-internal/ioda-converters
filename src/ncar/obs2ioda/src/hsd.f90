@@ -224,7 +224,7 @@ real(r_double), parameter :: rad2deg = 180.0/pi
 contains
 
 subroutine read_HSD(ccyymmddhhnn, inpdir, do_superob, superob_halfwidth)
-
+use, intrinsic :: ieee_arithmetic, only: ieee_is_nan
 implicit none
 
 character(len=12), intent(in) :: ccyymmddhhnn
@@ -288,6 +288,7 @@ hh       = ccyymmddhhnn(9:10)
 nn       = ccyymmddhhnn(11:12)
 read(mm, '(i2)') imm  !month
 read(dd, '(i2)') idd  !day
+read(hh, '(i2)') ihh  !hour
 jday = 0
 do i = 1, imm - 1
    jday = jday + mmday(i)
@@ -483,6 +484,12 @@ do iband = 1, nband
                      longitude(ipixel, iline), &
                      ihh, imm, jday, &
                      solzen(ipixel, iline))
+                  if (ieee_is_nan(solzen(ipixel, iline))) then
+                      print *, "ERROR in calc_solar_zenith_angle: solzen(", ipixel, ",", iline, ") is NaN."
+                      print *, "       This indicates invalid input to the subroutine."
+                      print *, "       gmt =", ihh, ", minute =", imm, ", julian =", jday
+                      call exit(1)
+                  end if
                   ! calculate geostationary satellite zenith angle
                   rlat = lat * deg2rad ! in radian
                   rlon = lon * deg2rad ! in radian
@@ -889,11 +896,26 @@ subroutine pixlin_to_lonlat(pix, lin, lon, lat, ierr)
  return
 end subroutine pixlin_to_lonlat
 
+!> @brief
+!> Computes the solar zenith angle given geolocation and time inputs.
+!>
+!> @details
+!> This subroutine calculates the solar zenith angle (in degrees) using the input latitude, longitude,
+!> GMT hour, minute, and Julian day. The calculation is adapted from the WRF radiation driver
+!> routines `radconst` and `calc_coszen`. If the input values are out of valid range, `solzen` is
+!> set to NaN to signal invalid input.
+!>
+!> @param[in]  xlat    Latitude in degrees (-90 to 90)
+!> @param[in]  xlon    Longitude in degrees (-360 to 360)
+!> @param[in]  gmt     Hour of the day in GMT (0 to 23)
+!> @param[in]  minute  Minute of the hour (0 to 59)
+!> @param[in]  julian  Julian day (1 to 366)
+!> @param[inout] solzen  Solar zenith angle in degrees; set to NaN if input is invalid
 subroutine calc_solar_zenith_angle(xlat, xlon, gmt, minute, julian, solzen)
 
 ! the calulcation is adapted from subroutines radconst and calc_coszen in
 ! WRF phys/module_radiation_driver.F
-
+ use ieee_arithmetic, only: ieee_value, ieee_quiet_nan
  implicit none
 
  real(r_single),  intent(in)    :: xlat, xlon
@@ -905,6 +927,21 @@ subroutine calc_solar_zenith_angle(xlat, xlon, gmt, minute, julian, solzen)
  real(r_single) :: slon   ! longitude of the sun
  real(r_single) :: declin ! declination of the sun
  real(r_single) :: hrang, da, eot, xt, tloctm, rlat
+ ! Check for valid hour (gmt), minute, and Julian day
+ if (gmt < 0 .or. gmt > 23) then
+     solzen = ieee_value(solzen, ieee_quiet_nan)
+     return
+ end if
+
+ if (minute < 0 .or. minute > 59) then
+     solzen = ieee_value(solzen, ieee_quiet_nan)
+     return
+ end if
+
+ if (julian < 1 .or. julian > 366) then
+     solzen = ieee_value(solzen, ieee_quiet_nan)
+     return
+ end if
 
  ! initialize to missing values
  solzen = missing_r
