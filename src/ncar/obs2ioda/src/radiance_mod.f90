@@ -213,6 +213,7 @@ subroutine read_amsua_amsub_mhs (filename, filedate)
 
          if ( lalodat(1) < r8bfms ) rlink % lat = lalodat(1)
          if ( lalodat(2) < r8bfms ) rlink % lon = lalodat(2)
+         if ( rlink % lon < 360. .and.rlink % lon > 180. ) rlink % lon = rlink % lon - 360.
 
          rlink % satid  = nint(infodat(1))  ! SAID satellite identifier
          rlink % instid = nint(infodat(2))  ! SIID instrument identifier
@@ -1275,6 +1276,7 @@ fgat_loop: do ii = 1, nfgat
 
     if ( trim(inst_list(i)) /= 'cris_npp' .and. &
          trim(inst_list(i)) /= 'cris_n20' .and. &
+         trim(inst_list(i)) /= 'cris_n21' .and. &
          trim(inst_list(i)) /= 'iasi_metop-a' .and. &
          trim(inst_list(i)) /= 'iasi_metop-b' .and. &
          trim(inst_list(i)) /= 'iasi_metop-c' ) then

@@ -464,6 +464,8 @@ subroutine read_prepbufr(filename, filedate)
       plink % dhr           = hdr(4)    ! difference in hour
       plink % elv           = hdr(6)
 
+      if ( plink % lon < 360. .and. plink % lon > 180. ) plink % lon = plink % lon - 360.
+
       write(unit=plink%datetime, fmt='(i4,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a,i2.2,a)')  &
          iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
 
@@ -534,6 +536,9 @@ subroutine read_prepbufr(filename, filedate)
                   iyear, '-', imonth, '-', iday, 'T', ihour, ':', imin, ':', isec, 'Z'
                call get_julian_time(iyear, imonth, iday, ihour, imin, isec, rtmp, plink%each%epochtime)
             end if
+
+            if ( plink%each%lon < 360. .and. plink%each%lon > 180. ) plink%each%lon = plink%each%lon-360.
+
          end if
 
          if ( obs(1,k) > 0.0 .and. obs(1,k) < r8bfms ) then
