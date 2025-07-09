@@ -1,0 +1,8 @@
+#ifndef FILEPATHCONFIG_H_IN
+#define FILEPATHCONFIG_H_IN
+#pragma once
+namespace Obs2Ioda {
+    static constexpr const char* IODA_SCHEMA_YAML = "@IODA_SCHEMA_YAML@";
+}
+
+#endif //FILEPATHCONFIG_H_IN
