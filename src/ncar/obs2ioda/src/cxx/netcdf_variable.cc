@@ -6,15 +6,20 @@
 
 namespace Obs2Ioda {
 
-    std::vector<char> flattenCharPtrArray(const char *const *values, const int numStrings, const int stringSize) {
-        std::vector<char> contiguousValues(numStrings * stringSize + numStrings, ' ');
+    std::vector<char>
+    flattenCharArray(const char * const* values, size_t numStrings,
+                     size_t stringLen) {
+        std::vector<char> flattened(numStrings * stringLen,
+                                    ' ');  // default to space padding
 
-        for (int i = 0; i < numStrings; ++i) {
-            int len = std::strlen(values[i]);
-            std::copy_n(values[i], std::min(len, stringSize), contiguousValues.begin() + i * stringSize);
-            contiguousValues[i * stringSize + stringSize] = '\0';
+        for (size_t i = 0; i < numStrings; ++i) {
+            size_t len = std::min(std::strlen(values[i]), stringLen -
+                                                          1);  // leave room for null terminator
+            std::memcpy(&flattened[i * stringLen], values[i], len);
+            flattened[i * stringLen +
+                      len] = '\0';  // explicitly null-terminate
         }
-        return contiguousValues;
+        return flattened;
     }
 
     int netcdfAddVar(
@@ -54,7 +59,7 @@ namespace Obs2Ioda {
         }
     }
 
-    template<typename T>
+    template<typename T, bool netcdfChar = false>
     int netcdfPutVar(
         int netcdfID,
         const char *groupName,
@@ -71,15 +76,11 @@ namespace Obs2Ioda {
                                            iodaSchema.getGroup(groupName)->getValidName()));
             auto iodaVarName = iodaSchema.getVariable(varName)->getValidName();
             const auto var = group->getVar(iodaVarName);
-            auto varType = var.getType();
-            // Special handling for char arrays
-            if (varType == netCDF::ncChar) {
-                const auto contiguousValues = flattenCharPtrArray(
-                    reinterpret_cast<const char * const *>(values),
-                    static_cast<int>(var.getDims()[0].getSize()),
-                    static_cast<int>(var.getDims()[1].getSize())
-                );
-                var.putVar(contiguousValues.data());
+            if constexpr (std::is_same<T, const char *>::value && netcdfChar) {
+                auto numStrings = var.getDims()[0].getSize();
+                auto stringLen = var.getDims()[1].getSize();
+                auto flattenedCharValues = flattenCharArray(values, numStrings, stringLen);
+                var.putVar(flattenedCharValues.data());
                 return 0;
             }
             var.putVar(values);
@@ -155,7 +156,7 @@ namespace Obs2Ioda {
         const char *varName,
         const char **values
     ) {
-        return netcdfPutVar(
+        return netcdfPutVar<const char *, true>(
             netcdfID,
             groupName,
             varName,
@@ -196,7 +197,7 @@ namespace Obs2Ioda {
             auto iodaVarName = iodaSchema.getVariable(varName)->getValidName();
             auto var = group->getVar(iodaVarName);
             var.setFill(
-                fillMode,
+                fillMode != 0,  // true if fillMode is non-zero
                 fillValue
             );
             return 0;

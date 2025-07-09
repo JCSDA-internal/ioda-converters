@@ -3,7 +3,7 @@
 #include "netcdf_error.h"
 
 namespace Obs2Ioda {
-    template<typename T> int netcdfPutAtt(
+    template<typename T, bool netcdfString = false> int netcdfPutAtt(
         int netcdfID, const char *attName, T values,
         const char *varName, const char *groupName,
         const netCDF::NcType &netcdfDataType, size_t len
@@ -19,7 +19,7 @@ namespace Obs2Ioda {
             if (varName) {
                 auto iodaVarName = iodaSchema.getVariable(varName)->getValidName();
                 auto var = group->getVar(iodaVarName);
-                if (netcdfDataType == netCDF::ncString) {
+                if constexpr(std::is_same_v<const char *, T> && netcdfString) {
                     var.putAtt(
                         attName, std::string(
                             reinterpret_cast<const char *>(values)
@@ -29,7 +29,7 @@ namespace Obs2Ioda {
                     var.putAtt(attName, netcdfDataType, len, values);
                 }
             } else {
-                if (netcdfDataType == netCDF::ncString) {
+                if constexpr(std::is_same_v<const char *, T> && netcdfString) {
                     group->putAtt(
                         attName, std::string(
                             reinterpret_cast<const char *>(values)
@@ -80,7 +80,7 @@ namespace Obs2Ioda {
         const int netcdfID, const char *attName, const char *attValue,
         const char *varName, const char *groupName
     ) {
-        return netcdfPutAtt(
+        return netcdfPutAtt<const char *, true>(
             netcdfID, attName, attValue, varName, groupName,
             netCDF::NcType(netCDF::ncString), strlen(attValue)
         );
