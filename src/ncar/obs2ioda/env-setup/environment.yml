@@ -1,8 +1,0 @@
-name: obs2ioda
-channels:
-  - conda-forge
-dependencies:
-  - python=3.11  # You can change this version if needed
-  - netCDF4
-  - pytest
-  - requests
