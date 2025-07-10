@@ -62,3 +62,33 @@ add_fortran_ctest(test_calc_solar_zenith_angle
         ${test_calc_solar_zenith_angle_SOURCES}
         ${test_calc_solar_zenith_angle_LIBRARY_DEPENDENCIES}
 )
+
+add_library(f_c_string_cpp_test SHARED
+        f_c_string.test.cpp
+)
+set_target_properties(
+        f_c_string_cpp_test
+        PROPERTIES
+        LINKER_LANGUAGE CXX
+)
+set(test_f_c_string_t_SOURCES
+        f_c_string_t.test.f90
+)
+set(test_f_c_string_t_LIBRARY_DEPENDENCIES
+        v3 f_c_string_cpp_test
+)
+add_fortran_ctest(test_f_c_string_t
+        ${test_f_c_string_t_SOURCES}
+        "${test_f_c_string_t_LIBRARY_DEPENDENCIES}"
+)
+
+set(test_f_c_string_array_t_SOURCES
+        f_c_string_array_t.test.f90
+)
+set(test_f_c_string_array_t_LIBRARY_DEPENDENCIES
+        v3 f_c_string_cpp_test
+)
+add_fortran_ctest(test_f_c_string_array_t
+        ${test_f_c_string_array_t_SOURCES}
+        "${test_f_c_string_array_t_LIBRARY_DEPENDENCIES}"
+)

@@ -1,7 +1,7 @@
 module netcdf_cxx_mod
     use iso_c_binding, only: c_int, c_ptr, c_null_ptr, c_loc, c_float, c_long, c_double
-    use f_c_string_t_mod, only: f_c_string_t
-    use f_c_string_1D_t_mod, only: f_c_string_1D_t
+    use f_c_string_t_mod, only: f_c_string_t, check_f_c_string
+    use f_c_string_array_t_mod, only: f_c_string_array_t, check_f_c_string_array
     use netcdf_cxx_i_mod, only: c_netcdfCreate, c_netcdfClose, c_netcdfAddGroup, c_netcdfAddDim, &
             c_netcdfAddVar, c_netcdfPutVarInt, c_netcdfPutVarInt64, c_netcdfPutVarReal, c_netcdfPutVarDouble, c_netcdfPutVarChar, &
             c_netcdfSetFillInt, c_netcdfSetFillInt64, c_netcdfSetFillReal, c_netcdfSetFillString, &
@@ -43,13 +43,16 @@ contains
         type(f_c_string_t) :: f_c_string_path
         type(c_ptr) :: c_path
         integer(c_int) :: mode
+        integer :: status
         ! Set the mode to the provided fileMode if present, otherwise default to 2
         if (present(fileMode)) then
             mode = fileMode
         else
             mode = 2
         end if
-        c_path = f_c_string_path%to_c(path)
+        f_c_string_path = f_c_string_t(path)
+        status = check_f_c_string(f_c_string_path%to_c())
+        c_path = check_f_c_string(f_c_string_path%get_c_string())
         netcdfCreate = c_netcdfCreate(c_path, netcdfID, mode)
     end function netcdfCreate
 
@@ -89,18 +92,22 @@ contains
         character(len = *), intent(in), optional :: parentGroupName
         character(len = *), intent(in) :: groupName
         integer(c_int) :: netcdfAddGroup
+        integer :: status
         type(c_ptr) :: c_parentGroupName
         type(c_ptr) :: c_groupName
         type(f_c_string_t) :: f_c_string_parentGroupName
         type(f_c_string_t) :: f_c_string_groupName
 
         if (present(parentGroupName)) then
-            c_parentGroupName = f_c_string_parentGroupName%to_c(parentGroupName)
+            f_c_string_parentGroupName = f_c_string_t(parentGroupName)
+            status = check_f_c_string(f_c_string_parentGroupName%to_c())
+            c_parentGroupName = check_f_c_string(f_c_string_parentGroupName%get_c_string())
         else
             c_parentGroupName = c_null_ptr
         end if
-        c_groupName = f_c_string_groupName%to_c(groupName)
-
+        f_c_string_groupName = f_c_string_t(groupName)
+        status = check_f_c_string(f_c_string_groupName%to_c())
+        c_groupName = check_f_c_string(f_c_string_groupName%get_c_string())
         netcdfAddGroup = c_netcdfAddGroup(netcdfID, c_parentGroupName, c_groupName)
     end function netcdfAddGroup
 
@@ -137,11 +144,15 @@ contains
         integer(c_int) :: status
 
         if (present(groupName)) then
-            c_groupName = f_c_string_groupName%to_c(groupName)
+            f_c_string_groupName = f_c_string_t(groupName)
+            status = check_f_c_string(f_c_string_groupName%to_c())
+            c_groupName = check_f_c_string(f_c_string_groupName%get_c_string())
         else
             c_groupName = c_null_ptr
         end if
-        c_dimName = f_c_string_dimName%to_c(dimName)
+        f_c_string_dimName = f_c_string_t(dimName)
+        status = check_f_c_string(f_c_string_dimName%to_c())
+        c_dimName = check_f_c_string(f_c_string_dimName%get_c_string())
 
         netcdfAddDim = c_netcdfAddDim(netcdfID, c_groupName, c_dimName, len, dimID)
         dimID = dimID + 1
@@ -180,20 +191,27 @@ contains
         character(len = *), optional, intent(in) :: groupName
         class(*), intent(in), optional :: fillValue
         integer(c_int) :: netcdfAddVar
+        integer :: status
         type(c_ptr) :: c_groupName
         type(c_ptr) :: c_varName
         type(c_ptr) :: c_dimNames
         type(f_c_string_t) :: f_c_string_groupName
         type(f_c_string_t) :: f_c_string_varName
-        type(f_c_string_1D_t) :: f_c_string_1D_dimNames
+        type(f_c_string_array_t) :: f_c_string_array_dimNames
 
         if (present(groupName)) then
-            c_groupName = f_c_string_groupName%to_c(groupName)
+            f_c_string_groupName = f_c_string_t(groupName)
+            status = check_f_c_string(f_c_string_groupName%to_c())
+            c_groupName = check_f_c_string(f_c_string_groupName%get_c_string())
         else
             c_groupName = c_null_ptr
         end if
-        c_varName = f_c_string_varName%to_c(varName)
-        c_dimNames = f_c_string_1D_dimNames%to_c(dimNames)
+        f_c_string_varName = f_c_string_t(varName)
+        status = check_f_c_string(f_c_string_varName%to_c())
+        c_varName = check_f_c_string(f_c_string_varName%get_c_string())
+        f_c_string_array_dimNames = f_c_string_array_t(dimNames)
+        status = check_f_c_string_array(f_c_string_array_dimNames%to_c())
+        c_dimNames = check_f_c_string_array(f_c_string_array_dimNames%get_c_string_array())
         netcdfAddVar = c_netcdfAddVar(netcdfID, c_groupName, c_varName, &
                 netcdfDataType, numDims, c_dimNames)
         if (present(fillValue)) then
@@ -227,19 +245,24 @@ contains
         class(*), dimension(:), target, intent(in) :: values
         character(len = *), optional, intent(in) :: groupName
         integer(c_int) :: netcdfPutVar
+        integer :: status
         type(f_c_string_t) :: f_c_string_groupName
         type(f_c_string_t) :: f_c_string_varName
         type(c_ptr) :: c_groupName
         type(c_ptr) :: c_varName
         type(c_ptr) :: c_values
-        type(f_c_string_1D_t) :: f_c_string_1D_values
+        type(f_c_string_array_t) :: f_c_string_array_values
 
         if (present(groupName)) then
-            c_groupName = f_c_string_groupName%to_c(groupName)
+            f_c_string_groupName = f_c_string_t(groupName)
+            status = check_f_c_string(f_c_string_groupName%to_c())
+            c_groupName = check_f_c_string(f_c_string_groupName%get_c_string())
         else
             c_groupName = c_null_ptr
         end if
-        c_varName = f_c_string_varName%to_c(varName)
+        f_c_string_varName = f_c_string_t(varName)
+        status = check_f_c_string(f_c_string_varName%to_c())
+        c_varName = check_f_c_string(f_c_string_varName%get_c_string())
 
         select type (values)
         type is (integer(c_int))
@@ -263,7 +286,9 @@ contains
                c_varName, c_values)
 
         type is (character(len = *))
-            c_values = f_c_string_1D_values%to_c(values)
+            f_c_string_array_values = f_c_string_array_t(values)
+            status = check_f_c_string_array(f_c_string_array_values%to_c())
+            c_values = check_f_c_string_array(f_c_string_array_values%get_c_string_array())
             netcdfPutVar = c_netcdfPutVarChar(netcdfID, c_groupName, &
                     c_varName, c_values)
         class default
@@ -303,18 +328,24 @@ contains
         class(*), target, intent(in) :: fillValue
         character(len = *), optional, intent(in) :: groupName
         integer(c_int) :: netcdfSetFill
+        integer :: status
         type(f_c_string_t) :: f_c_string_groupName
         type(f_c_string_t) :: f_c_string_varName
         type(c_ptr) :: c_groupName
         type(c_ptr) :: c_varName
         type(f_c_string_t) :: f_c_string_fillValue
+        type(c_ptr) :: c_fillValue
 
         if (present(groupName)) then
-            c_groupName = f_c_string_groupName%to_c(groupName)
+            f_c_string_groupName = f_c_string_t(groupName)
+            status = check_f_c_string(f_c_string_groupName%to_c())
+            c_groupName = check_f_c_string(f_c_string_groupName%get_c_string())
         else
             c_groupName = c_null_ptr
         end if
-        c_varName = f_c_string_varName%to_c(varName)
+        f_c_string_varName = f_c_string_t(varName)
+        status = check_f_c_string(f_c_string_varName%to_c())
+        c_varName = check_f_c_string(f_c_string_varName%get_c_string())
 
         select type (fillValue)
         type is (integer(c_int))
@@ -330,9 +361,12 @@ contains
                     c_varName, fillMode, fillValue)
 
         type is (character(len = *))
+            f_c_string_fillValue = f_c_string_t(fillValue)
+            status = check_f_c_string(f_c_string_fillValue%to_c())
+            c_fillValue = check_f_c_string(f_c_string_fillValue%get_c_string())
             netcdfSetFill = c_netcdfSetFillString(netcdfID, c_groupName, &
                     c_varName, fillMode, &
-                    f_c_string_fillValue%to_c(fillValue))
+                    c_fillValue)
         class default
             netcdfSetFill = -2
         end select
@@ -370,6 +404,7 @@ contains
         character(len = *), optional, intent(in) :: varName
         character(len = *), optional, intent(in) :: groupName
         integer(c_int) :: netcdfPutAtt
+        integer :: status
         type(f_c_string_t) :: f_c_string_attName
         type(f_c_string_t) :: f_c_string_groupName
         type(f_c_string_t) :: f_c_string_varName
@@ -380,24 +415,32 @@ contains
         type(f_c_string_t) :: f_c_string_attValue
 
         if (present(groupName)) then
-            c_groupName = f_c_string_groupName%to_c(groupName)
+            f_c_string_groupName = f_c_string_t(groupName)
+            status = check_f_c_string(f_c_string_groupName%to_c())
+            c_groupName = check_f_c_string(f_c_string_groupName%get_c_string())
         else
             c_groupName = c_null_ptr
         end if
         if (present(varName)) then
-            c_varName = f_c_string_varName%to_c(varName)
+            f_c_string_varName = f_c_string_t(varName)
+            status = check_f_c_string(f_c_string_varName%to_c())
+            c_varName = check_f_c_string(f_c_string_varName%get_c_string())
         else
             c_varName = c_null_ptr
         end if
 
-        c_attName = f_c_string_attName%to_c(attName)
+        f_c_string_attName = f_c_string_t(attName)
+        status = check_f_c_string(f_c_string_attName%to_c())
+        c_attName = check_f_c_string(f_c_string_attName%get_c_string())
 
         select type (attValue)
         type is (integer(c_int))
             c_attValue = c_loc(attValue)
             netcdfPutAtt = c_netcdfPutAttInt(netcdfID, c_attName, c_attValue, c_varName, c_groupName)
         type is (character(len = *))
-            c_attValue = f_c_string_attValue%to_c(attValue)
+            f_c_string_attValue = f_c_string_t(attValue)
+            status = check_f_c_string(f_c_string_attValue%to_c())
+            c_attValue = check_f_c_string(f_c_string_attValue%get_c_string())
             netcdfPutAtt = c_netcdfPutAttString(netcdfID, c_attName, c_attValue, c_varName, c_groupName)
         class default
             netcdfPutAtt = -2
@@ -440,6 +483,7 @@ contains
         character(len = *), optional, intent(in) :: varName
         character(len = *), optional, intent(in) :: groupName
         integer(c_int) :: netcdfPutAttArray
+        integer :: status
         type(f_c_string_t) :: f_c_string_attName
         type(f_c_string_t) :: f_c_string_groupName
         type(f_c_string_t) :: f_c_string_varName
@@ -449,17 +493,23 @@ contains
         type(c_ptr) :: c_attValue
 
         if (present(groupName)) then
-            c_groupName = f_c_string_groupName%to_c(groupName)
+            f_c_string_groupName = f_c_string_t(groupName)
+            status = check_f_c_string(f_c_string_groupName%to_c())
+            c_groupName = check_f_c_string(f_c_string_groupName%get_c_string())
         else
             c_groupName = c_null_ptr
         end if
         if (present(varName)) then
-            c_varName = f_c_string_varName%to_c(varName)
+            f_c_string_varName = f_c_string_t(varName)
+            status = check_f_c_string(f_c_string_varName%to_c())
+            c_varName = check_f_c_string(f_c_string_varName%get_c_string())
         else
             c_varName = c_null_ptr
         end if
 
-        c_attName = f_c_string_attName%to_c(attName)
+        f_c_string_attName = f_c_string_t(attName)
+        status = check_f_c_string(f_c_string_attName%to_c())
+        c_attName = check_f_c_string(f_c_string_attName%get_c_string())
 
         select type (attValue)
         type is (integer(c_int))

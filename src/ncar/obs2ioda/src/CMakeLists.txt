@@ -14,7 +14,7 @@ set(v3_SOURCES
         ufo_variables_mod.F90
         utils_mod.f90
         f_c_string_t_mod.f90
-        f_c_string_1D_t_mod.f90
+        f_c_string_array_t_mod.f90
         netcdf_cxx_i_mod.f90
         netcdf_cxx_mod.f90
         goes_abi_converter_mod.f90
