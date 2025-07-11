@@ -63,14 +63,15 @@ add_fortran_ctest(test_calc_solar_zenith_angle
         ${test_calc_solar_zenith_angle_LIBRARY_DEPENDENCIES}
 )
 
-add_library(f_c_string_cpp_test SHARED
-        f_c_string.test.cpp
+set(f_c_string_cpp_test_SOURCES
+    f_c_string.test.cpp
 )
-set_target_properties(
-        f_c_string_cpp_test
-        PROPERTIES
-        LINKER_LANGUAGE CXX
-        INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+add_library(f_c_string_cpp_test "${f_c_string_cpp_test_SOURCES}")
+set_target_properties(f_c_string_cpp_test PROPERTIES
+ 	ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+	LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+)
+target_include_directories(f_c_string_cpp_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 set(test_f_c_string_t_SOURCES
         f_c_string_t.test.f90
 )
