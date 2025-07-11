@@ -51,7 +51,7 @@ contains
     ! and the start time is formatted into the filename as "yyyyMMddhh_mm". The filename
     ! follows the format:
     !
-    !   abi_<sat_id_lower>_obs_<time_str>.h5
+    !   abi_<sat_id_lower>_obs_<time_str>.nc4
     !
     ! @param fname (inout) The output filename. It will be updated with the generated
     !        filename based on the satellite ID and time.
@@ -78,7 +78,7 @@ contains
         write(time_str, '(i4.4, i2.2, i2.2, i2.2)') iyear, imonth, iday, ihour
         time_str = trim(time_str) // '_' // time_start(15:16)
         sat_id_lower = to_lower(trim(sat_id))
-        fname = 'abi_' // trim(sat_id_lower) // '_obs_' // trim(time_str)  // '.h5'
+        fname = 'abi_' // trim(sat_id_lower) // '_obs_' // trim(time_str)  // '.nc4'
     end subroutine set_goes_abi_out_fname
 
     ! write_iodav3_netcdf:

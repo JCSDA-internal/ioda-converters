@@ -420,7 +420,7 @@ contains
       else  ! single time window: central time corresponds to 6h bufr file analysis time
          output_file_date = analysis_time
       endif
-      output_file_name = trim(adjustl(file_output_info%output_dir)) // 'gnssro_obs_' // output_file_date // '.h5'
+      output_file_name = trim(adjustl(file_output_info%output_dir)) // 'gnssro_obs_' // output_file_date // '.nc4'
    end subroutine
 
 
