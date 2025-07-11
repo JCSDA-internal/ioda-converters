@@ -70,7 +70,7 @@ set_target_properties(
         f_c_string_cpp_test
         PROPERTIES
         LINKER_LANGUAGE CXX
-)
+        INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
 set(test_f_c_string_t_SOURCES
         f_c_string_t.test.f90
 )

@@ -1,4 +1,4 @@
-include("${CMAKE_SOURCE_DIR}/cmake/Obs2Ioda_CompilerFlags.cmake")
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/Obs2Ioda_CompilerFlags.cmake")
 
 # This CMake function, `obs2ioda_fortran_library_target`, configures Fortran library targets for obs2ioda.
 #
@@ -16,14 +16,11 @@ include("${CMAKE_SOURCE_DIR}/cmake/Obs2Ioda_CompilerFlags.cmake")
 #
 # The function also links the provided public libraries to the target.
 function(obs2ioda_fortran_library target public_link_libraries)
-    set_target_properties(${target} PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/${OBS2IODA_MODULE_DIR})
-    target_include_directories(${target} INTERFACE $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/${OBS2IODA_MODULE_DIR}>
-                               $<INSTALL_INTERFACE:${OBS2IODA_MODULE_DIR}>)
-    #Relocatable, portable, runtime dynamic linking
-    set_target_properties(${target} PROPERTIES INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
     # Global Fortran configuration
-    set_target_properties(${target} PROPERTIES Fortran_FORMAT FREE)
-
+    set_target_properties(${target} PROPERTIES Fortran_FORMAT FREE
+		      ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+		      LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+		      INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
     # Compiler-specific options and flags
     set(OBS2IODA_FORTRAN_TARGET_COMPILE_OPTIONS_PRIVATE "")
     if (CMAKE_Fortran_COMPILER_ID MATCHES GNU)
@@ -66,7 +63,9 @@ endfunction()
 #
 # This ensures that the target has the correct runtime library paths and is properly linked with its public dependencies.
 function(obs2ioda_fortran_executable target public_link_libraries)
-    set_target_properties(${target} PROPERTIES LINKER_LANGUAGE Fortran INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+    set_target_properties(${target} PROPERTIES LINKER_LANGUAGE Fortran
+                      RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+	             INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
     target_link_libraries(${target} PUBLIC ${public_link_libraries})
 endfunction()
 
@@ -87,7 +86,11 @@ endfunction()
 # runtime shared library paths are properly configured for relocatable installations, and that the target
 # can find its include directories.
 function(obs2ioda_cxx_library target include_dirs public_link_libraries)
-    set_target_properties(${target} PROPERTIES INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+	set_target_properties(${target} PROPERTIES
+		      ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+		      LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+		      INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+
     target_link_libraries(${target} PUBLIC ${public_link_libraries})
     target_include_directories(${target} PUBLIC ${include_dirs})
 endfunction()

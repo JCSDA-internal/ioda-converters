@@ -20,6 +20,7 @@
 #
 function(add_cxx_ctest name sources include_directories library_dependencies)
     add_executable(${name} ${sources})
+    set_target_properties(${name} PROPERTIES INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
     target_include_directories(${name} PUBLIC ${include_directories})
     target_link_libraries(${name} PUBLIC ${library_dependencies})
     add_test(
@@ -48,7 +49,8 @@ endfunction()
 #
 function(add_fortran_ctest name sources library_dependencies)
     add_executable(${name} ${sources})
-    set_target_properties(${name} PROPERTIES LINKER_LANGUAGE Fortran)
+    set_target_properties(${name} PROPERTIES LINKER_LANGUAGE Fortran
+    INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
     target_link_libraries(${name} PUBLIC ${library_dependencies})
     add_test(
             NAME ${name}
