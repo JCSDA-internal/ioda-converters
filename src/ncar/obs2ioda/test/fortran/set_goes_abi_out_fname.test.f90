@@ -15,7 +15,7 @@ program set_goes_abi_out_fname_test
     ! Test 1 - Regular satellite ID and start time
     sat_id = "G16"
     time_start = "2018-04-15T00:00:41.9Z"
-    expected_fname = "abi_g16_obs_2018041500_00.h5"
+    expected_fname = "abi_g16_obs_2018041500_00.nc4"
     call set_goes_abi_out_fname(fname, sat_id, time_start)
     if (.not. fname == expected_fname) then
         print *, " FAILED"
@@ -27,7 +27,7 @@ program set_goes_abi_out_fname_test
     ! Test 2 - Regular satellite ID and start time with different minutes
     sat_id = "G16"
     time_start = "2018-04-15T00:15:41.9Z"
-    expected_fname = "abi_g16_obs_2018041500_15.h5"
+    expected_fname = "abi_g16_obs_2018041500_15.nc4"
     call set_goes_abi_out_fname(fname, sat_id, time_start)
     if (.not. fname == expected_fname) then
         print *, " FAILED"
@@ -39,7 +39,7 @@ program set_goes_abi_out_fname_test
     ! Test 3 - Different satellite ID
     sat_id = "G6"
     time_start = "2018-04-15T00:15:41.9Z"
-    expected_fname = "abi_g6_obs_2018041500_15.h5"
+    expected_fname = "abi_g6_obs_2018041500_15.nc4"
     call set_goes_abi_out_fname(fname, sat_id, time_start)
     if (.not. fname == expected_fname) then
         print *, " FAILED"
