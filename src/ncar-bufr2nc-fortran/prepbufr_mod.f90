@@ -455,7 +455,7 @@ contains
          call plink%init()
 
          plink%msg_type(1:8) = subset
-         plink%stid(1:5) = csid(1:5)
+         plink%stid = trim(adjustl(csid(1:8)))
          plink%rptype = kx
          plink%t29 = t29
          call set_obtype_conv(plink%t29, plink%obtype)
@@ -1307,7 +1307,12 @@ contains
 
       if (.not. ice) then   ! over water only
 
-         es = es_alpha*exp(es_beta*t_c/(t_c + es_gamma))
+        ! exponential cannot be numerically evaluated for t_c < -200C
+        if (t_c .gt. -200.) then
+            es = es_alpha*exp(es_beta*t_c/(t_c + es_gamma))
+        else ! use es(-200C) for all temperature below -200C
+            es = 3.19E-33
+        end if
 
       else   ! consider ice-water and ice effects
 

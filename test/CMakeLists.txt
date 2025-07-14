@@ -52,7 +52,7 @@ list( APPEND test_input
   testinput/mopitt_co.he5
   testinput/tropess_cris_co.nc
   testinput/modis_aod.hdf
-  testinput/2020100106_metars_small.csv
+  testinput/2025022218_metars_small.csv
   testinput/singleob.yaml
   testinput/ghcn_20200228.csv
   testinput/SMAP_L2_SM_P_NRT_24342_A_20190822T224858_N16023_002.h5
@@ -84,6 +84,7 @@ list( APPEND test_input
   testinput/satwinds_ssec2021080103.txt
   testinput/pace_oc_l2.nc
   testinput/pace_radiance_L1B.nc
+  testinput/pace_uaa_aod.2024072114.nc
   testinput/modis_aqua_Rrs_OC_L2.nc
   testinput/mls_o3_l2.he5
   testinput/omi_o3_l2.he5
@@ -91,9 +92,9 @@ list( APPEND test_input
   testinput/sst_ostia.nc
   testinput/2021081612_RAOB_small.txt
   testinput/tropomi_co.nc
-  testinput/TEMPO_no2_L2_V01_20231101T210834Z_S011G08.nc
-  testinput/TEMPO_no2_L2_V01_20231101T211511Z_S011G09.nc
-  testinput/TEMPO_no2_L2_V01_20231101T210157Z_S011G07.nc  
+  testinput/TEMPO_NO2_L2_V03_20230802T151249Z_S001G01.nc
+  testinput/TEMPO_NO2_L2_V03_20230802T151902Z_S001G02.nc
+  testinput/TEMPO_NO2_L2_V03_20230802T152515Z_S001G03.nc
   testinput/gdas.t18z.abias_air
   testinput/MRMS_MergedReflectivityQC_01.50_20230712-152241.grib2
   testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t162415_small.h5
@@ -153,11 +154,13 @@ list( APPEND test_output
   testoutput/viirs_dt_aod.nc
   testoutput/viirs_bias.nc
   testoutput/tropomi_no2_total.nc
-  testoutput/tropomi_no2_tropo.nc
+  testoutput/tropomi_no2_troposphere.nc
+  testoutput/tempo_NO2_total.nc
+  testoutput/tempo_NO2_troposphere.nc
   testoutput/mopitt_co.nc
   testoutput/tropess_cris_co.nc
   testoutput/modis_aod.nc
-  testoutput/2020100106_metars_small.nc
+  testoutput/2025022218_metars_small.nc
   testoutput/singleob.nc
   testoutput/ghcn_snod_20200228.nc
   testoutput/ionosonde_edp_20201003T203000Z.nc4
@@ -185,6 +188,7 @@ list( APPEND test_output
   testoutput/satwinds_ssec2021080103.nc
   testoutput/pace_oc_l2.nc
   testoutput/pace_radiance_L1B.nc
+  testoutput/pace_uaa_aod.2024072114.nc
   testoutput/modis_water_leaving_radiance_L2.nc
   testoutput/mls_o3_l2.nc
   testoutput/omi_o3_l2.nc
@@ -192,9 +196,6 @@ list( APPEND test_output
   testoutput/sst_ostia.nc
   testoutput/2021081612_sonde_small.nc
   testoutput/tropomi_co_total.nc
-  testoutput/tempo_no2_total.nc
-  testoutput/tempo_no2_troposphere.nc
-  testoutput/tempo_no2_stratosphere.nc
   testoutput/gdas.t18z.abias_air_ascent.csv
   testoutput/mrms_reflectivity_Z1500m.nc
   testoutput/omps_o3_nm.nc
@@ -342,6 +343,7 @@ if( iodaconv_bufr_query_ENABLED )
     testinput/bufr_ncep_rtma_adpupa.yaml
     testinput/rtma.t00z.adpupa.tm00.bufr_d
     testinput/bufr_gpsipw.yaml
+    testinput/bufr_gpsztd.yaml
     testinput/obs.20240806T00Z.ipw_gnssgb.ncep.bufr
   )
 
@@ -410,6 +412,7 @@ if( iodaconv_bufr_query_ENABLED )
     testoutput/gdas.t00z.rtma_adpupa.prepbufr.nc
     testoutput/rtma.t00z.adpupa.tm00.nc
     testoutput/20240806T00Z_PT1M_ipw_gnssgb_ncep.nc
+    testoutput/20240806T00Z_PT1M_ztd_gnssgb_ncep.nc
   )
 endif()
 
@@ -943,10 +946,10 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_metar
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/metar_csv2ioda.py
-                          -i testinput/2020100106_metars_small.csv
-                          -o testrun/2020100106_metars_small.nc
-                          -d 2020100106"
-                          2020100106_metars_small.nc ${IODA_CONV_COMP_TOL})
+                          -i testinput/2025022218_metars_small.csv
+                          -o testrun/2025022218_metars_small.nc
+                          -d 2025022218"
+                          2025022218_metars_small.nc ${IODA_CONV_COMP_TOL})
 
 #===============================================================================
 # Conventional data, radiosonde, text/alpha (legacy) converter
@@ -1252,6 +1255,18 @@ endif()
 # Atmospheric Composition converters
 #==============================================================================
 
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pace_uaa_aod
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/pace_aod2ioda.py
+                          -i testinput/pace_uaa_aod.2024072114.nc
+                          -o testrun/pace_uaa_aod.2024072114.nc
+                          --date_range 2024072114 2024072115"
+                          pace_uaa_aod.2024072114.nc ${IODA_CONV_COMP_TOL})
+
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_aod
                   TYPE    SCRIPT
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
@@ -1263,8 +1278,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_aod
                           -o testrun/viirs_aod.nc
                           --provider noaa
                           --error_method pue
-                          --date_range 2018041504 2018041505
-                          -n 0.0"
+                          --date_range 2018041504 2018041505"
                           viirs_aod.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_nasa_viirs_db_aod
@@ -1279,8 +1293,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_nasa_viirs_db_aod
                           --provider nasa
                           --error_method pue
                           --retrieval_method DeepBlue
-                          --date_range 2024070315 2024070316
-                          -n 0.0"
+                          --date_range 2024070315 2024070316"
                           viirs_db_aod.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_nasa_viirs_dt_aod
@@ -1294,8 +1307,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_nasa_viirs_dt_aod
                           -o testrun/viirs_dt_aod.nc
                           --provider nasa
                           --retrieval_method DarkTarget
-                          --date_range 2024070315 2024070316
-                          -n 0.0"
+                          --date_range 2024070315 2024070316"
                           viirs_dt_aod.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_satbias_viirs_aod
@@ -1328,7 +1340,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gcas
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/gcas_nc2ioda.py
                           -i testinput/GCAS_NO2_20230802.nc
                           -o testrun/ioda_GCAS_NO2_20230802.nc
-                          -c tropo
+                          -c troposphere
                           -r 2023080215 2023080321"
                           ioda_GCAS_NO2_20230802.nc ${IODA_CONV_COMP_TOL})
 
@@ -1345,7 +1357,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pandora
                           --site_classification testinput/pandora_site_classification.csv"
                           Pandora57s1_BoulderCO_L2_rnvs3p1-8.nc ${IODA_CONV_COMP_TOL})
 
-foreach (coltype total tropo)
+foreach (coltype total troposphere)
         ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2_${coltype}
                           TYPE    SCRIPT
                           ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
@@ -1360,9 +1372,9 @@ foreach (coltype total tropo)
                                   tropomi_no2_${coltype}.nc ${IODA_CONV_COMP_TOL})
 endforeach()
 
-foreach (coltype total troposphere stratosphere)
-  foreach (spec no2) #hcho not tested and o3 not out yet with real data
-    if (NOT (${spec} STREQUAL "hcho" AND (${coltype} STREQUAL "total" OR ${coltype} STREQUAL "stratosphere")))
+foreach (coltype total troposphere)
+  foreach (spec NO2) #hcho not tested and o3 not out yet with real data
+    if (NOT (${spec} STREQUAL "HCHO" AND (${coltype} STREQUAL "total")))
        ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tempo_${spec}_${coltype}
                           TYPE    SCRIPT
                           ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
@@ -1370,9 +1382,9 @@ foreach (coltype total troposphere stratosphere)
                           ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                                   netcdf
                                   "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tempo_nc2ioda.py
-				  -i testinput/TEMPO_${spec}_L2_V01_20231101T210157Z_S011G07.nc
-				     testinput/TEMPO_${spec}_L2_V01_20231101T210834Z_S011G08.nc
-				     testinput/TEMPO_${spec}_L2_V01_20231101T211511Z_S011G09.nc
+				  -i testinput/TEMPO_${spec}_L2_V03_20230802T151249Z_S001G01.nc
+				     testinput/TEMPO_${spec}_L2_V03_20230802T151902Z_S001G02.nc
+				     testinput/TEMPO_${spec}_L2_V03_20230802T152515Z_S001G03.nc
 				  -o testrun/tempo_${spec}_${coltype}.nc
                                   -v ${spec}
                                   -c ${coltype}"
@@ -1953,6 +1965,15 @@ if(iodaconv_bufr_query_ENABLED)
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_gpsipw.yaml"
                             20240806T00Z_PT1M_ipw_gnssgb_ncep.nc ${IODA_CONV_COMP_TOL_ZERO}
+                    DEPENDS bufr2ioda.x )
+
+  ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_gpsztd
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_gpsztd.yaml"
+                            20240806T00Z_PT1M_ztd_gnssgb_ncep.nc ${IODA_CONV_COMP_TOL_ZERO}
                     DEPENDS bufr2ioda.x )
 
 #  FIXME: Greg Thompson
