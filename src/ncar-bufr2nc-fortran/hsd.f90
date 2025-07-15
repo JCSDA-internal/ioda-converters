@@ -328,7 +328,10 @@ fnames(ij) = trim(inpdir)//'HS_'//satellite//'_'//ccyymmdd//'_'//hhnn//'_'//band
       do iband = 1, nband
          do isegm = 1, nsegm
             ifile = isegm + (iband - 1)*nsegm
-            if (.not. fexist(ifile)) cycle
+            if (.not. fexist(ifile)) then
+                print*,'Cannot find file ',TRIM(fnames(ifile))
+                cycle
+            end if
    open (iunit, file=trim(fnames(ifile)), form='unformatted', action='read', access='stream', status='old', convert='little_endian')
             print *, 'Reading from ', trim(fnames(ifile))
 
