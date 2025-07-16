@@ -65,6 +65,7 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
    integer(i_kind)                       :: iflag
    integer(i_kind), allocatable :: ichan(:)
    real(r_kind),    allocatable :: rtmp2d(:,:)
+   integer(i_kind),    allocatable :: itmp2d(:,:)
    real(r_kind),    allocatable :: obserr(:)
    integer(i_kind) :: imin_datetime(1), imax_datetime(1)
    integer(i_kind) :: ncstatus
@@ -288,6 +289,7 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
          ncname = "nchans"
          status = netcdfPutVar(netcdfID, ncname, ichan(:))
          allocate(rtmp2d(xdata(ityp,itim)%nvars, xdata(ityp,itim)%nlocs))
+         allocate(itmp2d(xdata(ityp,itim)%nvars, xdata(ityp,itim)%nlocs))
          ncname = trim(var_tb)
          do jj = 1, xdata(ityp,itim)%nvars
             do ii = 1, xdata(ityp,itim)%nlocs
@@ -305,14 +307,15 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
             "ObsError")
          do jj = 1, xdata(ityp, itim)%nvars
             do ii = 1, xdata(ityp, itim)%nlocs
-               rtmp2d(jj, ii) = xdata(ityp, itim)%xfield(ii, jj)%qm
+               itmp2d(jj, ii) = xdata(ityp, itim)%xfield(ii, jj)%qm
             end do
          end do
          ! netcdfPutVar expects a 1D variable, but rtmp2d is 2D, so you need to flatten it before passing it to netcdfPutVar.
          status = netcdfPutVar(netcdfID, ncname, &
-            reshape(rtmp2d(:,:), [xdata(ityp, itim)%nvars * xdata(ityp, itim)%nlocs]), &
+            reshape(itmp2d(:,:), [xdata(ityp, itim)%nvars * xdata(ityp, itim)%nlocs]), &
             "PreQC")
          deallocate(rtmp2d)
+         deallocate(itmp2d)
       end if
 
       var_info_loop: do i = 1, nvar_info

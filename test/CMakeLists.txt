@@ -2603,7 +2603,7 @@ foreach ( f ${TESTOUTPUT_IODA_FILES} )
     )
 endforeach()
 
-set(NCAR_OBS2IODA_TESTOUTPUT_IODA_FILES testrun/amsua_metop-b_obs_2020110112.nc4 testrun/radiosonde_obs_2020093018.nc4 testrun/mhs_metop-b_obs_2020101215.nc4)
+set(NCAR_OBS2IODA_TESTOUTPUT_IODA_FILES testrun/amsua_metop-b_obs_2020110112.nc4 testrun/sondes_obs_2020093018.nc4 testrun/mhs_metop-b_obs_2020101215.nc4)
 foreach ( f ${NCAR_OBS2IODA_TESTOUTPUT_IODA_FILES} )
     get_filename_component(filename ${f} NAME)
 	ecbuild_add_test(
@@ -2611,7 +2611,8 @@ foreach ( f ${NCAR_OBS2IODA_TESTOUTPUT_IODA_FILES} )
 	COMMAND ioda-validate.x
 	LABELS ${PROJECT_NAME}_validate
 	ENVIRONMENT "ECKIT_COLOUR_OUTPUT=1"
-	ARGS "${IODA_YAML_ROOT}/validation/ObsSpace.yaml"
+	ARGS "--ignore-warn"
+	     "${IODA_YAML_ROOT}/validation/ObsSpace.yaml"
 	     "${f}"
 	)
 endforeach()

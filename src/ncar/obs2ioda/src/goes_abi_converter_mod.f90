@@ -1,5 +1,24 @@
 module goes_abi_converter_mod
 
+    ! transpose_and_flatten:
+    !   Transposes a 2D T matrix and flattens it into a 1D array.
+    !
+    !   Arguments:
+    !     - mat (T, dimension(:,:), intent(in)):
+    !       The input 2D matrix to be transposed and flattened.
+    !     - flat_mat_trans (T, dimension(:), intent(out)):
+    !       The output 1D array containing the flattened transpose of `mat`.
+    !       Must be pre-allocated with size equal to size(mat,1) * size(mat,2).
+    !
+    !   Notes:
+    !     - The subroutine performs an internal check to ensure `flat_mat_trans`
+    !       has the correct size. If not, it prints an error message and stops execution.
+    !     - The subroutine is generic and can handle both real and integer matrices.
+    interface transpose_and_flatten
+        module procedure transpose_and_flatten_real
+        module procedure transpose_and_flatten_int
+    end interface transpose_and_flatten
+
 contains
 
     subroutine check(status)
@@ -11,20 +30,8 @@ contains
         end if
     end subroutine check
 
-    ! transpose_and_flatten:
-    !   Transposes a 2D real matrix and flattens it into a 1D array.
-    !
-    !   Arguments:
-    !     - mat (real, dimension(:,:), intent(in)):
-    !       The input 2D matrix to be transposed and flattened.
-    !     - flat_mat_trans (real, dimension(:), intent(out)):
-    !       The output 1D array containing the flattened transpose of `mat`.
-    !       Must be pre-allocated with size equal to size(mat,1) * size(mat,2).
-    !
-    !   Notes:
-    !     - The subroutine performs an internal check to ensure `flat_mat_trans`
-    !       has the correct size. If not, it prints an error message and stops execution.
-    subroutine transpose_and_flatten(mat, flat_mat_trans)
+    ! See documentation for transpose_and_flatten interface
+    subroutine transpose_and_flatten_real(mat, flat_mat_trans)
         implicit none
         real, intent(in)  :: mat(:,:)
         real, intent(out) :: flat_mat_trans(:)
@@ -42,7 +49,27 @@ contains
 
         ! Transpose and flatten
         flat_mat_trans = reshape(transpose(mat), [m*n])
-    end subroutine transpose_and_flatten
+    end subroutine transpose_and_flatten_real
+
+    ! See documentation for transpose_and_flatten interface
+    subroutine transpose_and_flatten_int(mat, flat_mat_trans)
+        implicit none
+        integer, intent(in)  :: mat(:,:)
+        integer, intent(out) :: flat_mat_trans(:)
+        integer :: m, n, i, j
+
+        ! Get dimensions of input matrix
+        m = size(mat, 1)
+        n = size(mat, 2)
+
+        ! Safety check
+        if (size(flat_mat_trans) /= m * n) then
+            print *, "Error: flat_mat_trans must have size m*n"
+            stop 1
+        end if
+        ! Transpose and flatten
+        flat_mat_trans = reshape(transpose(mat), [m*n])
+    end subroutine transpose_and_flatten_int
 
     ! @brief Sets the output filename for GOES ABI data based on satellite ID and time.
     !
@@ -107,7 +134,7 @@ contains
     !       Brightness temperature values (K).
     !     - err_out (real(r_kind), dimension(nchans, nlocs), intent(in)):
     !       Observation error estimates.
-    !     - qf_out (real(r_kind), dimension(nchans, nlocs), intent(in)):
+    !     - qf_out (integer(i_kind), dimension(nchans, nlocs), intent(in)):
     !       Pre-quality control flags.
     subroutine write_iodav3_netcdf(fname, nlocs, nchans, missing_r, missing_i, &
             datetime, lat_out, lon_out, scan_pos_out, sat_zen_out, sat_azi_out, &
@@ -128,12 +155,14 @@ contains
         real(r_kind), intent(in) :: sun_zen_out(nlocs), sun_azi_out(nlocs)
         real(r_kind), intent(in) :: bt_out(nchans, nlocs)
         real(r_kind), intent(in) :: err_out(nchans, nlocs)
-        real(r_kind), intent(in) :: qf_out(nchans, nlocs)
+        integer(i_kind), intent(in) :: qf_out(nchans, nlocs)
 
         integer :: ncid, nlocs_dimid, nchans_dimid
         real(r_kind), allocatable :: rtmp1d(:)
+        integer(i_kind), allocatable :: itmp1d(:)
 
         allocate(rtmp1d(nlocs*nchans))
+        allocate(itmp1d(nlocs*nchans))
 
         call check(netcdfCreate(fname, ncid))
         call check(netcdfAddGroup(ncid, 'ObsValue'))
@@ -172,8 +201,8 @@ contains
         call check(netcdfPutVar(ncid, 'brightness_temperature', rtmp1d, 'ObsValue'))
         call transpose_and_flatten(err_out, rtmp1d)
         call check(netcdfPutVar(ncid, 'brightness_temperature', rtmp1d, 'ObsError'))
-        call transpose_and_flatten(qf_out, rtmp1d)
-        call check(netcdfPutVar(ncid, 'brightness_temperature', rtmp1d, 'PreQC'))
+        call transpose_and_flatten(qf_out, itmp1d)
+        call check(netcdfPutVar(ncid, 'brightness_temperature', itmp1d, 'PreQC'))
 
         call check(netcdfPutVar(ncid, 'latitude', lat_out, 'MetaData'))
         call check(netcdfPutVar(ncid, 'longitude', lon_out, 'MetaData'))

@@ -1,10 +1,11 @@
 module netcdf_cxx_mod
-    use iso_c_binding, only: c_int, c_ptr, c_null_ptr, c_loc, c_float, c_long, c_double
-    use f_c_string_t_mod, only: f_c_string_t, check_f_c_string
-    use f_c_string_array_t_mod, only: f_c_string_array_t, check_f_c_string_array
-    use netcdf_cxx_i_mod, only: c_netcdfCreate, c_netcdfClose, c_netcdfAddGroup, c_netcdfAddDim, &
-            c_netcdfAddVar, c_netcdfPutVarInt, c_netcdfPutVarInt64, c_netcdfPutVarReal, c_netcdfPutVarDouble, c_netcdfPutVarChar, &
-            c_netcdfSetFillInt, c_netcdfSetFillInt64, c_netcdfSetFillReal, c_netcdfSetFillString, &
+    use iso_c_binding, only : c_int, c_ptr, c_null_ptr, c_loc, c_float, c_long, c_double
+    use f_c_string_t_mod, only : f_c_string_t, check_f_c_string
+    use f_c_string_array_t_mod, only : f_c_string_array_t, check_f_c_string_array
+    use netcdf, only : nf90_char, nf90_string
+    use netcdf_cxx_i_mod, only : c_netcdfCreate, c_netcdfClose, c_netcdfAddGroup, c_netcdfAddDim, &
+            c_netcdfAddVar, c_netcdfPutVarInt, c_netcdfPutVarInt64, c_netcdfPutVarReal, c_netcdfPutVarDouble, c_netcdfPutVarString, &
+            c_netcdfPutVarChar, c_netcdfSetFillInt, c_netcdfSetFillInt64, c_netcdfSetFillReal, c_netcdfSetFillString, &
             c_netcdfPutAttInt, c_netcdfPutAttString, c_netcdfPutAttIntArray, c_netcdfPutAttRealArray
     implicit none
     public
@@ -239,11 +240,12 @@ contains
     !         - -1: NetCDF operation returned an error, but the error code was 0.
     !         - -2: Unsupported type passed for values.
     !         - Other nonzero values: Specific NetCDF error codes.
-    function netcdfPutVar(netcdfID, varName, values, groupName)
+    function netcdfPutVar(netcdfID, varName, values, groupName, netcdfDataType)
         integer(c_int), value, intent(in) :: netcdfID
         character(len = *), intent(in) :: varName
         class(*), dimension(:), target, intent(in) :: values
         character(len = *), optional, intent(in) :: groupName
+        integer(c_int), intent(in), optional :: netcdfDataType
         integer(c_int) :: netcdfPutVar
         integer :: status
         type(f_c_string_t) :: f_c_string_groupName
@@ -283,14 +285,24 @@ contains
         type is (real(c_double))
             c_values = c_loc(values)
             netcdfPutVar = c_netcdfPutVarDouble(netcdfID, c_groupName, &
-               c_varName, c_values)
+                    c_varName, c_values)
 
         type is (character(len = *))
             f_c_string_array_values = f_c_string_array_t(values)
             status = check_f_c_string_array(f_c_string_array_values%to_c())
             c_values = check_f_c_string_array(f_c_string_array_values%get_c_string_array())
-            netcdfPutVar = c_netcdfPutVarChar(netcdfID, c_groupName, &
-                    c_varName, c_values)
+            if (present(netcdfDataType)) then
+                if (netcdfDataType == nf90_char) then
+                    netcdfPutVar = c_netcdfPutVarChar(netcdfID, c_groupName, &
+                            c_varName, c_values)
+                else
+                    netcdfPutVar = c_netcdfPutVarString(netcdfID, c_groupName, &
+                            c_varName, c_values)
+                end if
+            else
+                netcdfPutVar = c_netcdfPutVarString(netcdfID, c_groupName, &
+                        c_varName, c_values)
+            end if
         class default
             netcdfPutVar = -2
         end select

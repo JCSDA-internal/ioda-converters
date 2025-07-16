@@ -815,7 +815,7 @@ end subroutine read_GRB
    real(r_kind), allocatable :: sun_azi_out(:)
    real(r_kind), allocatable :: bt_out(:,:)
    real(r_kind), allocatable :: err_out(:,:)
-   real(r_kind), allocatable :: qf_out(:,:)
+   integer(i_kind), allocatable :: qf_out(:,:)
 
    integer(i_kind) :: ncid_nlocs
    integer(i_kind) :: ncfileid

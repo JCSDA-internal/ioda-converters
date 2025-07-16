@@ -2,7 +2,7 @@
 #define FILEPATHCONFIG_H_IN
 #pragma once
 namespace Obs2Ioda {
-    static constexpr const char* IODA_SCHEMA_YAML = "@IODA_SCHEMA_YAML@";
+    static constexpr const char* IODA_SCHEMA_YAML = "@IODA_OBS_SPACE_YAML@";
 }
 
 #endif //FILEPATHCONFIG_H_IN

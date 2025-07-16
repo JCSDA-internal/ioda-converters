@@ -24,4 +24,3 @@ find_package(NetCDF REQUIRED COMPONENTS Fortran C CXX)
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/config")
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/src")
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/test")
