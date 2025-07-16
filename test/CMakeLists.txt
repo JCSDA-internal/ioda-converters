@@ -108,6 +108,7 @@ list( APPEND test_input
   testinput/balloonsonde_sample_20241001T00Z_PT15M.json
   testinput/tec_groundBased_TENET_20201001T00Z.tec
   testinput/COWVR_TSDR.020421.20240430T215845.20240430T230345.V1001.sample.h5
+  testinput/caliop_l2_APro.hdf
 )
 
 list( APPEND test_output
@@ -207,6 +208,7 @@ list( APPEND test_output
   testoutput/obs.20241001T000000Z_PT15M_balloonsonde.nc4
   testoutput/obs.20201001T000000Z_PT1M_tec_groundbased.nc4
   testoutput/obs.20240430T220600Z_PT2M_cowvr_iss.nc4
+  testoutput/caliop_l2_APro.nc4
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -1518,6 +1520,18 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_j1_l1b_albedo
                           --secterm
                           -o testrun/viirs_j1_l1b_albedo_2021080506.nc"
                           viirs_j1_l1b_albedo_2021080506.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_caliop_l2_ext
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/caliop_l2_ext2ioda.py
+                          -i testinput/caliop_l2_APro.hdf
+                          -o testrun/caliop_l2_APro.nc4
+                          --date_range 201907220346 201907220348"
+                          caliop_l2_APro.nc4 ${IODA_CONV_COMP_TOL})
 
 
 #==============================================================================

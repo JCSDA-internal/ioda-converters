@@ -62,8 +62,8 @@ obsValName = iconv.OvalName()
 obsErrName = iconv.OerrName()
 qcName = iconv.OqcName()
 
-varsKeyList = [('valKey', obsValName, 'float', 'longitude latitude height', None),
-               ('errKey', obsErrName, 'float', 'longitude latitude height', None),
+varsKeyList = [('valKey', obsValName, 'float', 'longitude latitude height', "km-1"),
+               ('errKey', obsErrName, 'float', 'longitude latitude height', "km-1"),
                ('qcKey', qcName, 'integer', 'longitude latitude height', None)]
 
 
@@ -83,8 +83,8 @@ missing_vals = {'string': string_missing_value,
 class calipso_l2ext(object):
     def __init__(self, filenames, date_range):
         self.filenames = filenames
-        self.wbeg = np.datetime64(datetime.strptime(date_range[0], "%Y%m%d%H"))
-        self.wend = np.datetime64(datetime.strptime(date_range[1], "%Y%m%d%H"))
+        self.wbeg = np.datetime64(datetime.strptime(date_range[0], "%Y%m%d%H%M"))
+        self.wend = np.datetime64(datetime.strptime(date_range[1], "%Y%m%d%H%M"))
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.setDicts()
@@ -112,6 +112,16 @@ class calipso_l2ext(object):
                 self.varAttrs[iodavar, varGroupName]['_FillValue'] = missing_vals[dtypestr]
                 if varsKeyList[var_keys.index(key)][4]:
                     self.varAttrs[iodavar, varGroupName]['units'] = varsKeyList[var_keys.index(key)][4]
+
+    def calipso_time2dt(time):
+        d = np.round(np.mod(time, 100)).astype(np.int32)
+        m = np.round(np.mod((time-d), 10000)).astype(np.int32)
+        y = np.round(time-m-d).astype(np.int32)
+        dtarr = [datetime(2000 + yi//10000, mi//100, di, tzinfo=timezone.utc)
+                 for yi, mi, di in zip(y, m, d)]
+        delta = [timedelta(frac) for frac in np.mod(time, 1)]
+        outarr = [dt + dl for dt, dl in zip(dtarr, delta)]
+        return outarr
 
     def _read(self):
         # default missing value in CALIPSO file
@@ -145,14 +155,13 @@ class calipso_l2ext(object):
         for f in self.filenames:
             sd = SD(f, SDC.READ)
 
-            pres = sd.select('Pressure').get() * 1e2 # hPa to Pa
+            pres = sd.select('Pressure').get() * 1e2  # hPa to Pa
             nloc = pres.shape[0]
-            nlev = pres.shape[1] 
-            #pres = pres.ravel()
-            lats = sd.select('Latitude').get()[:,1]
-            lons = sd.select('Longitude').get()[:,1]
+            nlev = pres.shape[1]
+            lats = sd.select('Latitude').get()[:, 1]
+            lons = sd.select('Longitude').get()[:, 1]
             profidx = np.arange(nloc)
-            proftime = sd.select('Profile_Time').get()[:,1]
+            proftime = sd.select('Profile_Time').get()[:, 1]
             obs_time = (proftime + caliop_ref_time.timestamp()).astype('datetime64[s]')
             winmsk = ((obs_time >= self.wbeg) & (obs_time <= self.wend))
 
@@ -168,7 +177,7 @@ class calipso_l2ext(object):
                 # Level 2 QC flag stores 30m level 1 QC flag below 8.3 km in the rightmost dimension
                 # Based on Young et al. (2018): qc flag value 0, 1, 2, 16, and 18 should be used.
                 tmpqcf = sd.select(qcfvarname).get()
-                tmpqcf = np.where(tmpqcf[:, :, 0]==tmpqcf[:, :, 1], tmpqcf[:, :, 0], 
+                tmpqcf = np.where((tmpqcf[:, :, 0] == tmpqcf[:, :, 1]), tmpqcf[:, :, 0],
                                   np.maximum(tmpqcf[:, :, 0], tmpqcf[:, :, 1]))
                 tmpqcf = np.where(np.isin(tmpqcf, [0, 1, 2, 16, 18]), 0, 1)
 
@@ -176,13 +185,12 @@ class calipso_l2ext(object):
                 err[:, :, i] = sd.select(errvarname).get()
                 qcf[:, :, i] = tmpqcf
 
-            cadvarname = f"CAD_Score"
-            cad = sd.select(cadvarname).get()
+            cad = sd.select("CAD_Score").get()
 
-            obs = np.where(obs==caliop_missing_value, float_missing_value, obs)
-            err = np.where(err==caliop_missing_value, float_missing_value, err)
+            obs = np.where((obs == caliop_missing_value), float_missing_value, obs)
+            err = np.where((err == caliop_missing_value), float_missing_value, err)
             pres = np.where(pres < 0, float_missing_value, pres)
-                
+
             self.outdata[('latitude', metaDataName)] = np.append(self.outdata[('latitude', metaDataName)],
                                                                  np.array(lats[winmsk], dtype=np.float32))
             self.outdata[('longitude', metaDataName)] = np.append(self.outdata[('longitude', metaDataName)],
@@ -192,24 +200,25 @@ class calipso_l2ext(object):
             self.outdata[('pressure', metaDataName)] = np.append(self.outdata[('pressure', metaDataName)],
                                                                  np.array(pres[winmsk, :], dtype=np.float32))
             self.outdata[('cloudAerosolDiscrimination', metaDataName)] = np.append(
-                    self.outdata[('cloudAerosolDiscrimination', metaDataName)],  np.array(cad[winmsk, :, :], dtype=np.int32))
+                self.outdata[('cloudAerosolDiscrimination', metaDataName)], np.array(cad[winmsk, :, :], dtype=np.int32))
 
             for iodavar in obsvars:
                 self.outdata[self.varDict[iodavar]['valKey']] = np.append(
-                        self.outdata[self.varDict[iodavar]['valKey']], np.array(obs[winmsk, :, :], dtype=np.float32))
+                    self.outdata[self.varDict[iodavar]['valKey']], np.array(obs[winmsk, :, :], dtype=np.float32))
                 self.outdata[self.varDict[iodavar]['errKey']] = np.append(
-                        self.outdata[self.varDict[iodavar]['errKey']], np.array(err[winmsk, :, :], dtype=np.float32))
+                    self.outdata[self.varDict[iodavar]['errKey']], np.array(err[winmsk, :, :], dtype=np.float32))
                 self.outdata[self.varDict[iodavar]['qcKey']] = np.append(
-                        self.outdata[self.varDict[iodavar]['qcKey']],  np.array(qcf[winmsk, :, :], dtype=np.int32))
+                    self.outdata[self.varDict[iodavar]['qcKey']], np.array(qcf[winmsk, :, :], dtype=np.int32))
 
             sd.end()
 
         self.outdata[('sensorCentralWavelength', metaDataName)] = np.array(wavelength, dtype=np.float32)[output_chidx]
         self.outdata[('sensorCentralFrequency', metaDataName)] = np.array(wavelength, dtype=np.float32)[output_chidx]
-        self.outdata[('height', metaDataName)] = np.array(alt, dtype=np.float32)
+        # self.outdata[('height', metaDataName)] = np.array(alt, dtype=np.float32)
         DimDict['Location'] = len(self.outdata[('dateTime', metaDataName)])
         DimDict['Channel'] = nchan
         DimDict['Layer'] = nlev
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -233,9 +242,9 @@ def main():
     optional.add_argument(
         '--date_range',
         help="extract a date range to fit the data assimilation window"
-        "format -r YYYYMMDDHH YYYYMMDDHH",
+        "format -r YYYYMMDDHHMM YYYYMMDDHHMM",
         type=str, metavar=('begindate', 'enddate'), nargs=2,
-        default=('1970010100', '2170010100'))
+        default=('197001010000', '217001010000'))
 
     args = parser.parse_args()
 
@@ -246,6 +255,6 @@ def main():
     writer = iconv.IodaWriter(args.output, metaKeyList, DimDict)
     writer.BuildIoda(calipsol2.outdata, VarDims, calipsol2.varAttrs, AttrData)
 
+
 if __name__ == "__main__":
     main()
-
