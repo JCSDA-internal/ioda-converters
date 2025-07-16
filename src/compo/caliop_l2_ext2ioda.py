@@ -214,7 +214,7 @@ class calipso_l2ext(object):
 
         self.outdata[('sensorCentralWavelength', metaDataName)] = np.array(wavelength, dtype=np.float32)[output_chidx]
         self.outdata[('sensorCentralFrequency', metaDataName)] = np.array(wavelength, dtype=np.float32)[output_chidx]
-        # self.outdata[('height', metaDataName)] = np.array(alt, dtype=np.float32)
+        self.outdata[('height', metaDataName)] = np.array(alt, dtype=np.float32)
         DimDict['Location'] = len(self.outdata[('dateTime', metaDataName)])
         DimDict['Channel'] = nchan
         DimDict['Layer'] = nlev
@@ -223,7 +223,7 @@ class calipso_l2ext(object):
 def main():
     parser = argparse.ArgumentParser(
         description=(
-            'Reads the satellite data '
+            'Reads the CALIOP Level 2 aerosol profile data '
             ' convert into IODA formatted output files. '
             ' Multiple files are concatenated')
     )
@@ -231,7 +231,7 @@ def main():
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
         '-i', '--input',
-        help="path of satellite observation input file(s)",
+        help="path of CALIOP APro (HDF4) input file(s)",
         type=str, nargs='+', required=True)
     required.add_argument(
         '-o', '--output',
