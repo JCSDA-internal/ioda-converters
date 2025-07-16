@@ -31,6 +31,7 @@ module ahi_HSD_mod
    integer(i_kind)  :: iyear, imonth, iday, ihour, imin, isec
 
    integer(i_kind) :: subsample
+   character(len=3) :: ahi_satid
 
    integer(i_kind), parameter :: npixel = 5500
    integer(i_kind), parameter :: nline = 5500
@@ -242,7 +243,7 @@ contains
       character(len=8)    :: ccyymmdd
       character(len=4)    :: ccyy, hhnn
       character(len=2)    :: mm, dd, hh, nn
-      character(len=3)    :: satellite = 'H08'
+!     character(len=3)    :: satellite = 'H08' now ahi_satid in module hsd
       character(len=4)    :: region = 'FLDK'
       character(len=3)    :: resolution = 'R20'
       character(len=5)    :: segment ! S0110, S0210, etc
@@ -312,13 +313,13 @@ contains
             write (band, '(a,i2.2)') 'B', iband + 6
             write (segment, '(a,i2.2,i2.2)') 'S', isegm, nsegm
             ij = isegm + (iband - 1)*nsegm
-fnames(ij) = trim(inpdir)//'HS_'//satellite//'_'//ccyymmdd//'_'//hhnn//'_'//band//'_'//region//'_'//resolution//'_'//segment//'.DAT'
+fnames(ij) = trim(inpdir)//'HS_'//ahi_satid//'_'//ccyymmdd//'_'//hhnn//'_'//band//'_'//region//'_'//resolution//'_'//segment//'.DAT'
 !write(33,*) 'wget -np -nd -nc http://noaa-himawari8.s3.amazonaws.com/AHI-L1b-FLDK/' &
 !& //ccyy//'/'//mm//'/'//dd//'/'//hhnn//'/'//trim(fnames(ij))//'.bz2'
             inquire (file=trim(fnames(ij)), exist=fexist(ij))
             if (fexist(ij) .eqv. .false.) then
                write (segment, '(a,i2.2,i2.2)') 'S', isegm, nodivisionsegm
-fnames(ij) = trim(inpdir)//'HS_'//satellite//'_'//ccyymmdd//'_'//hhnn//'_'//band//'_'//region//'_'//resolution//'_'//segment//'.DAT'
+fnames(ij) = trim(inpdir)//'HS_'//ahi_satid//'_'//ccyymmdd//'_'//hhnn//'_'//band//'_'//region//'_'//resolution//'_'//segment//'.DAT'
                inquire (file=trim(fnames(ij)), exist=fexist(ij))
             end if
 !print*,iband, isegm, trim(fnames(ij)), fexist(ij)
