@@ -1,6 +1,7 @@
 #include "netcdf_attribute.h"
 #include "netcdf_file.h"
 #include "netcdf_error.h"
+#include "netcdf_utils.h"
 
 namespace Obs2Ioda {
     template<typename T, bool netcdfString = false> int netcdfPutAtt(
@@ -10,13 +11,14 @@ namespace Obs2Ioda {
     ) {
         try {
             auto file = FileMap::getInstance().getFile(netcdfID);
-            std::shared_ptr<netCDF::NcGroup> group = (groupName && *
-                groupName)
-                ? std::make_shared<netCDF::NcGroup>(
-                    file->getGroup(groupName)
-                ) : file;
-
-            if (varName) {
+            const auto group = setNetcdfGroup(file, groupName);
+            if (varName == nullptr) {
+                std::string msg = "Variable name cannot be null";
+                throw netCDF::exceptions::NcBadName(
+                    msg.c_str(), __FILE__, __LINE__
+                );
+            }
+            if (!std::string(varName).empty()) {
                 auto iodaVarName = iodaSchema.getVariable(varName)->getValidName();
                 auto var = group->getVar(iodaVarName);
                 if constexpr(std::is_same_v<const char *, T> && netcdfString) {

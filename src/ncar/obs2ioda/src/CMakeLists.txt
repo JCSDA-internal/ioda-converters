@@ -25,7 +25,7 @@ set(obs2ioda_v3_SOURCES
 set(goes_abi_converter_SOURCES
         goes_abi_converter.f90
 )
-set(v3_PUBLIC_LINK_LIBRARIES NetCDF::NetCDF_Fortran "${NCEP_BUFR_LIB}" obs2ioda_cxx)
+set(v3_PUBLIC_LINK_LIBRARIES NetCDF::NetCDF_Fortran bufr::bufr_4 obs2ioda_cxx)
 add_library(v3 SHARED ${v3_SOURCES})
 obs2ioda_fortran_library(v3 "${v3_PUBLIC_LINK_LIBRARIES}")
 set(obs2ioda_v3_PUBLIC_LINK_LIBRARIES v3)
