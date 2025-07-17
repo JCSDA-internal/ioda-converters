@@ -3,7 +3,14 @@ FetchContent_Declare(
         GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
         GIT_TAG 0.8.0
 )
+
 FetchContent_MakeAvailable(yaml-cpp)
+set_target_properties(yaml-cpp PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+)
+
+
 
 set(obs2ioda_cxx_SOURCES
     netcdf_error.cc
