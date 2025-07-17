@@ -38,6 +38,7 @@ metaKeyList = [
     ("dateTime", "long", iso8601_string),
     ("pressure", "float", "Pa"),
     ("sensorCentralWavelength", "float", "micron"),
+    ("sensorCentralFrequency", "float", "Hz"),
     ("height", "float", "m"),
     ("cloudAerosolDiscrimination", "integer", ""),
 ]
@@ -46,16 +47,19 @@ DimDict = {
 }
 
 VarDims = {
-    'extinctionCoefficient': ['Location', 'Layer', 'Channel'],
-    'pressure': ['Location', 'Layer'],
-    'height': ['Layer'],
+    'extinctionCoefficient': ['Location', 'Level', 'Channel'],
+    'pressure': ['Location', 'Level'],
+    'height': ['Level'],
     'sensorCentralWavelength': ['Channel'],
-    'cloudAerosolDiscrimination': ['Location', 'Layer', 'Channel'],
+    'sensorCentralFrequency': ['Channel'],
+    'cloudAerosolDiscrimination': ['Location', 'Level', 'Channel'],
 }
 
 obsvars = ["extinctionCoefficient"]
 channels = [1, 2]
-wavelength = [0.532, 1.064]
+wavelength = np.array([0.532, 1.064])
+speed_light = 2.99792458E8
+frequency = speed_light * 1.0E6 / wavelength
 
 metaDataName = iconv.MetaDataName()
 obsValName = iconv.OvalName()
@@ -65,7 +69,6 @@ qcName = iconv.OqcName()
 varsKeyList = [('valKey', obsValName, 'float', 'longitude latitude height', "km-1"),
                ('errKey', obsErrName, 'float', 'longitude latitude height', "km-1"),
                ('qcKey', qcName, 'integer', 'longitude latitude height', None)]
-
 
 float_missing_value = iconv.get_default_fill_val(np.float32)
 double_missing_value = iconv.get_default_fill_val(np.float64)
@@ -213,11 +216,11 @@ class calipso_l2ext(object):
             sd.end()
 
         self.outdata[('sensorCentralWavelength', metaDataName)] = np.array(wavelength, dtype=np.float32)[output_chidx]
-        self.outdata[('sensorCentralFrequency', metaDataName)] = np.array(wavelength, dtype=np.float32)[output_chidx]
+        self.outdata[('sensorCentralFrequency', metaDataName)] = np.array(frequency, dtype=np.float32)[output_chidx]
         self.outdata[('height', metaDataName)] = np.array(alt, dtype=np.float32)
         DimDict['Location'] = len(self.outdata[('dateTime', metaDataName)])
         DimDict['Channel'] = nchan
-        DimDict['Layer'] = nlev
+        DimDict['Level'] = nlev
 
 
 def main():
