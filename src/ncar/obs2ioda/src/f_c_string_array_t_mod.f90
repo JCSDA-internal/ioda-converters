@@ -91,6 +91,10 @@ contains
             print *, "Error: f_c_string_array_t is not initialized."
             return
         end if
+        if (this%c_memcpy) then
+            print *, "Error: f_c_string_array_t has already been converted to C."
+            return
+        end if
         m = size(this%f_string_array)
         allocate(this%f_c_string_t_array(m))
         allocate(this%fc_string_array(m))

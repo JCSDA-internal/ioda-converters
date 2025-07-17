@@ -84,6 +84,9 @@ contains
         if (.not. this%initialized) then
             return
         end if
+        if (this%c_memcpy) then
+            return
+        end if
         n = len_trim(this%f_string)
         allocate(character(len = n + 1, kind = c_char) :: this%fc_string)
         this%fc_string = this%f_string(1:n) // c_null_char
