@@ -11,7 +11,6 @@ set_target_properties(yaml-cpp PROPERTIES
 )
 
 
-
 set(obs2ioda_cxx_SOURCES
     netcdf_error.cc
     netcdf_file.cc

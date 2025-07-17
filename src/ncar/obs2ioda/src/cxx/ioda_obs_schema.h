@@ -5,186 +5,249 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <array>
+#include <utility>
+
 #include "yaml-cpp/yaml.h"
 #include "FilePathConfig.h"
 
+/**
+ * @brief Interface for generic YAML node access.
+ *
+ * This abstraction allows schema parsing code to be independent of any specific
+ * YAML library (e.g., yaml-cpp). It enables dependency injection and mocking.
+ */
+class IYamlNode {
+public:
+    /**
+     * @brief Check whether a key exists in the node.
+     * @param key The key to check.
+     * @return True if the key exists and is defined.
+     */
+    [[nodiscard]] virtual bool hasKey(const std::string &key) const = 0;
+
+    /**
+     * @brief Check whether the specified key holds a YAML sequence.
+     * @param key The key to check.
+     * @return True if the key maps to a sequence node.
+     */
+    [[nodiscard]] virtual bool
+    isSequence(const std::string &key) const = 0;
+
+    /**
+     * @brief Retrieve a list of strings from a YAML sequence under a key.
+     * @param key The key for the sequence.
+     * @return A vector of strings.
+     */
+    [[nodiscard]] virtual std::vector<std::string>
+    getStringList(const std::string &key) const = 0;
+
+    /**
+     * @brief Retrieve a list of child nodes from a YAML sequence under a key.
+     * @param key The key for the sequence.
+     * @return A vector of shared pointers to IYamlNode children.
+     */
+    [[nodiscard]] virtual std::vector<std::shared_ptr<IYamlNode>>
+    getSequence(const std::string &key) const = 0;
+
+    /// @brief Virtual destructor.
+    virtual ~IYamlNode() = default;
+};
+
+/**
+ * @brief Concrete implementation of IYamlNode using yaml-cpp.
+ *
+ * Wraps a `YAML::Node` object and implements the `IYamlNode` interface to provide
+ * generic access to YAML keys, sequences, and nested nodes.
+ */
+class YamlCppNode : public IYamlNode {
+public:
+    /**
+     * @brief Constructor from a yaml-cpp node.
+     * @param node The YAML::Node to wrap.
+     */
+    explicit YamlCppNode(YAML::Node node);
+
+    /**
+     * @brief Check if a key exists and is defined in the wrapped node.
+     * @param key The key to check.
+     * @return True if the key exists and is defined.
+     */
+    bool hasKey(const std::string &key) const override;
+
+    /**
+     * @brief Check whether the value at a key is a YAML sequence.
+     * @param key The key to check.
+     * @return True if the value is a sequence.
+     */
+    bool isSequence(const std::string &key) const override;
+
+    /**
+     * @brief Extract a vector of strings from a sequence under a given key.
+     * @param key The YAML key containing the string list.
+     * @return A vector of strings.
+     */
+    std::vector<std::string>
+    getStringList(const std::string &key) const override;
+
+    /**
+     * @brief Extract a list of child nodes from a sequence under a key.
+     * @param key The key containing the YAML sequence.
+     * @return A vector of wrapped child IYamlNode instances.
+     */
+    std::vector<std::shared_ptr<IYamlNode>>
+    getSequence(const std::string &key) const override;
+
+private:
+    YAML::Node node_;  ///< The wrapped yaml-cpp node.
+};
 
 
 /**
- * @brief Base class for all components of an IODA observation schema.
+ * @brief Abstract base class for all IODA schema components.
  *
- * Each component (Variable, Dimension, Attribute, Group) stores a canonical name
- * and a list of deprecated aliases. The canonical name is always the first entry
- * in the `names` vector. Deprecated names follow.
+ * Each component (e.g., Variable, Attribute) has a canonical name and
+ * optionally a list of deprecated aliases.
  */
 class IodaObsSchemaComponent {
 protected:
-    std::string validName;
-    /**< Canonical (current) name of the component. */
-    std::vector<std::string> names;
-    /**< First name is canonical; remaining are deprecated. */
-    std::string componentType;
-    /**< Type of schema component ("Variable", "Attribute", etc.). */
+    std::string validName;              ///< Canonical name (first name in list).
+    std::vector<std::string> names;     ///< All known names (canonical + aliases).
+    std::string componentType;          ///< Type: "Variable", "Attribute", etc.
 
     /**
-     * @brief Extracts names from a YAML node and sets the internal name fields.
+     * @brief Set names and canonical name from a YAML node.
      *
-     * Used when a schema entry contains a list of names for a component, where
-     * the first is canonical and the rest are deprecated.
+     * This method extracts a list of names under a given category key
+     * and sets the first one as the canonical name.
      *
-     * @param node The YAML node containing schema definitions.
-     * @param category Key used to identify component names (e.g., "Variable").
+     * @param node The YAML node containing the list.
+     * @param category The key to look up (e.g., "Variable", "Attribute").
      */
-    void setNames(const YAML::Node &node, const std::string &category);
+    void setNames(const std::shared_ptr<IYamlNode> &node,
+                  const std::string &category);
 
     /**
-     * @brief Constructor for a schema component.
-     *
-     * @param componentType The component type (e.g., "Variable", "Group").
-     * @param name Optional single name, used as the canonical name if provided.
+     * @brief Constructor.
+     * @param componentType Name of the component type.
+     * @param name Optional canonical name.
      */
-    explicit IodaObsSchemaComponent(
-        std::string componentType, std::string name = ""
-    );
+    explicit IodaObsSchemaComponent(std::string componentType,
+                                    std::string name = "");
 
 public:
     /**
-     * @brief Returns the canonical (valid) name of the component.
-     *
-     * @return Reference to the primary name.
+     * @brief Returns the canonical name of the component.
+     * @return Canonical name string.
      */
-    [[nodiscard]] const std::string &getValidName() const;
+    [[nodiscard]] const std::string &
+    getValidName() const;
 
     /**
-     * @brief Returns all known names for the component.
-     *
-     * The first entry is the canonical name. All others are deprecated aliases.
-     *
-     * @return Reference to the list of names.
+     * @brief Returns all names (canonical + deprecated).
+     * @return Vector of all known names.
      */
-    [[nodiscard]] const std::vector<std::string> &getNames() const;
+    [[nodiscard]] const std::vector<std::string> &
+    getNames() const;
 
     /**
-     * @brief Loads the component from a YAML node.
-     *
-     * By default, this sets the name(s) based on the component type.
-     *
-     * @param node The YAML node describing the component.
+     * @brief Load the component metadata from a YAML node.
+     * @param node YAML node describing the component.
      */
-    virtual void load(const YAML::Node &node);
+    virtual void load(const std::shared_ptr<IYamlNode> &node);
 
-    /**
-     * @brief Virtual destructor.
-     */
+    /// @brief Virtual destructor.
     virtual ~IodaObsSchemaComponent() = default;
 };
 
 /**
- * @brief Represents an Attribute component in the IODA schema.
+ * @brief Represents an attribute entry in the schema.
  */
 class IodaObsAttribute final : public IodaObsSchemaComponent {
 public:
     /**
      * @brief Constructor for an attribute component.
-     * @param name Optional name used as the canonical name.
+     * @param name Optional attribute name.
      */
     explicit IodaObsAttribute(std::string name = "");
 };
 
 /**
- * @brief Represents a Group component in the IODA schema.
+ * @brief Represents a group entry in the schema.
  */
 class IodaObsGroup final : public IodaObsSchemaComponent {
 public:
     /**
      * @brief Constructor for a group component.
-     * @param name Optional name used as the canonical name.
+     * @param name Optional group name.
      */
     explicit IodaObsGroup(std::string name = "");
 };
 
 /**
- * @brief Represents a Dimension component in the IODA schema.
+ * @brief Represents a dimension entry in the schema.
  */
 class IodaObsDimension final : public IodaObsSchemaComponent {
 public:
     /**
      * @brief Constructor for a dimension component.
-     * @param name Optional name used as the canonical name.
+     * @param name Optional dimension name.
      */
     explicit IodaObsDimension(std::string name = "");
 };
 
 /**
- * @brief Represents a Variable component in the IODA schema.
+ * @brief Represents a variable entry in the schema.
+ *
+ * Variables may appear under both "Variables" and "Dimensions".
  */
 class IodaObsVariable final : public IodaObsSchemaComponent {
 public:
     /**
      * @brief Constructor for a variable component.
-     * @param name Optional name used as the canonical name.
+     * @param name Optional variable name.
      */
     explicit IodaObsVariable(std::string name = "");
 
     /**
-     * @brief Loads the variable definition from a YAML node.
-     *
-     * A variable may be defined under either a "Variable" or a "Dimension" node
-     * in the YAML schema. This method checks both keys in order to support
-     * dimension variables that are defined globally.
-     *
-     * This is necessary because every dimension is also represented as a global
-     * variable in IODA files (e.g., `/nlocs`), and must be accessible under both
-     * schema categories.
-     *
-     * @param node The YAML node describing the variable or dimension.
+     * @brief Load variable metadata from the provided YAML node.
+     * @param node YAML node containing variable data.
      */
-    void load(const YAML::Node &node) override;
+    void load(const std::shared_ptr<IYamlNode> &node) override;
 };
 
 /**
- * @brief Parses and manages the full IODA observation schema.
+ * @brief Full schema loader and manager.
  *
- * This class loads the schema from a YAML document and manages
- * collections of variables, dimensions, groups, and attributes.
- * Deprecated aliases are automatically recognized and mapped to
- * the correct canonical name.
+ * Parses schema components and resolves deprecated names to canonical ones.
  */
 class IodaObsSchema {
-    std::unordered_map<std::string, std::shared_ptr<IodaObsVariable> >
-    variables;
-    std::unordered_map<std::string, std::shared_ptr<IodaObsDimension> >
-    dimensions;
-    std::unordered_map<std::string, std::shared_ptr<IodaObsGroup> >
-    groups;
-    std::unordered_map<std::string, std::shared_ptr<IodaObsAttribute> >
-    attributes;
+    std::unordered_map<std::string, std::shared_ptr<IodaObsVariable>> variables;   ///< Variable name to variable object.
+    std::unordered_map<std::string, std::shared_ptr<IodaObsDimension>> dimensions; ///< Dimension name to dimension object.
+    std::unordered_map<std::string, std::shared_ptr<IodaObsGroup>> groups;         ///< Group name to group object.
+    std::unordered_map<std::string, std::shared_ptr<IodaObsAttribute>> attributes; ///< Attribute name to attribute object.
 
     /**
-     * @brief Loads a specific component category (e.g., Variables) from the schema.
+     * @brief Generic component loader from YAML into the component map.
      *
-     * Each item in the YAML sequence is loaded and registered under all its names.
-     *
-     * @tparam T Component type (e.g., IodaObsVariable).
-     * @param schema YAML node containing the full schema.
-     * @param category The YAML key for the component type (e.g., "Variables").
-     * @param key The name used to find aliases inside each item.
-     * @param componentMap Storage for created components.
+     * @tparam T Component type.
+     * @param schema Root YAML node.
+     * @param category YAML key for this component type (e.g., "Variables").
+     * @param key Component-specific key (e.g., "Variable").
+     * @param componentMap Output map to populate.
      */
-    template<typename T> void loadComponent(
-        const YAML::Node &schema, const std::string &category,
-        const std::string &key,
-        std::unordered_map<std::string, std::shared_ptr<T> > &
-        componentMap
-    ) {
-        if (schema[category] && schema[category].IsSequence()) {
-            for (const auto &item: schema[category]) {
-                if (item[key]) {
+    template<typename T>
+    void loadComponent(const std::shared_ptr<IYamlNode> &schema,
+                       const std::string &category,
+                       const std::string &key,
+                       std::unordered_map<std::string, std::shared_ptr<T>> &componentMap) {
+        if (schema->hasKey(category) && schema->isSequence(category)) {
+            for (const auto &item: schema->getSequence(category)) {
+                if (item->hasKey(key)) {
                     auto component = std::make_shared<T>();
                     component->load(item);
-                    for (const auto &componentName: component->
-                         getNames()) {
-                        componentMap.emplace(componentName, component);
+                    for (const auto &n: component->getNames()) {
+                        componentMap.emplace(n, component);
                     }
                 }
             }
@@ -192,21 +255,16 @@ class IodaObsSchema {
     }
 
     /**
-     * @brief Looks up a component by name or creates a new one.
-     *
-     * If a component is not already loaded, a placeholder with the given name
-     * is created and inserted into the map.
+     * @brief Lookup or create a schema component.
      *
      * @tparam T Component type.
-     * @param name Name or alias of the component.
-     * @param componentMap Map from name to shared component.
+     * @param name Name of the component to look up.
+     * @param componentMap Component map to search.
      * @return Shared pointer to the component.
      */
-    template<typename T> std::shared_ptr<const T> getComponent(
-        const std::string &name,
-        std::unordered_map<std::string, std::shared_ptr<T> > &
-        componentMap
-    ) {
+    template<typename T>
+    std::shared_ptr<const T> getComponent(const std::string &name,
+                                          std::unordered_map<std::string, std::shared_ptr<T>> &componentMap) {
         auto it = componentMap.find(name);
         if (it != componentMap.end()) {
             return it->second;
@@ -218,46 +276,42 @@ class IodaObsSchema {
 
 public:
     /**
-     * @brief Constructs a schema object and loads from a parsed YAML node.
-     * @param schema Root node of a parsed IODA schema file.
+     * @brief Construct and populate schema from YAML node.
+     * @param schema Shared pointer to parsed YAML root node.
      */
-    explicit IodaObsSchema(const YAML::Node &schema);
+    explicit IodaObsSchema(const std::shared_ptr<IYamlNode> &schema);
 
     /**
-     * @brief Gets an attribute by name or deprecated alias.
-     * @param name Name or deprecated name of the attribute.
-     * @return Shared pointer to the attribute.
+     * @brief Retrieve an attribute by name.
+     * @param name Canonical or alias name.
+     * @return Shared pointer to attribute object.
      */
-    std::shared_ptr<const IodaObsAttribute> getAttribute(
-        const std::string &name
-    );
+    std::shared_ptr<const IodaObsAttribute>
+    getAttribute(const std::string &name);
 
     /**
-     * @brief Gets a dimension by name or deprecated alias.
-     * @param name Name or deprecated name of the dimension.
-     * @return Shared pointer to the dimension.
+     * @brief Retrieve a group by name.
+     * @param name Canonical or alias name.
+     * @return Shared pointer to group object.
      */
-    std::shared_ptr<const IodaObsDimension> getDimension(
-        const std::string &name
-    );
+    std::shared_ptr<const IodaObsGroup>
+    getGroup(const std::string &name);
 
     /**
-     * @brief Gets a group by name or deprecated alias.
-     * @param name Name or deprecated name of the group.
-     * @return Shared pointer to the group.
+     * @brief Retrieve a dimension by name.
+     * @param name Canonical or alias name.
+     * @return Shared pointer to dimension object.
      */
-    std::shared_ptr<const IodaObsGroup> getGroup(
-        const std::string &name
-    );
+    std::shared_ptr<const IodaObsDimension>
+    getDimension(const std::string &name);
 
     /**
-     * @brief Gets a variable by name or deprecated alias.
-     * @param name Name or deprecated name of the variable.
-     * @return Shared pointer to the variable.
+     * @brief Retrieve a variable by name.
+     * @param name Canonical or alias name.
+     * @return Shared pointer to variable object.
      */
-    std::shared_ptr<const IodaObsVariable> getVariable(
-        const std::string &name
-    );
+    std::shared_ptr<const IodaObsVariable>
+    getVariable(const std::string &name);
 };
 
-#endif // IODASCHEMA_H
+#endif  // IODASCHEMA_H

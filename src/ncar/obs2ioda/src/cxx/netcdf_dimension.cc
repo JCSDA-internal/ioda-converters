@@ -2,7 +2,6 @@
 #include "netcdf_dimension.h"
 #include "netcdf_file.h"
 #include "netcdf_error.h"
-#include "netcdf_utils.h"
 
 namespace Obs2Ioda {
     int netcdfAddDim(
