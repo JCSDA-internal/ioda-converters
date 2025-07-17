@@ -2,9 +2,10 @@ GNU:[![AWS-gnu](https://codebuild.us-east-1.amazonaws.com/badges?uuid=eyJlbmNyeX
 INTEL:[![AWS-intel](https://codebuild.us-east-1.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiNmUzcndiY2VIVGtYcC92S2luakNsVGUrdUV5WjhnSGpYWWp2U3JVVERWM0pjSzNHeUg4c1lUTEV6R2VldDdPcmtyZzZHUHYvaFFHek5WV3hxNlJWQ3A4PSIsIml2UGFyYW1ldGVyU3BlYyI6IjZyU21lWUtRTkVEdG9Ld2ciLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=develop)](https://us-east-1.console.aws.amazon.com/codesuite/codebuild/projects/automated-testing-ioda-conventers-intel/history)
 CLANG:[![AWS-clang](https://codebuild.us-east-1.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoicE8zR0dRZmo1NUV6TVVVSTJsY0RYejA0SlRIR1dGOXZBTDVQNVh5dy9vb0ViNXFEbENHZTFPN20wa3p6aHV2ZWhQOTRHUDNyYlc3TnJKdVloOGtqVTM0PSIsIml2UGFyYW1ldGVyU3BlYyI6IjBENU9vV00xRDI5L3MwRmYiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=develop)](https://console.aws.amazon.com/codesuite/codebuild/projects/automated-testing-ioda-conventers-clang/history?region=us-east-1)
 
+
 # ioda-converters
 
-The converters can be built and tested using ioda-bundle. In ioda-bundle the build of the converters is disabled by default (for now) so you must enable the build using the BUILD_IODA_CONVERTERS directive. Here is an example:
+The converters can be built and tested using ioda-bundle. In ioda-bundle the build of the converters is disabled by default (for now) so you must enable the build using the BUILD\_IODA\_CONVERTERS directive. Here is an example:
 
 ```
 git clone https://github.com/jcsda-internal/ioda-bundle
@@ -16,12 +17,32 @@ make -j4
 ctest
 ```
 
-Note, you will need to add the following to your `$PYTHONPATH` in order to run the converters. 
+Note, you will need to add the following to your `$PYTHONPATH` in order to run the converters.
 
 ```
 export PYTHONPATH=$PYTHONPATH:/<path_to_ioda-bundle_build>/lib/pyiodaconv
 export PYTHONPATH=$PYTHONPATH:/<path_to_ioda-bundle>/iodaconv/src
 ```
+
+Alternatively, you can build ioda-converters directly outside of ioda-bundle if you have already compiled ioda and oops. You must use the same environment that was used to build ioda and oops (e.g., compiler, MPI, environment modules).
+
+```
+git clone https://github.com/JCSDA-internal/ioda-converters
+cd ioda-converters
+mkdir build
+cd build
+ecbuild .. -Dioda_DIR=<PATH_TO_IODA_CMAKE_DIR> -Doops_DIR=<PATH_TO_OOPS_CMAKE_DIR>
+make -j4
+ctest
+```
+
+Note, when using this method you will still need to add the following to your `$PYTHONPATH` in order to run the converters.
+
+```
+export PYTHONPATH=$PYTHONPATH:/<path_to_ioda-converters_build>/lib/pyiodaconv
+export PYTHONPATH=$PYTHONPATH:/<path_to_ioda-converters>/iodaconv/src
+```
+
 
 ## gsi_ncdiag
 These scripts use classes defined in the gsincdiag Python library to convert output from GSI netCDF diag files into
