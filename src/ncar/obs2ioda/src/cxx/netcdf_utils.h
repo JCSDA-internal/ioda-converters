@@ -2,6 +2,7 @@
 #define OBS2IODA_NETCDF_UTILS_H
 #include <ncGroup.h>
 #include <ncFile.h>
+#include <memory>
 
 
 namespace Obs2Ioda {
