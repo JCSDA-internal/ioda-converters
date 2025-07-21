@@ -170,9 +170,9 @@ if __name__ == '__main__':
     optional.add_argument(
         '-r', '--time_range',
         help="extract a date range to fit the data assimilation window"
-        "format -r YYYYMMDDHH YYYYMMDDHH",
+        "format -r YYYYMMDDHHmm YYYYMMDDHHmm",
         type=str, metavar=('begindate', 'enddate'), nargs=2,
-        default=('1970010100', '2170010100'))
+        default=('197001010000', '217001010000'))
 
     args = parser.parse_args()
 
@@ -192,8 +192,8 @@ if __name__ == '__main__':
         data[key] = []
 
     # date range to fit DA window
-    date_start = datetime.strptime(args.time_range[0], "%Y%m%d%H")
-    date_end = datetime.strptime(args.time_range[1], "%Y%m%d%H")
+    date_start = datetime.strptime(args.time_range[0], "%Y%m%d%H%M")
+    date_end = datetime.strptime(args.time_range[1], "%Y%m%d%H%M")
 
     total_locs = 0
     for infile in args.input:

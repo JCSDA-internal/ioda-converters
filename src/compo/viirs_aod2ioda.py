@@ -65,8 +65,8 @@ class AOD(object):
         self.thin = in_dict['thin']
         self.provider = in_dict['provider']
         self.retrieval_method = in_dict['retrieval_method']
-        self.wbeg = np.datetime64(str(datetime.strptime(in_dict['date_range'][0], "%Y%m%d%H"))).astype(np.int64)
-        self.wend = np.datetime64(str(datetime.strptime(in_dict['date_range'][1], "%Y%m%d%H"))).astype(np.int64)
+        self.wbeg = np.datetime64(str(datetime.strptime(in_dict['date_range'][0], "%Y%m%d%H%M"))).astype(np.int64)
+        self.wend = np.datetime64(str(datetime.strptime(in_dict['date_range'][1], "%Y%m%d%H%M"))).astype(np.int64)
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -354,9 +354,9 @@ def main():
     optional.add_argument(
         '--date_range',
         help="extract a date range to fit the data assimilation window"
-        "format -r YYYYMMDDHH YYYYMMDDHH",
+        "format -r YYYYMMDDHHmm YYYYMMDDHHmm",
         type=str, metavar=('begindate', 'enddate'), nargs=2,
-        default=('1970010100', '2170010100'))
+        default=('197001010000', '217001010000'))
 
     args = parser.parse_args()
 
