@@ -219,8 +219,8 @@ class calipso_l2ext(object):
         self.outdata[('sensorCentralFrequency', metaDataName)] = np.array(frequency, dtype=np.float32)[output_chidx]
         self.outdata[('height', metaDataName)] = np.array(alt, dtype=np.float32)
         DimDict['Location'] = len(self.outdata[('dateTime', metaDataName)])
-        DimDict['Channel'] = nchan
-        DimDict['Level'] = nlev
+        DimDict['Channel'] = np.array(channels)
+        DimDict['Level'] = np.arange(nlev)
 
 
 def main():
