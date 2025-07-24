@@ -1335,6 +1335,7 @@ contains
             deallocate (wavenumber)
 
          end do inst_loop
+         if (ierr /= 0) call abort
       end do fgat_loop
 
    end subroutine radiance_to_temperature
