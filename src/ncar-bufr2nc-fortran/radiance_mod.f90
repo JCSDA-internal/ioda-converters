@@ -53,7 +53,7 @@ contains
 
 !--------------------------------------------------------------
 
-   subroutine read_amsua_amsub_mhs(filename, filedate)
+   subroutine read_amsua_amsub_mhs(filename, filedate, iret)
 
 !| NC021023 | A61223 | MTYP 021-023 PROC AMSU-A 1B Tb (NOAA-15-19, METOP-1,2)   |
 !| NC021024 | A61224 | MTYP 021-024 PROCESSED AMSU-B 1B Tb (NOAA-15-17)         |
@@ -88,6 +88,7 @@ contains
 
       character(len=*), intent(in)  :: filename
       character(len=10), intent(out) :: filedate  ! ccyymmddhh
+      integer, intent(inout) :: iret
 
       integer(i_kind), parameter :: ntime = 6      ! number of data to read in timestr
       integer(i_kind), parameter :: ninfo = 10     ! number of data to read in infostr
@@ -105,7 +106,7 @@ contains
       character(len=8)  :: subset
       character(len=10) :: cdate
 
-      integer(i_kind) :: iunit, iost, iret, i
+      integer(i_kind) :: iunit, iost, i
       integer(i_kind) :: nchan
       integer(i_kind) :: idate
       integer(i_kind) :: num_report_infile
@@ -124,6 +125,7 @@ contains
       num_report_infile = 0
 
       iunit = 96
+      iret  = 0
 
       ! open bufr file
       open (unit=iunit, file=trim(filename), &
@@ -131,6 +133,7 @@ contains
       if (iost /= 0) then
          write (unit=*, fmt='(a,i5,a)') &
             "Error", iost, " opening BUFR obs file "//trim(filename)
+             iret = -1
          return
       end if
 
@@ -1335,7 +1338,7 @@ contains
             deallocate (wavenumber)
 
          end do inst_loop
-         if (ierr /= 0) call abort
+
       end do fgat_loop
 
    end subroutine radiance_to_temperature
