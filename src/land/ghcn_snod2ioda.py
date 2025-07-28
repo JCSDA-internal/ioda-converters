@@ -85,7 +85,7 @@ class ghcn(object):
         # select only snow depth, valid obs, and date
         df30 = pd.concat(df30_list, ignore_index=True)
         df30 = df30[df30["ELEMENT"] == "SNWD"]
-        df30 = df30[df30["DATA_VALUE"] >= 0.0]
+        df30 = df30[df30["DATA_VALUE"].astype('float32') >= 0.0]
         df30["DATETIME"] = df30.apply(lambda row: parse(str(row["DATETIME"])).date(), axis=1)
         startdate = self.date
         valid_date = datetime.strptime(startdate, "%Y%m%d%H")
@@ -111,7 +111,7 @@ class ghcn(object):
         df300['LONGITUDE'] = df300['LONGITUDE'].fillna(float_missing_value) 
         df300['ELEVATION'] = df300['ELEVATION'].fillna(float_missing_value) 
 
-        id_array = df300["ID"].values
+        sites = df300["ID"].values
         vals = df300["DATA_VALUE"].values
         lats = df300["LATITUDE"].values
         lons = df300["LONGITUDE"].values
@@ -125,13 +125,13 @@ class ghcn(object):
         # set qflg to 0 (do we need this?), error to 40. 
         qflg = np.full(vals.shape, 0, dtype='int32')
         errs =  np.full(vals.shape, 40.0, dtype='float32')  
-        times = np.full(vals.shape, epoch_time, dtype='int64')
-        sites = id_array
 
         # get datetime from input
         my_date = datetime.strptime(startdate, "%Y%m%d%H")
         my_date = my_date.replace(tzinfo=timezone.utc)
         epoch_time = np.int64(get_epoch_time(my_date))
+
+        times = np.full(vals.shape, epoch_time, dtype='int64')
 
         # add metadata variables
         self.outdata[('dateTime', 'MetaData')] = times
