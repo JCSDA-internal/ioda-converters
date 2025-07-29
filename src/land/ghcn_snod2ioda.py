@@ -8,6 +8,7 @@
 import argparse
 import numpy as np
 import pandas as pd
+import sys
 from datetime import datetime, timezone
 from dateutil.parser import parse
 
@@ -48,10 +49,11 @@ def get_epoch_time(adatetime):
 
 class ghcn(object):
 
-    def __init__(self, filename, fixfile, date):
+    def __init__(self, filename, fixfile, date, warn):
         self.filename = filename
         self.fixfile = fixfile
         self.date = date
+        self.warn = warn
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.metaDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
@@ -106,10 +108,14 @@ class ghcn(object):
 
         # merge on ID to pull coordinates from the fix file
         df300 = pd.merge(df30, df10[['ID', 'LATITUDE', 'LONGITUDE', 'ELEVATION']], on='ID', how='left')
-        # fill in with missing value, if station not found in fix file
-        df300['LATITUDE'] = df300['LATITUDE'].fillna(float_missing_value) 
-        df300['LONGITUDE'] = df300['LONGITUDE'].fillna(float_missing_value) 
-        df300['ELEVATION'] = df300['ELEVATION'].fillna(float_missing_value) 
+
+        # if merge (left) cannot find ID in df10, will insert NaN
+        if (any(df300['LATITUDE'].isna())):
+           if (self.warn):
+                print(f"\n WARNING: ignoring ghcn stations missing from station_list")
+           else:
+                sys.exit(f"\n ERROR: ghcn data files contains station not in station_list.")
+
 
         sites = df300["ID"].values
         vals = df300["DATA_VALUE"].values
@@ -167,13 +173,17 @@ def main():
                         type=str, required=True)
     parser.add_argument('-d', '--date',
                         help="base date (YYYYMMDDHH)", type=str, required=True)
+    parser.add_argument('--warn_on_missing_stn',
+                    help="if present: missing stations in the fix file will warn, rather than exit",
+                    action='store_true')
+
     args = parser.parse_args()
  
     # start timer
     tic = record_time()
 
     # Read in the GHCN snow depth data
-    snod = ghcn(args.input, args.fixfile, args.date)
+    snod = ghcn(args.input, args.fixfile, args.date, args.warn_on_missing_stn)
 
     # report time
     toc = record_time(tic=tic)
