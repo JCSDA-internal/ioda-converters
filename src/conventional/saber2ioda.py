@@ -62,6 +62,9 @@ VAR_ATTRS['airTemperature', OBS_ERR_NAME]['units'] = 'K'
 VAR_ATTRS['airTemperature', OBS_QC_NAME]['coordinates'] = 'longitude latitude'
 VAR_ATTRS['pressure', META_DATA_NAME]['units'] = 'Pa'
 VAR_ATTRS['height', META_DATA_NAME]['units'] = 'm'
+VAR_ATTRS['tpAscendDescend', META_DATA_NAME]['units'] = 'unitless'
+VAR_ATTRS['tpDayNight', META_DATA_NAME]['units'] = 'unitless'
+VAR_ATTRS['solarZenithAngle', META_DATA_NAME]['units'] = 'degrees'
 VAR_ATTRS['dateTime', META_DATA_NAME]['units'] = 'seconds since 1970-01-01T00:00:00Z'
 
 # Missing values definitions
@@ -69,11 +72,13 @@ MISSING_VALS = {
     'integer': int_missing_value,
     'long': long_missing_value,
     'float': float_missing_value,
+    'short': "-32767",
 }
 DTYPES = {
     'integer': numpy.int32,
     'long': numpy.int64,
     'float': numpy.float32,
+    'short': numpy.int16,
 }
 
 
@@ -185,6 +190,9 @@ def get_data_from_file(obs_file_handle):
         ('longitude', META_DATA_NAME): read_variable(obs_file_handle, 'tplongitude', dtype=numpy.float32),
         ('height', META_DATA_NAME): read_variable(obs_file_handle, 'tpaltitude', dtype=numpy.float32),
         ('pressure', META_DATA_NAME): read_variable(obs_file_handle, 'pressure', dtype=numpy.float32),
+        ('tpAscendDescend', META_DATA_NAME): read_variable(obs_file_handle, 'tpAD', dtype=numpy.int16),
+        ('tpDayNight', META_DATA_NAME): read_variable(obs_file_handle, 'tpDN', dtype=numpy.int16),
+        ('solarZenithAngle', META_DATA_NAME): read_variable(obs_file_handle, 'tpSolarZen', dtype=numpy.float32),
         ('airTemperature', OBS_VAL_NAME): read_variable(obs_file_handle, 'ktemp', dtype=numpy.float32),
     }
 
