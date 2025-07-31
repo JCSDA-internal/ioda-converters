@@ -236,6 +236,7 @@ def main(args):
 
     # Map missing values
     obs_data = map_missing_values(obs_data)
+
     # Time window screening
     if args.date:
         window_start = args.date - timedelta(hours=args.window_offset)
