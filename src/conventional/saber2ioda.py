@@ -54,7 +54,6 @@ VAR_DIMS = {
     'airTemperature': ['Location'],
 }
 
-
 # Variable attributes
 VAR_ATTRS = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
 VAR_ATTRS['airTemperature', OBS_VAL_NAME]['coordinates'] = 'longitude latitude'
@@ -123,6 +122,7 @@ def time_window_screening(full_obs_data, window_start, window_end):
             filtered_obs_data[key] = numpy.array(val)[valid_time_mask]
     return filtered_obs_data
 
+
 def process_file(file_name):
     if not os.path.isfile(file_name):
         raise FileNotFoundError(f"Input file not found (-i option): {file_name}")
@@ -178,6 +178,8 @@ def get_epoch_time(date_var, time_var):
             epoch_time[i, :] = base_epoch_sec + (times // 1000)
 
     return epoch_time.flatten()
+
+
 def get_data_from_file(obs_file_handle):
     obs_data = {
         ('latitude', META_DATA_NAME): read_variable(obs_file_handle, 'tplatitude', dtype=numpy.float32),
@@ -213,6 +215,8 @@ def get_data_from_file(obs_file_handle):
     logging.debug("Extracted %d observations from file.", nlocs)
 
     return obs_data
+
+
 def main(args):
     if args.verbose:
         logging.basicConfig(level=logging.INFO)
@@ -285,4 +289,3 @@ if __name__ == "__main__":
                           help='Enable verbose messages (INFO level)')
 
     main(parser.parse_args())
-

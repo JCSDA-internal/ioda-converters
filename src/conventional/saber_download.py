@@ -1,12 +1,12 @@
 #!/usr/bin/env python 
-        
 import os
 import re
 import requests
 import argparse
 from urllib.parse import urljoin
 from datetime import datetime, timedelta
-        
+
+
 BASE_URL = "https://data.gats-inc.com/saber/Version2_0/Level2A"
 SAVE_DIR = "./saber_files"
             
@@ -51,6 +51,7 @@ def download_nc_files_by_date(date: datetime):
             print(f"Already exists: {fname}")
 
     print(f"Downloaded {downloaded} files from {url}")
+
 
 def main():
     parser = argparse.ArgumentParser(description="Download SABER Level2A .nc files for a date range.")
