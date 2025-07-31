@@ -1,4 +1,5 @@
-#!/usr/bin/env python 
+#!/usr/bin/env python
+
 import os
 import re
 import requests
@@ -6,22 +7,22 @@ import argparse
 from urllib.parse import urljoin
 from datetime import datetime, timedelta
 
-
 BASE_URL = "https://data.gats-inc.com/saber/Version2_0/Level2A"
 SAVE_DIR = "./saber_files"
-            
+
+
 def download_nc_files_by_date(date: datetime):
     year = date.year
     jday = date.timetuple().tm_yday
     jday_str = f"{jday:03d}"
     url = f"{BASE_URL}/{year}/{jday_str}/"
-                
+
     print(f"Accessing: {url}")
-    try:        
+    try:
         response = requests.get(url)
-        response.raise_for_status() 
+        response.raise_for_status()
     except requests.RequestException as e:
-        print(f"Failed to access {url} - {e}") 
+        print(f"Failed to access {url} - {e}")
         return
 
     # Extract all .nc file links from HTML
@@ -78,4 +79,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

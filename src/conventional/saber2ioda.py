@@ -29,7 +29,6 @@ from pyiodaconv.def_jedi_utils import (
     record_time
 )
 
-
 # Globals
 META_DATA_NAME = iconv.MetaDataName()
 OBS_VAL_NAME = iconv.OvalName()
@@ -264,6 +263,7 @@ def main(args):
         raise ValueError('No valid observations remained.')
 
     logging.debug("Processing complete. Time elapsed: %f", record_time() - tic)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
