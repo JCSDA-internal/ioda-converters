@@ -191,7 +191,7 @@ def get_data_from_file(obs_file_handle):
     # Change height units from km to m
     obs_data[('height', META_DATA_NAME)] *= 1000.0
 
-    # Change presure units from hPa to Pa
+    # Change pressure units from hPa to Pa
     obs_data[('pressure', META_DATA_NAME)] *= 100.0
 
     # Handle longitudes to be within [-180, 180)
