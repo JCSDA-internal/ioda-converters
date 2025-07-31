@@ -2465,8 +2465,8 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_saber_timed_v2_0
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                             "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/saber2ioda.py
-                            --i testinput/SABER_L2A_2016001_76232_02.0.nc
-                            --o testrun/saber_timed.20160101T180000Z.nc4"
+                            -i testinput/SABER_L2A_2016001_76232_02.0.nc
+                            -o testrun/saber_timed.20160101T180000Z.nc4"
                             saber_timed.20160101T180000Z.nc4 ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap_nrt_ssm
