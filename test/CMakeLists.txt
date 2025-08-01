@@ -2293,6 +2293,20 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_osw_cygnss
 
 if( iodaconv_pbfortran_ENABLED )
 
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_prepbufr_conv_ncar_obs2ioda
+                    COMMAND obs2ioda_v3 
+                    ARGS    "-i testinput" 
+		            "-o testrun" 
+			    "prepbufr.bufr"
+                    DEPENDS obs2ioda_v3)
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mhs_conv_ncar_obs2ioda
+                    COMMAND obs2ioda_v3 
+                    ARGS    "-i testinput" 
+		            "-o testrun" 
+			    "gdas.t18z.1bmhs.tm00.bufr_d"
+                    DEPENDS obs2ioda_v3)
+
   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_prepbufr_conv
                     TYPE    SCRIPT
                     COMMAND bash
@@ -2333,6 +2347,13 @@ if( iodaconv_pbfortran_ENABLED )
                             -i testinput -o testrun gdas.t12z.1bamua.tm00.bufr_d"
                             amsua_metop-b_obs_2020110112.nc4 ${IODA_CONV_COMP_TOL}
                     DEPENDS bufr2nc_fortran.x)
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_amsua_conv_ncar_obs2ioda
+                    COMMAND obs2ioda_v3 
+                    ARGS    "-i testinput" 
+		            "-o testrun" 
+			    "gdas.t12z.1bamua.tm00.bufr_d"
+                    DEPENDS obs2ioda_v3)
 
 #  FIXME: Emily Liu
 #  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ears_amsua_conv
