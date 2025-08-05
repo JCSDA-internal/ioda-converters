@@ -92,6 +92,7 @@ list( APPEND test_input
   testinput/sst_ostia.nc
   testinput/2021081612_RAOB_small.txt
   testinput/tropomi_co.nc
+  testinput/SABER_L2A_2016001_76232_02.0.nc
   testinput/TEMPO_NO2_L2_V03_20230802T151249Z_S001G01.nc
   testinput/TEMPO_NO2_L2_V03_20230802T151902Z_S001G02.nc
   testinput/TEMPO_NO2_L2_V03_20230802T152515Z_S001G03.nc
@@ -204,6 +205,7 @@ list( APPEND test_output
   testoutput/madis_snod_2021010100.nc
   testoutput/20240401T105230_PT1M_dpr_gpm.nc
   testoutput/Pandora57s1_BoulderCO_L2_rnvs3p1-8.nc
+  testoutput/saber_timed.20160101T180000Z.nc4
   testoutput/obs.20241001T000000Z_PT15M_balloonsonde.nc4
   testoutput/obs.20201001T000000Z_PT1M_tec_groundbased.nc4
   testoutput/obs.20240430T220600Z_PT2M_cowvr_iss.nc4
@@ -2291,6 +2293,20 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_osw_cygnss
 
 if( iodaconv_pbfortran_ENABLED )
 
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_prepbufr_conv_ncar_obs2ioda
+                    COMMAND obs2ioda_v3 
+                    ARGS    "-i testinput" 
+		            "-o testrun" 
+			    "prepbufr.bufr"
+                    DEPENDS obs2ioda_v3)
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mhs_conv_ncar_obs2ioda
+                    COMMAND obs2ioda_v3 
+                    ARGS    "-i testinput" 
+		            "-o testrun" 
+			    "gdas.t18z.1bmhs.tm00.bufr_d"
+                    DEPENDS obs2ioda_v3)
+
   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_prepbufr_conv
                     TYPE    SCRIPT
                     COMMAND bash
@@ -2331,6 +2347,13 @@ if( iodaconv_pbfortran_ENABLED )
                             -i testinput -o testrun gdas.t12z.1bamua.tm00.bufr_d"
                             amsua_metop-b_obs_2020110112.nc4 ${IODA_CONV_COMP_TOL}
                     DEPENDS bufr2nc_fortran.x)
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_amsua_conv_ncar_obs2ioda
+                    COMMAND obs2ioda_v3 
+                    ARGS    "-i testinput" 
+		            "-o testrun" 
+			    "gdas.t12z.1bamua.tm00.bufr_d"
+                    DEPENDS obs2ioda_v3)
 
 #  FIXME: Emily Liu
 #  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ears_amsua_conv
@@ -2454,6 +2477,17 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ionosonde_edp
                             -i testinput/AL945_2020277203000.EDP
                             -o testrun/ionosonde_edp_20201003T203000Z.nc4"
                             ionosonde_edp_20201003T203000Z.nc4 ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_saber_timed_v2_0
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/saber2ioda.py
+                            -i testinput/SABER_L2A_2016001_76232_02.0.nc
+                            -o testrun/saber_timed.20160101T180000Z.nc4"
+                            saber_timed.20160101T180000Z.nc4 ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap_nrt_ssm
                     TYPE    SCRIPT

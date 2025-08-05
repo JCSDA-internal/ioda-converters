@@ -13,6 +13,7 @@ add_subdirectory(ssec)
 add_subdirectory(wrfda_ncdiag)
 add_subdirectory(single_observation)
 add_subdirectory(mrms)
+add_subdirectory(ncar/obs2ioda)
 
 # Optional components
 if(iodaconv_gnssro_ENABLED)
