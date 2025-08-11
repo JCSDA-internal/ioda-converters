@@ -12,6 +12,7 @@ module ncio_mod
                          def_netcdf_dims, def_netcdf_grp, def_netcdf_var, def_netcdf_end, &
                          put_netcdf_var, get_netcdf_dims
    use ufo_vars_mod, only: ufo_vars_getindex
+   use ahi_HSD_mod, only: ahi_satid
 
    implicit none
 
@@ -82,7 +83,11 @@ contains
          else if (write_opt == write_nc_radiance) then
             ncfname = trim(outdir)//trim(inst_list(ityp))//'_obs_'//trim(filedate)//'.nc4'
          else if (write_opt == write_nc_radiance_geo) then
-            ncfname = trim(outdir)//trim(geoinst_list(ityp))//'_obs_'//trim(filedate)//'.nc4'
+            if (geoinst_list(ityp) == 'ahi_himawari') then
+                ncfname = trim(outdir)//trim(geoinst_list(ityp))//'_'//trim(ahi_satid)//'_obs_'//trim(filedate)//'.nc4'
+            else
+                ncfname = trim(outdir)//trim(geoinst_list(ityp))//'_obs_'//trim(filedate)//'.nc4'
+            end if
          end if
          if (write_opt == write_nc_radiance .or. write_opt == write_nc_radiance_geo) then
             iv = ufo_vars_getindex(name_sen_info, 'sensor_channel')
@@ -90,7 +95,7 @@ contains
             ichan(:) = xdata(ityp, itim)%xseninfo_int(:, iv)
             allocate (obserr(xdata(ityp, itim)%nvars))
             if (write_opt == write_nc_radiance_geo) then
-               if (geoinst_list(ityp) == 'ahi_himawari8') then
+               if (geoinst_list(ityp) == 'ahi_himawari') then
                   call set_ahi_obserr(geoinst_list(ityp), xdata(ityp, itim)%nvars, obserr)
                else
                   call set_brit_obserr(inst_list(ityp), xdata(ityp, itim)%nvars, obserr)
