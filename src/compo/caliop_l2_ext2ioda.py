@@ -40,19 +40,21 @@ metaKeyList = [
     ("sensorCentralWavelength", "float", "micron"),
     ("sensorCentralFrequency", "float", "Hz"),
     ("height", "float", "m"),
-    ("cloudAerosolDiscrimination", "integer", ""),
+    ("cloudAerosolDiscriminationHigher", "integer", ""),
+    ("cloudAerosolDiscriminationLower", "integer", ""),
 ]
 
 DimDict = {
 }
 
 VarDims = {
-    'extinctionCoefficient': ['Location', 'Level', 'Channel'],
-    'pressure': ['Location', 'Level'],
+    'extinctionCoefficient': ['Location', 'Channel'],
+    'pressure': ['Location'],
     'height': ['Level'],
     'sensorCentralWavelength': ['Channel'],
     'sensorCentralFrequency': ['Channel'],
-    'cloudAerosolDiscrimination': ['Location', 'Level', 'Channel'],
+    'cloudAerosolDiscriminationHigher': ['Location', 'Channel'],
+    'cloudAerosolDiscriminationLower': ['Location', 'Channel'],
 }
 
 obsvars = ["extinctionCoefficient"]
@@ -138,7 +140,8 @@ class calipso_l2ext(object):
         self.outdata[('longitude', metaDataName)] = np.array([], dtype=np.float32)
         self.outdata[('dateTime', metaDataName)] = np.array([], dtype=np.int64)
         self.outdata[('pressure', metaDataName)] = np.array([], dtype=np.float32)
-        self.outdata[('cloudAerosolDiscrimination', metaDataName)] = np.array([], dtype=np.int32)
+        self.outdata[('cloudAerosolDiscriminationHigher', metaDataName)] = np.array([], dtype=np.int32)
+        self.outdata[('cloudAerosolDiscriminationLower', metaDataName)] = np.array([], dtype=np.int32)
         for iodavar in obsvars:
             self.outdata[self.varDict[iodavar]['valKey']] = np.array([], dtype=np.float32)
             self.outdata[self.varDict[iodavar]['errKey']] = np.array([], dtype=np.float32)
@@ -152,26 +155,28 @@ class calipso_l2ext(object):
         vd = vs.attach(metaid)
         vd.setfields('Lidar_Data_Altitudes')
         alt = np.array(vd.read()[0][0]) * 1000.
+        nlev = alt.size
         vd.detach()
         vs.end()
 
         for f in self.filenames:
             sd = SD(f, SDC.READ)
 
-            pres = sd.select('Pressure').get() * 1e2  # hPa to Pa
-            nloc = pres.shape[0]
-            nlev = pres.shape[1]
+            pres = sd.select('Pressure').get().ravel() * 1e2  # hPa to Pa
             lats = sd.select('Latitude').get()[:, 1]
+            nloc = lats.size
+            lats = np.repeat(lats, nlev)
             lons = sd.select('Longitude').get()[:, 1]
-            profidx = np.arange(nloc)
+            lons = np.repeat(lons, nlev)
+            profidx = np.arange(lats.size)
             proftime = sd.select('Profile_Time').get()[:, 1]
             obs_time = (proftime + caliop_ref_time.timestamp()).astype('datetime64[s]')
+            obs_time = np.repeat(obs_time, nlev)
             winmsk = ((obs_time >= self.wbeg) & (obs_time <= self.wend))
 
-            obs = np.zeros((nloc, nlev, nchan))
+            obs = np.zeros((nloc * nlev, nchan))
             err = np.zeros_like(obs)
             qcf = np.zeros_like(obs)
-            cad = np.zeros_like(obs)
             for i, chidx in enumerate(output_chidx):
                 wavelength_str = str(int(wavelength[chidx] * 1e3))
                 obsvarname = f"Extinction_Coefficient_{wavelength_str}"
@@ -180,15 +185,22 @@ class calipso_l2ext(object):
                 # Level 2 QC flag stores 30m level 1 QC flag below 8.3 km in the rightmost dimension
                 # Based on Young et al. (2018): qc flag value 0, 1, 2, 16, and 18 should be used.
                 tmpqcf = sd.select(qcfvarname).get()
-                tmpqcf = np.where((tmpqcf[:, :, 0] == tmpqcf[:, :, 1]), tmpqcf[:, :, 0],
-                                  np.maximum(tmpqcf[:, :, 0], tmpqcf[:, :, 1]))
+                tmpqcf = tmpqcf.reshape(-1, tmpqcf.shape[2])
+                tmpqcf = np.where((tmpqcf[:, 0] == tmpqcf[:, 1]), tmpqcf[:, 0],
+                                  np.maximum(tmpqcf[:, 0], tmpqcf[:, 1]))
                 tmpqcf = np.where(np.isin(tmpqcf, [0, 1, 2, 16, 18]), 0, 1)
 
-                obs[:, :, i] = sd.select(obsvarname).get()
-                err[:, :, i] = sd.select(errvarname).get()
-                qcf[:, :, i] = tmpqcf
+                obs[:, i] = sd.select(obsvarname).get().ravel()
+                err[:, i] = sd.select(errvarname).get().ravel()
+                qcf[:, i] = tmpqcf
 
-            cad = sd.select("CAD_Score").get()
+            # Similar to QC_Flag, it stores higher and lower 30 meter layers' CAD score
+            cad1 = np.zeros_like(pres)
+            cad2 = np.zeros_like(pres)
+            tmpcad = sd.select("CAD_Score").get()
+            tmpcad = tmpcad.reshape(-1, tmpcad.shape[2])
+            cad1 = tmpcad[:, 0]
+            cad2 = tmpcad[:, 1]
 
             obs = np.where((obs == caliop_missing_value), float_missing_value, obs)
             err = np.where((err == caliop_missing_value), float_missing_value, err)
@@ -201,17 +213,25 @@ class calipso_l2ext(object):
             self.outdata[('dateTime', metaDataName)] = np.append(self.outdata[('dateTime', metaDataName)],
                                                                  np.array(obs_time[winmsk], dtype=np.int64))
             self.outdata[('pressure', metaDataName)] = np.append(self.outdata[('pressure', metaDataName)],
-                                                                 np.array(pres[winmsk, :], dtype=np.float32))
-            self.outdata[('cloudAerosolDiscrimination', metaDataName)] = np.append(
-                self.outdata[('cloudAerosolDiscrimination', metaDataName)], np.array(cad[winmsk, :, :], dtype=np.int32))
+                                                                 np.array(pres[winmsk], dtype=np.float32))
+            self.outdata[('cloudAerosolDiscriminationHigher', metaDataName)] = np.append(
+                self.outdata[('cloudAerosolDiscriminationHigher', metaDataName)], np.array(cad1[winmsk], dtype=np.int32))
+            self.outdata[('cloudAerosolDiscriminationLower', metaDataName)] = np.append(
+                self.outdata[('cloudAerosolDiscriminationLower', metaDataName)], np.array(cad2[winmsk], dtype=np.int32))
+            print(lats[winmsk].size)
+            print(lons[winmsk].size)
+            print(obs_time[winmsk].size)
+            print(pres[winmsk].size)
+            print(cad1[winmsk].size)
+            print(cad2[winmsk].size)
 
             for iodavar in obsvars:
                 self.outdata[self.varDict[iodavar]['valKey']] = np.append(
-                    self.outdata[self.varDict[iodavar]['valKey']], np.array(obs[winmsk, :, :], dtype=np.float32))
+                    self.outdata[self.varDict[iodavar]['valKey']], np.array(obs[winmsk, :], dtype=np.float32))
                 self.outdata[self.varDict[iodavar]['errKey']] = np.append(
-                    self.outdata[self.varDict[iodavar]['errKey']], np.array(err[winmsk, :, :], dtype=np.float32))
+                    self.outdata[self.varDict[iodavar]['errKey']], np.array(err[winmsk, :], dtype=np.float32))
                 self.outdata[self.varDict[iodavar]['qcKey']] = np.append(
-                    self.outdata[self.varDict[iodavar]['qcKey']], np.array(qcf[winmsk, :, :], dtype=np.int32))
+                    self.outdata[self.varDict[iodavar]['qcKey']], np.array(qcf[winmsk, :], dtype=np.int32))
 
             sd.end()
 
