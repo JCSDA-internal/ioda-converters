@@ -131,13 +131,18 @@ class pandora(object):
                     urb_class = 0
 
             aq_class = np.full(nlocs, urb_class)
-            pct_urb_L = np.full(nlocs, pct_urb_L)
-            pct_urb_M = np.full(nlocs, pct_urb_M)
-            pct_urb_H = np.full(nlocs, pct_urb_H)
+            if urb_class ==0:
+                pct_urb_L = np.full(nlocs, 0, dtype=np.float32)
+                pct_urb_M = np.full(nlocs, 0, dtype=np.float32)
+                pct_urb_H = np.full(nlocs, 0, dtype=np.float32)
+            else:
+                pct_urb_L = np.full(nlocs, pct_urb_L, dtype=np.float32)
+                pct_urb_M = np.full(nlocs, pct_urb_M, dtype=np.float32)
+                pct_urb_H = np.full(nlocs, pct_urb_H, dtype=np.float32)
 
-            pct_urb_L = pct_urb_L.astype(np.float32)
-            pct_urb_M = pct_urb_M.astype(np.float32)
-            pct_urb_H = pct_urb_H.astype(np.float32)
+            #pct_urb_L = pct_urb_L.astype(np.float32)
+            #pct_urb_M = pct_urb_M.astype(np.float32)
+            #pct_urb_H = pct_urb_H.astype(np.float32)
 
             # set flag
             flag = np.full((nlocs), True)
@@ -149,8 +154,8 @@ class pandora(object):
             time = np.array([datetime.strptime(date, '%Y%m%dT%H%M%S.%fZ') for date in times])
             iodatime = np.array([date.strftime('%Y-%m-%dT%H:%M:%SZ') for date in time], dtype='object')
 
-            wbegin = np.datetime64(datetime.strptime(self.date_range[0], "%Y%m%d%H"))
-            wend = np.datetime64(datetime.strptime(self.date_range[1], "%Y%m%d%H"))
+            wbegin = np.datetime64(datetime.strptime(self.date_range[0], "%Y%m%d%H%M"))
+            wend = np.datetime64(datetime.strptime(self.date_range[1], "%Y%m%d%H%M"))
             flag_time = np.where((time >= wbegin) & (time <= wend), 1, 0)
 
             flag_neg = np.where(no2 > 0, 1, 0)
@@ -301,9 +306,9 @@ def get_parser():
     optional.add_argument(
         '--date_range',
         help="extract a date range to fit the data assimilation window"
-        "format --date_range YYYYMMDDHH YYYYMMDDHH",
+        "format --date_range YYYYMMDDHHmm YYYYMMDDHHmm",
         type=str, metavar=('begindate', 'enddate'), nargs=2,
-        default=('1970010100', '2170010100'))
+        default=('197001010000', '217001010000'))
 
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
