@@ -206,7 +206,7 @@ def get_data_from_file(obs_file_handle):
     time_raw = read_variable(obs_file_handle, 'time', dtype=numpy.int64, flatten=False)
     obs_data[('dateTime', META_DATA_NAME)] = get_epoch_time(date_raw, time_raw)
 
-    # Handle ascending flag (flipping from 0=asc to 1=asc)
+    # Handle satellite ascending flag (flipping from 0=asc to 1=asc)
     tpAD_raw = read_variable(obs_file_handle, 'tpAD', dtype=numpy.int32)
     valid_mask = numpy.isin(tpAD_raw, [0, 1])
     combined_mask = tpAD_raw.mask | ~valid_mask
