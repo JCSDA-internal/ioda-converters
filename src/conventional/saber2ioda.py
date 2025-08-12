@@ -213,7 +213,7 @@ def get_data_from_file(obs_file_handle):
     tpAD_raw.mask = mask
     obs_data[("satelliteAscendingFlag", META_DATA_NAME)] = numpy.repeat(tpAD_raw, time_raw.shape[1])
 
-    # Handle day or night qualifier (from 0=day to 1=day)
+    # Handle day or night qualifier (flipping from 0=day to 1=day)
     tpDN_raw = read_variable(obs_file_handle, 'tpDN', dtype=numpy.int32)
     mask = tpDN_raw.mask | ~numpy.isin(tpDN_raw, [0, 1])
     tpDN_raw = numpy.ma.where(mask, tpDN_raw, 1 - tpDN_raw)
