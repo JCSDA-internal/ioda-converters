@@ -202,9 +202,23 @@ def get_data_from_file(obs_file_handle):
     )
 
     # Handle time conversion
-    date_raw = read_variable(obs_file_handle, 'date', dtype=numpy.int64, flatten=False)
+    date_raw = read_variable(obs_file_handle, 'date', dtype=numpy.int64)
     time_raw = read_variable(obs_file_handle, 'time', dtype=numpy.int64, flatten=False)
     obs_data[('dateTime', META_DATA_NAME)] = get_epoch_time(date_raw, time_raw)
+
+    # Handle ascending flag (flipping from 0=asc to 1=asc)
+    tpAD_raw = read_variable(obs_file_handle, 'tpAD', dtype=numpy.int32)
+    mask = tpAD_raw.mask | ~numpy.isin(tpAD_raw, [0, 1])
+    tpAD_raw = numpy.ma.where(mask, tpAD_raw, 1 - tpAD_raw)
+    tpAD_raw.mask = mask
+    obs_data[("satelliteAscendingFlag", META_DATA_NAME)] = numpy.repeat(tpAD_raw, time_raw.shape[1])
+
+    # Handle day or night qualifier (from 0=day to 1=day)
+    tpDN_raw = read_variable(obs_file_handle, 'tpDN', dtype=numpy.int32)
+    mask = tpDN_raw.mask | ~numpy.isin(tpDN_raw, [0, 1])
+    tpDN_raw = numpy.ma.where(mask, tpDN_raw, 1 - tpDN_raw)
+    tpDN_raw.mask = mask
+    obs_data[("dayOrNightQualifier", META_DATA_NAME)] = numpy.repeat(tpDN_raw, time_raw.shape[1])
 
     # Add error and QC values
     nlocs = len(obs_data[('latitude', META_DATA_NAME)])
