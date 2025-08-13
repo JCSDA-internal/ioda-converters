@@ -227,7 +227,7 @@ if __name__ == '__main__':
 
         if args.epa_list:
             data['airQualityClassification'] = np.append(data['airQualityClassification'],
-                                                         np.array(f3['loc_type'], dtype=np.int32))
+                                                         f3['loc_type'].fillna(int_missing_value).astype(np.int32))
 
         GlobalAttrs['sourceFiles'] += str(infile.split('/')[-1]) + ", "
 
