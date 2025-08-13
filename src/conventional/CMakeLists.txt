@@ -5,6 +5,8 @@ list(APPEND programs
   buoy_bufr2ioda.py
   ionosonde_ascii2ioda.py
   metar_csv2ioda.py
+  saber2ioda.py
+  saber_download.py
   ship_bufr2ioda.py
   sonde_bufr2ioda.py
   sonde_tac2ioda.py
