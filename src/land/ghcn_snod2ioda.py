@@ -47,6 +47,7 @@ def get_epoch_time(adatetime):
 
     return time_offset
 
+
 class ghcn(object):
 
     def __init__(self, filename, fixfile, date, warn):
@@ -111,11 +112,10 @@ class ghcn(object):
 
         # if merge (left) cannot find ID in df10, will insert NaN
         if (any(df300['LATITUDE'].isna())):
-           if (self.warn):
+            if (self.warn):
                 print(f"\n WARNING: ignoring ghcn stations missing from station_list")
-           else:
+            else:
                 sys.exit(f"\n ERROR: ghcn data files contains station not in station_list.")
-
 
         sites = df300["ID"].values
         vals = df300["DATA_VALUE"].values
@@ -128,9 +128,9 @@ class ghcn(object):
         lons = lons.astype('float32')
         alts = alts.astype('float32')
 
-        # set qflg to 0 (do we need this?), error to 40. 
+        # set qflg to 0 (do we need this?), error to 40.
         qflg = np.full(vals.shape, 0, dtype='int32')
-        errs =  np.full(vals.shape, 40.0, dtype='float32')  
+        errs = np.full(vals.shape, 40.0, dtype='float32')
 
         # get datetime from input
         my_date = datetime.strptime(startdate, "%Y%m%d%H")
@@ -155,6 +155,7 @@ class ghcn(object):
 
         DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
 
+
 def main():
 
     parser = argparse.ArgumentParser(
@@ -174,11 +175,11 @@ def main():
     parser.add_argument('-d', '--date',
                         help="base date (YYYYMMDDHH)", type=str, required=True)
     parser.add_argument('--warn_on_missing_stn',
-                    help="if present: missing stations in the fix file will warn, rather than exit",
-                    action='store_true')
+                        help="if present: missing stations in the fix file will warn, rather than exit",
+                        action='store_true')
 
     args = parser.parse_args()
- 
+
     # start timer
     tic = record_time()
 
