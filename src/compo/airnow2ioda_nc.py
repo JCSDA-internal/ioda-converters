@@ -76,9 +76,9 @@ def read_monitor_file(sitefile, is_epa):
     if is_epa:
         tmpdf = pd.read_csv(sitefile)
         tmpdf = tmpdf[['stat_id', 'lat', 'lon', 'elevation', 'loc_setting']]
-        tmpdf['loc_type'] = np.nan
-        for n_loc_type, n_loc_setting in enumerate(['UNKNOWN', 'RURAL', 'SUBURBAN', 'URBAN AND CENTER CITY']):
-            tmpdf.loc[tmpdf['loc_setting'] == n_loc_setting, 'loc_type'] = n_loc_type
+        tmpdf['loc_setting'] = tmpdf['loc_setting'].astype(str).str.strip().str.upper()
+        tmpdf['loc_type'] = tmpdf['loc_setting'].map({'UNKNOWN': 0, 'RURAL': 1, 'SUBURBAN': 2, 'URBAN AND CENTER CITY': 3}).astype('Int32')
+        tmpdf['loc_type'] = tmpdf['loc_type'].fillna(int_missing_value).astype(np.int32)
         airnow = tmpdf.rename(columns={'stat_id': 'siteid', 'lat': 'latitude', 'lon': 'longitude'})
     else:
         colsinuse = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
@@ -227,7 +227,7 @@ if __name__ == '__main__':
 
         if args.epa_list:
             data['airQualityClassification'] = np.append(data['airQualityClassification'],
-                                                         f3['loc_type'].fillna(int_missing_value).astype(np.int32))
+                                                         f3['loc_type'].values)
 
         GlobalAttrs['sourceFiles'] += str(infile.split('/')[-1]) + ", "
 
