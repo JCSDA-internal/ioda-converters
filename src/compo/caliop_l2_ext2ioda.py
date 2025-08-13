@@ -40,6 +40,7 @@ metaKeyList = [
     ("sensorCentralWavelength", "float", "micron"),
     ("sensorCentralFrequency", "float", "Hz"),
     ("height", "float", "m"),
+    ("atmosphereLayerThicknessZ", "float", "m"),
     ("cloudAerosolDiscriminationHigher", "integer", ""),
     ("cloudAerosolDiscriminationLower", "integer", ""),
 ]
@@ -51,6 +52,7 @@ VarDims = {
     'extinctionCoefficient': ['Location', 'Channel'],
     'pressure': ['Location'],
     'height': ['Level'],
+    'atmosphereLayerThicknessZ': ['Level'],
     'sensorCentralWavelength': ['Channel'],
     'sensorCentralFrequency': ['Channel'],
     'cloudAerosolDiscriminationHigher': ['Location', 'Channel'],
@@ -159,6 +161,12 @@ class calipso_l2ext(object):
         vd.detach()
         vs.end()
 
+        # Calculate the thickness of LiDAR profile
+        thickness = np.empty_like(alt)
+        thickness[1:-1] = 0.5 * (alt[:-2] - alt[2:])
+        thickness[0] = alt[0] - alt[1]
+        thickness[-1] = alt[-2] - alt[-1]
+
         for f in self.filenames:
             sd = SD(f, SDC.READ)
 
@@ -218,12 +226,6 @@ class calipso_l2ext(object):
                 self.outdata[('cloudAerosolDiscriminationHigher', metaDataName)], np.array(cad1[winmsk], dtype=np.int32))
             self.outdata[('cloudAerosolDiscriminationLower', metaDataName)] = np.append(
                 self.outdata[('cloudAerosolDiscriminationLower', metaDataName)], np.array(cad2[winmsk], dtype=np.int32))
-            print(lats[winmsk].size)
-            print(lons[winmsk].size)
-            print(obs_time[winmsk].size)
-            print(pres[winmsk].size)
-            print(cad1[winmsk].size)
-            print(cad2[winmsk].size)
 
             for iodavar in obsvars:
                 self.outdata[self.varDict[iodavar]['valKey']] = np.append(
@@ -238,6 +240,7 @@ class calipso_l2ext(object):
         self.outdata[('sensorCentralWavelength', metaDataName)] = np.array(wavelength, dtype=np.float32)[output_chidx]
         self.outdata[('sensorCentralFrequency', metaDataName)] = np.array(frequency, dtype=np.float32)[output_chidx]
         self.outdata[('height', metaDataName)] = np.array(alt, dtype=np.float32)
+        self.outdata[('atmosphereLayerThicknessZ', metaDataName)] = np.array(thickness, dtype=np.float32)
         DimDict['Location'] = len(self.outdata[('dateTime', metaDataName)])
         DimDict['Channel'] = np.array(channels)
         DimDict['Level'] = np.arange(nlev)
@@ -265,7 +268,7 @@ def main():
     optional.add_argument(
         '--date_range',
         help="extract a date range to fit the data assimilation window"
-        "format -r YYYYMMDDHHMM YYYYMMDDHHMM",
+        "format -r YYYYMMDDHHmm YYYYMMDDHHmm",
         type=str, metavar=('begindate', 'enddate'), nargs=2,
         default=('197001010000', '217001010000'))
 
