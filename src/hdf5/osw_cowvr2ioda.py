@@ -129,9 +129,6 @@ def main(args):
         VarAttrs[(k, obsErrName)]['_FillValue'] = float_missing_value
         VarAttrs[(k, qcName)]['_FillValue'] = int_missing_value
 
-    VarAttrs[('dateTime', metaDataName)]['units'] = iso8601_string
-    VarAttrs[('dateTime', metaDataName)]['_FillValue'] = long_missing_value
-
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
