@@ -5,7 +5,7 @@
 !  which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 !
 
-module ufo_vars_mod
+module ufo_vars_mod_deprecated
 
    implicit none
    private
@@ -189,4 +189,4 @@ contains
 
 ! ------------------------------------------------------------------------------
 
-end module ufo_vars_mod
+end module ufo_vars_mod_deprecated
