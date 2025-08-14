@@ -167,6 +167,16 @@ class calipso_l2ext(object):
         thickness[0] = alt[0] - alt[1]
         thickness[-1] = alt[-2] - alt[-1]
 
+        # Adjust thickness near 20.2 km because it should be around 180m above and 60m below 20.2km
+        tmpidx = abs(alt-20200).argmin()
+        oldthick = thickness[tmpidx]
+        if alt[tmpidx] > 20200:
+            thickness[tmpidx] = thickness[tmpidx - 1]
+            thickness[tmpidx + 1] = thickness[tmpidx + 1] + abs(thickness[tmpidx] - oldthick)
+        else:
+            thickness[tmpidx] = thickness[tmpidx + 1]
+            thickness[tmpidx - 1] = thickness[tmpidx - 1] + abs(thickness[tmpidx] - oldthick)
+
         for f in self.filenames:
             sd = SD(f, SDC.READ)
 
