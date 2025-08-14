@@ -261,9 +261,6 @@ def get_epoch_time(obs_time_tai93):
     return time_offset
 
 
-import numpy as np
-
-
 def wind_speed_direction_to_uv(windSpeed, windDirection, windSpeedError):
     """
     Converts wind speed and direction (in degrees) to eastward (u) and
