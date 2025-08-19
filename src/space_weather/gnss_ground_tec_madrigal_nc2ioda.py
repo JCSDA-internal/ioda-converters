@@ -68,7 +68,7 @@ def main(args):
             meta_data_types = def_meta_types()
             for k, v in meta_data_types.items():
                 locationKeyList.append((k, v))
-            output = f'{args.output}.{date_time_int32}.nc4'
+            output = f'{args.output}_{date_time_int32}.nc4'
             writer = iconv.IodaWriter(output, locationKeyList, DimDict)
             VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
             VarAttrs[('totalElectronContent', 'ObsValue')]['units'] = 'TECU'
@@ -146,9 +146,9 @@ if __name__ == "__main__":
     # Get command line arguments
     parser = argparse.ArgumentParser(
         description=(
-            'Reads the GNSS TEC data from netCDF file'
-            ' convert into IODA formatted output files. '
-            ' Multiple files are concatenated')
+            'Reads the Ground-based GNSS TEC data from gridded netCDF files as downloaded from Madrigal'
+            ' convert into hourly IODA formatted output files. '
+            ' Multiple files can be given')
     )
 
     required = parser.add_argument_group(title='required arguments')
@@ -158,13 +158,10 @@ if __name__ == "__main__":
         type=str, nargs='+', required=True)
     required.add_argument(
         '-o', '--output',
-        help="full path and IODA output file name base (not including date or '.nc4')",
+        help="full path and IODA output file name base (not including date or '.nc4')
+              Should be given as /path/to/file/base and files will be saved as /path/to/file/base_date.nc4",
         type=str, required=True)
     optional = parser.add_argument_group(title='optional arguments')
-#   optional.add_argument(
-#       '-q', '--qualitycontrol',
-#       help='turn on quality control georeality checks',
-#       default=False, action='store_true', required=False)
 
     args = parser.parse_args()
     main(args)

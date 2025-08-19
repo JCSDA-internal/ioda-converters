@@ -181,7 +181,7 @@ if __name__ == "__main__":
     # Get command line arguments
     parser = argparse.ArgumentParser(
         description=(
-            'Reads the GNSS TEC data from netCDF file'
+            'Reads the Space-based GNSS TEC data from netCDF files as downloaded from Madrigal'
             ' convert into IODA formatted output files. '
             ' Multiple files are concatenated')
     )
