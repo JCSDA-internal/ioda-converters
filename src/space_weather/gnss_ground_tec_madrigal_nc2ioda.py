@@ -40,9 +40,19 @@ def main(args):
     for ifile in files:
         ds = h5py.File(ifile)
 
-        times = len(ds['timestamps'][:])
+        if 'nc' in ifile:
+            times = len(ds['timestamps'][:])
+            file_type = 'nc'
+        elif 'hdf' in ifile:
+            times = len(ds['Data']['Array Layout']['timestamps'][:])
+            file_type = 'hdf'
+        else:
+            print(f'File {ifile} not supported')
+            continue
+
         for eindex in range(12, times + 1, 12):  # 12 5-minute increments per hour
-            obs_data = get_obs_data(ds, (eindex - 12, eindex))
+            obs_data = get_obs_data(ds, (eindex - 12, eindex), file_type)
+
             if not obs_data:
                 print(f"INFO: non-nominal file skipping")
                 continue
@@ -50,7 +60,10 @@ def main(args):
             # prepare global attributes we want to output in the file,
             # in addition to the ones already loaded in from the input file
             GlobalAttrs = {}
-            dtg = datetime.utcfromtimestamp(ds['timestamps'][eindex - 6])
+            if file_type =='nc':
+                dtg = datetime.utcfromtimestamp(ds['timestamps'][eindex - 6])
+            else:
+                dtg = datetime.utcfromtimestamp(ds['Data']['Array Layout']['timestamps'][eindex - 6])
             GlobalAttrs['datetimeReference'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
             date_time_int32 = np.array(int(dtg.strftime("%Y%m%d%H")), dtype='int32')
             GlobalAttrs['date_time'] = date_time_int32.item()
@@ -87,16 +100,23 @@ def main(args):
             writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
 
-def get_meta_data(ds, indices):
+def get_meta_data(ds, indices, file_type):
 
     # these are the MetaData we are interested in
     meta_data = {}
 
-    lats = ds['gdlat'][:]
-    lons = ds['glon'][:]
-    times = []
-    for ind in range(indices[0], indices[1], 1):
-        times.append(datetime.utcfromtimestamp(ds['timestamps'][ind]).strftime("%Y%m%d%H"))
+    if file_type == 'nc':
+        lats = ds['gdlat'][:]
+        lons = ds['glon'][:]
+        times = []
+        for ind in range(indices[0], indices[1], 1):
+            times.append(ds['timestamps'][ind])
+    else:
+        lats = ds['Data']['Array Layout']['gdlat'][:]
+        lons = ds['Data']['Array Layout']['glon'][:]
+        times = []
+        for ind in range(indices[0], indices[1], 1):
+            times.append(ds['Data']['Array Layout']['timestamps'][ind])
 
     times3d, lats3d, lons3d = np.meshgrid(times, lats, lons)
 
@@ -111,16 +131,20 @@ def get_meta_data(ds, indices):
     return meta_data
 
 
-def get_obs_data(ds, indices):
+def get_obs_data(ds, indices, file_type):
     # allocate space for output depending on which variables are to be saved
     obs_data = {}
 
-    profile_meta_data = get_meta_data(ds, indices)
-    for k in profile_meta_data.keys():
-        obs_data[(k, 'MetaData')] = profile_meta_data[k]
+    meta_data = get_meta_data(ds, indices, file_type)
+    for k in meta_data.keys():
+        obs_data[(k, 'MetaData')] = meta_data[k]
 
-    obs_data[("totalElectronContent", "ObsValue")] = ds['tec'][indices[0]:indices[1], :, :].ravel()
-    obs_data[("totalElectronContent", "ObsError")] = ds['dtec'][indices[0]:indices[1], :, :].ravel()
+    if file_type == 'nc':
+        obs_data[("totalElectronContent", "ObsValue")] = ds['tec'][indices[0]:indices[1], :, :].ravel()
+        obs_data[("totalElectronContent", "ObsError")] = ds['dtec'][indices[0]:indices[1], :, :].ravel()
+    else:
+        obs_data[("totalElectronContent", "ObsValue")] = ds['Data']['Array Layout']['2D Parameters']['tec'][:, :, indices[0]:indices[1]].ravel()
+        obs_data[("totalElectronContent", "ObsError")] = ds['Data']['Array Layout']['2D Parameters']['dtec'][:, :, indices[0]:indices[1]].ravel()
 
     obs_data[("totalElectronContent", "ObsValue")] = np.asarray(obs_data[("totalElectronContent", "ObsValue")], dtype=ioda_float_type)
     obs_data[("totalElectronContent", "ObsError")] = np.asarray(obs_data[("totalElectronContent", "ObsError")], dtype=ioda_float_type)
@@ -146,7 +170,7 @@ if __name__ == "__main__":
     # Get command line arguments
     parser = argparse.ArgumentParser(
         description=(
-            'Reads the Ground-based GNSS TEC data from gridded netCDF files as downloaded from Madrigal'
+            'Reads the Ground-based GNSS TEC data from gridded netCDF or HDF5 files as downloaded from Madrigal'
             ' convert into hourly IODA formatted output files. '
             ' Multiple files can be given')
     )
@@ -158,8 +182,8 @@ if __name__ == "__main__":
         type=str, nargs='+', required=True)
     required.add_argument(
         '-o', '--output',
-        help="full path and IODA output file name base (not including date or '.nc4')
-              Should be given as /path/to/file/base and files will be saved as /path/to/file/base_date.nc4",
+        help="full path and IODA output file name base (not including date or '.nc4')"
+              "Should be given as /path/to/file/base and files will be saved as /path/to/file/base_date.nc4",
         type=str, required=True)
     optional = parser.add_argument_group(title='optional arguments')
 

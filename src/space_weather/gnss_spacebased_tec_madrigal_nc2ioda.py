@@ -90,25 +90,31 @@ def main(args):
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
 
-def get_meta_data(ds):
+def get_meta_data(ds, file_type):
 
     # these are the MetaData we are interested in
     profile_meta_data = {}
-    psize = len(ds['Data']['Table Layout'][:])
-
-    # bespoke table of letter to WMO code
-    transmitterConstellationId = get_GNSS_constellation(str(ds['Metadata']['Experiment Parameters'][2][1]).split('\'')[1])
-    profile_meta_data['satelliteConstellationRO'] = np.array(np.repeat(transmitterConstellationId, psize), dtype=ioda_int_type)
-
-    profile_meta_data['latitude'] = []
-    profile_meta_data['longitude'] = []
-    profile_meta_data['dateTime'] = []
-    for i in range(psize):
-        profile_meta_data['latitude'].append(ds['Data']['Table Layout'][i][11])
-        profile_meta_data['longitude'].append(ds['Data']['Table Layout'][i][12])
-
-        # the time convert to epoch and handle array of values
-        profile_meta_data['dateTime'].append(datetime(ds['Data']['Table Layout'][i][0], ds['Data']['Table Layout'][i][1], ds['Data']['Table Layout'][i][2], ds['Data']['Table Layout'][i][3], ds['Data']['Table Layout'][i][4], ds['Data']['Table Layout'][i][5]).timestamp())
+    if file_type == 'nc':
+        profile_meta_data['latitude'] = ds['gdlat'][:]
+        profile_meta_data['longitude'] = ds['glon'][:]
+        profile_meta_data['dateTime'] = ds['timestamps'][:]
+        
+    else:
+        psize = len(ds['Data']['Table Layout'][:])
+     
+        # bespoke table of letter to WMO code
+        transmitterConstellationId = get_GNSS_constellation(str(ds['Metadata']['Experiment Parameters'][2][1]).split('\'')[1])
+        profile_meta_data['satelliteConstellationRO'] = np.array(np.repeat(transmitterConstellationId, psize), dtype=ioda_int_type)
+     
+        profile_meta_data['latitude'] = []
+        profile_meta_data['longitude'] = []
+        profile_meta_data['dateTime'] = []
+        for i in range(psize):
+            profile_meta_data['latitude'].append(ds['Data']['Table Layout'][i][11])
+            profile_meta_data['longitude'].append(ds['Data']['Table Layout'][i][12])
+     
+            # the time convert to epoch and handle array of values
+            profile_meta_data['dateTime'].append(datetime(ds['Data']['Table Layout'][i][0], ds['Data']['Table Layout'][i][1], ds['Data']['Table Layout'][i][2], ds['Data']['Table Layout'][i][3], ds['Data']['Table Layout'][i][4], ds['Data']['Table Layout'][i][5]).timestamp())
 
     profile_meta_data['latitude'] = np.asarray(profile_meta_data['latitude'], dtype=ioda_float_type)
     profile_meta_data['longitude'] = np.asarray(profile_meta_data['longitude'], dtype=ioda_float_type)
@@ -123,20 +129,33 @@ def get_obs_data(ifile, get_obs_data_args):
 
     ds = h5py.File(ifile)
 
-    profile_meta_data = get_meta_data(ds)
-    psize = len(profile_meta_data['longitude'])
+    if 'nc' in ifile:
+        file_type = 'nc'
+    elif 'hdf' in ifile:
+        file_type = 'hdf'
+    else:
+        print(f'File {ifile} not supported')
+        return
+
+    profile_meta_data = get_meta_data(ds, file_type)
     for k in profile_meta_data.keys():
         obs_data[(k, 'MetaData')] = profile_meta_data[k]
 
-    obs_data[('sequenceNumber', 'MetaData')] = []
-    obs_data[("totalElectronContent", "ObsValue")] = []
-    for i in range(psize):
-        # number to keep track of profile
-        obs_data[('sequenceNumber', 'MetaData')].append(ds['Data']['Table Layout'][i][6])
-        # the observation value
-        obs_data[("totalElectronContent", "ObsValue")].append(ds['Data']['Table Layout'][i][13])
+    if file_type == 'nc':
+        obs_data[("totalElectronContent", "ObsValue")] = ds['tec'][:]
+        obs_data[("totalElectronContent", "ObsError")] = ds['dtec'][:]
 
-    obs_data[('sequenceNumber', 'MetaData')] = np.asarray(obs_data[('sequenceNumber', 'MetaData')])
+    else:
+        psize = len(profile_meta_data['longitude'])
+        obs_data[('sequenceNumber', 'MetaData')] = []
+        obs_data[("totalElectronContent", "ObsValue")] = []
+        for i in range(psize):
+            # number to keep track of profile
+            obs_data[('sequenceNumber', 'MetaData')].append(ds['Data']['Table Layout'][i][6])
+            # the observation value
+            obs_data[("totalElectronContent", "ObsValue")].append(ds['Data']['Table Layout'][i][13])
+
+        obs_data[('sequenceNumber', 'MetaData')] = np.asarray(obs_data[('sequenceNumber', 'MetaData')])
     obs_data[("totalElectronContent", "ObsValue")] = np.asarray(obs_data[("totalElectronContent", "ObsValue")])
 
     return obs_data
@@ -181,7 +200,7 @@ if __name__ == "__main__":
     # Get command line arguments
     parser = argparse.ArgumentParser(
         description=(
-            'Reads the Space-based GNSS TEC data from netCDF files as downloaded from Madrigal'
+            'Reads the Space-based GNSS TEC data from netCDF or HDF5 files as downloaded from Madrigal'
             ' convert into IODA formatted output files. '
             ' Multiple files are concatenated')
     )
