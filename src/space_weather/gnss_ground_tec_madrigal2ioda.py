@@ -35,6 +35,7 @@ locationKeyList = [
 
 def main(args):
     files = args.input
+    inc = int(args.window/5)
     print(f'{len(files)} files to read')
     obs_data = {}
     for ifile in files:
@@ -50,8 +51,8 @@ def main(args):
             print(f'File {ifile} not supported')
             continue
 
-        for eindex in range(12, times + 1, 12):  # 12 5-minute increments per hour
-            obs_data = get_obs_data(ds, (eindex - 12, eindex), file_type)
+        for sindex in range(0, times, inc):
+            obs_data = get_obs_data(ds, (sindex, sindex + inc), file_type)
 
             if not obs_data:
                 print(f"INFO: non-nominal file skipping")
@@ -61,12 +62,12 @@ def main(args):
             # in addition to the ones already loaded in from the input file
             GlobalAttrs = {}
             if file_type =='nc':
-                dtg = datetime.utcfromtimestamp(ds['timestamps'][eindex - 6])
+                dtg = datetime.utcfromtimestamp(ds['timestamps'][sindex + int(inc/2)])
             else:
-                dtg = datetime.utcfromtimestamp(ds['Data']['Array Layout']['timestamps'][eindex - 6])
+                dtg = datetime.utcfromtimestamp(ds['Data']['Array Layout']['timestamps'][sindex + int(inc/2)])
             GlobalAttrs['datetimeReference'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
-            date_time_int32 = np.array(int(dtg.strftime("%Y%m%d%H")), dtype='int32')
-            GlobalAttrs['date_time'] = date_time_int32.item()
+            date_time = np.array(int(dtg.strftime("%Y%m%d%H%M")), dtype=str)
+            GlobalAttrs['date_time'] = date_time.item()
         
             GlobalAttrs['converter'] = os.path.basename(__file__)
         
@@ -81,7 +82,7 @@ def main(args):
             meta_data_types = def_meta_types()
             for k, v in meta_data_types.items():
                 locationKeyList.append((k, v))
-            output = f'{args.output}_{date_time_int32}.nc4'
+            output = f'{args.output}_{date_time}.nc4'
             writer = iconv.IodaWriter(output, locationKeyList, DimDict)
             VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
             VarAttrs[('totalElectronContent', 'ObsValue')]['units'] = 'TECU'
@@ -186,6 +187,10 @@ if __name__ == "__main__":
               "Should be given as /path/to/file/base and files will be saved as /path/to/file/base_date.nc4",
         type=str, required=True)
     optional = parser.add_argument_group(title='optional arguments')
+    optional.add_argument(
+        '-w', '--window',
+        help="Number of minutes to output to file. Will be rounded down to multiples of 5. Default 60 minutes",
+        type=int, default=60)
 
     args = parser.parse_args()
     main(args)
