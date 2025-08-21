@@ -1,4 +1,4 @@
-module ahi_HSD_mod
+module ahi_HSD_mod_deprecated
 
 !Himawari Standard Data
 !HS_H08_20210119_1600_B09_FLDK_R20_S0510.DAT
@@ -15,12 +15,12 @@ module ahi_HSD_mod
 !https://www.jstage.jst.go.jp/article/jmsj/94/2/94_2016-009/_pdf/-char/en
 
    use iodaconv_kinds, only: i_byte, i_int, i_short, i_long, i_llong, i_kind, r_single, r_double, r_kind
-   use define_mod, only: missing_r, missing_i, nstring, ndatetime, &
-                         ninst, inst_list, set_name_satellite, set_name_sensor, xdata, name_sen_info, &
-                         nvar_info, name_var_info, type_var_info, nsen_info, type_sen_info, set_brit_obserr, strlen
-   use ufo_vars_mod, only: ufo_vars_getindex
+   use define_mod_deprecated, only: missing_r, missing_i, nstring, ndatetime, &
+                                    ninst, inst_list, set_name_satellite, set_name_sensor, xdata, name_sen_info, &
+                                    nvar_info, name_var_info, type_var_info, nsen_info, type_sen_info, set_brit_obserr, strlen
+   use ufo_vars_mod_deprecated, only: ufo_vars_getindex
    use netcdf, only: nf90_float, nf90_int, nf90_char, nf90_int64
-   use utils_mod, only: get_julian_time
+   use utils_mod_deprecated, only: get_julian_time
 
    implicit none
 
@@ -1045,4 +1045,4 @@ fnames(ij) = trim(inpdir)//'HS_'//ahi_satid//'_'//ccyymmdd//'_'//hhnn//'_'//band
 
     end subroutine read_error
 
-end module ahi_HSD_mod
+end module ahi_HSD_mod_deprecated

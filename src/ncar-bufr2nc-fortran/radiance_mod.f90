@@ -1,13 +1,13 @@
-module radiance_mod
+module radiance_mod_deprecated
 
    use iodaconv_kinds, only: r_kind, i_kind, r_double, i_llong
-   use define_mod, only: missing_r, missing_i, nstring, ndatetime, &
-                         ninst, inst_list, set_name_satellite, set_name_sensor, xdata, name_sen_info, &
-                         nvar_info, name_var_info, type_var_info, nsen_info, type_sen_info, &
-                         dtime_min, dtime_max, strlen
-   use ufo_vars_mod, only: ufo_vars_getindex
+   use define_mod_deprecated, only: missing_r, missing_i, nstring, ndatetime, &
+                                    ninst, inst_list, set_name_satellite, set_name_sensor, xdata, name_sen_info, &
+                                    nvar_info, name_var_info, type_var_info, nsen_info, type_sen_info, &
+                                    dtime_min, dtime_max, strlen
+   use ufo_vars_mod_deprecated, only: ufo_vars_getindex
    use netcdf, only: nf90_float, nf90_int, nf90_char, nf90_int64
-   use utils_mod, only: get_julian_time, da_advance_time, da_get_time_slots
+   use utils_mod_deprecated, only: get_julian_time, da_advance_time, da_get_time_slots
 
    implicit none
    private
@@ -1407,4 +1407,4 @@ contains
 
    end subroutine read_spc
 
-end module radiance_mod
+end module radiance_mod_deprecated

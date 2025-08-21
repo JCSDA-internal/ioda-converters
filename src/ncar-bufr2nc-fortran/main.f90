@@ -1,16 +1,16 @@
 program obs2ioda
 
-   use define_mod, only: write_nc_conv, write_nc_radiance, write_nc_radiance_geo, StrLen, xdata, &
+   use define_mod_deprecated, only: write_nc_conv, write_nc_radiance, write_nc_radiance_geo, StrLen, xdata, &
                          ninst
    use iodaconv_kinds, only: i_kind
-   use prepbufr_mod, only: read_prepbufr, sort_obs_conv, filter_obs_conv, do_tv_to_ts
-   use radiance_mod, only: read_amsua_amsub_mhs, read_airs_colocate_amsua, sort_obs_radiance, &
-                           read_iasi, read_cris, radiance_to_temperature
-   use ncio_mod, only: write_obs
-   use gnssro_bufr2ioda, only: read_write_gnssro
-   use ahi_hsd_mod, only: read_hsd, subsample, ahi_satid
-   use satwnd_mod, only: read_satwnd, filter_obs_satwnd, sort_obs_satwnd
-   use utils_mod, only: da_advance_time
+   use prepbufr_mod_deprecated, only: read_prepbufr, sort_obs_conv, filter_obs_conv, do_tv_to_ts
+   use radiance_mod_deprecated, only: read_amsua_amsub_mhs, read_airs_colocate_amsua, sort_obs_radiance, &
+                                      read_iasi, read_cris, radiance_to_temperature
+   use ncio_mod_deprecated, only: write_obs
+   use gnssro_bufr2ioda_deprecated, only: read_write_gnssro
+   use ahi_hsd_mod_deprecated, only: read_hsd, subsample, ahi_satid
+   use satwnd_mod_deprecated, only: read_satwnd, filter_obs_satwnd, sort_obs_satwnd
+   use utils_mod_deprecated, only: da_advance_time
 
    implicit none
 
