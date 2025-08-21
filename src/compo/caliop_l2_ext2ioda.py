@@ -8,11 +8,11 @@
 #
 
 import argparse
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os, sys
 
-from pyhdf.HDF import *
-from pyhdf.VS import *
+from pyhdf.HDF import HDF
+from pyhdf.VS import VS
 from pyhdf.SD import SD, SDC
 import numpy as np
 import netCDF4 as nc
@@ -22,6 +22,8 @@ from collections import defaultdict, OrderedDict
 from pyiodaconv.orddicts import DefaultOrderedDict
 from pyiodaconv.def_jedi_utils import compute_scan_angle
 from pyiodaconv.def_jedi_utils import iso8601_string, epoch
+
+os.environ["TZ"] = "UTC"
 
 # globals
 CALIPSO_WMO_sat_ID = 787
@@ -55,8 +57,8 @@ VarDims = {
     'atmosphereLayerThicknessZ': ['Level'],
     'sensorCentralWavelength': ['Channel'],
     'sensorCentralFrequency': ['Channel'],
-    'cloudAerosolDiscriminationHigher': ['Location', 'Channel'],
-    'cloudAerosolDiscriminationLower': ['Location', 'Channel'],
+    'cloudAerosolDiscriminationHigher': ['Location'],
+    'cloudAerosolDiscriminationLower': ['Location'],
 }
 
 obsvars = ["extinctionCoefficient"]
@@ -87,11 +89,13 @@ missing_vals = {'string': string_missing_value,
                 'double': double_missing_value}
 
 
-class calipso_l2ext(object):
+class caliop_l2ext(object):
     def __init__(self, filenames, date_range):
         self.filenames = filenames
-        self.wbeg = np.datetime64(datetime.strptime(date_range[0], "%Y%m%d%H%M"))
-        self.wend = np.datetime64(datetime.strptime(date_range[1], "%Y%m%d%H%M"))
+        wbeg = datetime.strptime(date_range[0], "%Y%m%d%H%M").replace(tzinfo=timezone.utc) - epoch
+        wend = datetime.strptime(date_range[1], "%Y%m%d%H%M").replace(tzinfo=timezone.utc) - epoch
+        self.wbeg = wbeg.total_seconds()
+        self.wend = wend.total_seconds()
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.setDicts()
@@ -120,14 +124,16 @@ class calipso_l2ext(object):
                 if varsKeyList[var_keys.index(key)][4]:
                     self.varAttrs[iodavar, varGroupName]['units'] = varsKeyList[var_keys.index(key)][4]
 
-    def calipso_time2dt(time):
-        d = np.round(np.mod(time, 100)).astype(np.int32)
-        m = np.round(np.mod((time-d), 10000)).astype(np.int32)
-        y = np.round(time-m-d).astype(np.int32)
-        dtarr = [datetime(2000 + yi//10000, mi//100, di, tzinfo=timezone.utc)
-                 for yi, mi, di in zip(y, m, d)]
+    def caliop_time2dt(self, time):
+        """
+        Convert CALIOP Profile_UTC_Time to datetime.datetime object
+
+        Args:
+            time: list or array of Profile_UTC_Time from CALIOP file (float number: yymmdd.ffffffff)
+        """
+        dtarr = [datetime.strptime(str(t)[:6], '%y%m%d') for t in time]
         delta = [timedelta(frac) for frac in np.mod(time, 1)]
-        outarr = [dt + dl for dt, dl in zip(dtarr, delta)]
+        outarr = [(dt + dl).replace(tzinfo=timezone.utc) for dt, dl in zip(dtarr, delta)]
         return outarr
 
     def _read(self):
@@ -168,14 +174,14 @@ class calipso_l2ext(object):
         thickness[-1] = alt[-2] - alt[-1]
 
         # Adjust thickness near 20.2 km because it should be around 180m above and 60m below 20.2km
-        tmpidx = abs(alt-20200).argmin()
+        tmpidx = np.argmin(np.abs(alt-20200))
         oldthick = thickness[tmpidx]
         if alt[tmpidx] > 20200:
             thickness[tmpidx] = thickness[tmpidx - 1]
-            thickness[tmpidx + 1] = thickness[tmpidx + 1] + abs(thickness[tmpidx] - oldthick)
+            thickness[tmpidx + 1] = thickness[tmpidx + 1] + np.abs(thickness[tmpidx] - oldthick)
         else:
             thickness[tmpidx] = thickness[tmpidx + 1]
-            thickness[tmpidx - 1] = thickness[tmpidx - 1] + abs(thickness[tmpidx] - oldthick)
+            thickness[tmpidx - 1] = thickness[tmpidx - 1] + np.abs(thickness[tmpidx] - oldthick)
 
         for f in self.filenames:
             sd = SD(f, SDC.READ)
@@ -187,8 +193,9 @@ class calipso_l2ext(object):
             lons = sd.select('Longitude').get()[:, 1]
             lons = np.repeat(lons, nlev)
             profidx = np.arange(lats.size)
-            proftime = sd.select('Profile_Time').get()[:, 1]
-            obs_time = (proftime + caliop_ref_time.timestamp()).astype('datetime64[s]')
+            proftime = sd.select('Profile_UTC_Time').get()[:, 1]
+            obs_time = np.array([(pt - epoch).total_seconds() for pt in self.caliop_time2dt(proftime)],
+                                dtype=np.int64)
             obs_time = np.repeat(obs_time, nlev)
             winmsk = ((obs_time >= self.wbeg) & (obs_time <= self.wend))
 
@@ -285,11 +292,11 @@ def main():
     args = parser.parse_args()
 
     # Read CALIPSO extinction profile data
-    calipsol2 = calipso_l2ext(args.input, args.date_range)
+    caliop_l2 = caliop_l2ext(args.input, args.date_range)
 
     # write everything out
     writer = iconv.IodaWriter(args.output, metaKeyList, DimDict)
-    writer.BuildIoda(calipsol2.outdata, VarDims, calipsol2.varAttrs, AttrData)
+    writer.BuildIoda(caliop_l2.outdata, VarDims, caliop_l2.varAttrs, AttrData)
 
 
 if __name__ == "__main__":
