@@ -1532,7 +1532,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_caliop_l2_ext
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/caliop_l2_ext2ioda.py
                           -i testinput/caliop_l2_APro.hdf
                           -o testrun/caliop_l2_APro.nc4
-                          --date_range 201907220346 201907220348"
+                          --date_range 201907220340 201907220350"
                           caliop_l2_APro.nc4 ${IODA_CONV_COMP_TOL})
 
 
