@@ -25,7 +25,7 @@ set(obs2ioda_v3_SOURCES
 set(goes_abi_converter_SOURCES
         goes_abi_converter.f90
 )
-set(v3_PUBLIC_LINK_LIBRARIES NetCDF::NetCDF_Fortran bufr::bufr_4 obs2ioda_cxx)
+set(v3_PUBLIC_LINK_LIBRARIES eckit NetCDF::NetCDF_Fortran bufr::bufr_4 obs2ioda_cxx)
 add_library(v3 SHARED ${v3_SOURCES})
 
 function(obs2ioda_fortran_library target public_link_libraries)
@@ -67,8 +67,7 @@ endfunction()
 obs2ioda_fortran_library(v3 "${v3_PUBLIC_LINK_LIBRARIES}")
 
 set(obs2ioda_v3_PUBLIC_LINK_LIBRARIES v3)
-#add_executable(obs2ioda_v3 ${obs2ioda_v3_SOURCES})
-#obs2ioda_fortran_executable(obs2ioda_v3 "${obs2ioda_v3_PUBLIC_LINK_LIBRARIES}")
+
 ecbuild_add_executable( TARGET  obs2ioda_v3
                         SOURCES ${obs2ioda_v3_SOURCES})
 set_target_properties(obs2ioda_v3 PROPERTIES LINKER_LANGUAGE Fortran
@@ -78,12 +77,10 @@ target_link_libraries(obs2ioda_v3 PUBLIC "${obs2ioda_v3_PUBLIC_LINK_LIBRARIES}")
 
 if (BUILD_GOES_ABI_CONVERTER)
     set(goes_abi_converter_PUBLIC_LINK_LIBRARIES v3)
-    #add_executable(goes_abi_converter ${goes_abi_converter_SOURCES})
     ecbuild_add_executable( TARGET  goes_abi_converter
                             SOURCES ${goes_abi_converter_SOURCES})
     set_target_properties(goes_abi_converter PROPERTIES LINKER_LANGUAGE Fortran
               RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
               INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
     target_link_libraries(goes_abi_converter PUBLIC "${goes_abi_converter_PUBLIC_LINK_LIBRARIES}")    
-    #obs2ioda_fortran_executable(goes_abi_converter "${goes_abi_converter_PUBLIC_LINK_LIBRARIES}")
 endif ()
