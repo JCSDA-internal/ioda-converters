@@ -1,0 +1,49 @@
+name: start-jedi-ci
+
+on:
+  pull_request:
+    branches:
+     - 'master'
+     - 'main'
+     - 'develop'
+
+jobs:
+  launch-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+
+      - name: Generate CI App token
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          # Owner is specified to scope the token to the org install
+          # otherwise the token will be scoped to the repository.
+          app-id: 321361
+          private-key: ${{ secrets.CI_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: checkout repository
+        uses: actions/checkout@v4
+        with:
+          path: target_repository
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          # This role only has the permission to write to our lfs archive s3 bucket path.
+          role-to-assume: arn:aws:iam::747101682576:role/service-role/jedi-ci-action-runner-backend-GitHubActionsIAMRole-HkHdJRVEFw3x
+          aws-region: us-east-2
+
+      - name: Run JEDI CI
+        uses: JCSDA-internal/jedi-ci@develop
+        with:
+          container_version: 'latest'
+          unittest_tag: 'iodaconv'
+          unittest_dependencies: oops ioda ioda-data
+          test_script: run_tests.sh
+          target_repo_dir: target_repository
+          bundle_branch: develop
+          jedi_ci_token: ${{ steps.generate-token.outputs.token }}
