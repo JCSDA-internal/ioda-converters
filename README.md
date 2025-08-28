@@ -162,9 +162,9 @@ It should be noted that both ims_scf2ioda.py and afwa_snod2ioda.py are depending
 
 For snow depth (snod), GHCN csv files are supported with `ghcn_snod2ioda.py`.
 ```
-Usage: ghcn_snod2ioda.py -i input_ghcn_file.csv -o output_ioda_file.nc -f ghcn_station.txt -d YYYYMMDD -m maskout
+Usage: ghcn_snod2ioda.py -i input_ghcn_file.csv -o output_ioda_file.nc -f ghcn_station.txt -d YYYYMMDD [ --warn_on_missing_stn]
 ````
-In the test case, YYYYMMDD is set 20200228. For -i you can specify an input file and the converter will write it to one output file. For fix file option (-f), you can specify fix station list file which includes station ID, latitude, longitude, and elevation. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values.
+In the test case, YYYYMMDD is set 20200228. For -i you can specify an input file and the converter will write it to one output file. For fix file option (-f), you can specify fix station list file which includes station ID, latitude, longitude, and elevation. If there are stations in the input file that are not in the fix file the code will report an error and exit; this can be over-written by adding the --warn_on_missing_stn flag.
 
 
 For both SMAP surface volumetric soil moisture (ssm), both 9km and NRT h5 files are supported with `smap_ssm2ioda.py`.

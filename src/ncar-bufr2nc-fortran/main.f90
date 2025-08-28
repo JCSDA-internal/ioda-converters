@@ -1,16 +1,16 @@
 program obs2ioda
 
-   use define_mod, only: write_nc_conv, write_nc_radiance, write_nc_radiance_geo, StrLen, xdata, &
+   use define_mod_deprecated, only: write_nc_conv, write_nc_radiance, write_nc_radiance_geo, StrLen, xdata, &
                          ninst
    use iodaconv_kinds, only: i_kind
-   use prepbufr_mod, only: read_prepbufr, sort_obs_conv, filter_obs_conv, do_tv_to_ts
-   use radiance_mod, only: read_amsua_amsub_mhs, read_airs_colocate_amsua, sort_obs_radiance, &
-                           read_iasi, read_cris, radiance_to_temperature
-   use ncio_mod, only: write_obs
-   use gnssro_bufr2ioda, only: read_write_gnssro
-   use ahi_hsd_mod, only: read_hsd, subsample
-   use satwnd_mod, only: read_satwnd, filter_obs_satwnd, sort_obs_satwnd
-   use utils_mod, only: da_advance_time
+   use prepbufr_mod_deprecated, only: read_prepbufr, sort_obs_conv, filter_obs_conv, do_tv_to_ts
+   use radiance_mod_deprecated, only: read_amsua_amsub_mhs, read_airs_colocate_amsua, sort_obs_radiance, &
+                                      read_iasi, read_cris, radiance_to_temperature
+   use ncio_mod_deprecated, only: write_obs
+   use gnssro_bufr2ioda_deprecated, only: read_write_gnssro
+   use ahi_hsd_mod_deprecated, only: read_hsd, subsample, ahi_satid
+   use satwnd_mod_deprecated, only: read_satwnd, filter_obs_satwnd, sort_obs_satwnd
+   use utils_mod_deprecated, only: da_advance_time
 
    implicit none
 
@@ -261,6 +261,10 @@ program obs2ioda
          write (*, *) 'Error: -t ccyymmddhhnn not specified for -ahi'
          stop
       end if
+      if (len_trim(ahi_satid) /=3) then
+         write (*, *) 'Error: Himawari satid: -hs H08/H09 must be specified with -ahi'
+         stop
+      end if
       call read_HSD(cdatetime, inpdir, do_superob, superob_halfwidth)
       filedate = cdatetime(1:10)
       call write_obs(filedate, write_nc_radiance_geo, outdir, 1)
@@ -276,7 +280,7 @@ contains
       implicit none
 
       integer(i_kind)       :: iunit = 21
-      integer(i_kind)       :: narg, iarg, iarg_inpdir, iarg_outdir, iarg_datetime, iarg_subsample, iarg_superob_halfwidth
+      integer(i_kind)       :: narg, iarg, iarg_inpdir, iarg_outdir, iarg_datetime, iarg_subsample, iarg_superob_halfwidth, iarg_hs
       integer(i_kind)       :: itmp
       integer(i_kind)       :: iost, iret, idate
       character(len=StrLen) :: strtmp
@@ -287,6 +291,7 @@ contains
       inpdir = '.'
       outdir = '.'
       cdatetime = ''
+      ahi_satid = ''
       flist(:) = 'null'
       iarg_inpdir = -1
       iarg_outdir = -1
@@ -314,6 +319,8 @@ contains
                iarg_datetime = iarg + 1
             else if (trim(strtmp) == '-s') then
                iarg_subsample = iarg + 1
+            else if (trim(strtmp) == '-hs') then
+               iarg_hs = iarg + 1
             else if (trim(strtmp) == '-superob') then
                do_superob = .true.
                iarg_superob_halfwidth = iarg + 1
@@ -337,6 +344,11 @@ contains
                      read (strtmp, '(i2)') superob_halfwidth
                   else
                      iarg_superob_halfwidth = 1
+                  end if
+               else if (iarg == iarg_hs) then
+                  call get_command_argument(number=iarg, value=strtmp)
+                  if (len_trim(strtmp) > 0) then
+                      ahi_satid = strtmp(1:3)
                   end if
                else
                   ifile = ifile + 1
