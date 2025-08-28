@@ -260,7 +260,8 @@ public:
      * @param node YAML node containing variable data.
      * @param config The configuration object containing the child node of variable.
      */
-    void load(const std::shared_ptr<IYamlNode> &node) override;
+    void load(const std::shared_ptr<IYamlNode> &node,
+              const eckit::LocalConfiguration &config) override;
 };
 
 /**
