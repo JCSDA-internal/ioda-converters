@@ -461,9 +461,11 @@ if( iodaconv_pbfortran_ENABLED )
     testoutput/radiosonde_obs_2020093018.nc4
     testoutput/sondes_obs_2020093018.nc4
     testoutput/mhs_metop-b_obs_2020101215.nc4
+    testoutput/mhs_metop-b_obs_2020101215_v1.nc4
     testoutput/mhs_metop-b_obs_2020110112.nc4
     testoutput/mhs_n19_obs_2020110112.nc4
     testoutput/amsua_metop-b_obs_2020110112.nc4
+    testoutput/amsua_metop-b_obs_2020110112_v1.nc4
     testoutput/amsua_n18_obs_2020110112.nc4
     testoutput/iasi_metop-b_obs_2022021912.nc4
   )
@@ -2324,18 +2326,16 @@ if( iodaconv_pbfortran_ENABLED )
                             radiosonde_obs_2020093018.nc4 ${IODA_CONV_COMP_TOL}
                     DEPENDS bufr2nc_fortran.x)
 
-#   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mhs_conv
-#                     TYPE    SCRIPT
-#                     COMMAND bash
-#                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-#                             netcdf
-#                             "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
-#                             -i testinput -o testrun gdas.t18z.1bmhs.tm00.bufr_d"
-#                             mhs_metop-b_obs_2020101215.nc4 ${IODA_CONV_COMP_TOL}
-#                     DEPENDS bufr2nc_fortran.x)
-# Commenting out, since the reference and output file mhs_metop-b_obs_2020101215.nc4
-# is different for the obs2ioda_v3 and bufr2nc_fortran converter and this test will fail.
-# Converted file has canonical variable names and not the names with underscore or other names.
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mhs_conv
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_v1comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
+                            -i testinput -o testrun gdas.t18z.1bmhs.tm00.bufr_d"
+                            mhs_metop-b_obs_2020101215.nc4
+                            mhs_metop-b_obs_2020101215_v1.nc4 ${IODA_CONV_COMP_TOL}
+                    DEPENDS bufr2nc_fortran.x)
 
 #  FIXME: Emily Liu
 #  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ears_mhs_conv
@@ -2348,18 +2348,16 @@ if( iodaconv_pbfortran_ENABLED )
 #                            mhs_n19_obs_2020110112.nc4 ${IODA_CONV_COMP_TOL}
 #                    DEPENDS bufr2nc_fortran.x)
 
-#   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_amsua_conv
-#                     TYPE    SCRIPT
-#                     COMMAND bash
-#                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-#                             netcdf
-#                             "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
-#                             -i testinput -o testrun gdas.t12z.1bamua.tm00.bufr_d"
-#                             amsua_metop-b_obs_2020110112.nc4 ${IODA_CONV_COMP_TOL}
-#                     DEPENDS bufr2nc_fortran.x)
-# Commenting out, since the reference and output file amsua_metop-b_obs_2020110112.nc4
-# is different for the obs2ioda_v3 and bufr2nc_fortran converter and this test will fail.
-# Converted file has canonical variable names and not the names with underscore or other names.
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_amsua_conv
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_v1comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
+                            -i testinput -o testrun gdas.t12z.1bamua.tm00.bufr_d"
+                            amsua_metop-b_obs_2020110112.nc4
+                            amsua_metop-b_obs_2020110112_v1.nc4 ${IODA_CONV_COMP_TOL}
+                    DEPENDS bufr2nc_fortran.x)
 
   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_amsua_conv_ncar_obs2ioda
                     TYPE    SCRIPT
