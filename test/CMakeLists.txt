@@ -2371,6 +2371,51 @@ if( iodaconv_pbfortran_ENABLED )
                             amsua_metop-b_obs_2020110112.nc4 ${IODA_CONV_COMP_TOL}
                     DEPENDS obs2ioda_v3)
 
+#==============================================================================
+# Unit tests for Obs2Ioda C++ NetCDF and schema utilities
+#==============================================================================
+
+ecbuild_add_test( TARGET   test_${PROJECT_NAME}_obs2ioda_ioda_obs_schema
+                  SOURCES  ncar/obs2ioda/cpp/ioda_obs_schema.test.cc
+                  LIBS     eckit obs2ioda_cxx
+                  DEPENDS  obs2ioda_v3 )
+
+ecbuild_add_test( TARGET   test_${PROJECT_NAME}_obs2ioda_netcdf_file
+                  SOURCES  ncar/obs2ioda/cpp/netcdf_file.test.cc
+                  LIBS     eckit obs2ioda_cxx
+                  DEPENDS  obs2ioda_v3 )
+
+ecbuild_add_test( TARGET   test_${PROJECT_NAME}_obs2ioda_netcdf_group
+                  SOURCES  ncar/obs2ioda/cpp/netcdf_group.test.cc
+                  LIBS     eckit obs2ioda_cxx
+                  DEPENDS  obs2ioda_v3 )
+
+ecbuild_add_test( TARGET   test_${PROJECT_NAME}_obs2ioda_netcdf_variable
+                  SOURCES  ncar/obs2ioda/cpp/netcdf_variable.test.cc
+                  LIBS     eckit obs2ioda_cxx
+                  DEPENDS  obs2ioda_v3 )
+
+ecbuild_add_test( TARGET   test_${PROJECT_NAME}_obs2ioda_netcdf_error
+                  SOURCES  ncar/obs2ioda/cpp/netcdf_error.test.cc
+                  LIBS     eckit obs2ioda_cxx
+                  DEPENDS  obs2ioda_v3 )
+
+ecbuild_add_test( TARGET   test_${PROJECT_NAME}_obs2ioda_netcdf_dimension
+                  SOURCES  ncar/obs2ioda/cpp/netcdf_dimension.test.cc
+                  LIBS     eckit obs2ioda_cxx
+                  DEPENDS  obs2ioda_v3 )
+
+ecbuild_add_test( TARGET   test_${PROJECT_NAME}_obs2ioda_netcdf_attribute
+                  SOURCES  ncar/obs2ioda/cpp/netcdf_attribute.test.cc
+                  LIBS     eckit obs2ioda_cxx
+                  DEPENDS  obs2ioda_v3 )
+
+ecbuild_add_test( TARGET   test_${PROJECT_NAME}_obs2ioda_set_netcdf_group
+                  SOURCES  ncar/obs2ioda/cpp/set_netcdf_group.test.cc
+                  LIBS     eckit obs2ioda_cxx
+                  DEPENDS  obs2ioda_v3 )
+
+
 #  FIXME: Emily Liu
 #  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ears_amsua_conv
 #                    TYPE    SCRIPT
