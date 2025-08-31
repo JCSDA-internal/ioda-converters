@@ -4,12 +4,6 @@ set(FORTRAN_COMPILER_GNU_FLAGS
     $<$<COMPILE_LANGUAGE:Fortran>:-ffree-line-length-none>
 )
 
-# Set Fortran compiler flags specific to the GNU Compiler and Linux OS.
-# -mcmodel=medium: Allow for larger datasets in memory
-set(FORTRAN_COMPILER_GNU_LINUX_FLAGS
-        $<$<COMPILE_LANGUAGE:Fortran>:-mcmodel=medium>
-)
-
 # Set Debugging Fortran compiler flags specific to the GNU Compiler
 # -fbacktrace: Provide a backtrace when an error occurs
 # -ffpe-trap=invalid,zero,overflow: Trap floating point exceptions (invalid calculation, divide by zero, overflow)
@@ -17,12 +11,6 @@ set(FORTRAN_COMPILER_GNU_LINUX_FLAGS
 # -g: Produce debugging information
 set(FORTRAN_COMPILER_GNU_DEBUG_FLAGS
     $<$<COMPILE_LANGUAGE:Fortran>:-g -fbacktrace -ffpe-trap=invalid,zero,overflow -fcheck=all>
-)
-
-# Set Fortran compiler flags for the Intel Compiler
-# -mcmodel=medium: Allow for larger datasets in memory
-set(FORTRAN_COMPILER_INTEL_FLAGS
-    $<$<COMPILE_LANGUAGE:Fortran>:-mcmodel=medium>
 )
 
 # Set Debugging Fortran compiler flags for the Intel Compiler
@@ -34,3 +22,15 @@ set(FORTRAN_COMPILER_INTEL_FLAGS
 set(FORTRAN_COMPILER_INTEL_DEBUG_FLAGS
     $<$<COMPILE_LANGUAGE:Fortran>:-check uninit -ftrapuv -g -traceback -fpe0>
 )
+
+# Only for x86_64: allow larger datasets in memory
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
+    set(FORTRAN_COMPILER_GNU_FLAGS
+        ${FORTRAN_COMPILER_GNU_FLAGS}
+        $<$<COMPILE_LANGUAGE:Fortran>:-mcmodel=medium>
+    )
+    set(FORTRAN_COMPILER_INTEL_FLAGS
+        ${FORTRAN_COMPILER_INTEL_FLAGS}
+        $<$<COMPILE_LANGUAGE:Fortran>:-mcmodel=medium>
+    )
+endif()

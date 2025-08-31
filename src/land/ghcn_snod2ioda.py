@@ -8,6 +8,7 @@
 import argparse
 import numpy as np
 import pandas as pd
+import sys
 from datetime import datetime, timezone
 from dateutil.parser import parse
 
@@ -47,26 +48,13 @@ def get_epoch_time(adatetime):
     return time_offset
 
 
-def assignValue(colrowValue, df400):
-    if colrowValue == '' or pd.isnull(colrowValue):
-        outList = float_missing_value
-    else:
-        ml = df400.loc[df400['ID'] == colrowValue, "DATA_VALUE"]
-    # check if the series is empty
-    if not ml.empty:
-        outList = ml.iloc[0]
-    else:
-        outList = float_missing_value
-    return outList
-
-
 class ghcn(object):
 
-    def __init__(self, filename, fixfile, date, mask):
+    def __init__(self, filename, fixfile, date, warn):
         self.filename = filename
         self.fixfile = fixfile
         self.date = date
-        self.mask = mask
+        self.warn = warn
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.metaDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
@@ -97,10 +85,11 @@ class ghcn(object):
         df30_list.append(df20)
         df20 = None
 
+        # select only snow depth, valid obs, and date
         df30 = pd.concat(df30_list, ignore_index=True)
         df30 = df30[df30["ELEMENT"] == "SNWD"]
+        df30 = df30[df30["DATA_VALUE"].astype('float32') >= 0.0]
         df30["DATETIME"] = df30.apply(lambda row: parse(str(row["DATETIME"])).date(), axis=1)
-        # select data which matches the Start date
         startdate = self.date
         valid_date = datetime.strptime(startdate, "%Y%m%d%H")
         valid_date = valid_date.replace(tzinfo=timezone.utc)
@@ -118,63 +107,38 @@ class ghcn(object):
         df10 = df10.rename(columns=sub_cols)
         df10 = df10.drop_duplicates(subset=["ID"])
 
-        # use stations list as the number of obs points
-        # if no data for a station and a given date, leave float_missing_value
-        num_obs = len(df10.index)
+        # merge on ID to pull coordinates from the fix file
+        df300 = pd.merge(df30, df10[['ID', 'LATITUDE', 'LONGITUDE', 'ELEVATION']], on='ID', how='left')
 
-        # Initialzed data array
-        vals = np.full((num_obs), float_missing_value)
-        lats = np.full((num_obs), float_missing_value)
-        lons = np.full((num_obs), float_missing_value)
-        alts = np.full((num_obs), float_missing_value)
-        id_array = np.chararray((num_obs))
-        id_array[:] = "UNKNOWN"
+        # if merge (left) cannot find ID in df10, will insert NaN
+        if (any(df300['LATITUDE'].isna())):
+            if (self.warn):
+                print(f"\n WARNING: ignoring ghcn stations missing from station_list")
+            else:
+                sys.exit(f"\n ERROR: ghcn data files contains station not in station_list.")
 
-        lats = df10["LATITUDE"].values
-        lons = df10["LONGITUDE"].values
-        alts = df10["ELEVATION"].values
-        id_array = df10["ID"].values
+        sites = df300["ID"].values
+        vals = df300["DATA_VALUE"].values
+        lats = df300["LATITUDE"].values
+        lons = df300["LONGITUDE"].values
+        alts = df300["ELEVATION"].values
 
-        df100 = pd.DataFrame(data=id_array, columns=['ID'])
-        df100.assign(DATA_VALUE=float_missing_value)
-        df30Temp = df30.loc[df30["DATETIME"] == new_date]
-        df100["DATA_VALUE"] = df100.apply(lambda row: assignValue(row['ID'], df30Temp), axis=1)
-        df30Temp = None
-
-        vals = df100["DATA_VALUE"].values
         vals = vals.astype('float32')
         lats = lats.astype('float32')
         lons = lons.astype('float32')
         alts = alts.astype('float32')
-        qflg = 0*vals.astype('int32')
-        errs = 0.0*vals
-        sites = np.empty_like(vals, dtype=object)
-        times = np.empty_like(vals, dtype='int64')
-        sites = id_array
 
-        # use maskout options
-        if self.mask == "maskout":
-
-            with np.errstate(invalid='ignore'):
-                mask = (vals >= 0.0) & (vals < float_missing_value)
-            vals = vals[mask]
-            errs = errs[mask]
-            qflg = qflg[mask]
-            lons = lons[mask]
-            lats = lats[mask]
-            alts = alts[mask]
-            sites = sites[mask]
-            times = times[mask]
+        # set qflg to 0 (do we need this?), error to 40.
+        qflg = np.full(vals.shape, 0, dtype='int32')
+        errs = np.full(vals.shape, 40.0, dtype='float32')
 
         # get datetime from input
         my_date = datetime.strptime(startdate, "%Y%m%d%H")
         my_date = my_date.replace(tzinfo=timezone.utc)
         epoch_time = np.int64(get_epoch_time(my_date))
 
-        # vals[vals >= 0.0] *= 0.001      # mm to meters
-        # errs[:] = 0.04                  # error in meters
-        errs[:] = 40.0                    # error in mm
-        times[:] = epoch_time
+        times = np.full(vals.shape, epoch_time, dtype='int64')
+
         # add metadata variables
         self.outdata[('dateTime', 'MetaData')] = times
         self.outdata[('stationIdentification', 'MetaData')] = sites
@@ -210,11 +174,9 @@ def main():
                         type=str, required=True)
     parser.add_argument('-d', '--date',
                         help="base date (YYYYMMDDHH)", type=str, required=True)
-    optional = parser.add_argument_group(title='optional arguments')
-    optional.add_argument(
-        '-m', '--mask',
-        help="maskout missing values: maskout/default, default=none",
-        type=str, required=True)
+    parser.add_argument('--warn_on_missing_stn',
+                        help="if present: missing stations in the fix file will warn, rather than exit",
+                        action='store_true')
 
     args = parser.parse_args()
 
@@ -222,7 +184,7 @@ def main():
     tic = record_time()
 
     # Read in the GHCN snow depth data
-    snod = ghcn(args.input, args.fixfile, args.date, args.mask)
+    snod = ghcn(args.input, args.fixfile, args.date, args.warn_on_missing_stn)
 
     # report time
     toc = record_time(tic=tic)

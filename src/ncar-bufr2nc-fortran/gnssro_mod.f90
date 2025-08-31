@@ -5,7 +5,7 @@
 !  Copyright UCAR 2022
 !  Author: Hailing Zhang
 
-module gnssro_bufr2ioda
+module gnssro_bufr2ioda_deprecated
    use netcdf
    use iso_fortran_env
    implicit none
@@ -664,4 +664,4 @@ contains
    END SUBROUTINE epochtimecalculator
 
 !end program
-end module gnssro_bufr2ioda
+end module gnssro_bufr2ioda_deprecated
