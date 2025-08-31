@@ -202,9 +202,27 @@ def get_data_from_file(obs_file_handle):
     )
 
     # Handle time conversion
-    date_raw = read_variable(obs_file_handle, 'date', dtype=numpy.int64, flatten=False)
+    date_raw = read_variable(obs_file_handle, 'date', dtype=numpy.int64)
     time_raw = read_variable(obs_file_handle, 'time', dtype=numpy.int64, flatten=False)
     obs_data[('dateTime', META_DATA_NAME)] = get_epoch_time(date_raw, time_raw)
+
+    # Handle satellite ascending flag (flipping from 0=asc to 1=asc)
+    tpAD_raw = read_variable(obs_file_handle, 'tpAD', dtype=numpy.int32)
+    valid_mask = numpy.isin(tpAD_raw, [0, 1])
+    combined_mask = tpAD_raw.mask | ~valid_mask
+    tpAD_raw = numpy.ma.masked_array(tpAD_raw, mask=combined_mask)
+    flip_idx = (tpAD_raw == 0) | (tpAD_raw == 1)
+    tpAD_raw[flip_idx] = 1 - tpAD_raw[flip_idx]
+    obs_data[("satelliteAscendingFlag", META_DATA_NAME)] = numpy.repeat(tpAD_raw, time_raw.shape[1])
+
+    # Handle day or night qualifier (flipping from 0=day to 1=day, keeping 2=twilight)
+    tpDN_raw = read_variable(obs_file_handle, 'tpDN', dtype=numpy.int32)
+    valid_mask = numpy.isin(tpDN_raw, [0, 1, 2])
+    combined_mask = tpDN_raw.mask | ~valid_mask
+    tpDN_raw = numpy.ma.masked_array(tpDN_raw, mask=combined_mask)
+    flip_idx = (tpDN_raw == 0) | (tpDN_raw == 1)
+    tpDN_raw[flip_idx] = 1 - tpDN_raw[flip_idx]
+    obs_data[("dayOrNightQualifier", META_DATA_NAME)] = numpy.repeat(tpDN_raw, time_raw.shape[1])
 
     # Add error and QC values
     nlocs = len(obs_data[('latitude', META_DATA_NAME)])
