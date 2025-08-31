@@ -1,4 +1,4 @@
-module utils_mod
+module utils_mod_deprecated
 
 ! adapated from WRFDA/var/da/da_tools/da_advance_time.inc
 
@@ -339,4 +339,4 @@ contains
 
    end subroutine da_get_time_slots
 
-end module utils_mod
+end module utils_mod_deprecated

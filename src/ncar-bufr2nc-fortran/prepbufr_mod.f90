@@ -1,14 +1,14 @@
-module prepbufr_mod
+module prepbufr_mod_deprecated
 
 ! adapated from WRFDA/var/da/da_obs_io/da_read_obs_bufr.inc
 
    use iodaconv_kinds, only: r_kind, i_kind, r_double, i_llong
-   use define_mod, only: nobtype, set_obtype_conv, obtype_list, xdata, &
-                         nvar_met, nvar_info, type_var_info, name_var_met, name_var_info, &
-                         t_kelvin, missing_r, missing_i, vflag, itrue, ifalse, nstring, ndatetime, not_use, &
-                         dtime_min, dtime_max
-   use ufo_vars_mod, only: ufo_vars_getindex, var_prs, var_u, var_v, var_ts, var_tv, var_q, var_ps
-   use utils_mod, only: get_julian_time, da_advance_time, da_get_time_slots
+   use define_mod_deprecated, only: nobtype, set_obtype_conv, obtype_list, xdata, &
+                                    nvar_met, nvar_info, type_var_info, name_var_met, name_var_info, &
+                                    t_kelvin, missing_r, missing_i, vflag, itrue, ifalse, nstring, ndatetime, not_use, &
+                                    dtime_min, dtime_max
+   use ufo_vars_mod_deprecated, only: ufo_vars_getindex, var_prs, var_u, var_v, var_ts, var_tv, var_q, var_ps
+   use utils_mod_deprecated, only: get_julian_time, da_advance_time, da_get_time_slots
    use netcdf, only: nf90_int, nf90_float, nf90_char, nf90_int64
 
    implicit none
@@ -1307,7 +1307,12 @@ contains
 
       if (.not. ice) then   ! over water only
 
-         es = es_alpha*exp(es_beta*t_c/(t_c + es_gamma))
+        ! exponential cannot be numerically evaluated for t_c < -200C
+        if (t_c .gt. -200.) then
+            es = es_alpha*exp(es_beta*t_c/(t_c + es_gamma))
+        else ! use es(-200C) for all temperature below -200C
+            es = 3.19E-33
+        end if
 
       else   ! consider ice-water and ice effects
 
@@ -1330,5 +1335,4 @@ contains
 
    end subroutine calc_qs
 
-end module prepbufr_mod
-
+end module prepbufr_mod_deprecated
