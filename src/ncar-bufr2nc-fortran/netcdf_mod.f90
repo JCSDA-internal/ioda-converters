@@ -1,7 +1,7 @@
-module netcdf_mod
+module netcdf_mod_deprecated
    use,intrinsic :: iso_fortran_env
    use netcdf
-   use define_mod, only: missing_r, missing_i, nstring
+   use define_mod_deprecated, only: missing_r, missing_i, nstring
    implicit none
 
 ! public subroutines
@@ -375,4 +375,4 @@ contains
       return
    end subroutine put_netcdf_var_char
 
-end module netcdf_mod
+end module netcdf_mod_deprecated
