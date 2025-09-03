@@ -42,7 +42,7 @@ contains
       end if
    end function get_dim_name
 
-subroutine write_obs (filedate, write_opt, outdir, itim)
+subroutine write_obs (filedate, write_opt, outdir, itim, fileExt)
 
    implicit none
 
@@ -50,7 +50,7 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
    integer(i_kind),  intent(in)          :: write_opt
    character(len=*), intent(in)          :: outdir
    integer(i_kind),  intent(in)          :: itim
-
+   character(len=*), intent(in)          :: fileExt
    character(len=512)                    :: ncfname  ! netcdf file name
    integer(i_kind), dimension(n_ncdim)   :: ncid_ncdim
    integer(i_kind), dimension(n_ncdim)   :: val_ncdim
@@ -104,11 +104,11 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
       xdata(ityp,itim)%max_datetime = xdata(ityp,itim)%xinfo_char(imax_datetime(1),iv)
 
       if ( write_opt == write_nc_conv ) then
-         ncfname = trim(outdir)//trim(obtype_list(ityp))//'_obs_'//trim(filedate)//'.nc4'
+         ncfname = trim(outdir)//trim(obtype_list(ityp))//'_obs_'//trim(filedate)//'.'//fileExt
       else if ( write_opt == write_nc_radiance ) then
-         ncfname = trim(outdir)//trim(inst_list(ityp))//'_obs_'//trim(filedate)//'.nc4'
+         ncfname = trim(outdir)//trim(inst_list(ityp))//'_obs_'//trim(filedate)//'.'//fileExt
       else if ( write_opt == write_nc_radiance_geo ) then
-         ncfname = trim(outdir)//trim(geoinst_list(ityp))//'_obs_'//trim(filedate)//'.nc4'
+         ncfname = trim(outdir)//trim(geoinst_list(ityp))//'_obs_'//trim(filedate)//'.'//fileExt
       end if
       if ( write_opt == write_nc_radiance .or. write_opt == write_nc_radiance_geo ) then
          iv = ufo_vars_getindex(name_sen_info, 'sensor_channel')

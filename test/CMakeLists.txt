@@ -2368,7 +2368,7 @@ if( iodaconv_pbfortran_ENABLED )
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/obs2ioda
-                            -i testinput -o testrun gdas.t12z.1bamua.tm00.bufr_d"
+                            -i testinput -o testrun gdas.t12z.1bamua.tm00.bufr_d -e nc4"
                             amsua_metop-b_obs_2020110112.nc4 ${IODA_CONV_COMP_TOL}
                     DEPENDS obs2ioda)
 

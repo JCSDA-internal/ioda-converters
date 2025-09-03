@@ -1,7 +1,7 @@
 program obs2ioda
 
 use define_mod, only: write_nc_conv, write_nc_radiance, write_nc_radiance_geo, StrLen, xdata, &
-   ninst, output_info_type, set_output_info
+   ninst, output_info_type, set_output_info, ExtLen
 use kinds, only: i_kind
 use prepbufr_mod, only: read_prepbufr, sort_obs_conv, filter_obs_conv, do_tv_to_ts
 use radiance_mod, only: read_amsua_amsub_mhs, read_airs_colocate_amsua, sort_obs_radiance, &
@@ -44,6 +44,7 @@ character (len=NameLen) :: flist(nfile_all)  ! file names to be read in from com
 character (len=NameLen) :: filename
 character (len=DateLen) :: filedate, filedate_out
 character (len=StrLen)  :: inpdir, outdir, cdatetime
+character (len=ExtLen)  :: fileExt
 logical                 :: fexist
 logical                 :: do_radiance
 logical                 :: do_radiance_hyperIR
@@ -116,10 +117,10 @@ do ifile = 1, nfile
                write(dtime,'(i2,a)')  hour_fgat*(itime-1)-3, 'h'
                call da_advance_time(filedate, trim(dtime), datetmp)
                filedate_out = datetmp(1:10)
-               call write_obs(filedate_out, write_nc_conv, outdir, itime)
+               call write_obs(filedate_out, write_nc_conv, outdir, itime, fileExt)
             end do
          else
-            call write_obs(filedate, write_nc_conv, outdir, 1)
+            call write_obs(filedate, write_nc_conv, outdir, 1, fileExt)
          end if
          if ( allocated(xdata) ) deallocate(xdata)
       end if
@@ -148,10 +149,10 @@ do ifile = 1, nfile
                write(dtime,'(i2,a)')  hour_fgat*(itime-1)-3, 'h'
                call da_advance_time(filedate, trim(dtime), datetmp)
                filedate_out = datetmp(1:10)
-               call write_obs(filedate_out, write_nc_conv, outdir, itime)
+               call write_obs(filedate_out, write_nc_conv, outdir, itime, fileExt)
             end do
          else
-            call write_obs(filedate, write_nc_conv, outdir, 1)
+            call write_obs(filedate, write_nc_conv, outdir, 1, fileExt)
          end if
          if ( allocated(xdata) ) deallocate(xdata)
       end if
@@ -203,10 +204,10 @@ if ( do_radiance ) then
          write(dtime,'(i2,a)')  hour_fgat*(itime-1)-3, 'h'
          call da_advance_time(filedate, trim(dtime), datetmp)
          filedate_out = datetmp(1:10)
-         call write_obs(filedate_out, write_nc_radiance, outdir, itime)
+         call write_obs(filedate_out, write_nc_radiance, outdir, itime, fileExt)
       end do
    else
-      call write_obs(filedate, write_nc_radiance, outdir, 1)
+      call write_obs(filedate, write_nc_radiance, outdir, 1, fileExt)
    end if
    if ( allocated(xdata) ) deallocate(xdata)
 end if
@@ -252,10 +253,10 @@ if ( do_radiance_hyperIR ) then
          write(dtime,'(i2,a)')  hour_fgat*(itime-1)-3, 'h'
          call da_advance_time(filedate, trim(dtime), datetmp)
          filedate_out = datetmp(1:10)
-         call write_obs(filedate_out, write_nc_radiance, outdir, itime)
+         call write_obs(filedate_out, write_nc_radiance, outdir, itime, fileExt)
       end do
    else
-      call write_obs(filedate, write_nc_radiance, outdir, 1)
+      call write_obs(filedate, write_nc_radiance, outdir, 1, fileExt)
    end if
    if ( allocated(xdata) ) deallocate(xdata)
 end if
@@ -267,7 +268,7 @@ if ( do_ahi ) then
    end if
    call read_HSD(cdatetime, inpdir, do_superob, superob_halfwidth)
    filedate = cdatetime(1:10)
-   call write_obs(filedate, write_nc_radiance_geo, outdir, 1)
+   call write_obs(filedate, write_nc_radiance_geo, outdir, 1, fileExt)
    if ( allocated(xdata) ) deallocate(xdata)
 end if
 
@@ -280,7 +281,8 @@ subroutine parse_files_to_convert
 implicit none
 
 integer(i_kind)       :: iunit = 21
-integer(i_kind)       :: narg, iarg, iarg_inpdir, iarg_outdir, iarg_datetime, iarg_subsample, iarg_superob_halfwidth
+integer(i_kind)       :: narg, iarg, iarg_inpdir, iarg_outdir, iarg_datetime, iarg_subsample
+integer(i_kind)       :: iarg_superob_halfwidth, iarg_ext
 integer(i_kind)       :: itmp
 integer(i_kind)       :: iost, iret, idate
 character(len=StrLen) :: strtmp
@@ -288,6 +290,7 @@ character(len=8)      :: subset
 
 narg = command_argument_count()
 ifile = 0
+fileExt = ''
 inpdir = '.'
 outdir = '.'
 cdatetime = ''
@@ -297,6 +300,7 @@ iarg_outdir = -1
 iarg_datetime = -1
 iarg_subsample = -1
 iarg_superob_halfwidth = -1
+iarg_ext = -1
 if ( narg > 0 ) then
    do iarg = 1, narg
       call get_command_argument(number=iarg, value=strtmp)
@@ -314,6 +318,8 @@ if ( narg > 0 ) then
          iarg_inpdir = iarg + 1
       else if ( trim(strtmp) == '-o' ) then
          iarg_outdir = iarg + 1
+      else if ( trim(strtmp) == '-e' ) then
+         iarg_ext = iarg + 1
       else if ( trim(strtmp) == '-t' ) then
          iarg_datetime = iarg + 1
       else if ( trim(strtmp) == '-s' ) then
@@ -326,6 +332,8 @@ if ( narg > 0 ) then
             call get_command_argument(number=iarg, value=inpdir)
          else if ( iarg == iarg_outdir ) then
             call get_command_argument(number=iarg, value=outdir)
+         else if ( iarg == iarg_ext ) then
+            call get_command_argument(number=iarg, value=fileExt)
          else if ( iarg == iarg_datetime ) then
             call get_command_argument(number=iarg, value=cdatetime)
          else if ( iarg == iarg_subsample ) then
@@ -365,6 +373,16 @@ else
    ftype(:) = (/ ftype_gnssro, ftype_prepbufr, ftype_satwnd,  &
                  ftype_amsua, ftype_airs, ftype_mhs,  &
                  ftype_iasi, ftype_cris /)
+end if
+
+if ( LEN_TRIM(fileExt) /= 0) then ! file extension is provided
+   if ( TRIM(fileExt) == 'nc4' .OR. TRIM(fileExt) == 'h5' ) then ! checking only for nc4/h5
+      ! do nothing
+   else
+     fileExt = 'nc4'
+   end if
+else ! file extension is not provided
+  fileExt = 'nc4' ! default file extension
 end if
 
 itmp = len_trim(inpdir)
