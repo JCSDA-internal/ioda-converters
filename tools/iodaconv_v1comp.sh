@@ -37,7 +37,7 @@ case $file_type in
     rc=${?}
     ;;
    *)
-    echo "ERROR: iodaconv_comp.sh: Unrecognized file type: ${file_type}"
+    echo "ERROR: iodaconv_v1comp.sh: Unrecognized file type: ${file_type}"
     rc="-2"
     ;;
 esac
