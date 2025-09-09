@@ -2325,7 +2325,6 @@ if( iodaconv_pbfortran_ENABLED )
                             -i testinput -o testrun prepbufr.bufr"
                             radiosonde_obs_2020093018.nc4 ${IODA_CONV_COMP_TOL}
                     DEPENDS bufr2nc_fortran.x)
-                    #TEST_DEPENDS test_${PROJECT_NAME}_prepbufr_conv_ncar_obs2ioda)
 
   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mhs_conv
                     TYPE    SCRIPT
