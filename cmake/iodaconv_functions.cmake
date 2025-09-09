@@ -23,11 +23,11 @@ function(obs2ioda_fortran_library target public_link_libraries)
     set(OBS2IODA_FORTRAN_TARGET_COMPILE_OPTIONS_PRIVATE "")
     if (CMAKE_Fortran_COMPILER_ID MATCHES GNU)
         list(APPEND OBS2IODA_FORTRAN_TARGET_COMPILE_OPTIONS_PRIVATE
-             ${compiler_flags_GNU_Fortran}
+             ${FORTRAN_COMPILER_GNU_FLAGS}
         )
     elseif (CMAKE_Fortran_COMPILER_ID MATCHES Intel)
         list(APPEND OBS2IODA_FORTRAN_TARGET_COMPILE_OPTIONS_PRIVATE
-             ${compiler_flags_Intel_Fortran}
+             ${FORTRAN_COMPILER_INTEL_FLAGS}
         )
     endif ()
     target_compile_options(${target} PRIVATE ${OBS2IODA_FORTRAN_TARGET_COMPILE_OPTIONS_PRIVATE})
