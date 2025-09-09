@@ -103,8 +103,8 @@ def get_meta_data(ds, file_type):
         psize = len(ds['Data']['Table Layout'][:])
      
         # bespoke table of letter to WMO code
-        transmitterConstellationId = get_GNSS_constellation(str(ds['Metadata']['Experiment Parameters'][2][1]).split('\'')[1])
-        profile_meta_data['satelliteConstellationRO'] = np.array(np.repeat(transmitterConstellationId, psize), dtype=ioda_int_type)
+        transmitterId = get_sat_constellation(str(ds['Metadata']['Experiment Parameters'][2][1]).split('\'')[1])
+        profile_meta_data['satelliteID'] = np.array(np.repeat(transmitterId, psize), dtype=ioda_int_type)
      
         profile_meta_data['latitude'] = []
         profile_meta_data['longitude'] = []
@@ -173,26 +173,13 @@ def def_meta_types():
     return meta_data_types
 
 
-def get_GNSS_constellation(constellationId):
+def get_sat_constellation(constellationId):
     # convert letter codes to WMO constellation ID
     if constellationId == 'Sentinel 6 TEC':
         transmitterConstellationId = 401
     else:
         transmitterConstellationId = int_missing_value
     return transmitterConstellationId
-
-
-def get_GNSS_mission(ds):
-    # return WMO satellite ID
-    try:
-        mission = ds.mission
-    except Exception as e:
-        return int_missing_value
-
-    satID = int_missing_value
-    if mission == 'COSEQ':
-        satID = 749 + ds.leo_id
-    return satID
 
 
 if __name__ == "__main__":
