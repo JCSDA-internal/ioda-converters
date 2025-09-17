@@ -14,10 +14,60 @@ from datetime import datetime, timedelta
 import pdb
 import sys
 
+import pyresample
+from pyproj import CRS
+import numpy as np
+
+
+def create_latlon_area(resolution_deg=0.1, area_extent=(-81, -81, 81, 81)):
+    """
+    Creates a lat/lon AreaDefinition
+
+    Args:
+        resolution_deg (float): Desired resolution in degrees
+        area_extent (tuple): (min_lon, min_lat, max_lon, max_lat) in degrees
+
+    Returns:
+        pyresample.AreaDefinition: The defined grid
+    """
+    min_lon, min_lat, max_lon, max_lat = area_extent
+    
+    # Calculate the number of points for the shape
+    # Lon/x-dimension span: max_lon - min_lon
+    # Lat/y-dimension span: max_lat - min_lat
+    width = int(np.ceil((max_lon - min_lon) / resolution_deg))
+    height = int(np.ceil((max_lat - min_lat) / resolution_deg))
+
+    target_crs = CRS.from_epsg(4326)
+
+    target_area = pyresample.create_area_def('latlon_area',
+                                             proj_id='latlon',
+                                             projection={'proj': 'longlat', 'ellps': 'WGS84', 'no_defs': True},
+                                             area_extent=area_extent,
+                                             shape=(height, width))
+    return target_area
+
+
+
+def get_metadata(scn, dataset='IR_108'):
+
+    # retrieve specific metaData from attributes
+    #
+    #   Input:
+    #       scn - Scene structure from satpy
+    #
+    #   Output:
+    #       satellite_name, instrument_name, satellite_altitude
+
+    satellite_name = scn[dataset].attrs['platform_name']
+    instrument_name = scn[dataset].attrs['sensor']
+    satellite_altitude = scn[dataset].attrs['orbital_parameters']['satellite_actual_altitude']
+    return satellite_name, instrument_name, satellite_altitude
+
 
 def get_pixel_time(scn, target_area, dataset='IR_108'):
 
-    # this will get a time for each pixel and remap to target_area projection
+    # get a dateTime for each pixel and remap to target_area projection
     #
     #   Input:
     #       scn - Scene structure from satpy
@@ -62,31 +112,25 @@ scn = Scene(reader="seviri_l1b_native", filenames=filenames, reader_kwargs={'fil
 # scn.load(['IR_108'])  # test single channel
 scn.load(aload)
 
-satellite_name = scn['IR_108'].attrs['platform_name']
-instrument_name = scn['IR_108'].attrs['sensor']
-satellite_altitude = scn['IR_108'].attrs['orbital_parameters']['satellite_actual_altitude']
+satellite_name, instrument_name, satellite_altitude = get_metadata(scn)
 
-# Define the target CRS (WGS84 lat/lon)
-target_crs = CRS.from_epsg(4326)
+# Create a target area with the default 0.1 degree resolution
+target_area = create_latlon_area()
+print(f"target area shape: {target_area.shape}")
 
-# Create a new AreaDefinition for full-disk lat/lon grid
-target_area = pyresample.create_area_def('latlon_area',
-                                         proj_id='latlon',
-                                         projection={'proj': 'longlat', 'ellps': 'WGS84', 'no_defs': True},
-                                         area_extent=(-81, -81, 81, 81),
-                                         shape=(1620, 1620)) # Reduced shape for testing
-
+# Create a target area with a higher 0.05 degree resolution
+# target_area = create_latlon_area(resolution_deg=0.05)
+# print(f"target area shape: {target_area.shape}")
 
 # Resample the scene to the new target area
 scn_latlon = scn.resample(target_area)
 
+# get a time for each pixel on new target area
 locationDateTime = get_pixel_time(scn, target_area)
-# locationDateTime = scn_latlon['pixel_time'].data
 
 # Access the new latitude and longitude coordinates
 latitude = scn_latlon['IR_108'].coords['y']
 longitude = scn_latlon['IR_108'].coords['x']
-
 
 ir_data = scn_latlon['IR_108'].data
 vis_data = scn_latlon['VIS008'].data
