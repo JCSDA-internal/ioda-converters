@@ -94,7 +94,7 @@ def get_seviri_scene(filenames):
     ]
 
     # load Scene
-    scn = Scene(reader="seviri_l1b_native", filenames=filenames, reader_kwargs={'fill_disk': True})
+    scn = Scene(reader="seviri_l1b_native", filenames=filenames, reader_kwargs={'fill_disk': False})
     # scn.load(['IR_108'])  # test single channel
     scn.load(aload)
 
@@ -104,7 +104,7 @@ def get_seviri_scene(filenames):
     satellite_name, instrument_name, satellite_altitude = get_metadata(scn)
 
     # Create a target area with the default 0.1 degree resolution
-    target_area = create_latlon_area()
+    target_area = create_latlon_area(resolution_deg=10.)
     print(f"target area shape: {target_area.shape}")
 
     # Create a target area with a higher 0.05 degree resolution
@@ -161,7 +161,7 @@ def create_latlon_area(resolution_deg=0.1, area_extent=(-81, -81, 81, 81)):
     return target_area
 
 
-def get_vars(obs_scene, obs_dateTime, VarDims, albedo=False, dataset='IR_108'):
+def variables_to_obs(obs_scene, obs_dateTime, VarDims, albedo=False, dataset='IR_108', apply_gross_qc=True):
     """
     Move data from satpy Scene into IODA convention
 
@@ -226,6 +226,7 @@ def get_vars(obs_scene, obs_dateTime, VarDims, albedo=False, dataset='IR_108'):
     latitude = obs_scene[dataset].coords['y']
     longitude = obs_scene[dataset].coords['x']
     lon_2d, lat_2d = np.meshgrid(longitude, latitude)
+
     satellite_name, instrument_name, satellite_altitude = get_metadata(obs_scene)
     WMO_sat_ID = get_WMO_sat_ID(satellite_name)
 
@@ -240,6 +241,10 @@ def get_vars(obs_scene, obs_dateTime, VarDims, albedo=False, dataset='IR_108'):
     obs[('solarZenithAngle', metaDataName)] = np.full((nlocs), 0., dtype='float32')
     obs[('solarAzimuthAngle', metaDataName)] = np.full((nlocs), 0., dtype='float32')
     obs[('stationElevation', metaDataName)] = np.full((nlocs), satellite_altitude, dtype='float32')
+
+    if apply_gross_qc:
+        obs = location_gross_qc(obs)
+        obs = gross_qc(obs)
 
     return obs
 
@@ -271,6 +276,90 @@ def init_obs(albedo=False):
         obs.pop(('brightnessTemperature', "PreQC"), None)
 
 
+    return obs
+
+
+def location_gross_qc(obs):
+    """
+    Apply gross quality control to the latitude, longitude and dateTime
+    Args: obs - IODA dictionary of observation
+    Returns: obs - IODA dictionary after gross quality control
+    """
+    chk_location = (obs[('latitude', metaDataName)] > 90) | (obs[('latitude', metaDataName)] < -90) | \
+        (obs[('longitude', metaDataName)] > 180) | (obs[('longitude', metaDataName)] < -180) | \
+        (obs[('sensorZenithAngle', metaDataName)] > 80) | (obs[('sensorZenithAngle', metaDataName)] < 0) | \
+        (obs[('dateTime', metaDataName)] <= 0)
+    obs[('latitude', metaDataName)][chk_location] = float_missing_value
+    obs[('longitude', metaDataName)][chk_location] = float_missing_value
+    obs[('sensorZenithAngle', metaDataName)][chk_location] = float_missing_value
+    obs[('dateTime', metaDataName)][chk_location] = long_missing_value
+    obs = add_to_preQC(obs, chk_location)
+    return obs
+
+
+def gross_qc(obs):
+    """
+    Apply gross quality control this is specific for SEVIR I
+    Args: obs - IODA dictionary of observation
+    Returns: obs - IODA dictionary after gross quality control
+    """
+    obs_limits = {
+        'brightnessTemperature': {'min': 20.0, 'max': 400.0},
+        'albedo': {'min': 0.0, 'max': 1.0}
+    }
+    obs_key = next((key for key in obs_limits if (key, 'ObsValue') in obs), None)
+
+    if obs_key is None:
+        # chk_obs = np.zeros(len(obs[('sensorChannelNumber', metaDataName)]), dtype=bool)
+        return obs
+    else:
+        # Get the min and max limits for the current observation type
+        kmin = obs_limits[obs_key]['min']
+        kmax = obs_limits[obs_key]['max']
+
+        nrec = len(obs[('sensorChannelNumber', metaDataName)])
+
+        # Initialize boolean False array to aggregate checks
+        chk_obs = np.zeros(obs[(obs_key, 'ObsValue')].shape[0], dtype=bool)
+
+        for j in range(nrec):
+            # Perform physical reality and PreQC check for current channel
+            is_bad_data = (
+                (obs[(obs_key, 'ObsValue')][:, j] < kmin) |
+                (obs[(obs_key, 'ObsValue')][:, j] > kmax) |
+                (obs[(obs_key, 'PreQC')][:, j] > 0)
+            )
+
+            obs[(obs_key, 'ObsValue')][is_bad_data, j] = float_missing_value
+            # Create mask True when bad data AND current PreQC is 0
+            mask = is_bad_data & (obs[(obs_key, 'PreQC')][:, j] == 0)
+            obs[(obs_key, 'PreQC')][mask, j] = 2
+            # Use OR operator to accumulate checks
+            chk_obs = chk_obs | is_bad_data
+
+    # reject all channels if any are bad
+#   for j in range(nrec):
+#       obs[(obs_key, 'ObsValue')][chk_obs, j] = float_missing_value
+
+#   obs = add_to_preQC(obs, chk_obs)
+    return obs
+
+
+def add_to_preQC(obs, chk_array):
+    key_map = {
+        ('brightnessTemperature', 'PreQC'): 'brightnessTemperature',
+        ('albedo', 'PreQC'): 'albedo'
+    }
+
+    k = None
+    for key_tuple, key_str in key_map.items():
+        if key_tuple in obs:
+            k = key_str
+            break
+    if not k:
+        return obs
+
+    obs[(k, "PreQC")][chk_array, :] = 1
     return obs
 
 
@@ -474,7 +563,7 @@ def main():
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
-    obs = get_vars(obs_scene, obs_dateTime, VarDims)
+    obs = variables_to_obs(obs_scene, obs_dateTime, VarDims)
 
     del(obs_scene)
     del(obs_dateTime)
