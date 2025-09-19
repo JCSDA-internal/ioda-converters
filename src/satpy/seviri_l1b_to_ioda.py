@@ -327,14 +327,16 @@ def gross_qc(obs):
             is_bad_data = (
                 (obs[(obs_key, 'ObsValue')][:, j] < kmin) |
                 (obs[(obs_key, 'ObsValue')][:, j] > kmax) |
+                ~np.isfinite(obs[(obs_key, 'ObsValue')][:, j]) |
                 (obs[(obs_key, 'PreQC')][:, j] > 0)
             )
-
             obs[(obs_key, 'ObsValue')][is_bad_data, j] = float_missing_value
-            # Create mask True when bad data AND current PreQC is 0
+
+            # Create a mask for values that were bad and have PreQC == 0
             mask = is_bad_data & (obs[(obs_key, 'PreQC')][:, j] == 0)
             obs[(obs_key, 'PreQC')][mask, j] = 2
-            # Use OR operator to accumulate checks
+
+            # Accumulate checks across all channels
             chk_obs = chk_obs | is_bad_data
 
     # reject all channels if any are bad
