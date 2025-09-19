@@ -26,9 +26,6 @@ from pyiodaconv.def_jedi_utils import compute_scan_angle
 from pyiodaconv.def_jedi_utils import ioda_int_type, ioda_float_type, epoch
 from pyiodaconv.def_jedi_utils import concat_obs_dict
 
-import pdb
-import sys
-
 # globals
 MSG_WMO_sat_ID = 267   # MeteoSat second generation uses single WMO BUFR ID
 
@@ -58,7 +55,7 @@ class DataIdInfo:
         # Extract the name using a regular expression
         name_match = re.search(r"name='(.*?)'", str(data_id_obj))
         self.name = name_match.group(1) if name_match else None
-        
+
         # Extract the central wavelength using a regular expression
         wavelength_match = re.search(r"central=(\d+\.?\d*)", str(data_id_obj))
         self.central_wavelength = float(wavelength_match.group(1)) if wavelength_match else None
@@ -104,7 +101,7 @@ def get_seviri_scene(filenames):
     satellite_name, instrument_name, satellite_altitude = get_metadata(scn)
 
     # Create a target area with the default 0.1 degree resolution
-    target_area = create_latlon_area(resolution_deg=10.)
+    target_area = create_latlon_area(resolution_deg=2.5)
     print(f"target area shape: {target_area.shape}")
 
     # Create a target area with a higher 0.05 degree resolution
@@ -132,6 +129,7 @@ def get_seviri_scene(filenames):
 
     return scn_latlon, locationDateTime
 
+
 def create_latlon_area(resolution_deg=0.1, area_extent=(-81, -81, 81, 81)):
     """
     Creates a lat/lon AreaDefinition
@@ -144,7 +142,7 @@ def create_latlon_area(resolution_deg=0.1, area_extent=(-81, -81, 81, 81)):
         pyresample.AreaDefinition: The defined grid
     """
     min_lon, min_lat, max_lon, max_lat = area_extent
-    
+
     # Calculate the number of points for the shape
     # Lon/x-dimension span: max_lon - min_lon
     # Lat/y-dimension span: max_lat - min_lat
@@ -193,7 +191,6 @@ def variables_to_obs(obs_scene, obs_dateTime, VarDims, albedo=False, dataset='IR
     nlocs = obs_scene[dataset].size
     bt_nchans = len(bt_channels)
     albedo_nchans = len(albedo_channels)
-
 
     if albedo:
         albedo_data = []
@@ -267,14 +264,13 @@ def init_obs(albedo=False):
         ('solarAzimuthAngle', metaDataName): [],
     }
     if albedo:
-        obs[('albedo', "ObsValue")]  = []
-        obs[('albedo', "ObsError")]  = []
-        obs[('albedo', "PreQC")]  = []
+        obs[('albedo', "ObsValue")] = []
+        obs[('albedo', "ObsError")] = []
+        obs[('albedo', "PreQC")] = []
         # Remove the brightnessTemperature entries using pop()
         obs.pop(('brightnessTemperature', "ObsValue"), None)
         obs.pop(('brightnessTemperature', "ObsError"), None)
         obs.pop(('brightnessTemperature', "PreQC"), None)
-
 
     return obs
 
@@ -325,10 +321,10 @@ def gross_qc(obs):
         for j in range(nrec):
             # Perform physical reality and PreQC check for current channel
             is_bad_data = (
-                (obs[(obs_key, 'ObsValue')][:, j] < kmin) |
-                (obs[(obs_key, 'ObsValue')][:, j] > kmax) |
-                ~np.isfinite(obs[(obs_key, 'ObsValue')][:, j]) |
-                (obs[(obs_key, 'PreQC')][:, j] > 0)
+                (obs[(obs_key, 'ObsValue')][:, j] < kmin)
+                | (obs[(obs_key, 'ObsValue')][:, j] > kmax)
+                | ~np.isfinite(obs[(obs_key, 'ObsValue')][:, j])
+                | (obs[(obs_key, 'PreQC')][:, j] > 0)
             )
             obs[(obs_key, 'ObsValue')][is_bad_data, j] = float_missing_value
 
@@ -365,13 +361,13 @@ def add_to_preQC(obs, chk_array):
     return obs
 
 
-def get_dimDict_varDims(obs_scene, dataset='IR_108', albedo=False):
+def get_obs_properties(obs_scene, dataset='IR_108', albedo=False):
 
     """
     define dimensions using  IODA conventions
 
     Args:
-        obs_scene - Scene structure from satpy 
+        obs_scene - Scene structure from satpy
 
     Returns:
         VarDims, DimDict
@@ -405,8 +401,13 @@ def get_dimDict_varDims(obs_scene, dataset='IR_108', albedo=False):
         VarAttrs[(k, 'ObsError')]['units'] = 'K'
         # VarAttrs[(k, 'PreQC')]['units'] = 'unitless'
 
-    # Replace 'obs_scene' with the variable name of your satpy Scene object
+    # get information from obs_scene
     data_info_list = [DataIdInfo(data_id) for data_id in obs_scene.keys()]
+    nrec = 0
+    if albedo:       # if albedo sum HRV and VIS
+        nrec = sum(1 for item in data_info_list if item.name.startswith('HRV') or item.name.startswith('VIS'))
+    else:            # else sum IR entries
+        nrec = sum(1 for item in data_info_list if item.name.startswith('IR') or item.name.startswith('WV'))
 
     # print list of objects containing name and central wavelength
 #   for info in data_info_list:
@@ -414,7 +415,7 @@ def get_dimDict_varDims(obs_scene, dataset='IR_108', albedo=False):
 
     DimDict = {
         'Location': nlocs,
-        'Channel': len(data_info_list),
+        'Channel': nrec,
     }
 
     return VarDims, VarAttrs, DimDict
@@ -491,8 +492,8 @@ def get_pixel_time(scn, target_area, dataset='IR_108'):
         source_area,
         pixel_time_array,
         target_area,
-        radius_of_influence=50000, # Example radius in meters
-        fill_value=np.datetime64('NaT') # Not a Time fill value for datetime data
+        radius_of_influence=50000,        # radius in meters
+        fill_value=np.datetime64('NaT')   # Not a Time fill value for datetime data
     )
 
     return resampled_pixel_time
@@ -561,18 +562,16 @@ def main():
     GlobalAttrs['converter'] = os.path.basename(__file__)
     obs_scene, obs_dateTime = get_seviri_scene(args.input)
 
-    VarDims, VarAttrs, DimDict = get_dimDict_varDims(obs_scene)
-    # setup the IODA writer
-    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
+    VarDims, VarAttrs, DimDict = get_obs_properties(obs_scene)
 
     obs = variables_to_obs(obs_scene, obs_dateTime, VarDims)
+    del obs_scene
+    del obs_dateTime
+#   for k in obs.keys():
+#       print(f"{k=}  {np.shape(obs[k])}  {np.min(obs[k])}  {np.max(obs[k])}  {np.mean(obs[k])}")
 
-    del(obs_scene)
-    del(obs_dateTime)
-    for k in obs.keys():
-        print(f"{k=}  {np.shape(obs[k])}  {np.min(obs[k])}  {np.max(obs[k])}  {np.mean(obs[k])}")
-#   pdb.set_trace()
-#   sys.exit()
+    # setup the IODA writer
+    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
     # write everything out
     writer.BuildIoda(obs, VarDims, VarAttrs, GlobalAttrs)
 
