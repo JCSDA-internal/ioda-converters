@@ -101,7 +101,7 @@ def get_seviri_scene(filenames):
     satellite_name, instrument_name, satellite_altitude = get_metadata(scn)
 
     # Create a target area with the default 0.1 degree resolution
-    target_area = create_latlon_area(resolution_deg=2.5)
+    target_area = create_latlon_area(resolution_deg=0.1)
     print(f"target area shape: {target_area.shape}")
 
     # Create a target area with a higher 0.05 degree resolution
