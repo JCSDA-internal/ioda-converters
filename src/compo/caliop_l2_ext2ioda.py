@@ -45,6 +45,7 @@ metaKeyList = [
     ("atmosphereLayerThicknessZ", "float", "m"),
     ("cloudAerosolDiscriminationHigher", "integer", ""),
     ("cloudAerosolDiscriminationLower", "integer", ""),
+    ("sequenceNumber", "integer", ""),
 ]
 
 DimDict = {
@@ -193,6 +194,7 @@ class caliop_l2ext(object):
             lons = sd.select('Longitude').get()[:, 1]
             lons = np.repeat(lons, nlev)
             profidx = np.arange(lats.size)
+            profidx = np.repeat(profidx, nlev)
             proftime = sd.select('Profile_UTC_Time').get()[:, 1]
             obs_time = np.array([(pt - epoch).total_seconds() for pt in self.caliop_time2dt(proftime)],
                                 dtype=np.int64)
@@ -258,6 +260,7 @@ class caliop_l2ext(object):
         self.outdata[('sensorCentralFrequency', metaDataName)] = np.array(frequency, dtype=np.float32)[output_chidx]
         self.outdata[('height', metaDataName)] = np.array(alt, dtype=np.float32)
         self.outdata[('atmosphereLayerThicknessZ', metaDataName)] = np.array(thickness, dtype=np.float32)
+        self.outdata[('sequenceNumber', metaDataName)] = profidx
         DimDict['Location'] = len(self.outdata[('dateTime', metaDataName)])
         DimDict['Channel'] = np.array(channels)
         DimDict['Level'] = np.arange(nlev)
