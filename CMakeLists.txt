@@ -21,6 +21,7 @@ include( ecbuild_system NO_POLICY_SCOPE )
 ecbuild_declare_project()
 
 
+include( iodaconv_functions )
 include( iodaconv_extra_macros )
 include( iodaconv_compiler_flags )
 

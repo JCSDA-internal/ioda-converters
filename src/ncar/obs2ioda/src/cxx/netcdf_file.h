@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <memory>
 #include "ioda_obs_schema.h"
+#include "eckit/config/YAMLConfiguration.h"
 
 namespace Obs2Ioda {
     extern IodaObsSchema iodaSchema;

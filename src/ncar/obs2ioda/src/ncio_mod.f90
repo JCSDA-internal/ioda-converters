@@ -42,7 +42,7 @@ contains
       end if
    end function get_dim_name
 
-subroutine write_obs (filedate, write_opt, outdir, itim)
+subroutine write_obs (filedate, write_opt, outdir, itim, fileExt)
 
    implicit none
 
@@ -50,7 +50,7 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
    integer(i_kind),  intent(in)          :: write_opt
    character(len=*), intent(in)          :: outdir
    integer(i_kind),  intent(in)          :: itim
-
+   character(len=*), intent(in)          :: fileExt
    character(len=512)                    :: ncfname  ! netcdf file name
    integer(i_kind), dimension(n_ncdim)   :: ncid_ncdim
    integer(i_kind), dimension(n_ncdim)   :: val_ncdim
@@ -99,16 +99,16 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
       iv = ufo_vars_getindex(name_var_info, 'dateTime')
       imin_datetime = minloc(xdata(ityp,itim)%xinfo_int64(:,iv))
       imax_datetime = maxloc(xdata(ityp,itim)%xinfo_int64(:,iv))
-      iv = ufo_vars_getindex(name_var_info, 'datetime')
+      ! iv = ufo_vars_getindex(name_var_info, 'datetime')
       xdata(ityp,itim)%min_datetime = xdata(ityp,itim)%xinfo_char(imin_datetime(1),iv)
       xdata(ityp,itim)%max_datetime = xdata(ityp,itim)%xinfo_char(imax_datetime(1),iv)
 
       if ( write_opt == write_nc_conv ) then
-         ncfname = trim(outdir)//trim(obtype_list(ityp))//'_obs_'//trim(filedate)//'.h5'
+         ncfname = trim(outdir)//trim(obtype_list(ityp))//'_obs_'//trim(filedate)//'.'//fileExt
       else if ( write_opt == write_nc_radiance ) then
-         ncfname = trim(outdir)//trim(inst_list(ityp))//'_obs_'//trim(filedate)//'.h5'
+         ncfname = trim(outdir)//trim(inst_list(ityp))//'_obs_'//trim(filedate)//'.'//fileExt
       else if ( write_opt == write_nc_radiance_geo ) then
-         ncfname = trim(outdir)//trim(geoinst_list(ityp))//'_obs_'//trim(filedate)//'.h5'
+         ncfname = trim(outdir)//trim(geoinst_list(ityp))//'_obs_'//trim(filedate)//'.'//fileExt
       end if
       if ( write_opt == write_nc_radiance .or. write_opt == write_nc_radiance_geo ) then
          iv = ufo_vars_getindex(name_sen_info, 'sensor_channel')
@@ -211,7 +211,7 @@ subroutine write_obs (filedate, write_opt, outdir, itim)
          idim = ufo_vars_getindex(name_ncdim, dim_var_info(1,i))
          dim1 = ncid_ncdim(idim)
          dim1_name = get_dim_name(dim1, nchans_nvars_flag)
-         if (ncname == 'dateTime') then
+         if (ncname == 'dateTime' .or. ncname == 'launchTime') then
             status = netcdfAddVar(netcdfID, ncname, type_var_info(i), 1, &
                [dim1_name], "MetaData")
             status = netcdfPutAtt(netcdfID, "units", "seconds since 1970-01-01T00:00:00Z", varName = trim(ncname), &
