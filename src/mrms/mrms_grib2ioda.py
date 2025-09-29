@@ -210,15 +210,13 @@ def read_grib(input_file, obsvars, min_dbz):
         '''
 
         mask = None
+        time_key = "dataTime"
         if product_id in mrms_products.keys():
             obsvar = mrms_products[product_id]
             d = eccodes.codes_get(gid, "dataDate")
-            t = eccodes.codes_get(gid, "dataTime")
-            if t > 2359:
-                logging.debug(f"DEBUG: dataTime is more than 4 digits, adjusting")
-                str_t = str(int(t/100))
-            else:
-                str_t = "{:04d}".format(t)
+            hour = eccodes.codes_get(gid, "hour")
+            minute = eccodes.codes_get(gid, "minute")
+            str_t = f"{hour:02d}{minute:02d}"
             dt = datetime.strptime(str(d)+str_t, "%Y%m%d%H%M")
             logging.debug(f"DEBUG: date info: {d} {t}Z")
 
