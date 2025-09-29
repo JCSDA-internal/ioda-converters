@@ -461,10 +461,13 @@ if( iodaconv_pbfortran_ENABLED )
   list( APPEND test_output
     testoutput/gnssro_obs_2018041500.nc4
     testoutput/radiosonde_obs_2020093018.nc4
+    testoutput/sondes_obs_2020093018.nc4
     testoutput/mhs_metop-b_obs_2020101215.nc4
+    testoutput/mhs_metop-b_obs_2020101215_v1.nc4
     testoutput/mhs_metop-b_obs_2020110112.nc4
     testoutput/mhs_n19_obs_2020110112.nc4
     testoutput/amsua_metop-b_obs_2020110112.nc4
+    testoutput/amsua_metop-b_obs_2020110112_v1.nc4
     testoutput/amsua_n18_obs_2020110112.nc4
     testoutput/iasi_metop-b_obs_2022021912.nc4
   )
@@ -2308,18 +2311,24 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_osw_cygnss
 if( iodaconv_pbfortran_ENABLED )
 
   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_prepbufr_conv_ncar_obs2ioda
-                    COMMAND obs2ioda_v3 
-                    ARGS    "-i testinput" 
-		            "-o testrun" 
-			    "prepbufr.bufr"
-                    DEPENDS obs2ioda_v3)
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/obs2ioda
+                            -i testinput -o testrun prepbufr.bufr"
+                            sondes_obs_2020093018.nc4 ${IODA_CONV_COMP_TOL}
+                    DEPENDS obs2ioda)
 
   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mhs_conv_ncar_obs2ioda
-                    COMMAND obs2ioda_v3 
-                    ARGS    "-i testinput" 
-		            "-o testrun" 
-			    "gdas.t18z.1bmhs.tm00.bufr_d"
-                    DEPENDS obs2ioda_v3)
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/obs2ioda
+                            -i testinput -o testrun gdas.t18z.1bmhs.tm00.bufr_d"
+                            mhs_metop-b_obs_2020101215.nc4 ${IODA_CONV_COMP_TOL}
+                    DEPENDS obs2ioda)
 
   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_prepbufr_conv
                     TYPE    SCRIPT
@@ -2334,12 +2343,14 @@ if( iodaconv_pbfortran_ENABLED )
   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mhs_conv
                     TYPE    SCRIPT
                     COMMAND bash
-                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_v1comp.sh
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
                             -i testinput -o testrun gdas.t18z.1bmhs.tm00.bufr_d"
-                            mhs_metop-b_obs_2020101215.nc4 ${IODA_CONV_COMP_TOL}
-                    DEPENDS bufr2nc_fortran.x)
+                            mhs_metop-b_obs_2020101215.nc4
+                            mhs_metop-b_obs_2020101215_v1.nc4 ${IODA_CONV_COMP_TOL}
+                    DEPENDS bufr2nc_fortran.x
+                    TEST_DEPENDS test_${PROJECT_NAME}_mhs_conv_ncar_obs2ioda)
 
 #  FIXME: Emily Liu
 #  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ears_mhs_conv
@@ -2355,19 +2366,24 @@ if( iodaconv_pbfortran_ENABLED )
   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_amsua_conv
                     TYPE    SCRIPT
                     COMMAND bash
-                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_v1comp.sh
                             netcdf
                             "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
                             -i testinput -o testrun gdas.t12z.1bamua.tm00.bufr_d"
-                            amsua_metop-b_obs_2020110112.nc4 ${IODA_CONV_COMP_TOL}
-                    DEPENDS bufr2nc_fortran.x)
+                            amsua_metop-b_obs_2020110112.nc4
+                            amsua_metop-b_obs_2020110112_v1.nc4 ${IODA_CONV_COMP_TOL}
+                    DEPENDS bufr2nc_fortran.x
+                    TEST_DEPENDS test_${PROJECT_NAME}_amsua_conv_ncar_obs2ioda)
 
   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_amsua_conv_ncar_obs2ioda
-                    COMMAND obs2ioda_v3 
-                    ARGS    "-i testinput" 
-		            "-o testrun" 
-			    "gdas.t12z.1bamua.tm00.bufr_d"
-                    DEPENDS obs2ioda_v3)
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/obs2ioda
+                            -i testinput -o testrun gdas.t12z.1bamua.tm00.bufr_d -e nc4"
+                            amsua_metop-b_obs_2020110112.nc4 ${IODA_CONV_COMP_TOL}
+                    DEPENDS obs2ioda)
 
 #  FIXME: Emily Liu
 #  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ears_amsua_conv
