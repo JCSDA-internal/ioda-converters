@@ -210,7 +210,6 @@ def read_grib(input_file, obsvars, min_dbz):
         '''
 
         mask = None
-        time_key = "dataTime"
         if product_id in mrms_products.keys():
             obsvar = mrms_products[product_id]
             d = eccodes.codes_get(gid, "dataDate")
@@ -218,7 +217,7 @@ def read_grib(input_file, obsvars, min_dbz):
             minute = eccodes.codes_get(gid, "minute")
             str_t = f"{hour:02d}{minute:02d}"
             dt = datetime.strptime(str(d)+str_t, "%Y%m%d%H%M")
-            logging.debug(f"DEBUG: date info: {d} {t}Z")
+            logging.debug(f"DEBUG: date info: {d} {str_t}Z")
 
             ni = eccodes.codes_get(gid, "Ni")
             nj = eccodes.codes_get(gid, "Nj")
