@@ -293,6 +293,7 @@ contains
       cdatetime = ''
       ahi_satid = ''
       flist(:) = 'null'
+      iarg_hs = -1
       iarg_inpdir = -1
       iarg_outdir = -1
       iarg_datetime = -1
