@@ -17,6 +17,7 @@ import os
 from itertools import repeat
 import h5py
 from datetime import datetime
+import time
 
 import pyiodaconv.ioda_conv_engines as iconv
 from pyiodaconv.def_jedi_utils import epoch, iso8601_string, ioda_int_type, ioda_float_type, concat_obs_dict
@@ -35,24 +36,26 @@ locationKeyList = [
 
 def main(args):
     files = args.input
-    inc = int(args.window/5)
+    window = args.window * 60 # window time in seconds
     print(f'{len(files)} files to read')
     obs_data = {}
     for ifile in files:
         ds = h5py.File(ifile)
 
-        if 'nc' in ifile:
-            times = len(ds['timestamps'][:])
-            file_type = 'nc'
-        elif 'hdf' in ifile:
-            times = len(ds['Data']['Array Layout']['timestamps'][:])
-            file_type = 'hdf'
+        if 'hdf' in ifile:
+            print('get times')
+            times = ds['Data']['Table Layout']['ut1_unix']
         else:
             print(f'File {ifile} not supported')
             continue
 
-        for sindex in range(0, times, inc):
-            obs_data = get_obs_data(ds, (sindex, sindex + inc), file_type)
+        ctime = times[0]
+        while ctime <= times[-1]:
+            wbegin = ctime - int(window / 2)
+            wend = ctime + int(window / 2)
+
+            tindex = (times > wbegin) & (times <= wend)
+            obs_data = get_obs_data(ds, tindex)
 
             if not obs_data:
                 print(f"INFO: non-nominal file skipping")
@@ -61,10 +64,7 @@ def main(args):
             # prepare global attributes we want to output in the file,
             # in addition to the ones already loaded in from the input file
             GlobalAttrs = {}
-            if file_type =='nc':
-                dtg = datetime.utcfromtimestamp(ds['timestamps'][sindex + int(inc/2)])
-            else:
-                dtg = datetime.utcfromtimestamp(ds['Data']['Array Layout']['timestamps'][sindex + int(inc/2)])
+            dtg = datetime.fromtimestamp(ctime)
             GlobalAttrs['datetimeReference'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
             date_time = np.array(int(dtg.strftime("%Y%m%d%H%M")), dtype=str)
             GlobalAttrs['date_time'] = date_time.item()
@@ -100,52 +100,47 @@ def main(args):
             # final write to IODA file
             writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
+            ctime = ctime + window
 
-def get_meta_data(ds, indices, file_type):
+
+def get_meta_data(ds, tindex):
 
     # these are the MetaData we are interested in
     meta_data = {}
 
-    if file_type == 'nc':
-        lats = ds['gdlat'][:]
-        lons = ds['glon'][:]
-        times = []
-        for ind in range(indices[0], indices[1], 1):
-            times.append(ds['timestamps'][ind])
-    else:
-        lats = ds['Data']['Array Layout']['gdlat'][:]
-        lons = ds['Data']['Array Layout']['glon'][:]
-        times = []
-        for ind in range(indices[0], indices[1], 1):
-            times.append(ds['Data']['Array Layout']['timestamps'][ind])
+    meta_data['stationLatitude'] = ds['Data']['Table Layout'][tindex]['gdlatr']
+    meta_data['stationLongitude'] = ds['Data']['Table Layout'][tindex]['gdlonr']
+    meta_data['piercePointLatitude'] = ds['Data']['Table Layout'][tindex]['gdlat']
+    meta_data['piercePointLongitude'] = ds['Data']['Table Layout'][tindex]['glon']
+    meta_data['piercePointAltitude'] = ds['Data']['Table Layout'][tindex]['pierce_alt']
+    meta_data['elevationAngle'] = ds['Data']['Table Layout'][tindex]['elm']
+    meta_data['azimuthAngle'] = ds['Data']['Table Layout'][tindex]['azm']
+    meta_data['satelliteID'] = ds['Data']['Table Layout'][tindex]['sat_id']
+    #meta_data['gnssType'] = ds['Data']['Table Layout'][tindex]['gnss_type']
+    meta_data['dateTime'] = ds['Data']['Table Layout'][tindex]['ut1_unix']
 
-    times3d, lats3d, lons3d = np.meshgrid(times, lats, lons)
-
-    meta_data['latitude'] = lats3d.ravel()
-    meta_data['longitude'] = lons3d.ravel()
-    meta_data['dateTime'] = times3d.ravel()
-
-    meta_data['latitude'] = np.asarray(meta_data['latitude'], dtype=ioda_float_type)
-    meta_data['longitude'] = np.asarray(meta_data['longitude'], dtype=ioda_float_type)
+    meta_data['stationLatitude'] = np.asarray(meta_data['stationLatitude'], dtype=ioda_float_type)
+    meta_data['stationLongitude'] = np.asarray(meta_data['stationLongitude'], dtype=ioda_float_type)
+    meta_data['piercePointLatitude'] = np.asarray(meta_data['piercePointLatitude'], dtype=ioda_float_type)
+    meta_data['piercePointLongitude'] = np.asarray(meta_data['piercePointLongitude'], dtype=ioda_float_type)
+    meta_data['piercePointAltitude'] = np.asarray(meta_data['piercePointAltitude'], dtype=ioda_float_type)
+    meta_data['elevationAngle'] = np.asarray(meta_data['elevationAngle'], dtype=ioda_float_type)
+    meta_data['azimuthAngle'] = np.asarray(meta_data['azimuthAngle'], dtype=ioda_float_type)
     meta_data['dateTime'] = np.asarray(meta_data['dateTime'], dtype=np.int64)
 
     return meta_data
 
 
-def get_obs_data(ds, indices, file_type):
+def get_obs_data(ds, tindex):
     # allocate space for output depending on which variables are to be saved
     obs_data = {}
 
-    meta_data = get_meta_data(ds, indices, file_type)
+    meta_data = get_meta_data(ds, tindex)
     for k in meta_data.keys():
         obs_data[(k, 'MetaData')] = meta_data[k]
 
-    if file_type == 'nc':
-        obs_data[("totalElectronContent", "ObsValue")] = ds['tec'][indices[0]:indices[1], :, :].ravel()
-        obs_data[("totalElectronContent", "ObsError")] = ds['dtec'][indices[0]:indices[1], :, :].ravel()
-    else:
-        obs_data[("totalElectronContent", "ObsValue")] = ds['Data']['Array Layout']['2D Parameters']['tec'][:, :, indices[0]:indices[1]].ravel()
-        obs_data[("totalElectronContent", "ObsError")] = ds['Data']['Array Layout']['2D Parameters']['dtec'][:, :, indices[0]:indices[1]].ravel()
+    obs_data[("totalElectronContent", "ObsValue")] = ds['Data']['Table Layout'][tindex]['los_tec']
+    obs_data[("totalElectronContent", "ObsError")] = ds['Data']['Table Layout'][tindex]['dlos_tec']
 
     obs_data[("totalElectronContent", "ObsValue")] = np.asarray(obs_data[("totalElectronContent", "ObsValue")], dtype=ioda_float_type)
     obs_data[("totalElectronContent", "ObsError")] = np.asarray(obs_data[("totalElectronContent", "ObsError")], dtype=ioda_float_type)
@@ -189,7 +184,7 @@ if __name__ == "__main__":
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
         '-w', '--window',
-        help="Number of minutes to output to file. Will be rounded down to multiples of 5. Default 60 minutes",
+        help="Number of minutes to output to file. Default 60 minutes",
         type=int, default=60)
 
     args = parser.parse_args()
