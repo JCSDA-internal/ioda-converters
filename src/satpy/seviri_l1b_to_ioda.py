@@ -39,8 +39,9 @@ obsValName = iconv.OvalName()
 GlobalAttrs = {
     "platformCommonName": "SEVIRI",
     "platformLongDescription": "EUMETSAT MeteoSat SEVIRI L1B Brightness Temperature and Reflectance Data",
-    "sensorCentralWavelength": "[0.7, 0.635, 0.81, 1.64, 3.92, 6.25, 7.35, 8.7, 9.66, 10.8, 12.0, 13.4]"
+    "sensorCentralWavelength": "[1.64, 3.92, 6.25, 7.35, 8.7, 9.66, 10.8, 12.0, 13.4]"
 }
+#   "sensorCentralWavelength": "[0.7, 0.635, 0.81, 1.64, 3.92, 6.25, 7.35, 8.7, 9.66, 10.8, 12.0, 13.4]"
 
 locationKeyList = [
     ("latitude", "float"),
@@ -101,7 +102,7 @@ def get_seviri_scene(filenames):
     satellite_name, instrument_name, satellite_altitude = get_metadata(scn)
 
     # Create a target area with the default 0.1 degree resolution
-    target_area = create_latlon_area(resolution_deg=0.1)
+    target_area = create_latlon_area(resolution_deg=0.25)
     print(f"target area shape: {target_area.shape}")
 
     # Create a target area with a higher 0.05 degree resolution
@@ -406,8 +407,10 @@ def get_obs_properties(obs_scene, dataset='IR_108', albedo=False):
     nrec = 0
     if albedo:       # if albedo sum HRV and VIS
         nrec = sum(1 for item in data_info_list if item.name.startswith('HRV') or item.name.startswith('VIS'))
+        channelNumber = np.array(np.arange(nrec)+1, dtype='int32')
     else:            # else sum IR entries
         nrec = sum(1 for item in data_info_list if item.name.startswith('IR') or item.name.startswith('WV'))
+        channelNumber = np.array(np.arange(nrec)+4, dtype='int32')
 
     # print list of objects containing name and central wavelength
 #   for info in data_info_list:
@@ -415,7 +418,7 @@ def get_obs_properties(obs_scene, dataset='IR_108', albedo=False):
 
     DimDict = {
         'Location': nlocs,
-        'Channel': nrec,
+        'Channel': channelNumber,
     }
 
     return VarDims, VarAttrs, DimDict
