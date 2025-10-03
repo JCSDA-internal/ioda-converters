@@ -27,7 +27,13 @@ from pyiodaconv.def_jedi_utils import ioda_int_type, ioda_float_type, epoch
 from pyiodaconv.def_jedi_utils import concat_obs_dict
 
 # globals
-MSG_WMO_sat_ID = 267   # MeteoSat second generation uses single WMO BUFR ID
+Meteosat08_WMO_sat_ID = 55
+Meteosat09_WMO_sat_ID = 56
+Meteosat10_WMO_sat_ID = 57
+Meteosat11_WMO_sat_ID = 70
+Meteosat12_WMO_sat_ID = 71
+Meteosat13_WMO_sat_ID = 72
+Meteosat16_WMO_sat_ID = 75
 
 float_missing_value = iconv.get_default_fill_val(np.float32)
 int_missing_value = iconv.get_default_fill_val(np.int32)
@@ -41,7 +47,6 @@ GlobalAttrs = {
     "platformLongDescription": "EUMETSAT MeteoSat SEVIRI L1B Brightness Temperature and Reflectance Data",
     "sensorCentralWavelength": "[1.64, 3.92, 6.25, 7.35, 8.7, 9.66, 10.8, 12.0, 13.4]"
 }
-#   "sensorCentralWavelength": "[0.7, 0.635, 0.81, 1.64, 3.92, 6.25, 7.35, 8.7, 9.66, 10.8, 12.0, 13.4]"
 
 locationKeyList = [
     ("latitude", "float"),
@@ -437,8 +442,15 @@ def get_WMO_sat_ID(satellite_name):
     # Create a tuple of the satellite names
     meteosat_series = ('Meteosat-8', 'Meteosat-9', 'Meteosat-10', 'Meteosat-11')
 
-    if satellite_name in meteosat_series:
-        WMO_sat_ID = 267
+    print(f"{satellite_name=}")
+    if 'Meteosat-8' in satellite_name:
+        WMO_sat_ID = Meteosat08_WMO_sat_ID
+    elif 'Meteosat-9' in satellite_name:
+        WMO_sat_ID = Meteosat09_WMO_sat_ID
+    elif 'Meteosat-10' in satellite_name:
+        WMO_sat_ID = Meteosat10_WMO_sat_ID
+    elif 'Meteosat-11' in satellite_name:
+        WMO_sat_ID = Meteosat11_WMO_sat_ID
     else:
         # Code for other satellite IDs
         WMO_sat_ID = -1
