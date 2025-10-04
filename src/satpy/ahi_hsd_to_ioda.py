@@ -78,14 +78,12 @@ def get_ahi_scene(filenames):
     # filename(s) to be read
     # filenames = ['HS_H09_20250901_0000_B05_FLDK_R20_S1010.DAT']
 
+    # load Scene
+    scn = Scene(reader="ahi_hsd", filenames=filenames)
+
     # what datasets are available
-    header = ahi_hsd.read_header(filenames[0])
-    available_datasets = ahi_hsd.get_available_channels(header)
-    aload = [k for k, v in available_datasets.items() if v]
-    import pdb
-    pdb.set_trace()
-    import sys
-    sys.exit()
+    aload = scn.available_dataset_names()
+    # aload = ['B05', 'B06', 'B07', 'B08', 'B09', 'B10', 'B11', 'B12', 'B13', 'B14', 'B15', 'B16']
 
     # Add the angle datasets to the list you want to load
     datasets_to_load = aload + [
@@ -95,9 +93,7 @@ def get_ahi_scene(filenames):
         'solar_azimuth_angle'
     ]
 
-    # load Scene
-    scn = Scene(reader="ahi_hsd", filenames=filenames, reader_kwargs={'fill_disk': False})
-    # scn.load(['IR_108'])  # test single channel
+    # scn.load(['B13'])  # test single channel
     scn.load(aload)
 
     # ensure the the loaded datasets in the Scene are calibrated (version dependent)
@@ -117,7 +113,7 @@ def get_ahi_scene(filenames):
     scn_latlon = scn.resample(target_area)
 
     # get a time for each pixel on new target area
-    locationDateTime = get_pixel_time(scn, target_area)
+    locationDateTime = get_pixel_time_ahi(scn, target_area)
 
     # Get the resampled solar and satellite angles
 #   resampled_satellite_zenith = resample_ancillary_data(scn, 'satellite_zenith_angle', target_area)
@@ -126,11 +122,11 @@ def get_ahi_scene(filenames):
 #   resampled_solar_azimuth = resample_ancillary_data(scn, 'solar_azimuth_angle', target_area)
 
 #   # Access the new latitude and longitude coordinates
-#   latitude = scn_latlon['IR_108'].coords['y']
-#   longitude = scn_latlon['IR_108'].coords['x']
+#   latitude = scn_latlon['B13'].coords['y']
+#   longitude = scn_latlon['B13'].coords['x']
 
-#   ir_data = scn_latlon['IR_108'].data
-#   vis_data = scn_latlon['VIS008'].data
+#   ir_data = scn_latlon['B13'].data
+#   vis_data = scn_latlon['B01'].data
 
     return scn_latlon, locationDateTime
 
@@ -164,7 +160,7 @@ def create_latlon_area(resolution_deg=0.1, area_extent=(-81, -81, 81, 81)):
     return target_area
 
 
-def variables_to_obs(obs_scene, obs_dateTime, VarDims, albedo=False, dataset='IR_108', apply_gross_qc=True):
+def variables_to_obs(obs_scene, obs_dateTime, VarDims, albedo=False, dataset='B13', apply_gross_qc=True):
     """
     Move data from satpy Scene into IODA convention
 
@@ -195,8 +191,9 @@ def variables_to_obs(obs_scene, obs_dateTime, VarDims, albedo=False, dataset='IR
     """
     obs = init_obs()
     # order for channels
-    albedo_channels = ['HRV', 'VIS006', 'VIS008']
-    bt_channels = ['IR_016', 'IR_039', 'WV_062', 'WV_073', 'IR_087', 'IR_097', 'IR_108', 'IR_120', 'IR_134']
+    albedo_channels = ['B01', 'B02', 'B03', 'B04']
+    bt_channels = ['B05', 'B06', 'B07', 'B08', 'B09', 'B10', 'B11', 'B12', 'B13', 'B14', 'B15', 'B16']
+
     nlocs = obs_scene[dataset].size
     bt_nchans = len(bt_channels)
     albedo_nchans = len(albedo_channels)
@@ -370,7 +367,7 @@ def add_to_preQC(obs, chk_array):
     return obs
 
 
-def get_obs_properties(obs_scene, dataset='IR_108', albedo=False):
+def get_obs_properties(obs_scene, dataset='B13', albedo=False):
 
     """
     define dimensions using  IODA conventions
@@ -442,18 +439,17 @@ def get_WMO_sat_ID(satellite_name):
         WMO_sat_ID
     """
 
-    # Create a tuple of the satellite names
-    meteosat_series = ('Meteosat-8', 'Meteosat-9', 'Meteosat-10', 'Meteosat-11')
-
-    if satellite_name in meteosat_series:
-        WMO_sat_ID = 267
+    if 'Himawari-8' in satellite_name:
+        WMO_sat_ID = Himawari08_WMO_sat_ID
+    elif 'Himawari-9' in satellite_name:
+        WMO_sat_ID = Himawari09_WMO_sat_ID
     else:
         # Code for other satellite IDs
         WMO_sat_ID = -1
     return WMO_sat_ID
 
 
-def get_metadata(scn, dataset='IR_108'):
+def get_metadata(scn, dataset='B13'):
 
     """
     retrieve specific metaData from attributes
@@ -471,10 +467,11 @@ def get_metadata(scn, dataset='IR_108'):
     return satellite_name, instrument_name, satellite_altitude
 
 
-def get_pixel_time(scn, target_area, dataset='IR_108'):
+def get_pixel_time_ahi(scn, target_area, dataset='B13'):
 
     """
-    get a dateTime for each pixel and remap to target_area projection
+    Calculates a nominal acquisition time for each pixel in AHI data
+    and resamples it to the target_area projection
 
     Args:
         scn - Scene structure from satpy
@@ -486,19 +483,33 @@ def get_pixel_time(scn, target_area, dataset='IR_108'):
     """
 
     # Get the acquisition times for each row
-    acq_times_dt64 = scn[dataset].coords['acq_time'].values
+    data_array = scn[dataset]
+    time_params = data_array.time_parameters
 
-    # Convert nanoseconds since epoch to seconds by dividing by 1 billion
-    acq_times = acq_times_dt64.astype('int64') / 1_000_000_000
+    start_dt = time_params['observation_start_time']
+    end_dt = time_params['observation_end_time']
+
+    # Convert datetime objects to seconds since the Unix epoch for calculation
+    epoch = datetime(1970, 1, 1)
+    start_seconds = (start_dt - epoch).total_seconds()
+    end_seconds = (end_dt - epoch).total_seconds()
+
+   # Determine array dimensions
+    num_rows = data_array.shape[0]
+    num_cols = data_array.shape[1]
+
+    # Create a 1D array of time (in seconds) linearly interpolated across rows
+    # assumes scan time progresses linearly across row
+    acq_times_1d = np.linspace(start_seconds, end_seconds, num_rows, dtype=np.float64)
 
     # Reshape the 1D time array into a 2D array and repeat it for each column
-    num_cols = scn[dataset].shape[1]
-    pixel_time_array = np.tile(acq_times.reshape(-1, 1), (1, num_cols))
+    pixel_time_array = np.tile(acq_times_1d.reshape(-1, 1), (1, num_cols))
 
     # --- Get the original area definition from the scene ---
-    source_area = scn[dataset].attrs['area']
+    source_area = data_array.attrs['area']
 
     # --- Perform the manual resampling of the time data ---
+    # Note: We are resampling a NumPy array of floats (seconds since epoch)
     resampled_pixel_time = resample_nearest(
         source_area,
         pixel_time_array,
@@ -510,7 +521,7 @@ def get_pixel_time(scn, target_area, dataset='IR_108'):
     return resampled_pixel_time
 
 
-def resample_ancillary_data(scn, dataset_name, target_area, source_dataset='IR_108'):
+def resample_ancillary_data(scn, dataset_name, target_area, source_dataset='B13'):
     """
     Resamples an ancillary dataset from the original scene to a new target area.
 
