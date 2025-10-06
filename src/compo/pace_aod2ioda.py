@@ -234,8 +234,8 @@ class AOD(object):
 
         # Uncertainty
         # FastMAPOL AMT paper: https://doi.org/10.5194/amt-16-5863-2023
-        # Fig. 9. Figure 9a1 shows that both the theoretical (red lines) and the true (blue lines) 
-        # absolute uncertainties of AOD increase from 0.002–0.004 to 0.015 as AOD increases from 0.01 to 0.45,
+        # Fig. 9. Figure 9a1 shows that both the theoretical (red lines) and the true (blue lines)
+        # absolute uncertainties of AOD increase from 0.002–0.004 to 0.015 as AOD increases from 0.01 to 0.45.
         self.errs = 0.00375 + 0.025 * self.vals
 
         valid_pts = np.any(~self.vals.mask, axis=1)
@@ -245,7 +245,6 @@ class AOD(object):
         self.vals = self.vals[valid_pts, :]
         self.errs = self.errs[valid_pts, :]
         self.qcfs = self.qcfs[valid_pts, :]
-
 
     def read(self):
         # Make empty lists for the output vars
