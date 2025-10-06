@@ -8,7 +8,9 @@
 #include <array>
 #include <utility>
 
-#include "yaml-cpp/yaml.h"
+#include "eckit/config/YAMLConfiguration.h"
+#include "eckit/config/LocalConfiguration.h"
+#include "eckit/filesystem/PathName.h"
 #include "FilePathConfig.h"
 
 /**
@@ -20,34 +22,55 @@
 class IYamlNode {
 public:
     /**
-     * @brief Check whether a key exists in the node.
+     * @brief Check whether a category (eg: "Variables") exists in the node.
+     * @param category The category to check.
+     * @return True if the category exists and is defined.
+     */
+    [[nodiscard]] virtual bool hasCategory(const std::string &category) const = 0;
+
+    /**
+     * @brief Check whether a key ("eg: "Variable") exists in the node.
+     * @param config The configuration object of category to check for key.
      * @param key The key to check.
      * @return True if the key exists and is defined.
      */
-    [[nodiscard]] virtual bool hasKey(const std::string &key) const = 0;
+    [[nodiscard]] virtual bool hasKey(const eckit::LocalConfiguration &config,
+                                      const std::string &key) const = 0;
 
     /**
-     * @brief Check whether the specified key holds a YAML sequence.
+     * @brief Check whether the specified category (eg: "Groups") holds a YAML sequence.
+     * @param category The category to check.
+     * @return True if the category maps to a sequence node.
+     */
+    [[nodiscard]] virtual bool
+    isCategorySequence(const std::string &category) const = 0;
+
+    /**
+     * @brief Check whether the specified key (eg: "Group") holds a YAML sequence.
+     * @param config The configuration object of category to check for key.
      * @param key The key to check.
      * @return True if the key maps to a sequence node.
      */
     [[nodiscard]] virtual bool
-    isSequence(const std::string &key) const = 0;
+    isKeySequence(const eckit::LocalConfiguration &config,
+                  const std::string &key) const = 0;
 
     /**
      * @brief Retrieve a list of strings from a YAML sequence under a key.
+     * @param config The configuration object of category to get sequence for key.
      * @param key The key for the sequence.
      * @return A vector of strings.
      */
     [[nodiscard]] virtual std::vector<std::string>
-    getStringList(const std::string &key) const = 0;
+    getStringList(const eckit::LocalConfiguration &config,
+                  const std::string &key) const = 0;
 
     /**
      * @brief Retrieve a list of child nodes from a YAML sequence under a key.
      * @param key The key for the sequence.
-     * @return A vector of shared pointers to IYamlNode children.
+     * @return A vector of configuration object of children.
      */
-    [[nodiscard]] virtual std::vector<std::shared_ptr<IYamlNode>>
+    [[nodiscard]] virtual std::vector<eckit::LocalConfiguration>
     getSequence(const std::string &key) const = 0;
 
     /// @brief Virtual destructor.
@@ -55,53 +78,72 @@ public:
 };
 
 /**
- * @brief Concrete implementation of IYamlNode using yaml-cpp.
+ * @brief Concrete implementation of IYamlNode using eckit::YAMLConfiguration.
  *
- * Wraps a `YAML::Node` object and implements the `IYamlNode` interface to provide
+ * Wraps a `eckit::YAMLConfiguration` object and
+ * implements the `IYamlNode` interface to provide
  * generic access to YAML keys, sequences, and nested nodes.
  */
-class YamlCppNode : public IYamlNode {
+class YamlEckitNode : public IYamlNode {
 public:
     /**
-     * @brief Constructor from a yaml-cpp node.
-     * @param node The YAML::Node to wrap.
+     * @brief Constructor from a yaml file path.
+     * @param yamlPath The path of file to get the node.
      */
-    explicit YamlCppNode(YAML::Node node);
+    explicit YamlEckitNode(const std::string& yamlPath);
+
+    /**
+     * @brief Check if a category exists and is defined in the wrapped node.
+     * @param category The category to check.
+     * @return True if the category exists and is defined.
+     */
+    bool hasCategory(const std::string &key) const override;
 
     /**
      * @brief Check if a key exists and is defined in the wrapped node.
+     * @param config The configuration object of category to check for key.
      * @param key The key to check.
      * @return True if the key exists and is defined.
      */
-    bool hasKey(const std::string &key) const override;
+    bool hasKey(const eckit::LocalConfiguration &config,
+                const std::string &key) const override;
+
+    /**
+     * @brief Check whether the value at a category is a YAML sequence.
+     * @param category The key to check.
+     * @return True if the value is a sequence.
+     */
+    bool isCategorySequence(const std::string &category) const override;
 
     /**
      * @brief Check whether the value at a key is a YAML sequence.
+     * @param config The configuration object of category to check for key.
      * @param key The key to check.
      * @return True if the value is a sequence.
      */
-    bool isSequence(const std::string &key) const override;
-
+    bool isKeySequence(const eckit::LocalConfiguration &config,
+                       const std::string &key) const override;
     /**
      * @brief Extract a vector of strings from a sequence under a given key.
+     * @param config The configuration object of category to get sequence for key.
      * @param key The YAML key containing the string list.
      * @return A vector of strings.
      */
     std::vector<std::string>
-    getStringList(const std::string &key) const override;
+    getStringList(const eckit::LocalConfiguration &config,
+                  const std::string &key) const override;
 
     /**
      * @brief Extract a list of child nodes from a sequence under a key.
      * @param key The key containing the YAML sequence.
-     * @return A vector of wrapped child IYamlNode instances.
+     * @return A vector of configuration object instances.
      */
-    std::vector<std::shared_ptr<IYamlNode>>
+    std::vector<eckit::LocalConfiguration>
     getSequence(const std::string &key) const override;
 
 private:
-    YAML::Node node_;  ///< The wrapped yaml-cpp node.
+    eckit::YAMLConfiguration node_;  ///< The wrapped eckit YAML node.
 };
-
 
 /**
  * @brief Abstract base class for all IODA schema components.
@@ -122,10 +164,12 @@ protected:
      * and sets the first one as the canonical name.
      *
      * @param node The YAML node containing the list.
-     * @param category The key to look up (e.g., "Variable", "Attribute").
+     * @param config The configuration object of category (eg: "Variables", "Attributes").
+     * @param key The key to set names (e.g., "Variable", "Attribute").
      */
     void setNames(const std::shared_ptr<IYamlNode> &node,
-                  const std::string &category);
+                  const eckit::LocalConfiguration &config,
+                  const std::string &key);
 
     /**
      * @brief Constructor.
@@ -153,8 +197,10 @@ public:
     /**
      * @brief Load the component metadata from a YAML node.
      * @param node YAML node describing the component.
+     * @param config The configuration object of component.
      */
-    virtual void load(const std::shared_ptr<IYamlNode> &node);
+    virtual void load(const std::shared_ptr<IYamlNode> &node,
+                      const eckit::LocalConfiguration &config);
 
     /// @brief Virtual destructor.
     virtual ~IodaObsSchemaComponent() = default;
@@ -212,8 +258,10 @@ public:
     /**
      * @brief Load variable metadata from the provided YAML node.
      * @param node YAML node containing variable data.
+     * @param config The configuration object containing the child node of variable.
      */
-    void load(const std::shared_ptr<IYamlNode> &node) override;
+    void load(const std::shared_ptr<IYamlNode> &node,
+              const eckit::LocalConfiguration &config) override;
 };
 
 /**
@@ -241,11 +289,11 @@ class IodaObsSchema {
                        const std::string &category,
                        const std::string &key,
                        std::unordered_map<std::string, std::shared_ptr<T>> &componentMap) {
-        if (schema->hasKey(category) && schema->isSequence(category)) {
+        if (schema->hasCategory(category) && schema->isCategorySequence(category)) {
             for (const auto &item: schema->getSequence(category)) {
-                if (item->hasKey(key)) {
+                if (schema->hasKey(item, key)) {
                     auto component = std::make_shared<T>();
-                    component->load(item);
+                    component->load(schema, item);
                     for (const auto &n: component->getNames()) {
                         componentMap.emplace(n, component);
                     }
@@ -264,7 +312,7 @@ class IodaObsSchema {
      */
     template<typename T>
     std::shared_ptr<const T> getComponent(const std::string &name,
-                                          std::unordered_map<std::string, std::shared_ptr<T>> &componentMap) {
+                    std::unordered_map<std::string, std::shared_ptr<T>> &componentMap) {
         auto it = componentMap.find(name);
         if (it != componentMap.end()) {
             return it->second;

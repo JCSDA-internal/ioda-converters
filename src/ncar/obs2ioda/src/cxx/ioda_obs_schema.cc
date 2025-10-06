@@ -1,17 +1,19 @@
 #include "ioda_obs_schema.h"
 
 void
-IodaObsSchemaComponent::load(const std::shared_ptr<IYamlNode> &node) {
-    setNames(node, this->componentType);
+IodaObsSchemaComponent::load(const std::shared_ptr<IYamlNode> &node,
+                             const eckit::LocalConfiguration &config) {
+    setNames(node, config, this->componentType);
 }
 
 const std::string &IodaObsSchemaComponent::getValidName() const { return this->validName; }
 
 void
 IodaObsSchemaComponent::setNames(const std::shared_ptr<IYamlNode> &node,
-                                 const std::string &category) {
-    if (node->hasKey(category) && node->isSequence(category)) {
-        this->names = node->getStringList(category);
+                                 const eckit::LocalConfiguration &config,
+                                 const std::string &key) {
+    if (node->hasKey(config, key) && node->isKeySequence(config, key)) {
+        this->names = node->getStringList(config, key);
         if (!names.empty()) {
             this->validName = names.at(0);
         }
@@ -29,29 +31,44 @@ IodaObsSchemaComponent::IodaObsSchemaComponent(
 
 const std::vector<std::string> &IodaObsSchemaComponent::getNames() const { return this->names; }
 
-std::vector<std::shared_ptr<IYamlNode>>
-YamlCppNode::getSequence(const std::string &key) const {
-    std::vector<std::shared_ptr<IYamlNode>> result;
-    for (const auto &child: node_[key]) {
-        result.emplace_back(std::make_shared<YamlCppNode>(child));
-    }
-    return result;
+// Class YamlEckitNode function definitions
+// ******************************************************************************
+YamlEckitNode::YamlEckitNode(const std::string& yamlPath)
+: node_(eckit::YAMLConfiguration(eckit::PathName(yamlPath))) { }
+
+std::vector<eckit::LocalConfiguration>
+YamlEckitNode::getSequence(const std::string &key) const {
+     std::vector<eckit::LocalConfiguration> keyConfigs;
+     node_.get(key, keyConfigs);
+     return keyConfigs;
 }
 
 std::vector<std::string>
-YamlCppNode::getStringList(const std::string &key) const {
-    return node_[key].as<std::vector<std::string>>();
+YamlEckitNode::getStringList(const eckit::LocalConfiguration &config,
+                             const std::string &key) const {
+    std::vector<std::string> stringVec;
+    stringVec = config.getStringVector(key);
+    return stringVec;
 }
 
-bool YamlCppNode::isSequence(const std::string &key) const {
-    return node_[key] && node_[key].IsSequence();
+bool YamlEckitNode::isCategorySequence(const std::string &category) const {
+    return node_.isList(category);
 }
 
-YamlCppNode::YamlCppNode(YAML::Node node) : node_(std::move(node)) {}
-
-bool YamlCppNode::hasKey(const std::string &key) const {
-    return node_[key].IsDefined();
+bool YamlEckitNode::isKeySequence(const eckit::LocalConfiguration &config,
+                                  const std::string &key) const {
+    return config.isList(key);
 }
+
+bool YamlEckitNode::hasCategory(const std::string &category) const {
+    return node_.has(category);
+}
+
+bool YamlEckitNode::hasKey(const eckit::LocalConfiguration &config,
+                           const std::string &key) const {
+    return config.has(key);
+}
+// ******************************************************************************
 
 IodaObsAttribute::IodaObsAttribute(std::string name)
         : IodaObsSchemaComponent("Attribute", std::move(name)) {}
@@ -65,12 +82,13 @@ IodaObsDimension::IodaObsDimension(std::string name)
 IodaObsVariable::IodaObsVariable(std::string name)
         : IodaObsSchemaComponent("Variable", std::move(name)) {}
 
-void IodaObsVariable::load(const std::shared_ptr<IYamlNode> &node) {
+void IodaObsVariable::load(const std::shared_ptr<IYamlNode> &node,
+                           const eckit::LocalConfiguration &config) {
     static constexpr std::array<const char *, 2> keys = {"Variable",
                                                          "Dimension"};
     for (const auto &key: keys) {
-        if (node->hasKey(key) && node->isSequence(key)) {
-            this->setNames(node, key);
+        if (node->hasKey(config, key) && node->isKeySequence(config, key)) {
+            this->setNames(node, config, key);
             break;
         }
     }

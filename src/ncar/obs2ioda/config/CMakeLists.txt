@@ -5,4 +5,3 @@ configure_file(
         ${CMAKE_BINARY_DIR}/generated/FilePathConfig.h
         @ONLY
 )
-
