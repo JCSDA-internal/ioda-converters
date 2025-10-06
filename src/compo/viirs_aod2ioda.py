@@ -159,7 +159,7 @@ class AOD(object):
         qcpath = self.ncd.variables['QCPath'][:].data.ravel()[valid_pts]
         qcpath = np.ma.masked_array(qcpath, np.logical_or(qcpath < 0, qcpath > 127))
         # bit 0: retrieval over water; bit 2: over glint water; other bits are over land
-        water_pts = ocean_mask = ((qcpath >> 0 & 1) == 1) | ((qcpath >> 2 & 1) == 1)
+        water_pts = ((qcpath >> 0 & 1) == 1) | ((qcpath >> 2 & 1) == 1)
         self.lsfs[water_pts] = 0
         self.lsfs[~water_pts] = 1
 
