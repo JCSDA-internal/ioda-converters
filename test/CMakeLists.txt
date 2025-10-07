@@ -1277,7 +1277,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pace_harp2_fmapol_aod
                           -o testrun/pace_harp2_fmapol_aod.2024110106.nc
                           --retrieval_method fmapol
                           --date_range 2024110103 2024110109"
-                          pace_harp2_fmapol_aod.2024110507.nc ${IODA_CONV_COMP_TOL})
+                          pace_harp2_fmapol_aod.2024110106.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pace_oci_uaa_aod
                   TYPE    SCRIPT
@@ -1303,7 +1303,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pace_spexone_fmapol_aod
                           -o testrun/pace_spexone_fmapol_aod.2024110106.nc
                           --retrieval_method fmapol
                           --date_range 2024110103 2024110109"
-                          pace_spexone_fmapol_aod.2024110507.nc ${IODA_CONV_COMP_TOL})
+                          pace_spexone_fmapol_aod.2024110106.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pace_spexone_remotap_aod
                   TYPE    SCRIPT
