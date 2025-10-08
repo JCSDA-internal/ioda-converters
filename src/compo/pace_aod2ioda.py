@@ -222,7 +222,7 @@ class AOD(object):
         self.lons = self.ncd.groups['geolocation_data'].variables['longitude'][:].ravel()
         self.lats = self.ncd.groups['geolocation_data'].variables['latitude'][:].ravel()
         # Fast MAPOL data is over ocean only, surfaceQualifier is zero
-        self.lsfs = np.zeros_like(self.lats, dtype=np.int32)
+        self.landseaflags = np.zeros_like(self.lats, dtype=np.int32)
         vals = self.ncd.groups['geophysical_data'].variables['aot'][:]
         self.vals = vals.reshape(-1, vals.shape[2])
         qcfs = self.ncd.groups['diagnostic_data'].variables['quality_flag'][:].ravel()
@@ -237,7 +237,7 @@ class AOD(object):
         valid_pts = np.any(~self.vals.mask, axis=1)
         self.lons = self.lons[valid_pts]
         self.lats = self.lats[valid_pts]
-        self.lsfs = self.lsfs[valid_pts]
+        self.landseaflags = self.landseaflags[valid_pts]
         self.vals = self.vals[valid_pts, :]
         self.errs = self.errs[valid_pts, :]
         self.qcfs = self.qcfs[valid_pts, :]
