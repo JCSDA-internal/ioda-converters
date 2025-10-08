@@ -8,7 +8,9 @@ list(APPEND scripts
   ozone_product_2ioda.py
   read_cloudsat.py
   read_dpr_gpm.py
+  ssmis_upp_2ioda.py
   tropics_2ioda.py
+  wsfm_2ioda.py
 )
 
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )
