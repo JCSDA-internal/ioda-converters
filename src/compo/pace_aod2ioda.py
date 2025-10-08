@@ -142,16 +142,16 @@ class AOD(object):
         # PACE UAA retrieval
         self.lons = self.ncd.groups['geolocation_data'].variables['longitude'][:].ravel()
         self.lats = self.ncd.groups['geolocation_data'].variables['latitude'][:].ravel()
-        self.lsfs = self.ncd.groups['geophysical_data'].variables['Land_Sea_Flag'][:].ravel()
+        self.landseaflags = self.ncd.groups['geophysical_data'].variables['Land_Sea_Flag'][:].ravel()
         vals = self.ncd.groups['geophysical_data'].variables['Aerosol_Optical_Depth'][:]
         self.vals = vals.reshape(-1, vals.shape[2])
-        qcfs = self.ncd.groups['geophysical_data'].variables['Quality_flag_Aerosol_Optical_Depth'][:].ravel()
-        self.qcfs = np.repeat(qcfs[:, np.newaxis], self.channels.size, axis=1)
+        qcflags = self.ncd.groups['geophysical_data'].variables['Quality_flag_Aerosol_Optical_Depth'][:].ravel()
+        self.qcflags = np.repeat(qcflags[:, np.newaxis], self.channels.size, axis=1)
 
         # Temporarily use expected error (EE) of Dark Target ATBD (March 2024)
         # https://darktarget.gsfc.nasa.gov/sites/default/files/users/user9/ATBD_DarkTarget_April3.pdf
         AttrData['errorMethod'] = 'Expected Error (EE)'
-        land_pts = (self.lsfs == 1)
+        land_pts = (self.landseaflags == 1)
         self.errs = np.zeros_like(self.vals)
         for n in range(self.channels.size):
             self.errs[:, n] = np.where(land_pts, np.add(0.05, np.multiply(0.2, self.vals[:, n])),
@@ -164,10 +164,10 @@ class AOD(object):
         valid_pts = np.any(~self.vals.mask, axis=1)
         self.lons = self.lons[valid_pts]
         self.lats = self.lats[valid_pts]
-        self.lsfs = self.lsfs[valid_pts]
+        self.landseaflags = self.landseaflags[valid_pts]
         self.vals = self.vals[valid_pts, :]
         self.errs = self.errs[valid_pts, :]
-        self.qcfs = self.qcfs[valid_pts, :]
+        self.qcflags = self.qcflags[valid_pts, :]
 
     def get_remotap_data(self):
         AttrData['retrievalMethod'] = 'Remote Sensing of Trace Gases and Aerosol Products (RemoTAP)'
@@ -180,24 +180,20 @@ class AOD(object):
 
         self.lons = self.ncd.groups['geolocation_data'].variables['longitude'][:].ravel()
         self.lats = self.ncd.groups['geolocation_data'].variables['latitude'][:].ravel()
-        if 'OCEAN' in self.ncd.product_name:
-            self.lsfs = np.zeros_like(self.lats, dtype=np.int32)
-        elif 'LAND' in self.ncd.product_name:
-            self.lsfs = np.ones_like(self.lats, dtype=np.int32)
+        if 'OCEAN' in self.ncd.product_name or 'RTAP_OC' in self.ncd.product_name:
+            self.landseaflags = np.zeros_like(self.lats, dtype=np.int32)
+        elif 'LAND' in self.ncd.product_name or 'RTAP_LD' in self.ncd.product_name:
+            self.landseaflags = np.ones_like(self.lats, dtype=np.int32)
         vals = self.ncd.groups['geophysical_data'].variables['aot'][:]
         self.vals = vals.reshape(-1, vals.shape[2])
-        qcfs = self.ncd.groups['diagnostic_data'].variables['quality_flag'][:].ravel()
-        self.qcfs = np.repeat(qcfs[:, np.newaxis], self.channels.size, axis=1)
+        qcflags = self.ncd.groups['diagnostic_data'].variables['quality_flag'][:].ravel()
+        self.qcflags = np.repeat(qcflags[:, np.newaxis], self.channels.size, axis=1)
 
         # Setup observation time with utc_date and fracday
         datet = self.ncd.groups['geolocation_data'].variables['utc_date'][:].ravel()
         fracd = self.ncd.groups['geolocation_data'].variables['fracday'][:].ravel()
-        d = np.round(np.mod(datet, 100)).astype(np.int32)
-        m = np.round(np.mod((datet-d), 10000)).astype(np.int32)
-        y = np.round(datet-m-d).astype(np.int32)
-        dtarr = [datetime(yi//10000, mi//100, di, tzinfo=timezone.utc)
-                 for yi, mi, di in zip(y, m, d)]
-        delta = [timedelta(float(f)) for f in fracd]
+        dtarr = [datetime.strptime(str(t), '%Y%m%d') for t in datet.data]
+        delta = [timedelta(float(f)) for f in fracd.data]
         tmparr = [dt + dl for dt, dl in zip(dtarr, delta)]
         self.obs_time = np.array([pt.timestamp() for pt in tmparr], dtype=np.int64)
 
@@ -207,15 +203,15 @@ class AOD(object):
         errs = self.ncd.groups['geophysical_data'].variables['aot_uncertainty'][:]
         self.errs = errs.reshape(-1, errs.shape[2])
 
-        # Keep valid data points only
-        valid_pts = np.any(~self.vals.mask, axis=1)
+        # Keep valid data points only, using mask of fracday to ensure no unreasonable observation time
+        valid_pts = np.any(~self.vals.mask, axis=1) & ~fracd.mask
         self.lons = self.lons[valid_pts]
         self.lats = self.lats[valid_pts]
         self.obs_time = self.obs_time[valid_pts]
-        self.lsfs = self.lsfs[valid_pts]
+        self.landseaflags = self.landseaflags[valid_pts]
         self.vals = self.vals[valid_pts, :]
         self.errs = self.errs[valid_pts, :]
-        self.qcfs = self.qcfs[valid_pts, :]
+        self.qcflags = self.qcflags[valid_pts, :]
 
     def get_fmapol_data(self):
         AttrData['retrievalMethod'] = 'Fast Multi-Angular Polarimetric Ocean coLor (FastMAPOL)'
@@ -297,10 +293,10 @@ class AOD(object):
                 mask_thin = np.random.uniform(size=len(self.lons)) > self.thinning_ratio
                 self.lons = self.lons[mask_thin]
                 self.lats = self.lats[mask_thin]
-                self.lsfs = self.lsfs[mask_thin]
+                self.landseaflags = self.landseaflags[mask_thin]
                 self.vals = self.vals[mask_thin]
                 self.errs = self.errs[mask_thin]
-                self.qcfs = self.qcfs[mask_thin]
+                self.qcflags = self.qcflags[mask_thin]
                 self.obs_time = self.obs_time[mask_thin]
 
             #  Write out data
@@ -311,7 +307,7 @@ class AOD(object):
             self.outdata[('dateTime', metaDataName)] = np.append(
                 self.outdata[('dateTime', metaDataName)], np.array(self.obs_time[winmsk], dtype=np.int64))
             self.outdata[('surfaceQualifier', metaDataName)] = np.append(
-                self.outdata[('surfaceQualifier', metaDataName)], np.array(self.lsfs[winmsk], dtype=np.int32))
+                self.outdata[('surfaceQualifier', metaDataName)], np.array(self.landseaflags[winmsk], dtype=np.int32))
 
             for iodavar in obsvars:
                 self.outdata[self.varDict[iodavar]['valKey']] = np.append(
@@ -319,7 +315,7 @@ class AOD(object):
                 self.outdata[self.varDict[iodavar]['errKey']] = np.append(
                     self.outdata[self.varDict[iodavar]['errKey']], np.array(self.errs[winmsk, :], dtype=np.float32))
                 self.outdata[self.varDict[iodavar]['qcKey']] = np.append(
-                    self.outdata[self.varDict[iodavar]['qcKey']], np.array(self.qcfs[winmsk, :], dtype=np.int32))
+                    self.outdata[self.varDict[iodavar]['qcKey']], np.array(self.qcflags[winmsk, :], dtype=np.int32))
 
             self.ncd.close()
 
@@ -385,12 +381,10 @@ def main():
                     }
 
     # setup the IODA writer
-
     # Read in the AOD data
     aod = AOD(args_in_dict)
 
     # write everything out
-
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
     writer.BuildIoda(aod.outdata, VarDims, aod.varAttrs, AttrData)
 

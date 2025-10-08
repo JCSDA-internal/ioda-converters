@@ -221,7 +221,7 @@ def main():
         type=str, required=True)
     required.add_argument(
         '--platform',
-        help="AQUA or TERRA satellite?",
+        help="AQUA or TERRA satellite",
         type=str, required=True)
 
     optional = parser.add_argument_group(title='optional arguments')

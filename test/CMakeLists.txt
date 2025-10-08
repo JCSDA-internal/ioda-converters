@@ -84,10 +84,15 @@ list( APPEND test_input
   testinput/satwinds_ssec2021080103.txt
   testinput/pace_oc_l2.nc
   testinput/pace_radiance_L1B.nc
+<<<<<<< HEAD
   testinput/pace_oci_uaa_aod.2024072114.nc
   testinput/pace_harp2_fmapol_aod.2024110106.nc
   testinput/pace_spexone_remotap_aod.2024110507.nc
   testinput/pace_spexone_fmapol_aod.2024110106.nc
+=======
+  testinput/pace_uaa_aod.2024072114.nc
+  testinput/pace_remotap_aod.2024110106.nc
+>>>>>>> feature/pace_spexone_aod
   testinput/modis_aqua_Rrs_OC_L2.nc
   testinput/mls_o3_l2.he5
   testinput/omi_o3_l2.he5
@@ -192,10 +197,15 @@ list( APPEND test_output
   testoutput/satwinds_ssec2021080103.nc
   testoutput/pace_oc_l2.nc
   testoutput/pace_radiance_L1B.nc
+<<<<<<< HEAD
   testoutput/pace_oci_uaa_aod.2024072114.nc
   testoutput/pace_harp2_fmapol_aod.2024110106.nc
   testoutput/pace_spexone_remotap_aod.2024110507.nc
   testoutput/pace_spexone_fmapol_aod.2024110106.nc
+=======
+  testoutput/pace_uaa_aod.2024072114.nc
+  testoutput/pace_remotap_aod.2024110106.nc
+>>>>>>> feature/pace_spexone_aod
   testoutput/modis_water_leaving_radiance_L2.nc
   testoutput/mls_o3_l2.nc
   testoutput/omi_o3_l2.nc
@@ -1312,11 +1322,11 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pace_spexone_remotap_aod
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/pace_aod2ioda.py
-                          -i testinput/pace_spexone_remotap_aod.2024110507.nc
-                          -o testrun/pace_spexone_remotap_aod.2024110507.nc
+                          -i testinput/pace_spexone_remotap_aod.2024110106.nc
+                          -o testrun/pace_spexone_remotap_aod.2024110106.nc
                           --retrieval_method remotap
-                          --date_range 2024110507 2024110508"
-                          pace_spexone_remotap_aod.2024110507.nc ${IODA_CONV_COMP_TOL})
+                          --date_range 2024110103 2024110109"
+                          pace_spexone_remotap_aod.2024110106.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_aod
                   TYPE    SCRIPT
