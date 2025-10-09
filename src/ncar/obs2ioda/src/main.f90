@@ -305,6 +305,7 @@ iarg_outdir = -1
 iarg_datetime = -1
 iarg_subsample = -1
 iarg_superob_halfwidth = -1
+iarg_hs = -1
 iarg_ext = -1
 if ( narg > 0 ) then
    do iarg = 1, narg
