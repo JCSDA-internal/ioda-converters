@@ -14,7 +14,7 @@ module ahi_HSD_mod
 
 !https://www.jstage.jst.go.jp/article/jmsj/94/2/94_2016-009/_pdf/-char/en
 
-use kinds, only: i_byte, i_short, i_int, i_long, i_llong, i_kind, r_single, r_double, r_kind
+use kinds, only: i_byte, i_short, i_long, i_llong, i_kind, r_single, r_double, r_kind
 use define_mod, only: missing_r, missing_i, nstring, ndatetime, &
    ninst, inst_list, set_name_satellite, set_name_sensor, xdata, name_sen_info, &
    nvar_info, name_var_info, type_var_info, nsen_info, type_sen_info, set_brit_obserr, strlen
@@ -66,8 +66,8 @@ type basic_info
   real(r_double)     :: obsStartTime   ! Modified Julian Date
   real(r_double)     :: obsEndTime     ! Modified Julian Date
   real(r_double)     :: fileCreateTime ! Modified Julian Date
-  integer(i_int)     :: totalHeaderLen
-  integer(i_int)     :: dataLen
+  integer(i_long)    :: totalHeaderLen
+  integer(i_long)    :: dataLen
   integer(i_byte)    :: qcflag1
   integer(i_byte)    :: qcflag2
   integer(i_byte)    :: qcflag3
@@ -91,8 +91,8 @@ type proj_info
   integer(i_byte)    :: headerNum      ! header block number = 3
   integer(i_short)   :: blockLen       ! block length = 127 bytes
   real(r_double)     :: subLon         ! 140.7 degree
-  integer(i_int)     :: cfac           ! column scaling factor
-  integer(i_int)     :: lfac           ! line scaling factor
+  integer(i_long)    :: cfac           ! column scaling factor
+  integer(i_long)    :: lfac           ! line scaling factor
   real(r_single)     :: coff           ! column offset
   real(r_single)     :: loff           ! line offset
   real(r_double)     :: satDis         ! distance from earth's center to virtual satellite = 42164 km
@@ -189,7 +189,7 @@ end type obsTime_info
 
 type error_info
   integer(i_byte)    :: headerNum      ! header block number = 10
-  integer(i_int)     :: blockLen       ! block length = 47
+  integer(i_long)    :: blockLen       ! block length = 47
   integer(i_short)   :: errorNum       ! number of error information data = 0
 !  integer(i_short), allocatable :: lineNo(:)    !(errorNum)
 !  integer(i_short), allocatable :: errPixNum(:) !(errorNum)
