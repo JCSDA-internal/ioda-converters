@@ -101,7 +101,7 @@ character(len=nstring), dimension(ninst) :: inst_list = &
 
 character(len=nstring), dimension(ninst_geo) :: geoinst_list = &
    (/                     &
-      'ahi_himawari8   '  &
+      'ahi_himawari    '  &
    /)
 ! variables for outputing netcdf files
 character(len=nstring), dimension(n_ncdim) :: name_ncdim = &
