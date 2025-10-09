@@ -24,6 +24,7 @@ locationKeyList = [
     ("latitude", "float", "degrees_north"),
     ("longitude", "float", "degrees_east"),
     ("dateTime", "long", iso8601_string),
+    ("surfaceQualifier", "integer", ""),
 ]
 
 obsvars = ["aerosolOpticalDepth"]
@@ -36,7 +37,10 @@ AttrData['ioda_object_type'] = 'AOD'
 DimDict = {}
 
 # A dictionary of variable names and their dimensions.
-VarDims = {'aerosolOpticalDepth': ['Location', 'Channel']}
+VarDims = {
+    'aerosolOpticalDepth': ['Location', 'Channel'],
+    "surfaceQualifier": ['Location'],
+}
 
 # Get the group names we use the most.
 metaDataName = iconv.MetaDataName()
@@ -147,16 +151,21 @@ class AOD(object):
         self.vals = self.vals[valid_pts]
         self.errs = self.errs[valid_pts]
         self.qcfs = self.qcfs[valid_pts]
+        self.lsfs = np.zeros_like(self.lats, dtype=np.int32)
+
+        # QCPath is the flag for retrieval path. The valid range is 0-127 in the
+        # ATBD: https://www.star.nesdis.noaa.gov/jpss/documents/ATBD/ATBD_EPS_Aerosol_AOD_v3.4.pdf.
+        # QCPath's valid range in the input file is not correct, so we define the valid range here.
+        qcpath = self.ncd.variables['QCPath'][:].data.ravel()[valid_pts]
+        qcpath = np.ma.masked_array(qcpath, np.logical_or(qcpath < 0, qcpath > 127))
+        # bit 0: retrieval over water; bit 2: over glint water; other bits are over land
+        water_pts = ((qcpath >> 0 & 1) == 1) | ((qcpath >> 2 & 1) == 1)
+        self.lsfs[water_pts] = 0
+        self.lsfs[~water_pts] = 1
 
         # Define pixel-level uncertainty estimates (PUE) based on surface type
         if self.error_method == "pue":
             AttrData['errorMethod'] = 'Pixel-level Uncertainty Estimates (PUE)'
-            # QCPath is the flag for retrieval path. The valid range is 0-127 in the
-            # ATBD: https://www.star.nesdis.noaa.gov/jpss/documents/ATBD/ATBD_EPS_Aerosol_AOD_v3.4.pdf.
-            # QCPath's valid range in the input file is not correct, so we define the valid range here.
-            qcpath = self.ncd.variables['QCPath'][:].data.ravel()[valid_pts]
-            qcpath = np.ma.masked_array(qcpath, np.logical_or(qcpath < 0, qcpath > 127))
-
             self.errs = 0.111431 + 0.128699 * self.vals    # over land (dark)
             self.errs[qcpath % 2 == 1] = 0.00784394 + 0.219923 * self.vals[qcpath % 2 == 1]  # over ocean
             self.errs[qcpath % 4 == 2] = 0.0550472 + 0.299558 * self.vals[qcpath % 4 == 2]   # over bright land
@@ -165,13 +174,14 @@ class AOD(object):
         # For NASA Dark Target
         self.lons = self.ncd.groups['geolocation_data'].variables['longitude'][:].ravel()
         self.lats = self.ncd.groups['geolocation_data'].variables['latitude'][:].ravel()
+        self.lsfs = self.ncd.groups['geophysical_data'].variables['Land_Sea_Flag'][:].ravel()
         self.vals = self.ncd.groups['geophysical_data'].variables['Optical_Depth_Land_And_Ocean'][:].ravel()
         self.qcfs = self.ncd.groups['geophysical_data'].variables['Land_Ocean_Quality_Flag'][:].ravel()
 
         # Based on Dark Target ATBD (March 2024), assign expected error (EE)
         # https://darktarget.gsfc.nasa.gov/sites/default/files/users/user9/ATBD_DarkTarget_April3.pdf
         AttrData['errorMethod'] = 'Expected Error (EE)'
-        land_pts = self.ncd.groups['geophysical_data'].variables['Land_Sea_Flag'][:].ravel() == 1
+        land_pts = self.lsfs == 1
         self.errs = np.where(land_pts, np.add(0.05, np.multiply(0.2, self.vals)),
                              np.add(0.05, np.multiply(0.15, self.vals)))
 
@@ -179,6 +189,7 @@ class AOD(object):
         valid_pts = ~self.vals.mask
         self.lons = self.lons[valid_pts]
         self.lats = self.lats[valid_pts]
+        self.lsfs = self.lsfs[valid_pts]
         self.vals = self.vals[valid_pts]
         self.errs = self.errs[valid_pts]
         self.qcfs = self.qcfs[valid_pts]
@@ -194,12 +205,18 @@ class AOD(object):
         self.lons = self.lons[valid_pts]
         self.lats = self.lats[valid_pts]
         self.vals = self.vals[valid_pts]
+        self.lsfs = np.zeros_like(self.lats, dtype=np.int32)
 
         npts_land = self.ncd.variables['Number_Of_Pixels_Used_Land'][:].ravel()
         npts_ocean = self.ncd.variables['Number_Of_Pixels_Used_Ocean'][:].ravel()
         land_pts = np.logical_and(npts_land[valid_pts] > 0, npts_ocean[valid_pts] == 0)
         ocean_pts = np.logical_and(npts_ocean[valid_pts] > 0, npts_land[valid_pts] == 0)
         mix_pts = np.logical_and(npts_land[valid_pts] > 0, npts_ocean[valid_pts] > 0)
+        # Assign land sea flag: Ocean=0, Land=1, Mix(Coastal)=2
+        self.lsfs[ocean_pts] = 0
+        self.lsfs[land_pts] = 1
+        self.lsfs[mix_pts] = 2
+
         mix_land_pts = np.logical_and(mix_pts, npts_land[valid_pts] > npts_ocean[valid_pts])
         mix_ocean_pts = np.logical_and(mix_pts, npts_land[valid_pts] < npts_ocean[valid_pts])
         mix_equal_pts = np.logical_and(mix_pts, npts_land[valid_pts] == npts_ocean[valid_pts])
@@ -243,6 +260,7 @@ class AOD(object):
         self.outdata[('latitude', metaDataName)] = np.array([], dtype=np.float32)
         self.outdata[('longitude', metaDataName)] = np.array([], dtype=np.float32)
         self.outdata[('dateTime', metaDataName)] = np.array([], dtype=np.int64)
+        self.outdata[('surfaceQualifier', metaDataName)] = np.array([], dtype=np.int32)
         for iodavar in obsvars:
             self.outdata[self.varDict[iodavar]['valKey']] = np.array([], dtype=np.float32)
             self.outdata[self.varDict[iodavar]['errKey']] = np.array([], dtype=np.float32)
@@ -287,16 +305,21 @@ class AOD(object):
                 mask_thin = np.random.uniform(size=len(self.lons)) > self.thin
                 self.lons = self.lons[mask_thin]
                 self.lats = self.lats[mask_thin]
+                self.lsfs = self.lsfs[mask_thin]
                 self.vals = self.vals[mask_thin]
                 self.errs = self.errs[mask_thin]
                 self.qcfs = self.qcfs[mask_thin]
                 self.obs_time = self.obs_time[mask_thin]
 
             #  Write out data
-            self.outdata[('latitude', metaDataName)] = np.append(self.outdata[('latitude', metaDataName)], np.array(self.lats[winmsk], dtype=np.float32))
-            self.outdata[('longitude', metaDataName)] = np.append(self.outdata[('longitude', metaDataName)], np.array(self.lons[winmsk], dtype=np.float32))
-            self.outdata[('dateTime', metaDataName)] = np.append(self.outdata[('dateTime', metaDataName)], np.array(self.obs_time[winmsk], dtype=np.int64))
-
+            self.outdata[('latitude', metaDataName)] = np.append(
+                self.outdata[('latitude', metaDataName)], np.array(self.lats[winmsk], dtype=np.float32))
+            self.outdata[('longitude', metaDataName)] = np.append(
+                self.outdata[('longitude', metaDataName)], np.array(self.lons[winmsk], dtype=np.float32))
+            self.outdata[('dateTime', metaDataName)] = np.append(
+                self.outdata[('dateTime', metaDataName)], np.array(self.obs_time[winmsk], dtype=np.int64))
+            self.outdata[('surfaceQualifier', metaDataName)] = np.append(
+                self.outdata[('surfaceQualifier', metaDataName)], np.array(self.lsfs[winmsk], dtype=np.int32))
             for iodavar in obsvars:
                 self.outdata[self.varDict[iodavar]['valKey']] = np.append(
                     self.outdata[self.varDict[iodavar]['valKey']], np.array(self.vals[winmsk], dtype=np.float32))
