@@ -225,8 +225,8 @@ class AOD(object):
         self.landseaflags = np.zeros_like(self.lats, dtype=np.int32)
         vals = self.ncd.groups['geophysical_data'].variables['aot'][:]
         self.vals = vals.reshape(-1, vals.shape[2])
-        qcfs = self.ncd.groups['diagnostic_data'].variables['quality_flag'][:].ravel()
-        self.qcfs = np.repeat(qcfs[:, np.newaxis], self.channels.size, axis=1)
+        qcflags = self.ncd.groups['diagnostic_data'].variables['quality_flag'][:].ravel()
+        self.qcflags = np.repeat(qcflags[:, np.newaxis], self.channels.size, axis=1)
 
         # Uncertainty
         # FastMAPOL AMT paper: https://doi.org/10.5194/amt-16-5863-2023
@@ -240,7 +240,7 @@ class AOD(object):
         self.landseaflags = self.landseaflags[valid_pts]
         self.vals = self.vals[valid_pts, :]
         self.errs = self.errs[valid_pts, :]
-        self.qcfs = self.qcfs[valid_pts, :]
+        self.qcflags = self.qcflags[valid_pts, :]
 
     def read(self):
         # Make empty lists for the output vars
