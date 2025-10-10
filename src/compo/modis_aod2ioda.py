@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #
-# (C) Copyright 2020 UCAR
+# (C) Copyright 2020-2025 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -221,7 +221,7 @@ def main():
         type=str, required=True)
     required.add_argument(
         '--platform',
-        help="AQUA or TERRA satellite?",
+        help="AQUA or TERRA satellite",
         type=str, required=True)
 
     optional = parser.add_argument_group(title='optional arguments')
