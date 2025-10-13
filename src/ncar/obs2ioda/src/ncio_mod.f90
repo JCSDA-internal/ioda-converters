@@ -9,6 +9,7 @@ use define_mod, only: nobtype, nvar_info, n_ncdim, n_ncgrp, nstring, ndatetime, 
    unit_var_met, iflag_conv, iflag_radiance, set_brit_obserr, set_ahi_obserr
 use netcdf, only: nf90_int, nf90_float, nf90_char, nf90_int64, nf90_string
 use ufo_vars_mod, only: ufo_vars_getindex
+use ahi_HSD_mod, only: ahi_satid
 use netcdf_cxx_mod, only: netcdfCreate, netcdfAddDim, netcdfPutAtt, netcdfAddVar, &
    netcdfSetFill, netcdfAddGroup, netcdfPutVar, netcdfClose
 
@@ -108,7 +109,11 @@ subroutine write_obs (filedate, write_opt, outdir, itim, fileExt)
       else if ( write_opt == write_nc_radiance ) then
          ncfname = trim(outdir)//trim(inst_list(ityp))//'_obs_'//trim(filedate)//'.'//fileExt
       else if ( write_opt == write_nc_radiance_geo ) then
-         ncfname = trim(outdir)//trim(geoinst_list(ityp))//'_obs_'//trim(filedate)//'.'//fileExt
+         if (geoinst_list(ityp) == 'ahi_himawari') then
+            ncfname = trim(outdir)//trim(geoinst_list(ityp))//'_'//trim(ahi_satid)//'_obs_'//trim(filedate)//'.'//fileExt
+         else
+            ncfname = trim(outdir)//trim(geoinst_list(ityp))//'_obs_'//trim(filedate)//'.'//fileExt
+         end if
       end if
       if ( write_opt == write_nc_radiance .or. write_opt == write_nc_radiance_geo ) then
          iv = ufo_vars_getindex(name_sen_info, 'sensor_channel')
@@ -116,6 +121,7 @@ subroutine write_obs (filedate, write_opt, outdir, itim, fileExt)
          ichan(:) = xdata(ityp,itim)%xseninfo_int(:,iv)
          allocate (obserr(xdata(ityp,itim)%nvars))
          if  ( write_opt == write_nc_radiance_geo ) then
+             ! AHI only supported geo sensor by decoder
              call set_ahi_obserr(geoinst_list(ityp), xdata(ityp,itim)%nvars, obserr)
          else
              call set_brit_obserr(inst_list(ityp), xdata(ityp,itim)%nvars, obserr)
