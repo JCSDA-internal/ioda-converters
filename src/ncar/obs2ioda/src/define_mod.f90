@@ -9,6 +9,7 @@ implicit none
 real(r_kind),    parameter :: t_kelvin          = 273.15
 real(r_kind),    parameter :: missing_r         = -999.0
 integer(i_kind), parameter :: StrLen            = 512
+integer(i_kind), parameter :: ExtLen            = 5 ! to accomadate nc4, h5
 integer(i_kind), parameter :: missing_i         = -999
 integer(i_kind), parameter :: not_use           = 100
 integer(i_kind), parameter :: itrue             = 1
@@ -100,7 +101,7 @@ character(len=nstring), dimension(ninst) :: inst_list = &
 
 character(len=nstring), dimension(ninst_geo) :: geoinst_list = &
    (/                     &
-      'ahi_himawari8   '  &
+      'ahi_himawari    '  &
    /)
 ! variables for outputing netcdf files
 character(len=nstring), dimension(n_ncdim) :: name_ncdim = &
@@ -126,16 +127,16 @@ character(len=nstring), dimension(nvar_info) :: name_var_info = &
       'latitude         ', &
       'longitude        ', &
       'dateTime         ', &
-      'datetime         ', &
+      'launchTime       ', &
       'station_id       ', &
       'variable_names   '  &
    /)
 
 ! conv info flags for name_var_info
-! air_pressure, height, station_elevation, latitude, longitude, dateTime, datetime, station_id, variable_names
+! air_pressure, height, station_elevation, latitude, longitude, dateTime, launchTime, station_id, variable_names
 integer(i_kind), dimension(nvar_info,nobtype) :: iflag_conv = reshape ( &
    (/ &
-      itrue, itrue,  itrue,  itrue,  itrue,  itrue,  ifalse,  itrue,  itrue,  & ! sonde
+      itrue, itrue,  itrue,  itrue,  itrue,  itrue,  itrue,   itrue,  itrue,  & ! sonde
       itrue, itrue,  itrue,  itrue,  itrue,  itrue,  ifalse,  itrue,  itrue,  & ! aircraft
       itrue, itrue,  itrue,  itrue,  itrue,  itrue,  ifalse,  itrue,  itrue,  & ! sfc
       itrue, itrue,  ifalse, itrue,  itrue,  itrue,  ifalse,  itrue,  itrue,  & ! satwind
@@ -145,7 +146,7 @@ integer(i_kind), dimension(nvar_info,nobtype) :: iflag_conv = reshape ( &
    /), (/nvar_info,nobtype/) )
 
 ! radiance info flags for name_var_info
-! air_pressure, height, station_elevation, latitude, longitude, dateTime, datetime, station_id, variable_names
+! air_pressure, height, station_elevation, latitude, longitude, dateTime, launchTime, station_id, variable_names
 integer(i_kind), dimension(nvar_info) :: iflag_radiance = &
    (/ &
       ifalse, ifalse, ifalse, itrue, itrue, itrue, ifalse, ifalse, ifalse &
@@ -171,7 +172,7 @@ character(len=nstring), dimension(2,nvar_info) :: dim_var_info = reshape ( &
       'nlocs     ', 'null      ', &
       'nlocs     ', 'null      ', &
       'nlocs     ', 'null      ', &
-      'ndatetime ', 'nlocs     ', &
+      'nlocs     ', 'null      ', &
       'nstring   ', 'nlocs     ', &
       'nstring   ', 'nvars     '  &
    /), (/2, nvar_info/) )
