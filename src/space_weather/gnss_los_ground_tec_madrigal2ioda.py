@@ -43,14 +43,13 @@ def main(args):
         ds = h5py.File(ifile)
 
         if 'hdf' in ifile:
-            print('get times')
             times = ds['Data']['Table Layout']['ut1_unix']
         else:
             print(f'File {ifile} not supported')
             continue
 
         ctime = times[0]
-        while ctime <= times[-1]:
+        while ctime <= times[-1] + int(window / 2):
             wbegin = ctime - int(window / 2)
             wend = ctime + int(window / 2)
 
@@ -60,6 +59,13 @@ def main(args):
             if not obs_data:
                 print(f"INFO: non-nominal file skipping")
                 continue
+
+            if obs_data[('dateTime', 'MetaData')][-1] < wend and ifile != files[-1]:
+                part_one = obs_data.copy()
+                continue
+            if ifile != files[0] and part_one:
+                for k in part_one.keys():
+                    obs_data[k] = part_one[k] + obs_data[k]
 
             # prepare global attributes we want to output in the file,
             # in addition to the ones already loaded in from the input file
