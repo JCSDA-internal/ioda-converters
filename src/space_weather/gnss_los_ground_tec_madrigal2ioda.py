@@ -65,7 +65,7 @@ def main(args):
                 continue
             if ifile != files[0] and part_one:
                 for k in part_one.keys():
-                    obs_data[k] = part_one[k] + obs_data[k]
+                    obs_data[k] = np.append(part_one[k], obs_data[k])
 
             # prepare global attributes we want to output in the file,
             # in addition to the ones already loaded in from the input file
