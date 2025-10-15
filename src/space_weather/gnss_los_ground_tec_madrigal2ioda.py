@@ -121,9 +121,14 @@ def get_meta_data(ds, tindex):
     meta_data['piercePointAltitude'] = ds['Data']['Table Layout'][tindex]['pierce_alt']
     meta_data['elevationAngle'] = ds['Data']['Table Layout'][tindex]['elm']
     meta_data['azimuthAngle'] = ds['Data']['Table Layout'][tindex]['azm']
-    meta_data['satelliteID'] = ds['Data']['Table Layout'][tindex]['sat_id']
-    #meta_data['gnssType'] = ds['Data']['Table Layout'][tindex]['gnss_type']
+    meta_data['satelliteSubID'] = ds['Data']['Table Layout'][tindex]['sat_id']
     meta_data['dateTime'] = ds['Data']['Table Layout'][tindex]['ut1_unix']
+    gnss_type = ds['Data']['Table Layout'][tindex]['gnss_type']
+    meta_data['satelliteID'] = np.zeros(len(gnss_type))
+    gps = np.where(gnss_type==b'GPS     ') 
+    glonass = np.where(gnss_type==b'GLONASS ')
+    meta_data['satelliteID'][gps] = 401
+    meta_data['satelliteID'][glonass] = 401
 
     meta_data['stationLatitude'] = np.asarray(meta_data['stationLatitude'], dtype=ioda_float_type)
     meta_data['stationLongitude'] = np.asarray(meta_data['stationLongitude'], dtype=ioda_float_type)
