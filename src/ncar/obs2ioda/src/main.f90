@@ -8,7 +8,7 @@ use radiance_mod, only: read_amsua_amsub_mhs, read_airs_colocate_amsua, sort_obs
    read_iasi, read_cris, radiance_to_temperature
 use ncio_mod, only: write_obs
 use gnssro_bufr2ioda, only: read_write_gnssro
-use ahi_hsd_mod, only: read_hsd, subsample
+use ahi_hsd_mod, only: read_hsd, subsample, ahi_satid
 use satwnd_mod, only: read_satwnd, filter_obs_satwnd, sort_obs_satwnd
 use utils_mod, only: da_advance_time
 
@@ -266,6 +266,10 @@ if ( do_ahi ) then
       write(*,*) 'Error: -t ccyymmddhhnn not specified for -ahi'
       stop
    end if
+   if (len_trim(ahi_satid) /=3) then
+      write (*, *) 'Error: Himawari AHI: with -ahi, specify satellite ID using -hs (H08 or H09)'
+      stop
+   end if
    call read_HSD(cdatetime, inpdir, do_superob, superob_halfwidth)
    filedate = cdatetime(1:10)
    call write_obs(filedate, write_nc_radiance_geo, outdir, 1, fileExt)
@@ -282,7 +286,7 @@ implicit none
 
 integer(i_kind)       :: iunit = 21
 integer(i_kind)       :: narg, iarg, iarg_inpdir, iarg_outdir, iarg_datetime, iarg_subsample
-integer(i_kind)       :: iarg_superob_halfwidth, iarg_ext
+integer(i_kind)       :: iarg_superob_halfwidth, iarg_ext, iarg_hs
 integer(i_kind)       :: itmp
 integer(i_kind)       :: iost, iret, idate
 character(len=StrLen) :: strtmp
@@ -294,12 +298,14 @@ fileExt = ''
 inpdir = '.'
 outdir = '.'
 cdatetime = ''
+ahi_satid = ''
 flist(:) = 'null'
 iarg_inpdir = -1
 iarg_outdir = -1
 iarg_datetime = -1
 iarg_subsample = -1
 iarg_superob_halfwidth = -1
+iarg_hs = -1
 iarg_ext = -1
 if ( narg > 0 ) then
    do iarg = 1, narg
@@ -324,6 +330,8 @@ if ( narg > 0 ) then
          iarg_datetime = iarg + 1
       else if ( trim(strtmp) == '-s' ) then
          iarg_subsample = iarg + 1
+      else if ( trim(strtmp) == '-hs' ) then
+         iarg_hs = iarg + 1
       else if ( trim(strtmp) == '-superob' ) then
          do_superob = .true.
          iarg_superob_halfwidth = iarg + 1
@@ -349,6 +357,11 @@ if ( narg > 0 ) then
               read(strtmp,'(i2)') superob_halfwidth
             else
               iarg_superob_halfwidth = 1
+            end if
+         else if (iarg == iarg_hs) then
+            call get_command_argument(number=iarg, value=strtmp)
+            if (len_trim(strtmp) > 0) then
+              ahi_satid = strtmp(1:3)
             end if
          else
             ifile = ifile + 1
