@@ -148,10 +148,12 @@ subroutine write_obs (filedate, write_opt, outdir, itim, fileExt)
       status = netcdfAddVar(netcdfID, trim(ncname), NF90_INT, 1, [trim(ncname)])
 
       do i = 2, n_ncdim
-         write(*,*) '  === adding dimension ===> ', name_ncdim(i)
-         status = netcdfAddDim(netcdfID, trim(name_ncdim(i)), val_ncdim(i), ncid_ncdim(i))
-         status = netcdfPutAtt(netcdfID, trim(name_ncdim(i)), val_ncdim(i))
-         status = netcdfAddVar(netcdfID, trim(name_ncdim(i)), NF90_INT, 1, [trim(name_ncdim(i))])
+         if ( .not. trim(name_ncdim(i)) == 'nstring' ) then
+             write(*,*) '  === adding dimension ===> ', name_ncdim(i)
+             status = netcdfAddDim(netcdfID, trim(name_ncdim(i)), val_ncdim(i), ncid_ncdim(i))
+             status = netcdfPutAtt(netcdfID, trim(name_ncdim(i)), val_ncdim(i))
+             status = netcdfAddVar(netcdfID, trim(name_ncdim(i)), NF90_INT, 1, [trim(name_ncdim(i))])
+         end if
       end do
 
       ! define global attributes
