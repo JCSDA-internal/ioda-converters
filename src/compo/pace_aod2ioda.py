@@ -352,6 +352,7 @@ def main():
     required.add_argument(
         '--retrieval_method',
         help="name of retrieval method: uaa, remotap, fmapol",
+        choices=['uaa', 'remotap', 'fmapol'],
         type=str, required=True)
 
     optional = parser.add_argument_group(title='optional arguments')
