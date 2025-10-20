@@ -44,9 +44,11 @@ obsValName = iconv.OvalName()
 
 GlobalAttrs = {
     "platformCommonName": "SEVIRI",
-    "platformLongDescription": "EUMETSAT MeteoSat SEVIRI L1B Brightness Temperature and Reflectance Data",
+    "platformLongDescription": "EUMETSAT MeteoSat SEVIRI L1B Brightness Temperature Data",
     "sensorCentralWavelength": "[1.64, 3.92, 6.25, 7.35, 8.7, 9.66, 10.8, 12.0, 13.4]"
 }
+#   "platformLongDescription": "EUMETSAT MeteoSat SEVIRI L1B Reflectance Data",
+#   "sensorCentralWavelength": "[0.56-0.71, 0.74-0.88, 0.6-0.9 um]"
 
 locationKeyList = [
     ("latitude", "float"),
@@ -177,18 +179,18 @@ def variables_to_obs(obs_scene, obs_dateTime, VarDims, albedo=False, dataset='IR
         obs: dictionary following IODA conventions
 
     SEVIRI definition of channel:
-        Channel 01 - HRV, Central Wavelength: 0.7 µm
-        Channel 02 - VIS006, Central Wavelength: 0.635 µm
-        Channel 03 - VIS008, Central Wavelength: 0.81 µm
-        Channel 04 - IR_016, Central Wavelength: 1.64 µm
-        Channel 05 - IR_039, Central Wavelength: 3.92 µm
-        Channel 06 - WV_062, Central Wavelength: 6.25 µm
-        Channel 07 - WV_073, Central Wavelength: 7.35 µm
-        Channel 08 - IR_087, Central Wavelength: 8.7 µm
-        Channel 09 - IR_097, Central Wavelength: 9.66 µm
-        Channel 10 - IR_108, Central Wavelength: 10.8 µm
-        Channel 11 - IR_120, Central Wavelength: 12.0 µm
-        Channel 12 - IR_134, Central Wavelength: 13.4 µm
+        Channel 01 - VIS006, Central Wavelength: 0.635 µm
+        Channel 02 - VIS008, Central Wavelength: 0.81 µm
+        Channel 03 - IR_016, Central Wavelength: 1.64 µm
+        Channel 04 - IR_039, Central Wavelength: 3.92 µm
+        Channel 05 - WV_062, Central Wavelength: 6.25 µm
+        Channel 06 - WV_073, Central Wavelength: 7.35 µm
+        Channel 07 - IR_087, Central Wavelength: 8.7 µm
+        Channel 08 - IR_097, Central Wavelength: 9.66 µm
+        Channel 09 - IR_108, Central Wavelength: 10.8 µm
+        Channel 10 - IR_120, Central Wavelength: 12.0 µm
+        Channel 11 - IR_134, Central Wavelength: 13.4 µm
+        Channel 12 - HRV, Central Wavelength: 0.7 µm
     """
     obs = init_obs()
     # order for channels
@@ -209,7 +211,7 @@ def variables_to_obs(obs_scene, obs_dateTime, VarDims, albedo=False, dataset='IR
         obs[(k, "ObsValue")] = albedo_final
         obs[(k, "ObsError")] = np.full((nlocs, albedo_nchans), 5.0, dtype='float32')
         obs[(k, "PreQC")] = np.full((nlocs, albedo_nchans), 0, dtype='int32')
-        obs[('sensorChannelNumber', metaDataName)] = np.array(np.arange(albedo_nchans)+1, dtype='int32')
+        obs[('sensorChannelNumber', metaDataName)] = np.array([1, 2, 12], dtype='int32')
 
     else:
         bt_data = []
@@ -224,7 +226,7 @@ def variables_to_obs(obs_scene, obs_dateTime, VarDims, albedo=False, dataset='IR
         obs[(k, "ObsValue")] = bt_final
         obs[(k, "ObsError")] = np.full((nlocs, bt_nchans), 5.0, dtype='float32')
         obs[(k, "PreQC")] = np.full((nlocs, bt_nchans), 0, dtype='int32')
-        obs[('sensorChannelNumber', metaDataName)] = np.array(np.arange(bt_nchans)+4, dtype='int32')
+        obs[('sensorChannelNumber', metaDataName)] = np.array(np.arange(bt_nchans)+3, dtype='int32')
 
     latitude = obs_scene[dataset].coords['y']
     longitude = obs_scene[dataset].coords['x']
