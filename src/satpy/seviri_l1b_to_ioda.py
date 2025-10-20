@@ -412,12 +412,13 @@ def get_obs_properties(obs_scene, dataset='IR_108', albedo=False):
     # get information from obs_scene
     data_info_list = [DataIdInfo(data_id) for data_id in obs_scene.keys()]
     nrec = 0
-    if albedo:       # if albedo sum HRV and VIS
+    if albedo:       # if albedo VIS (1 & 2) and HRV (12)
         nrec = sum(1 for item in data_info_list if item.name.startswith('HRV') or item.name.startswith('VIS'))
-        channelNumber = np.array(np.arange(nrec)+1, dtype='int32')
+        assert nrec == 3, "ERROR: nrec not equal to 3 (Actual: {nrec}), reflectance or albedo expect 3 channels (VIS006, VIS008, HRV)"
+        channelNumber = np.array([1, 2, 12], dtype='int32')
     else:            # else sum IR entries
         nrec = sum(1 for item in data_info_list if item.name.startswith('IR') or item.name.startswith('WV'))
-        channelNumber = np.array(np.arange(nrec)+4, dtype='int32')
+        channelNumber = np.array(np.arange(nrec)+3, dtype='int32')
 
     # print list of objects containing name and central wavelength
 #   for info in data_info_list:
