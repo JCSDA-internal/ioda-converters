@@ -112,11 +112,18 @@ class AOD(object):
         elif self.retrieval_method == 'remotap':
             AttrData["platform"] = "spexone_pace"
             AttrData["sensor"] = "v.spexone_pace"
+        elif self.retrieval_method == 'fmapol':
+            if sensor == 'SPEXone':
+                AttrData["platform"] = "spexone_pace"
+                AttrData["sensor"] = "v.spexone_pace"
+            elif sensor == 'HARP2':
+                AttrData["platform"] = "harp2_pace"
+                AttrData["sensor"] = "v.harp2_pace"
 
     def get_s_e_time(self):
         if self.retrieval_method == 'uaa':
             timeformat = '%Y-%m-%dT%H:%M:%S.%fZ'
-        elif self.retrieval_method == 'remotap':
+        elif self.retrieval_method in ['remotap', 'fmapol']:
             timeformat = '%Y-%m-%dT%H:%M:%SZ'
         this_starttime = datetime.strptime(self.glb_attrs["time_coverage_start"], timeformat)
         this_starttime = this_starttime.replace(tzinfo=timezone.utc)
@@ -206,6 +213,35 @@ class AOD(object):
         self.errs = self.errs[valid_pts, :]
         self.qcflags = self.qcflags[valid_pts, :]
 
+    def get_fmapol_data(self):
+        AttrData['retrievalMethod'] = 'Fast Multi-Angular Polarimetric Ocean coLor (FastMAPOL)'
+        self.wavelength = self.ncd.groups['sensor_band_parameters'].variables['wavelength'][:] / 1e3
+        self.frequency = speed_light * 1.0E6 / self.wavelength
+        self.channels = np.arange(self.wavelength.size) + 1
+
+        self.lons = self.ncd.groups['geolocation_data'].variables['longitude'][:].ravel()
+        self.lats = self.ncd.groups['geolocation_data'].variables['latitude'][:].ravel()
+        # Fast MAPOL data is over ocean only, surfaceQualifier is zero
+        self.landseaflags = np.zeros_like(self.lats, dtype=np.int32)
+        vals = self.ncd.groups['geophysical_data'].variables['aot'][:]
+        self.vals = vals.reshape(-1, vals.shape[2])
+        qcflags = self.ncd.groups['diagnostic_data'].variables['quality_flag'][:].ravel()
+        self.qcflags = np.repeat(qcflags[:, np.newaxis], self.channels.size, axis=1)
+
+        # Uncertainty
+        # FastMAPOL AMT paper: https://doi.org/10.5194/amt-16-5863-2023
+        # Fig. 9. Figure 9a1 shows that both the theoretical (red lines) and the true (blue lines)
+        # absolute uncertainties of AOD increase from 0.002–0.004 to 0.015 as AOD increases from 0.01 to 0.45.
+        self.errs = 0.00375 + 0.025 * self.vals
+
+        valid_pts = np.any(~self.vals.mask, axis=1)
+        self.lons = self.lons[valid_pts]
+        self.lats = self.lats[valid_pts]
+        self.landseaflags = self.landseaflags[valid_pts]
+        self.vals = self.vals[valid_pts, :]
+        self.errs = self.errs[valid_pts, :]
+        self.qcflags = self.qcflags[valid_pts, :]
+
     def read(self):
         # Make empty lists for the output vars
         self.outdata[('latitude', metaDataName)] = np.array([], dtype=np.float32)
@@ -222,6 +258,8 @@ class AOD(object):
             get_paceaod_data = self.get_uaa_data
         elif self.retrieval_method == 'remotap':
             get_paceaod_data = self.get_remotap_data
+        elif self.retrieval_method == 'fmapol':
+            get_paceaod_data = self.get_fmapol_data
 
         min_time = -int_missing_value
         max_time = int_missing_value
@@ -245,7 +283,7 @@ class AOD(object):
             get_paceaod_data()
 
             # assign the observation time based on time coverage
-            if self.retrieval_method in ['uaa']:
+            if self.retrieval_method in ['uaa', 'fmapol']:
                 self.obs_time = np.full(np.shape(self.lons), round(0.5*(self.s_time + self.e_time)), dtype=np.int64)
 
             winmsk = ((self.obs_time >= self.wbeg) & (self.obs_time <= self.wend))
@@ -313,7 +351,8 @@ def main():
         type=str, required=True)
     required.add_argument(
         '--retrieval_method',
-        help="name of retrieval method: uaa, remotap",
+        help="name of retrieval method: uaa, remotap, fmapol",
+        choices=['uaa', 'remotap', 'fmapol'],
         type=str, required=True)
 
     optional = parser.add_argument_group(title='optional arguments')
