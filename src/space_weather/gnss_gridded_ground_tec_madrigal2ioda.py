@@ -105,7 +105,7 @@ def main(args):
 
             VarAttrs[('totalElectronContent', 'ObsValue')]['_FillValue'] = float_missing_value
             VarAttrs[('totalElectronContent', 'ObsError')]['_FillValue'] = float_missing_value
-        
+
             VarAttrs[('latitude', 'MetaData')]['_FillValue'] = float_missing_value
             VarAttrs[('longitude', 'MetaData')]['_FillValue'] = float_missing_value
 
