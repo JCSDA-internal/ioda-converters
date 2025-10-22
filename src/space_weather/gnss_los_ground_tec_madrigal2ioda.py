@@ -36,7 +36,7 @@ locationKeyList = [
 
 def main(args):
     files = args.input
-    window = args.window * 60 # window time in seconds
+    window = args.window * 60  # window time in seconds
     print(f'{len(files)} files to read')
     obs_data = {}
     for ifile in files:
@@ -74,14 +74,14 @@ def main(args):
             GlobalAttrs['datetimeReference'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
             date_time = np.array(int(dtg.strftime("%Y%m%d%H%M")), dtype=str)
             GlobalAttrs['date_time'] = date_time.item()
-        
+
             GlobalAttrs['converter'] = os.path.basename(__file__)
-        
+
             # pass parameters to the IODA writer
             VarDims = {
                 'totalElectronContent': ['Location'],
             }
-        
+
             # write them out
             nlocs = obs_data[('totalElectronContent', 'ObsValue')].shape[0]
             DimDict = {'Location': nlocs}
@@ -96,13 +96,13 @@ def main(args):
             VarAttrs[('latitude', 'MetaData')]['units'] = 'degree'
             VarAttrs[('longitude', 'MetaData')]['units'] = 'degree'
             VarAttrs[('dateTime', 'MetaData')]['units'] = iso8601_string
-        
+
             VarAttrs[('totalElectronContent', 'ObsValue')]['_FillValue'] = float_missing_value
             VarAttrs[('totalElectronContent', 'ObsError')]['_FillValue'] = float_missing_value
-        
+
             VarAttrs[('latitude', 'MetaData')]['_FillValue'] = float_missing_value
             VarAttrs[('longitude', 'MetaData')]['_FillValue'] = float_missing_value
-        
+
             # final write to IODA file
             writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
@@ -125,8 +125,8 @@ def get_meta_data(ds, tindex):
     meta_data['dateTime'] = ds['Data']['Table Layout'][tindex]['ut1_unix']
     gnss_type = ds['Data']['Table Layout'][tindex]['gnss_type']
     meta_data['satelliteID'] = np.zeros(len(gnss_type))
-    gps = np.where(gnss_type==b'GPS     ') 
-    glonass = np.where(gnss_type==b'GLONASS ')
+    gps = np.where(gnss_type == b'GPS     ')
+    glonass = np.where(gnss_type == b'GLONASS ')
     meta_data['satelliteID'][gps] = 401
     meta_data['satelliteID'][glonass] = 401
 
