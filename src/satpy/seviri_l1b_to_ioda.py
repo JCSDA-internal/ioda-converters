@@ -12,6 +12,7 @@
 
 from datetime import datetime, timedelta
 import numpy as np
+import pyproj
 from pyproj import CRS
 import pyresample
 from pyresample.kd_tree import resample_nearest
@@ -69,7 +70,7 @@ class DataIdInfo:
         self.central_wavelength = float(wavelength_match.group(1)) if wavelength_match else None
 
 
-def get_seviri_scene(filenames):
+def get_seviri_scene(filenames, resample=True, ref_dataset='IR_108'):
 
     """
     decode an EUMETSAT MeteoSat SEVIRI native L1B file using satpy
@@ -90,43 +91,53 @@ def get_seviri_scene(filenames):
     available_datasets = seviri_l1b_native.get_available_channels(header)
     aload = [k for k, v in available_datasets.items() if v]
 
-    # Add the angle datasets to the list you want to load
-    datasets_to_load = aload + [
-        'satellite_zenith_angle',
-        'satellite_azimuth_angle',
-        'solar_zenith_angle',
-        'solar_azimuth_angle'
-    ]
-
     # load Scene
     scn = Scene(reader="seviri_l1b_native", filenames=filenames, reader_kwargs={'fill_disk': False})
-    # scn.load(['IR_108'])  # test single channel
     scn.load(aload)
 
     # ensure the the loaded datasets in the Scene are calibrated (version dependent)
     # scn.calibrate()
 
-    satellite_name, instrument_name, satellite_altitude = get_metadata(scn)
+    # ancillary information
+    # latitude, longitude and satellite zenith
+    lat, lon, satellite_zenith_angle = get_zenith_angle(scn)
+    # get a time for each pixel on new target area
+    locationDateTime = get_pixel_time(scn)
+    # scan position is the x-coordinate
+    sensorScanPosition = get_scanPosition(scn)
 
-    # Create a target area with the default 0.1 degree resolution
+    # set ancillary_data
+    ancillary_data = {
+        'lat': lat,
+        'lon': lon,
+        'dateTime': locationDateTime,
+        'satellite_zenith_angle': satellite_zenith_angle,
+        'sensor_scan_position': sensorScanPosition,
+    }
+
+    if not resample:
+        return scn, ancillary_data
+
+    # Create a target area with the default 0.25 degree resolution
     target_area = create_latlon_area(resolution_deg=0.25)
-    print(f"target area shape: {target_area.shape}")
+    # print(f"target area shape: {target_area.shape}")
 
     # Create a target area with a higher 0.05 degree resolution
     # target_area = create_latlon_area(resolution_deg=0.05)
     # print(f"target area shape: {target_area.shape}")
 
+    resampled_satellite_zenith = resample_ancillary_data(scn, satellite_zenith_angle, target_area)
+    resampled_dateTime = resample_ancillary_data(scn, locationDateTime, target_area, missing_value=np.datetime64('NaT'))
+
     # Resample the scene to the new target area
     scn_latlon = scn.resample(target_area)
 
-    # get a time for each pixel on new target area
-    locationDateTime = get_pixel_time(scn, target_area)
+    # get a psuedo scanPosition
+    sensorScanPosition = get_scanPosition(scn_latlon)
 
-    # Get the resampled solar and satellite angles
-#   resampled_satellite_zenith = resample_ancillary_data(scn, 'satellite_zenith_angle', target_area)
-#   resampled_satellite_azimuth = resample_ancillary_data(scn, 'satellite_azimuth_angle', target_area)
-#   resampled_solar_zenith = resample_ancillary_data(scn, 'solar_zenith_angle', target_area)
-#   resampled_solar_azimuth = resample_ancillary_data(scn, 'solar_azimuth_angle', target_area)
+    latitude = scn_latlon[ref_dataset].coords['y']
+    longitude = scn_latlon[ref_dataset].coords['x']
+    lon_2d, lat_2d = np.meshgrid(longitude, latitude)
 
 #   # Access the new latitude and longitude coordinates
 #   latitude = scn_latlon['IR_108'].coords['y']
@@ -135,7 +146,16 @@ def get_seviri_scene(filenames):
 #   ir_data = scn_latlon['IR_108'].data
 #   vis_data = scn_latlon['VIS008'].data
 
-    return scn_latlon, locationDateTime
+    # set ancillary_data
+    ancillary_data = {
+        'lat': lat_2d,
+        'lon': lon_2d,
+        'dateTime': resampled_dateTime,
+        'satellite_zenith_angle': resampled_satellite_zenith,
+        'sensor_scan_position': sensorScanPosition,
+    }
+
+    return scn_latlon, ancillary_data
 
 
 def create_latlon_area(resolution_deg=0.1, area_extent=(-81, -81, 81, 81)):
@@ -167,12 +187,14 @@ def create_latlon_area(resolution_deg=0.1, area_extent=(-81, -81, 81, 81)):
     return target_area
 
 
-def variables_to_obs(obs_scene, obs_dateTime, VarDims, albedo=False, dataset='IR_108', apply_gross_qc=True):
+def variables_to_obs(obs_scene, ancillary_data, VarDims, albedo=False, dataset='IR_108', apply_gross_qc=True):
     """
     Move data from satpy Scene into IODA convention
 
     Args:
         obs_scene: satpy Scene of satellite data
+        obs_lat: 2d array of latitude
+        obs_lon: 2d array of longitude
         obs_dateTime: dateTime for each pixel
 
     Returns:
@@ -228,19 +250,15 @@ def variables_to_obs(obs_scene, obs_dateTime, VarDims, albedo=False, dataset='IR
         obs[(k, "PreQC")] = np.full((nlocs, bt_nchans), 0, dtype='int32')
         obs[('sensorChannelNumber', metaDataName)] = np.array(np.arange(bt_nchans)+3, dtype='int32')
 
-    latitude = obs_scene[dataset].coords['y']
-    longitude = obs_scene[dataset].coords['x']
-    lon_2d, lat_2d = np.meshgrid(longitude, latitude)
-
     satellite_name, instrument_name, satellite_altitude = get_metadata(obs_scene)
     WMO_sat_ID = get_WMO_sat_ID(satellite_name)
 
-    obs[("latitude", metaDataName)] = np.array(lat_2d.flatten(), dtype='float32')
-    obs[("longitude", metaDataName)] = np.array(lon_2d.flatten(), dtype='float32')
-    obs[('dateTime', metaDataName)] = np.array(obs_dateTime.flatten(), dtype='int64')
+    obs[("latitude", metaDataName)] = np.array(ancillary_data['lat'].flatten(), dtype='float32')
+    obs[("longitude", metaDataName)] = np.array(ancillary_data['lon'].flatten(), dtype='float32')
+    obs[('dateTime', metaDataName)] = np.array(ancillary_data['dateTime'].flatten(), dtype='int64')
     obs[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
     obs[('stationElevation', metaDataName)] = np.full((nlocs), satellite_altitude, dtype='float32')
-    obs[('sensorZenithAngle', metaDataName)] = np.full((nlocs), 0., dtype='float32')
+    obs[('sensorZenithAngle', metaDataName)] = np.array(ancillary_data['satellite_zenith_angle'].flatten(), dtype='float32')
     obs[('sensorViewAngle', metaDataName)] = np.full((nlocs), 0., dtype='float32')
     obs[('sensorAzimuthAngle', metaDataName)] = np.full((nlocs), 0., dtype='float32')
     obs[('solarZenithAngle', metaDataName)] = np.full((nlocs), 0., dtype='float32')
@@ -478,7 +496,8 @@ def get_metadata(scn, dataset='IR_108'):
     return satellite_name, instrument_name, satellite_altitude
 
 
-def get_pixel_time(scn, target_area, dataset='IR_108'):
+# def get_pixel_time(scn, target_area, dataset='IR_108'):
+def get_pixel_time(scn, dataset='IR_108'):
 
     """
     get a dateTime for each pixel and remap to target_area projection
@@ -502,22 +521,88 @@ def get_pixel_time(scn, target_area, dataset='IR_108'):
     num_cols = scn[dataset].shape[1]
     pixel_time_array = np.tile(acq_times.reshape(-1, 1), (1, num_cols))
 
-    # --- Get the original area definition from the scene ---
-    source_area = scn[dataset].attrs['area']
-
-    # --- Perform the manual resampling of the time data ---
-    resampled_pixel_time = resample_nearest(
-        source_area,
-        pixel_time_array,
-        target_area,
-        radius_of_influence=50000,        # radius in meters
-        fill_value=np.datetime64('NaT')   # Not a Time fill value for datetime data
-    )
-
-    return resampled_pixel_time
+    return pixel_time_array
 
 
-def resample_ancillary_data(scn, dataset_name, target_area, source_dataset='IR_108'):
+def get_zenith_angle(scn, source_dataset='IR_108'):
+
+    ir_data = scn[source_dataset]
+
+    # Get the projection (AreaDefinition) and pixel coordinates (x, y)
+    area_def = ir_data.attrs['area']
+    x_coords = ir_data['x'].values
+    y_coords = ir_data['y'].values
+
+    # Create a PyProj Transformer to convert (x, y) to (lon, lat)
+    proj = pyproj.Proj(area_def.proj_dict)
+
+    # Create 2D arrays of the x and y coordinates
+    X, Y = np.meshgrid(x_coords, y_coords)
+
+    # Transform the (x, y) coordinates to (lon, lat)
+    lon, lat = proj(X, Y, inverse=True)
+
+    # Get the full projection definition to get the sub-satellite point (sat_lon) and altitude (H).
+    proj_dict = area_def.proj_dict
+
+    # Extract fixed satellite parameters from the projection
+    sat_lon = proj_dict.get('lon_0', 0.0)    # Satellite longitude (sub-satellite point)
+    H = proj_dict.get('h', 35785831.0)       # Satellite altitude in meters
+    R_e = proj_dict.get('a', 6378137.0)      # Earth radius (semi-major axis) in meters
+
+    # Convert all degrees to radians
+    lon_rad = np.deg2rad(lon)
+    lat_rad = np.deg2rad(lat)
+    sat_lon_rad = np.deg2rad(sat_lon)
+
+    # Compute the angle (beta) between the satellite-center and pixel-center vectors
+    # (This is the Earth-Centered Angle)
+    # Formula: cos(beta) = cos(lat) * cos(lon - sat_lon)
+    cos_beta = np.cos(lat_rad) * np.cos(lon_rad - sat_lon_rad)
+    beta = np.arccos(cos_beta)
+
+    # Compute the satellite zenith angle (theta_zen)
+    # Formula: theta_zen = 90 - arcsin( (R_e * sin(beta)) / sqrt(R_e^2 + H^2 - 2*R_e*H*cos(beta)) )
+
+    # The distance from the satellite to the pixel (r_s)
+    # Note: r_s^2 = R_e^2 + H^2 - 2 * R_e * H * cos(beta)  (where H = R_e + satellite altitude)
+    r_s = np.sqrt(R_e**2 + (R_e + H)**2 - 2 * R_e * (R_e + H) * cos_beta)    # Corrected distance term
+    # The corrected H is the total distance from the center of the Earth to the satellite: R_e + sat_alt
+    # Let's redefine H to be the total distance:
+    R_sat = R_e + H
+
+    r_s = np.sqrt(R_e**2 + R_sat**2 - 2 * R_e * R_sat * cos_beta)
+
+    # Calculate the satellite zenith angle (SZA)
+    # Compute the angle (gamma) at the satellite
+    # then use the Law of Sines/Law of Cosines on the Earth-Pixel-Satellite triangle
+    # Zenith angle is the angle at the Pixel, which is 180 - (90 + gamma)
+
+    # the standard vector approach for the Law of Sines:
+    # sin(zenith) = (R_sat / r_s) * sin(beta)
+    sin_theta_zen = (R_sat / r_s) * np.sin(beta)
+
+    # Handle potential floating-point errors near 1 (limit to 1.0)
+    sin_theta_zen = np.clip(sin_theta_zen, -1.0, 1.0)
+
+    # The zenith angle (angle at the pixel) is asin(sin_theta_zen)
+    theta_zen_rad = np.arcsin(sin_theta_zen)
+
+    # Convert back to degrees
+    satellite_zenith_angle_deg = np.rad2deg(theta_zen_rad)
+
+    return lat, lon, satellite_zenith_angle_deg
+
+
+def get_scanPosition(scn, dataset='IR_108'):
+    # create a psuedo scanPosition the x-coordinate index
+    num_rows, num_columns = scn[dataset].shape
+    sensorScanPosition_1d = np.arange(num_columns) + 1
+    sensorScanPosition = np.tile(sensorScanPosition_1d, (num_rows, 1))
+    return sensorScanPosition
+
+
+def resample_ancillary_data(scn, ancillary_data, target_area, source_dataset='IR_108', missing_value=np.nan):
     """
     Resamples an ancillary dataset from the original scene to a new target area.
 
@@ -531,7 +616,7 @@ def resample_ancillary_data(scn, dataset_name, target_area, source_dataset='IR_1
         numpy.ndarray: The resampled data array.
     """
     # Get the original data from the scene
-    ancillary_data = scn[dataset_name].data
+#   ancillary_data = scn[dataset_name].data
 
     # Get the source grid from a primary channel
     source_area = scn[source_dataset].attrs['area']
@@ -542,7 +627,7 @@ def resample_ancillary_data(scn, dataset_name, target_area, source_dataset='IR_1
         ancillary_data,
         target_area,
         radius_of_influence=50000,
-        fill_value=np.nan  # Use NaN for float data
+        fill_value=missing_value,
     )
     return resampled_data
 
@@ -578,13 +663,13 @@ def main():
     args = parser.parse_args()
 
     GlobalAttrs['converter'] = os.path.basename(__file__)
-    obs_scene, obs_dateTime = get_seviri_scene(args.input)
+    obs_scene, ancillary_data = get_seviri_scene(args.input)
 
     VarDims, VarAttrs, DimDict = get_obs_properties(obs_scene)
 
-    obs = variables_to_obs(obs_scene, obs_dateTime, VarDims)
+    obs = variables_to_obs(obs_scene, ancillary_data, VarDims)
     del obs_scene
-    del obs_dateTime
+    del ancillary_data
 #   for k in obs.keys():
 #       print(f"{k=}  {np.shape(obs[k])}  {np.min(obs[k])}  {np.max(obs[k])}  {np.mean(obs[k])}")
 
