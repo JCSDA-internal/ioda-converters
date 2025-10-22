@@ -98,23 +98,24 @@ def get_meta_data(ds, file_type):
         profile_meta_data['latitude'] = ds['gdlat'][:]
         profile_meta_data['longitude'] = ds['glon'][:]
         profile_meta_data['dateTime'] = ds['timestamps'][:]
-        
+
     else:
         psize = len(ds['Data']['Table Layout'][:])
-     
+
         # bespoke table of letter to WMO code
         transmitterId = get_sat_constellation(str(ds['Metadata']['Experiment Parameters'][2][1]).split('\'')[1])
         profile_meta_data['satelliteID'] = np.array(np.repeat(transmitterId, psize), dtype=ioda_int_type)
-     
+
         profile_meta_data['latitude'] = []
         profile_meta_data['longitude'] = []
         profile_meta_data['dateTime'] = []
         for i in range(psize):
             profile_meta_data['latitude'].append(ds['Data']['Table Layout'][i][11])
             profile_meta_data['longitude'].append(ds['Data']['Table Layout'][i][12])
-     
+
             # the time convert to epoch and handle array of values
-            profile_meta_data['dateTime'].append(datetime(ds['Data']['Table Layout'][i][0], ds['Data']['Table Layout'][i][1], ds['Data']['Table Layout'][i][2], ds['Data']['Table Layout'][i][3], ds['Data']['Table Layout'][i][4], ds['Data']['Table Layout'][i][5]).timestamp())
+            profile_meta_data['dateTime'].append(datetime(ds['Data']['Table Layout'][i][0], ds['Data']['Table Layout'][i][1], ds['Data']['Table Layout'][i][2],
+                                                          ds['Data']['Table Layout'][i][3], ds['Data']['Table Layout'][i][4], ds['Data']['Table Layout'][i][5]).timestamp())
 
     profile_meta_data['latitude'] = np.asarray(profile_meta_data['latitude'], dtype=ioda_float_type)
     profile_meta_data['longitude'] = np.asarray(profile_meta_data['longitude'], dtype=ioda_float_type)
