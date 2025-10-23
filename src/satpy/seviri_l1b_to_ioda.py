@@ -258,8 +258,9 @@ def variables_to_obs(obs_scene, ancillary_data, VarDims, albedo=False, dataset='
     obs[('dateTime', metaDataName)] = np.array(ancillary_data['dateTime'].flatten(), dtype='int64')
     obs[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
     obs[('stationElevation', metaDataName)] = np.full((nlocs), satellite_altitude, dtype='float32')
+    obs[('sensorScanPosition', metaDataName)] = np.array(ancillary_data['sensor_scan_position'].flatten(), dtype='int32')
     obs[('sensorZenithAngle', metaDataName)] = np.array(ancillary_data['satellite_zenith_angle'].flatten(), dtype='float32')
-    obs[('sensorViewAngle', metaDataName)] = np.full((nlocs), 0., dtype='float32')
+    obs[('sensorViewAngle', metaDataName)] = obs[('sensorZenithAngle', metaDataName)]
     obs[('sensorAzimuthAngle', metaDataName)] = np.full((nlocs), 0., dtype='float32')
     obs[('solarZenithAngle', metaDataName)] = np.full((nlocs), 0., dtype='float32')
     obs[('solarAzimuthAngle', metaDataName)] = np.full((nlocs), 0., dtype='float32')
