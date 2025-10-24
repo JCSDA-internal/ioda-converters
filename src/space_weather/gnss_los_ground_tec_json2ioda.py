@@ -39,7 +39,6 @@ for key in varDict.keys():
 locationKeyList = [
     ('latitude', 'float', 'degrees_north'),
     ('longitude', 'float', 'degrees_east'),
-    #('satelliteTransmitterId', 'integer', 'GNSS transmitter ID constellation pseudoRandomNoise PRN code'),
     ('elevationAngleGNSS', 'float', 'GNSS transmitter satellite elevation angle in degrees'),
     ('sensorAzimuthAngle', 'float', 'aziumuth angle viewing GNSS transmitter in degrees west'),
     ('xECEFPosition', 'float', 'receiving station Earth Centered Earth Fixed X-coordinate in meters'),
@@ -51,8 +50,6 @@ locationKeyList = [
     ('latitudeIPP', 'float', 'latitude of Ionospheric Pierce Point in degrees_north'),
     ('longitudeIPP', 'float', 'longitude of Ionospheric Pierce Point in degrees_east'),
     ('dateTime', 'long', iso8601_string),
-    #('stationIdentifierWMO', 'integer', 'WMO assigned number for the site'),
-    #('stationIdentifier', 'string', 'GNSS ground-based receiving station name'),
 ]
 
 meta_keys = [m_item[0] for m_item in locationKeyList]
@@ -200,7 +197,6 @@ def read_file(file_name, any_data):
         for line in data:
             local_data = populate_obsValue(line, local_data)
 
-
     any_data = True
     # repeat all the metaData values
     nlocs = len(local_data['dateTime'])
@@ -220,17 +216,16 @@ def populate_obsValue(line, local_data):
     latitudeIPP = line['seoList'][4]['obArray'][0] 
     longitudeIPP = line['seoList'][4]['obArray'][1]
 
-    xECEFPositionGNSS = line['seoList'][5]['obArray'][0]  
-    yECEFPositionGNSS = line['seoList'][5]['obArray'][1] 
+    xECEFPositionGNSS = line['seoList'][5]['obArray'][0]
+    yECEFPositionGNSS = line['seoList'][5]['obArray'][1]
     zECEFPositionGNSS = line['seoList'][5]['obArray'][2]
 
     tec_value = line['seoList'][0]['obValue']
     tec_error = line['seoList'][1]['obValue']
-    elevationAngleGNSS = line['seoList'][2]['obValue'] 
-    sensorAzimuthAngle = line['seoList'][3]['obValue'] 
+    elevationAngleGNSS = line['seoList'][2]['obValue']
+    sensorAzimuthAngle = line['seoList'][3]['obValue']
 
     local_data['dateTime'] = np.append(local_data['dateTime'], dateTime)
-    #local_data['satelliteTransmitterId'] = np.append(local_data['satelliteTransmitterId'], PRN)
     local_data['latitudeIPP'] = np.append(local_data['latitudeIPP'], latitudeIPP)
     local_data['longitudeIPP'] = np.append(local_data['longitudeIPP'], longitudeIPP)
     local_data['elevationAngleGNSS'] = np.append(local_data['elevationAngleGNSS'], elevationAngleGNSS)
@@ -243,8 +238,6 @@ def populate_obsValue(line, local_data):
 
     local_data['latitude'] = np.append(local_data['latitude'], line['lat'])
     local_data['longitude'] = np.append(local_data['longitude'], line['lon'])
-    #local_data['stationIdentifier'] = np.append(local_data['stationIdentifier'], stationName)
-    #3local_data['stationIdentifierWMO'] = np.append(local_data['stationIdentifierWMO'], int(WMOid))
     local_data['xECEFPosition'] = np.append(local_data['xECEFPosition'], line['senPos'][0])
     local_data['yECEFPosition'] = np.append(local_data['yECEFPosition'], line['senPos'][1])
     local_data['zECEFPosition'] = np.append(local_data['zECEFPosition'], line['senPos'][2])
