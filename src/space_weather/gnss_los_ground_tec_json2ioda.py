@@ -213,7 +213,7 @@ def populate_obsValue(line, local_data):
         PRN = 401
     else:
         PRN = 402
-    latitudeIPP = line['seoList'][4]['obArray'][0] 
+    latitudeIPP = line['seoList'][4]['obArray'][0]
     longitudeIPP = line['seoList'][4]['obArray'][1]
 
     xECEFPositionGNSS = line['seoList'][5]['obArray'][0]
