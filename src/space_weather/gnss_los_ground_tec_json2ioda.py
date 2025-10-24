@@ -274,7 +274,7 @@ if __name__ == "__main__":
     from argparse import ArgumentParser
 
     parser = ArgumentParser(
-        description=('Read a satwind AMV ascii/csv file from SSEC'
+        description=('Read a TENET formated Json file containing line of sight TEC'
                      ' and convert into IODA output file')
     )
 
