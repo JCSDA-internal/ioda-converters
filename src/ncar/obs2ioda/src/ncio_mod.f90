@@ -79,8 +79,6 @@ subroutine write_obs (filedate, write_opt, outdir, itim, fileExt)
 
    if ( write_opt == write_nc_conv ) then
       ntype = nobtype
-      iv = ufo_vars_getindex(name_ncdim, 'nstring')
-      if ( iv > 0 ) val_ncdim(iv) = nstring
    else if ( write_opt == write_nc_radiance ) then
       ntype = ninst
    else if ( write_opt == write_nc_radiance_geo ) then
@@ -148,18 +146,12 @@ subroutine write_obs (filedate, write_opt, outdir, itim, fileExt)
       status = netcdfAddVar(netcdfID, trim(ncname), NF90_INT, 1, [trim(ncname)])
 
       do i = 2, n_ncdim
-         if ( .not. trim(name_ncdim(i)) == 'nstring' ) then
-             write(*,*) '  === adding dimension ===> ', name_ncdim(i)
-             status = netcdfAddDim(netcdfID, trim(name_ncdim(i)), val_ncdim(i), ncid_ncdim(i))
-             status = netcdfPutAtt(netcdfID, trim(name_ncdim(i)), val_ncdim(i))
-             status = netcdfAddVar(netcdfID, trim(name_ncdim(i)), NF90_INT, 1, [trim(name_ncdim(i))])
-         end if
+         status = netcdfAddDim(netcdfID, trim(name_ncdim(i)), val_ncdim(i), ncid_ncdim(i))
+         status = netcdfPutAtt(netcdfID, trim(name_ncdim(i)), val_ncdim(i))
+         status = netcdfAddVar(netcdfID, trim(name_ncdim(i)), NF90_INT, 1, [trim(name_ncdim(i))])
       end do
 
       ! define global attributes
-!     status = netcdfPutAtt(netcdfID, "min_datetime", xdata(ityp, itim)%min_datetime)
-!     status = netcdfPutAtt(netcdfID, "max_datetime", xdata(ityp, itim)%max_datetime)
-
       if ( allocated(xdata(ityp,itim)%wavenumber) ) then
          has_wavenumber = itrue
       else
