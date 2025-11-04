@@ -1,6 +1,7 @@
 list(APPEND programs
   altimeter_spacebased_tec_madrigal2ioda.py
   gnss_gridded_ground_tec_madrigal2ioda.py
+  gnss_los_ground_tec_json2ioda.py
   gnss_los_ground_tec_madrigal2ioda.py
   gnss_tec_bufr2ioda.py
   gnss_tec_ground_based.py
