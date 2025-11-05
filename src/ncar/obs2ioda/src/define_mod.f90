@@ -173,8 +173,8 @@ character(len=nstring), dimension(2,nvar_info) :: dim_var_info = reshape ( &
       'nlocs     ', 'null      ', &
       'nlocs     ', 'null      ', &
       'nlocs     ', 'null      ', &
-      'nstring   ', 'nlocs     ', &
-      'nstring   ', 'nvars     '  &
+      'nlocs     ', 'null      ', &
+      'nvars     ', 'null      '  &
    /), (/2, nvar_info/) )
 character(len=nstring), dimension(nsen_info) :: name_sen_info = &
    (/                         &
