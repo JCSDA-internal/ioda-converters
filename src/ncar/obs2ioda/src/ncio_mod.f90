@@ -88,8 +88,8 @@ subroutine write_obs (filedate, write_opt, outdir, itim, fileExt)
       return
    end if
 
-   iv = ufo_vars_getindex(name_ncdim, 'nstring')
-   if ( iv > 0 ) val_ncdim(iv) = nstring
+!  iv = ufo_vars_getindex(name_ncdim, 'nstring')
+!  if ( iv > 0 ) val_ncdim(iv) = nstring
    iv = ufo_vars_getindex(name_ncdim, 'ndatetime')
    if ( iv > 0 ) val_ncdim(iv) = ndatetime
 
