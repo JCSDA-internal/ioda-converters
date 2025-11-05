@@ -17,7 +17,7 @@ integer(i_kind), parameter :: ifalse            = 0
 integer(i_kind), parameter :: nstring           = 50
 integer(i_kind), parameter :: ndatetime         = 20
 integer(i_kind), parameter :: nobtype           = 7  ! number of ob types
-integer(i_kind), parameter :: n_ncdim           = 2  ! total numner of nc dimensions
+integer(i_kind), parameter :: n_ncdim           = 3  ! total numner of nc dimensions
 integer(i_kind), parameter :: n_ncgrp           = 5  ! total numner of nc groups
 integer(i_kind), parameter :: nvar_met          = 6
 integer(i_kind), parameter :: nvar_info         = 9  ! number of metadata
@@ -108,7 +108,7 @@ character(len=nstring), dimension(n_ncdim) :: name_ncdim = &
    (/               &
       'nvars     '  &
     , 'nlocs     '  &
-!   , 'nstring   '  &
+    , 'nstring   '  &
 !    , 'ndatetime '  &
    /)
 character(len=nstring), dimension(n_ncgrp) :: name_ncgrp = &
