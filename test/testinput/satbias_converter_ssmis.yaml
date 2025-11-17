@@ -4,15 +4,15 @@ output:
 - sensor: ssmis_f16
   predictors:
   - constant
-  - zenith_angle
-  - cloud_liquid_water
-  - lapse_rate_order_2
-  - lapse_rate
-  - cosine_of_latitude_times_orbit_node
-  - sine_of_latitude
-  - emissivity
-  - scan_angle_order_4
-  - scan_angle_order_3
-  - scan_angle_order_2
-  - scan_angle
-  output file: testrun/satbias_ssmis_f16.nc4
+  - sensorZenithAngle
+  - cloudWaterContent
+  - lapseRate_order_2
+  - lapseRate
+  - cosineOfLatitudeTimesOrbitNode
+  - sineOfLatitude
+  - emissivityJacobian
+  - sensorScanAngle_order_4
+  - sensorScanAngle_order_3
+  - sensorScanAngle_order_2
+  - sensorScanAngle
+  output file: testrun/varbc/satbias_ssmis_f16.nc4

@@ -9,6 +9,8 @@
 
 #include <string>
 #include <vector>
+#include <limits>
+#include <cmath>
 
 #include "Constants.h"
 
@@ -205,7 +207,8 @@ namespace bufr {
             }
             else
             {
-                return value.octets[idx] == MissingOctetValue;
+                return std::fabs(value.octets[idx] - MissingOctetValue)
+                       <= std::numeric_limits<double>::epsilon() * MissingOctetValue * 100;
             }
         }
 

@@ -11,6 +11,7 @@ import argparse
 import netCDF4 as nc
 import numpy as np
 import os
+import sys
 
 import pyiodaconv.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
@@ -37,7 +38,7 @@ np.set_printoptions(threshold=np.inf)
 hPa2Pa = 1E+2
 Na = 6.0221408E+23
 cm2m2 = 1E+4
-molarmass = {"no2": 46.0055, "hcho": 30.031, "o3": 48.0}
+molarmass = {"NO2": 46.0055, "HCHO": 30.031, "O3": 48.0}
 
 
 class tempo(object):
@@ -72,8 +73,10 @@ class tempo(object):
         for f in self.filenames:
             ncd = nc.Dataset(f, 'r')
 
-            # conversion factor fron constants
-            conv = cm2m2 * molarmass[self.varname] / Na
+            print('FILENAME: ', f)
+
+            # conversion factor from constants
+            conv = cm2m2 / Na
 
             # get dimensions
             mirror = ncd.dimensions['mirror_step'].size
@@ -84,28 +87,49 @@ class tempo(object):
             AttrData['sensor'] = ncd.getncattr('project')
             AttrData['platform'] = ncd.getncattr('platform')
 
-            # coordinates and mask
+            # coordinates, mask and RT parameters for BC
             lats = ncd.groups['geolocation'].variables['latitude'][:].ravel()
             lons = ncd.groups['geolocation'].variables['longitude'][:].ravel()
+            sza = ncd.groups['geolocation'].variables['solar_zenith_angle'][:].ravel()
+            vza = ncd.groups['geolocation'].variables['viewing_zenith_angle'][:].ravel()
+            albedo = ncd.groups['support_data'].variables['albedo'][:].ravel()
             qc_flag = ncd.groups['support_data'].variables['ground_pixel_quality_flag'][:]\
+                .ravel()
+            cld_fra = ncd.groups['support_data'].variables['eff_cloud_fraction'][:]\
                 .ravel()
             qa_value = ncd.groups['product'].variables['main_data_quality_flag'][:]\
                 .ravel()
 
             # there are inconsitencies in masking between different variables
             # choose one from one variable and apply it to all the other variables
-            mask = np.ma.getmask(qa_value)
+            mask1 = np.ma.getmask(qa_value)
+            mask2 = np.ma.getmask(lats)
+            mask = np.ma.mask_or(mask1, mask2)
             if np.ndim(mask) == 0:
                 mask = [mask] * np.shape(qa_value)[0]
             lats = np.ma.array(lats, mask=mask)
             lons = np.ma.array(lons, mask=mask)
             qc_flag = np.ma.array(qc_flag, mask=mask)
+            cld_fra.mask = False
+            cld_fra = np.ma.array(cld_fra, mask=mask)
+            qa_value = np.ma.array(qa_value, mask=mask)
+            sza.mask = False
+            sza = np.ma.array(sza, mask=mask)
+            vza.mask = False
+            vza = np.ma.array(vza, mask=mask)
+            albedo.mask = False
+            albedo = np.ma.array(albedo, mask=mask)
 
             # adding ability to pre filter the data using the qa value
             # and also perform thinning using random uniform draw
-            qaf = qa_value <= self.qa_flg
+            qaf = ((qa_value <= self.qa_flg) & (qa_value >= 0))
             thi = np.random.uniform(size=len(qa_value)) > self.thin
             flg = np.logical_and(qaf, thi)
+
+            # add cloud fraction filter here as UFO one doesn't work
+            # needs FIX in future
+            cld = cld_fra < 0.5   # from TEMPO STM meetings, experimental
+            flg = np.logical_and(flg, cld)
 
             # time
             time_ref = np.datetime64(AttrData['date_time_string'])
@@ -115,7 +139,7 @@ class tempo(object):
             time = np.ma.array(time, mask=mask, dtype=object)
 
             # NO2 and HCHO
-            if self.varname == 'no2' or self.varname == 'hcho':
+            if self.varname == 'NO2' or self.varname == 'HCHO':
 
                 # pressure levels
                 levels = ncd.dimensions['swt_level'].size
@@ -130,16 +154,23 @@ class tempo(object):
                 # here we assume avk is scattering weights / AMF
                 # there is a mismatch between the mask in the scattering weights/box amf
                 # so we need to reset the mask and replace with the mask that is used
-                if self.varname == 'no2':
-                    tot_amf_name = 'amf_total'
-                    col_amf_name = 'amf_'+self.columnType
+
+                if self.varname == 'NO2':
+                    err_name = 'vertical_column_'+self.columnType
                     obs_name = 'vertical_column_'+self.columnType
-                    err_name = 'vertical_column_total'
-                if self.varname == 'hcho':
+                    col_amf_name = 'amf_'+self.columnType
+                    tot_amf_name = 'amf_total'
+                    if self.columnType == 'total':
+                        group_name = 'support_data'
+                    else:
+                        group_name = 'product'
+
+                if self.varname == 'HCHO':
                     tot_amf_name = 'amf'
                     col_amf_name = 'amf'
                     obs_name = 'vertical_column'
                     err_name = 'vertical_column'
+                    group_name = 'product'
 
                 tot_amf = ncd.groups['support_data'].variables[tot_amf_name][:].ravel()
                 tot_amf.mask = False
@@ -152,47 +183,64 @@ class tempo(object):
                 avg_kernel = box_amf / tot_amf[:, np.newaxis]
 
                 # for no2 use avk to define strat trop separation
-                if self.varname == 'no2':
+                if self.varname == 'NO2':
                     t_pause = hPa2Pa * ncd.groups['support_data'].variables['tropopause_pressure'][:]\
                         .ravel()
 
                     if self.columnType != "total":
                         t_diff = np.array(t_pause[:, np.newaxis] - preslev)[:, :-1]
-                        if self.columnType == "stratosphere":
-                            avg_kernel[t_diff <= 0] = 0.0
                         if self.columnType == "troposphere":
                             avg_kernel[t_diff > 0] = 0.0
 
                     # make sure that the avk mask is correctly put
+                    avg_kernel.mask = False
                     avg_kernel = np.ma.array(avg_kernel, mask=np.repeat(mask, levels))
 
                 # obs value and error
                 col_amf = ncd.groups['support_data'].variables[col_amf_name][:].ravel()
                 col_amf.mask = False
                 col_amf = np.ma.array(col_amf, mask=mask)
-                obs = ncd.groups['product'].variables[obs_name][:]\
+                obs = ncd.groups[group_name].variables[obs_name][:]\
                     .ravel() * conv
                 obs.mask = False
                 obs = np.ma.array(obs, mask=mask)
 
                 # error calculation:
-                err = ncd.groups['product'].variables[err_name+'_uncertainty'][:]\
-                    .ravel() * conv * col_amf / tot_amf
+                err = ncd.groups[group_name].variables[err_name+'_uncertainty'][:].ravel()
+                err = err * conv
+
                 err.mask = False
                 err = np.ma.array(err, mask=mask)
 
             # O3
-            if self.varname == 'o3':
-                print("O3 proxy product not ready yet")
+            if self.varname == 'O3':
+                print("O3 product converter not ready yet")
                 exit()
 
             # clean data
-            neg_obs = obs > 0.0
-            nan_obs = obs != np.nan
+            neg_obs = err > 0.0
+            nan_obs = ((obs != np.nan) & (err != np.nan))
             cln = np.logical_and(neg_obs, nan_obs)
 
             # final flag before sending this to ioda engines
             flg = np.logical_and(flg, cln)
+
+            # print before compression
+            print('BEFORE COMPRESSION')
+            print('lats: ', np.shape(lats))
+            print('lons: ', np.shape(lons))
+            print('time: ', np.shape(time))
+            print('flg: ', np.shape(flg))
+            print('qa_value: ', np.shape(qa_value))
+            print('cld_fra: ', np.shape(cld_fra))
+            print('sza: ', np.shape(sza))
+            print('vza: ', np.shape(vza))
+            print('albedo: ', np.shape(albedo))
+            print('qc_flag: ', np.shape(qc_flag))
+            print('obs: ', np.shape(obs))
+            print('err: ', np.shape(err))
+            print('preslev: ', np.shape(preslev))
+            print('avg_kernel: ', np.shape(avg_kernel))
 
             # remove masked Data and make sure types are correct
             lats = np.ma.compressed(lats).astype('float32')
@@ -200,6 +248,10 @@ class tempo(object):
             time = np.ma.compressed(time)
             flg = np.ma.compressed(flg)
             qa_value = np.ma.compressed(qa_value).astype('float32')
+            cld_fra = np.ma.compressed(cld_fra).astype('float32')
+            sza = np.ma.compressed(sza).astype('float32')
+            vza = np.ma.compressed(vza).astype('float32')
+            albedo = np.ma.compressed(albedo).astype('float32')
             qc_flag = np.ma.compressed(qc_flag).astype('int32')
             obs = np.ma.compressed(obs).astype('float32')
             err = np.ma.compressed(err).astype('float32')
@@ -207,40 +259,70 @@ class tempo(object):
             avg_kernel = np.ma.compress_rowcols(avg_kernel, axis=0).astype('float32')
 
             # flip 2d arrays to have increaing pressure
-            preslev = np.flip(preslev, axis=1)
-            avg_kernel = np.flip(avg_kernel, axis=1)
+            if np.shape(lats)[0] > 0:
+                preslev = np.flip(preslev, axis=1)
+                avg_kernel = np.flip(avg_kernel, axis=1)
 
-            if first:
-                self.outdata[('dateTime', 'MetaData')] = time[flg]
-                self.outdata[('latitude', 'MetaData')] = lats[flg]
-                self.outdata[('longitude', 'MetaData')] = lons[flg]
-                self.outdata[('quality_assurance_value', 'MetaData')] = qa_value[flg]
-                self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = avg_kernel[flg]
-                self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = preslev[flg]
-                self.outdata[self.varDict[iodavar]['valKey']] = obs[flg]
-                self.outdata[self.varDict[iodavar]['errKey']] = err[flg]
-                self.outdata[self.varDict[iodavar]['qcKey']] = qc_flag[flg]
-            else:
-                self.outdata[('dateTime', 'MetaData')] = np.concatenate((
-                    self.outdata[('dateTime', 'MetaData')], time[flg]))
-                self.outdata[('latitude', 'MetaData')] = np.concatenate((
-                    self.outdata[('latitude', 'MetaData')], lats[flg]))
-                self.outdata[('longitude', 'MetaData')] = np.concatenate((
-                    self.outdata[('longitude', 'MetaData')], lons[flg]))
-                self.outdata[('quality_assurance_value', 'MetaData')] = np.concatenate((
-                    self.outdata[('quality_assurance_value', 'MetaData')], qa_value[flg]))
-                self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = np.concatenate((
-                    self.outdata[('averagingKernel', 'RetrievalAncillaryData')], avg_kernel[flg]))
-                self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = np.concatenate((
-                    self.outdata[('pressureVertice', 'RetrievalAncillaryData')], preslev[flg]))
-                self.outdata[self.varDict[iodavar]['valKey']] = np.concatenate(
-                    (self.outdata[self.varDict[iodavar]['valKey']], obs[flg]))
-                self.outdata[self.varDict[iodavar]['errKey']] = np.concatenate(
-                    (self.outdata[self.varDict[iodavar]['errKey']], err[flg]))
-                self.outdata[self.varDict[iodavar]['qcKey']] = np.concatenate(
-                    (self.outdata[self.varDict[iodavar]['qcKey']], qc_flag[flg]))
+                # print after compression
+                print('AFTER COMPRESSION')
+                print('lats: ', np.shape(lats))
+                print('lons: ', np.shape(lons))
+                print('time: ', np.shape(time))
+                print('flg: ', np.shape(flg))
+                print('qa_value: ', np.shape(qa_value))
+                print('cld_fra: ', np.shape(cld_fra))
+                print('sza: ', np.shape(sza))
+                print('vza: ', np.shape(vza))
+                print('albedo: ', np.shape(albedo))
+                print('qc_flag: ', np.shape(qc_flag))
+                print('obs: ', np.shape(obs))
+                print('err: ', np.shape(err))
+                print('preslev: ', np.shape(preslev))
+                print('avg_kernel: ', np.shape(avg_kernel))
+                print(np.shape(time[flg]))
+                if first:
+                    self.outdata[('dateTime', 'MetaData')] = time[flg]
+                    self.outdata[('latitude', 'MetaData')] = lats[flg]
+                    self.outdata[('longitude', 'MetaData')] = lons[flg]
+                    self.outdata[('qualityFlags', 'MetaData')] = qa_value[flg]
+                    self.outdata[('cloudAmount', 'MetaData')] = cld_fra[flg]
+                    self.outdata[('solarZenithAngle', 'MetaData')] = sza[flg]
+                    self.outdata[('viewingZenithAngle', 'MetaData')] = vza[flg]
+                    self.outdata[('albedo', 'MetaData')] = albedo[flg]
+                    self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = avg_kernel[flg]
+                    self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = preslev[flg]
+                    self.outdata[self.varDict[iodavar]['valKey']] = obs[flg]
+                    self.outdata[self.varDict[iodavar]['errKey']] = err[flg]
+                    self.outdata[self.varDict[iodavar]['qcKey']] = qc_flag[flg]
+                else:
+                    self.outdata[('dateTime', 'MetaData')] = np.concatenate((
+                        self.outdata[('dateTime', 'MetaData')], time[flg]))
+                    self.outdata[('latitude', 'MetaData')] = np.concatenate((
+                        self.outdata[('latitude', 'MetaData')], lats[flg]))
+                    self.outdata[('longitude', 'MetaData')] = np.concatenate((
+                        self.outdata[('longitude', 'MetaData')], lons[flg]))
+                    self.outdata[('qualityFlags', 'MetaData')] = np.concatenate((
+                        self.outdata[('qualityFlags', 'MetaData')], qa_value[flg]))
+                    self.outdata[('cloudAmount', 'MetaData')] = np.concatenate((
+                        self.outdata[('cloudAmount', 'MetaData')], cld_fra[flg]))
+                    self.outdata[('solarZenithAngle', 'MetaData')] = np.concatenate((
+                        self.outdata[('solarZenithAngle', 'MetaData')], sza[flg]))
+                    self.outdata[('viewingZenithAngle', 'MetaData')] = np.concatenate((
+                        self.outdata[('viewingZenithAngle', 'MetaData')], vza[flg]))
+                    self.outdata[('albedo', 'MetaData')] = np.concatenate((
+                        self.outdata[('albedo', 'MetaData')], albedo[flg]))
+                    self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = np.concatenate((
+                        self.outdata[('averagingKernel', 'RetrievalAncillaryData')], avg_kernel[flg]))
+                    self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = np.concatenate((
+                        self.outdata[('pressureVertice', 'RetrievalAncillaryData')], preslev[flg]))
+                    self.outdata[self.varDict[iodavar]['valKey']] = np.concatenate(
+                        (self.outdata[self.varDict[iodavar]['valKey']], obs[flg]))
+                    self.outdata[self.varDict[iodavar]['errKey']] = np.concatenate(
+                        (self.outdata[self.varDict[iodavar]['errKey']], err[flg]))
+                    self.outdata[self.varDict[iodavar]['qcKey']] = np.concatenate(
+                        (self.outdata[self.varDict[iodavar]['qcKey']], qc_flag[flg]))
 
-            first = False
+                first = False
 
         DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
         AttrData['Location'] = np.int32(DimDict['Location'])
@@ -286,36 +368,36 @@ def main():
         type=str, required=True)
     required.add_argument(
         '-c', '--column',
-        help="type of column: total, troposphere or stratosphere",
+        help="type of column: total, troposphere",
         type=str, required=True)
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
         '-q', '--qa_value',
         help="qa value used to preflag data that goes into file before QC"
         "0 normal, 1 suspicious, 2 bad",
-        type=float, default=0.0)
+        type=int, default=0)
     optional.add_argument(
-        '-n', '--thin',
+        '-t', '--thin',
         help="percentage of random thinning from 0.0 to 1.0. Zero indicates"
         " no thinning is performed. (default: %(default)s)",
         type=float, default=0.0)
 
     args = parser.parse_args()
 
-    if args.variable == "hcho":
+    if args.variable == "HCHO":
         var_name = 'formaldehyde'
         if args.column != "troposphere":
             print('hcho is only available for troposphere column, reset column to troposphere', flush=1)
             args.column = 'troposphere'
-    elif args.variable == "no2":
+    elif args.variable == "NO2":
         var_name = 'nitrogendioxide'
-    elif args.variable == "o3":
+    elif args.variable == "O3":
         var_name = 'ozone'
 
-    if args.column == "troposphere" or args.column == "stratosphere":
+    if args.column == "troposphere":
 
         obsVar = {
-            var_name+'_'+args.column+'spheric_column': var_name+'Column'
+            var_name+'_'+args.column+'_column': var_name+'Column'
         }
 
         varDims = {

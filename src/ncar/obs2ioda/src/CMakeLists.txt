@@ -1,0 +1,43 @@
+
+add_subdirectory(cxx)
+
+# Define sources
+set(obs2ioda_utils_SOURCES
+        define_mod.f90
+        gnssro_mod.f90
+        hsd.f90
+        satwnd_mod.f90
+        kinds.f90
+        ncio_mod.f90
+        prepbufr_mod.f90
+        radiance_mod.f90
+        ufo_variables_mod.F90
+        utils_mod.f90
+        f_c_string_t_mod.f90
+        f_c_string_array_t_mod.f90
+        netcdf_cxx_i_mod.f90
+        netcdf_cxx_mod.f90
+        goes_abi_converter_mod.f90
+)
+set(obs2ioda_SOURCES
+        main.f90
+)
+set(goes_abi_converter_SOURCES
+        goes_abi_converter.f90
+)
+set(obs2ioda_utils_PUBLIC_LINK_LIBRARIES eckit NetCDF::NetCDF_Fortran bufr::bufr_4 obs2ioda_cxx)
+add_library(obs2ioda_utils SHARED ${obs2ioda_utils_SOURCES})
+obs2ioda_fortran_library(obs2ioda_utils "${obs2ioda_utils_PUBLIC_LINK_LIBRARIES}")
+
+set(obs2ioda_PUBLIC_LINK_LIBRARIES obs2ioda_utils)
+
+ecbuild_add_executable( TARGET  obs2ioda
+                        SOURCES ${obs2ioda_SOURCES})
+obs2ioda_fortran_executable(obs2ioda "${obs2ioda_PUBLIC_LINK_LIBRARIES}")
+
+if (BUILD_GOES_ABI_CONVERTER)
+    set(goes_abi_converter_PUBLIC_LINK_LIBRARIES obs2ioda_utils)
+    ecbuild_add_executable( TARGET  goes_abi_converter
+                            SOURCES ${goes_abi_converter_SOURCES})
+    obs2ioda_fortran_executable(goes_abi_converter "${goes_abi_converter_PUBLIC_LINK_LIBRARIES}")
+endif ()

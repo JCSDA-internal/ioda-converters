@@ -1,0 +1,100 @@
+File name: Pandora57s1_BoulderCO_L2_rnvs3p1-8.txt
+File generation date: 20240813T194946.2Z
+Data description: Level 2 file (columns and more)
+Data file version: rnvs3p1-8
+Data product status: Nitrogen dioxide data are official
+Local principal investigator: Nader Abuhassan
+Network principal investigator: Alexander Cede
+DOI: 10.48596/pgn.rnvs3p1-8.BoulderCO.P57s1
+Instrument type: Pandora
+Instrument number: 57
+Spectrometer number: 1
+Processing software version used: BlickP v1.8.24
+Full location name: Boulder, CO
+Short location name: BoulderCO
+Country of location: USA
+Location latitude [deg]: 39.9900
+Location longitude [deg]: -105.2600
+Location altitude [m]: 1660
+Data start time: 20180430T232020.
+Data end time: NONE
+Data caveats: None
+---------------------------------------------------------------------------------------
+Column 1: UT date and time for measurement center, yyyymmddThhmmssZ (ISO 8601)
+Column 2: Fractional days since 1-Jan-2000 UT midnight for measurement center
+Column 3: Effective duration of measurement [s]
+Column 4: Solar zenith angle for measurement center [deg]
+Column 5: Solar azimuth for measurement center [deg], 0=north, increases clockwise
+Column 6: Lunar zenith angle for measurement center [deg]
+Column 7: Lunar azimuth for measurement center [deg], 0=north, increases clockwise
+Column 8: rms of unweighted fitting residuals, -9=fitting not successful
+Column 9: Normalized rms of fitting residuals weighted with independent uncertainty, -9=fitting not successful or no uncertainty given
+Column 10: Expected rms of unweighted fitting residuals based on independent uncertainty, -9=fitting not successful or no uncertainty given
+Column 11: Expected normalized rms of weighted fitting residuals based on independent uncertainty, -9=fitting not successful or no uncertainty given
+Column 12: Climatological station pressure [mbar]
+Column 13: Data processing type index
+Column 14: Calibration file version
+Column 15: Calibration file validity starting date
+Column 16: Mean value of measured data inside fitting window [same units as measurements]
+Column 17: Wavelength effective temperature [°C], 999=no effective temperature given
+Column 18: Estimated average residual stray light level [%] (only valid for stray light correction methods 2 and higher)
+Column 19: Retrieved wavelength shift from L1 data [nm], -9=no wavelength change determination
+Column 20: Retrieved total wavelength shift [nm], -9=no wavelength change fitting
+Column 21: Retrieved resolution change [%], -999=no resolution change fitting
+Column 22: Integration time [ms]
+Column 23: Number of bright count cycles
+Column 24: Effective position of filterwheel #1, 0=filterwheel not used, 1-9 are valid positions
+Column 25: Effective position of filterwheel #2, 0=filterwheel not used, 1-9 are valid positions
+Column 26: Atmospheric variability [%], 999=no atmospheric variability was determined
+Column 27: Estimated aerosol optical depth at starting wavelength of fitting window
+Column 28: Estimated aerosol optical depth at center wavelength of fitting window
+Column 29: Estimated aerosol optical depth at ending wavelength of fitting window
+Column 30: L1 data quality flag, 0=assured high quality, 1=assured medium quality, 2=assured low quality, 10=not-assured high quality, 11=not-assured medium quality, 12=not-assured low quality
+Column 31: Sum over 2^i using those i, for which the corresponding L1 data quality parameter exceeds the DQ1 limit, 0=Saturated data, 1=Too few dark counts measurements, 2=No temperature given or effective temperature too different from the reference temperature, 3=Dark count too high, 4=Unsuccessful dark background fitting, 5=The dark count differs significantly from the dark map for too many pixels, 6=Absolute value of estimated average residual stray light level too high, 7=Although attempted, no wavelength change could be retrieved, 8=Absolute value of retrieved wavelength shift too large, 9=Retrieved wavelength shift differs too much from the shift predicted by the effective temperature
+Column 32: Sum over 2^i using those i, for which the corresponding L1 data quality parameter exceeds the DQ2 limit (same parameters as for DQ1)
+Column 33: L2Fit data quality flag, 0=assured high quality, 1=assured medium quality, 2=assured low quality, 10=not-assured high quality, 11=not-assured medium quality, 12=not-assured low quality
+Column 34: Sum over 2^i using those i, for which the corresponding L2Fit data quality parameter exceeds the DQ1 limit, 0=L1 data quality above 0, 1=Spectral fitting was not successful, 2=Wavelength shift too large, 3=Normalized rms of fitting residuals weighted with independent uncertainty too large
+Column 35: Sum over 2^i using those i, for which the corresponding L2Fit data quality parameter exceeds the DQ2 limit (same parameters as for DQ1)
+Column 36: L2 data quality flag for nitrogen dioxide, 0=assured high quality, 1=assured medium quality, 2=assured low quality, 10=not-assured high quality, 11=not-assured medium quality, 12=not-assured low quality, 20=unusable high quality, 21=unusable medium quality, 22=unusable low quality
+Column 37: Sum over 2^i using those i, for which the corresponding L2 data quality parameter for nitrogen dioxide exceeds the DQ1 limit, 0=L2Fit data quality above 0, 1=Retrieval error, 2=Air mass factor too large, 3=Atmospheric variability too large
+Column 38: Sum over 2^i using those i, for which the corresponding L2 data quality parameter for nitrogen dioxide exceeds the DQ2 limit (same parameters as for DQ1)
+Column 39: Nitrogen dioxide total vertical column amount [moles per square meter], -9e99=retrieval not successful
+Column 40: Independent uncertainty of nitrogen dioxide total vertical column amount [moles per square meter], -1=cross section is zero in this wavelength range, -3=spectral fitting was done, but no independent uncertainty could be retrieved, -5=no independent uncertainty input was given, -9=spectral fitting was not successful
+Column 41: Structured uncertainty of nitrogen dioxide total vertical column amount [moles per square meter], -1=cross section is zero in this wavelength range, -7=not given since method "MEAS" was chosen, -9=spectral fitting was not successful
+Column 42: Common uncertainty of nitrogen dioxide total vertical column amount [moles per square meter], -1=cross section is zero in this wavelength range, -6=no common uncertainty input was given, -7=not given since method "MEAS" was chosen, -9=spectral fitting was not successful
+Column 43: Total uncertainty of nitrogen dioxide total vertical column amount [moles per square meter], -1=cross section is zero in this wavelength range, -3=spectral fitting was done, but no independent uncertainty could be retrieved, -5=no independent uncertainty input was given, -6=no common uncertainty input was given, -7=not given since method "MEAS" was chosen, -8=not given, since not all components are given
+Column 44: rms-based uncertainty of nitrogen dioxide total vertical column amount [moles per square meter], -1=cross section is zero in this wavelength range, -3=spectral fitting was done, but no independent uncertainty could be retrieved, -9=spectral fitting was not successful
+Column 45: Nitrogen dioxide effective temperature [K]
+Column 46: Independent uncertainty of nitrogen dioxide effective temperature [K] , -1=temperature fitting was requested, but cross section is zero in this wavelength range, -2=no temperature fitting was requested and output for effective temperature and common uncertainty of it is based on f-code, -3=spectral fitting was done, but no independent uncertainty could be retrieved, -4=temperature fitting was requested, but differential optical depth is too small to retrieve temperature, -5=spectral fitting was done without using the independent uncertainty input, -6=no independent uncertainty input was given, -9=spectral fitting was not successful
+Column 47: Structured uncertainty of nitrogen dioxide effective temperature [K] , -1=temperature fitting was requested, but cross section is zero in this wavelength range, -4=temperature fitting was requested, but differential optical depth is too small to retrieve temperature, -9=spectral fitting was not successful
+Column 48: Common uncertainty of nitrogen dioxide effective temperature [K] , -1=temperature fitting was requested, but cross section is zero in this wavelength range, -2=no temperature fitting was requested and output for effective temperature and common uncertainty of it is based on f-code, -3=spectral fitting was done, but no independent uncertainty could be retrieved, -4=temperature fitting was requested, but differential optical depth is too small to retrieve temperature, -6=no independent uncertainty input was given, -9=spectral fitting was not successful
+Column 49: Total uncertainty of nitrogen dioxide effective temperature [K] , -1=temperature fitting was requested, but cross section is zero in this wavelength range, -2=no temperature fitting was requested and output for effective temperature and common uncertainty of it is based on f-code, -3=spectral fitting was done, but no independent uncertainty could be retrieved, -4=temperature fitting was requested, but differential optical depth is too small to retrieve temperature, -5=spectral fitting was done without using the independent uncertainty input, -6=no independent uncertainty or common uncertainty input was given, -9=spectral fitting was not successful
+Column 50: Direct nitrogen dioxide air mass factor
+Column 51: Uncertainty of direct nitrogen dioxide air mass factor, -7=uncertainty could not be retrieved since slant column uncertainties were missing
+Column 52: Diffuse correction applied before fitting at effective fitting wavelength for nitrogen dioxide [%], 0=no diffuse correction applied or fitting not successful, >0=measured diffuse correction, <0=(negative value of) calculated diffuse correction
+Column 53: Climatological nitrogen dioxide stratospheric column amount [moles per square meter]
+Column 54: Uncertainty of climatological nitrogen dioxide stratospheric column amount [moles per square meter]
+---------------------------------------------------------------------------------------
+20230801T151457.6Z 8613.635389 5.87 54.33 96.12 130.01 271.09 5.684e-04 5.508e-04 8.363e-05 8.190e-05 837 2 6 20220707 5.4752e-01 20.38 1.45 -0.00116 -0.00013 0.16 2.880 2026 1 4 9.58 0.220 0.212 0.205 10 0 0 10 0 0 10 0 0 1.2775e-04 3.6529e-07 8.9375e-07 7.7386e-07 1.2374e-06 2.5548e-06 260.18 -2.00 11.75 -2.00 11.75 1.708 0.000 0.00e+00 4.434e-05 4.687e-06
+20230801T151503.5Z 8613.635458 5.87 54.31 96.13 130.03 271.11 5.829e-04 5.599e-04 8.455e-05 8.279e-05 837 2 6 20220707 5.3828e-01 20.38 1.45 -0.00110 -0.00007 0.15 2.880 2026 1 4 20.17 0.224 0.216 0.209 10 0 0 10 0 0 10 0 0 1.2540e-04 3.6907e-07 8.8994e-07 7.7354e-07 1.2355e-06 2.6167e-06 259.77 -2.00 11.59 -2.00 11.59 1.707 0.000 0.00e+00 4.435e-05 4.687e-06
+20230801T151509.5Z 8613.635527 5.87 54.29 96.15 130.05 271.12 5.701e-04 5.508e-04 8.346e-05 8.174e-05 837 2 6 20220707 5.4943e-01 20.38 1.45 -0.00118 -0.00001 0.17 2.880 2026 1 4 4.93 0.226 0.217 0.210 10 0 0 10 0 0 10 0 0 1.2472e-04 3.6410e-07 8.9275e-07 7.7276e-07 1.2356e-06 2.5609e-06 259.65 -2.00 11.55 -2.00 11.55 1.706 0.000 0.00e+00 4.435e-05 4.687e-06
+20230801T151515.4Z 8613.635595 5.87 54.27 96.17 130.07 271.14 5.702e-04 5.526e-04 8.181e-05 8.026e-05 837 2 6 20220707 5.6983e-01 20.38 1.45 -0.00124 0.00020 0.17 2.880 2026 1 4 5.41 0.227 0.219 0.212 10 0 0 10 0 0 10 0 0 1.2384e-04 3.5745e-07 8.9249e-07 7.7536e-07 1.2351e-06 2.5620e-06 259.49 -2.00 11.49 -2.00 11.49 1.705 0.000 0.00e+00 4.435e-05 4.687e-06
+20230801T151521.3Z 8613.635664 5.88 54.25 96.18 130.09 271.16 5.658e-04 5.466e-04 8.049e-05 7.891e-05 837 2 6 20220707 5.8669e-01 20.38 1.45 -0.00123 0.00005 0.16 2.880 2026 1 4 3.02 0.223 0.214 0.207 10 0 0 10 0 0 10 0 0 1.2634e-04 3.5210e-07 8.9590e-07 7.7710e-07 1.2371e-06 2.5474e-06 259.93 -2.00 11.65 -2.00 11.65 1.705 0.000 0.00e+00 4.435e-05 4.687e-06
+20230801T151527.2Z 8613.635732 5.88 54.23 96.20 130.10 271.17 5.561e-04 5.385e-04 7.986e-05 7.828e-05 837 2 6 20220707 5.9505e-01 20.38 1.45 -0.00138 0.00002 0.16 2.880 2026 1 4 -7.66 0.222 0.213 0.206 10 0 0 10 0 0 10 0 0 1.2695e-04 3.4964e-07 9.0138e-07 7.7653e-07 1.2401e-06 2.5063e-06 260.04 -2.00 11.69 -2.00 11.69 1.704 0.000 0.00e+00 4.436e-05 4.687e-06
+20230801T151533.1Z 8613.635800 5.86 54.21 96.22 130.12 271.19 5.568e-04 5.394e-04 7.973e-05 7.815e-05 837 2 6 20220707 5.9698e-01 20.38 1.45 -0.00128 -0.00036 0.16 2.880 2026 1 4 5.15 0.223 0.215 0.208 10 0 0 10 0 0 10 0 0 1.2601e-04 3.4894e-07 9.0073e-07 7.7496e-07 1.2384e-06 2.5096e-06 259.87 -2.00 11.63 -2.00 11.63 1.703 0.000 0.00e+00 4.436e-05 4.687e-06
+20230801T151539.1Z 8613.635870 5.87 54.20 96.24 130.14 271.20 5.533e-04 5.337e-04 7.973e-05 7.814e-05 837 2 6 20220707 5.9691e-01 20.38 1.45 -0.00124 -0.00019 0.14 2.880 2026 1 4 4.31 0.224 0.216 0.209 10 0 0 10 0 0 10 0 0 1.2542e-04 3.4880e-07 8.9655e-07 7.7467e-07 1.2351e-06 2.4930e-06 259.77 -2.00 11.59 -2.00 11.59 1.703 0.000 0.00e+00 4.436e-05 4.687e-06
+20230801T151545.0Z 8613.635938 5.86 54.18 96.25 130.16 271.22 5.658e-04 5.463e-04 8.021e-05 7.862e-05 837 2 6 20220707 5.9070e-01 20.38 1.45 -0.00124 -0.00025 0.17 2.880 2026 1 4 8.14 0.226 0.218 0.211 10 0 0 10 0 0 10 0 0 1.2435e-04 3.5106e-07 8.9671e-07 7.7569e-07 1.2365e-06 2.5495e-06 259.57 -2.00 11.52 -2.00 11.52 1.702 0.000 0.00e+00 4.436e-05 4.687e-06
+20230801T151550.9Z 8613.636006 5.86 54.16 96.27 130.17 271.23 5.653e-04 5.485e-04 8.135e-05 7.983e-05 837 2 6 20220707 5.7567e-01 20.38 1.45 -0.00122 -0.00036 0.17 2.880 2026 1 4 12.12 0.227 0.218 0.211 10 0 0 10 0 0 10 0 0 1.2409e-04 3.5631e-07 8.9457e-07 7.8039e-07 1.2394e-06 2.5470e-06 259.52 -2.00 11.50 -2.00 11.50 1.701 0.000 0.00e+00 4.437e-05 4.687e-06
+20230801T151959.4Z 8613.638882 5.85 53.37 97.00 130.92 271.90 5.687e-04 5.561e-04 8.070e-05 7.905e-05 837 2 6 20220707 5.8966e-01 20.40 1.45 -0.00125 -0.00018 0.16 2.670 2184 1 4 7.00 0.237 0.228 0.221 10 0 0 10 0 0 10 0 0 1.2708e-04 3.6070e-07 9.0131e-07 7.9201e-07 1.2529e-06 2.6150e-06 260.00 -2.00 11.68 -2.00 11.68 1.670 0.000 0.00e+00 4.448e-05 4.687e-06
+20230801T152005.4Z 8613.638952 5.86 53.35 97.02 130.94 271.92 5.654e-04 5.509e-04 8.222e-05 8.054e-05 837 2 6 20220707 5.7195e-01 20.40 1.45 -0.00127 0.00015 0.17 2.670 2184 1 4 9.58 0.235 0.226 0.219 10 0 0 10 0 0 10 0 0 1.2821e-04 3.6780e-07 9.0141e-07 7.9494e-07 1.2569e-06 2.6021e-06 260.20 -2.00 11.75 -2.00 11.75 1.669 0.000 0.00e+00 4.449e-05 4.687e-06
+20230801T152011.3Z 8613.639020 5.86 53.33 97.04 130.95 271.93 5.754e-04 5.574e-04 8.320e-05 8.153e-05 837 2 6 20220707 5.6096e-01 20.40 1.45 -0.00117 -0.00006 0.17 2.670 2184 1 4 11.47 0.241 0.232 0.224 10 0 0 10 0 0 10 0 0 1.2506e-04 3.7084e-07 8.9855e-07 7.9009e-07 1.2527e-06 2.6447e-06 259.64 -2.00 11.55 -2.00 11.55 1.668 0.000 0.00e+00 4.449e-05 4.687e-06
+20230801T152017.2Z 8613.639088 5.86 53.31 97.06 130.97 271.95 5.696e-04 5.530e-04 8.342e-05 8.176e-05 837 2 6 20220707 5.5875e-01 20.40 1.45 -0.00129 -0.00019 0.17 2.670 2184 1 4 8.84 0.240 0.230 0.223 10 0 0 10 0 0 10 0 0 1.2586e-04 3.7202e-07 8.9808e-07 7.9275e-07 1.2544e-06 2.6195e-06 259.79 -2.00 11.60 -2.00 11.60 1.667 0.000 0.00e+00 4.449e-05 4.687e-06
+20230801T152023.1Z 8613.639157 5.87 53.30 97.08 130.99 271.97 5.621e-04 5.463e-04 8.365e-05 8.199e-05 837 2 6 20220707 5.5645e-01 20.40 1.45 -0.00122 -0.00048 0.17 2.670 2184 1 4 25.97 0.237 0.228 0.221 10 0 0 10 0 0 10 0 0 1.2716e-04 3.7335e-07 8.9853e-07 7.9345e-07 1.2555e-06 2.5876e-06 260.01 -2.00 11.68 -2.00 11.68 1.667 0.000 0.00e+00 4.450e-05 4.687e-06
+20230801T152029.1Z 8613.639226 5.87 53.28 97.09 131.01 271.98 5.687e-04 5.542e-04 8.462e-05 8.297e-05 837 2 6 20220707 5.4471e-01 20.40 1.45 -0.00122 -0.00048 0.17 2.670 2184 1 4 10.88 0.239 0.229 0.222 10 0 0 10 0 0 10 0 0 1.2643e-04 3.7833e-07 9.0001e-07 7.9241e-07 1.2574e-06 2.6184e-06 259.88 -2.00 11.63 -2.00 11.63 1.666 0.000 0.00e+00 4.450e-05 4.687e-06
+20230801T152035.0Z 8613.639294 5.87 53.26 97.11 131.03 272.00 5.661e-04 5.506e-04 8.549e-05 8.371e-05 837 2 6 20220707 5.3301e-01 20.40 1.45 -0.00125 -0.00046 0.15 2.670 2184 1 4 16.17 0.239 0.230 0.222 10 0 0 10 0 0 10 0 0 1.2621e-04 3.8221e-07 9.0463e-07 7.9110e-07 1.2611e-06 2.6084e-06 259.84 -2.00 11.62 -2.00 11.62 1.665 0.000 0.00e+00 4.450e-05 4.687e-06
+20230801T152040.9Z 8613.639363 5.85 53.24 97.13 131.04 272.02 5.700e-04 5.518e-04 8.550e-05 8.372e-05 837 2 6 20220707 5.3298e-01 20.40 1.46 -0.00126 -0.00057 0.17 2.670 2184 1 4 4.38 0.240 0.231 0.223 10 0 0 10 0 0 10 0 0 1.2583e-04 3.8228e-07 9.0160e-07 7.9119e-07 1.2590e-06 2.6261e-06 259.77 -2.00 11.59 -2.00 11.59 1.665 0.000 0.00e+00 4.450e-05 4.687e-06
+20230801T152046.8Z 8613.639431 5.85 53.22 97.15 131.06 272.03 5.643e-04 5.486e-04 8.502e-05 8.333e-05 837 2 6 20220707 5.3963e-01 20.40 1.45 -0.00131 -0.00041 0.16 2.670 2184 1 4 18.08 0.240 0.231 0.223 10 0 0 10 0 0 10 0 0 1.2570e-04 3.8049e-07 9.0010e-07 7.9222e-07 1.2580e-06 2.6009e-06 259.75 -2.00 11.59 -2.00 11.59 1.664 0.000 0.00e+00 4.451e-05 4.687e-06
+20230801T152052.7Z 8613.639499 5.87 53.20 97.16 131.08 272.05 5.545e-04 5.424e-04 8.348e-05 8.182e-05 837 2 6 20220707 5.5814e-01 20.40 1.46 -0.00127 -0.00042 0.16 2.670 2184 1 4 6.12 0.236 0.227 0.219 10 0 0 10 0 0 10 0 0 1.2801e-04 3.7384e-07 9.0353e-07 7.9618e-07 1.2610e-06 2.5607e-06 260.15 -2.00 11.73 -2.00 11.73 1.663 0.000 0.00e+00 4.451e-05 4.687e-06
+20230801T152501.4Z 8613.642378 5.86 52.42 97.91 131.82 272.73 5.798e-04 5.655e-04 8.417e-05 8.249e-05 837 2 6 20220707 5.3852e-01 20.41 1.45 -0.00120 -0.00000 0.19 2.950 1978 1 4 0.04 0.242 0.233 0.225 10 0 0 10 0 0 10 0 0 1.3483e-04 3.8580e-07 8.9844e-07 8.1152e-07 1.2707e-06 2.7347e-06 261.21 -2.00 12.12 -2.00 12.12 1.634 0.000 0.00e+00 4.463e-05 4.687e-06
+20230801T152507.3Z 8613.642446 5.87 52.40 97.93 131.84 272.74 5.908e-04 5.730e-04 8.559e-05 8.383e-05 837 2 6 20220707 5.2420e-01 20.41 1.45 -0.00107 0.00005 0.18 2.950 1978 1 4 6.81 0.243 0.234 0.227 10 0 0 10 0 0 10 0 0 1.3401e-04 3.9252e-07 8.9735e-07 8.1206e-07 1.2723e-06 2.7863e-06 261.08 -2.00 12.08 -2.00 12.08 1.633 0.000 0.00e+00 4.463e-05 4.687e-06
+20230801T152513.2Z 8613.642514 5.87 52.38 97.94 131.86 272.76 5.991e-04 5.798e-04 8.604e-05 8.427e-05 837 2 6 20220707 5.1988e-01 20.41 1.45 -0.00102 0.00011 0.17 2.950 1978 1 4 5.05 0.247 0.238 0.231 10 0 0 10 0 0 10 0 0 1.3178e-04 3.9389e-07 8.9582e-07 8.1380e-07 1.2728e-06 2.8218e-06 260.72 -2.00 11.94 -2.00 11.94 1.633 0.000 0.00e+00 4.463e-05 4.687e-06

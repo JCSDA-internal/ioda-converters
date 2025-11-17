@@ -9,16 +9,19 @@
 
 cmake_minimum_required( VERSION 3.12 )
 
-find_package( ecbuild 3 REQUIRED HINTS ${CMAKE_CURENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../ecbuild )
 
 project( iodaconv VERSION 0.0.1 LANGUAGES CXX Fortran )
+list( APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake )
 
+find_package( ecbuild 3 REQUIRED )
 if( ecbuild_VERSION VERSION_LESS 3.4 )
   include(GNUInstallDirs)
 endif()
+include( ecbuild_system NO_POLICY_SCOPE )
+ecbuild_declare_project()
 
-list( APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake )
 
+include( iodaconv_functions )
 include( iodaconv_extra_macros )
 include( iodaconv_compiler_flags )
 
@@ -62,14 +65,6 @@ else()
   ecbuild_find_package( eckit VERSION 1.13.0 QUIET )
   ecbuild_find_package( oops QUIET )
 endif()
-# Optional: pygrib for python for GRIB1/GRIB2 input files
-if ( USE_PYGRIB )
-    message(STATUS "Adding python tests that import pygrib")
-    set( iodaconv_pygrib_ENABLED True)
-else()
-    message(STATUS "Skipping python tests that import pygrib")
-    set( iodaconv_pygrib_ENABLED False)
-endif()
 
 find_package( eccodes QUIET)
 
@@ -88,10 +83,10 @@ endif()
 find_package( gsl-lite HINTS $ENV{gsl_lite_DIR} )
 find_package( MPI )
 
-find_package( ioda QUIET )
+find_package( ioda REQUIRED )
 
 find_package( bufr 12.0.1 QUIET )
-find_package( NetCDF QUIET COMPONENTS Fortran )
+find_package( NetCDF QUIET COMPONENTS Fortran CXX )
 
 if( bufr_FOUND AND NetCDF_Fortran_FOUND )
     set(iodaconv_gnssro_ENABLED True)
@@ -166,11 +161,11 @@ else()
 endif()
 
 if( eckit_FOUND AND oops_FOUND AND ioda_FOUND )
-    set(iodaconv_satbias_ENABLED True)
-    message(STATUS "Enabled Component: satbias converter")
+    set(iodaconv_gsi_varbc_ENABLED True)
+    message(STATUS "Enabled Component: gsi bias converter")
 else()
-    set(iodaconv_satbias_ENABLED False)
-    message(STATUS "Disabled Component: satbias converter")
+    set(iodaconv_gsi_varbc_ENABLED False)
+    message(STATUS "Disabled Component: gsi bias converter")
 endif()
 
 if (NetCDF_Fortran_FOUND )

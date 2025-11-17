@@ -14,9 +14,9 @@ ecbuild_add_executable( TARGET  gnssro_gsidiag2ioda
 
 # config for scripts
 list(APPEND scripts
-  gnssro_bufr2ioda.py
   gnssaro_netcdf2ioda.py
   gnssro_AWSopendataNetcdf2ioda.py
+  gnssro_bufr2ioda.py
 )
 
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )

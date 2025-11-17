@@ -60,6 +60,7 @@ def main(args):
 
     output_filename = args.output
     dtg = datetime.strptime(args.date, '%Y%m%d%H')
+    dtg = dtg.replace(tzinfo=timezone.utc)
 
     input_files = [(i) for i in args.input]
     # read / process files in parallel
@@ -307,7 +308,7 @@ def get_epoch_time(obs_time_utc):
     # following examples here could be written better potentially
     iterables = [year, month, day, hour, minute, second]
     # ensure the year is plausible (65535 appears in some data) if not set to 01Jan1900 (revisit)
-    this_datetime = [datetime(adate[0], adate[1], adate[2], adate[3], adate[4], adate[5])
+    this_datetime = [datetime(adate[0], adate[1], adate[2], adate[3], adate[4], adate[5], tzinfo=timezone.utc)
                      if adate[0] < 2200 else datetime(2200, 1, 1, 0, 0, 0)
                      for adate in zip(*iterables)]
 

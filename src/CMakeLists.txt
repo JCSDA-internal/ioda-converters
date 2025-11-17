@@ -10,10 +10,12 @@ add_subdirectory(pyiodaconv)
 add_subdirectory(marine)
 add_subdirectory(conventional)
 add_subdirectory(ncep)
+add_subdirectory(space_weather)
 add_subdirectory(ssec)
 add_subdirectory(wrfda_ncdiag)
 add_subdirectory(single_observation)
 add_subdirectory(mrms)
+add_subdirectory(ncar/obs2ioda)
 
 # Optional components
 if(iodaconv_gnssro_ENABLED)
@@ -28,8 +30,8 @@ if(iodaconv_pbfortran_ENABLED)
     add_subdirectory(ncar-bufr2nc-fortran)
 endif()
 
-if(iodaconv_satbias_ENABLED)
-  add_subdirectory(satbias)
+if(iodaconv_gsi_varbc_ENABLED)
+  add_subdirectory(gsi_varbc)
 endif()
 
 if(iodaconv_obserror_ENABLED)

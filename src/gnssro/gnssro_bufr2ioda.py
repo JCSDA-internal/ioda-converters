@@ -17,6 +17,7 @@ import numpy as np
 import os
 from itertools import repeat
 import netCDF4 as nc
+import re
 
 import pyiodaconv.ioda_conv_engines as iconv
 from pyiodaconv.def_jedi_utils import ioda_int_type, ioda_float_type
@@ -39,12 +40,32 @@ locationKeyList = [
     ("dateTime", "long")
 ]
 
+# Data used in fill_missing_satellite_subidentifier from file
+# names that use satDAAC identifiers, like the UCAR/COSMIC archive.
+# The first parentheses in the pattern should match the satId
+# and the second parentheses should match the number (subidentifier).
+# Satellite subidentifiers are typically not needed for government
+# missions. For example, Cosmic1 (C[0-9]{3}) and Cosmic2 (C2E[0-9])
+# do not use subidentifiers.
+satIdPatterns = [
+    r'^(GN|YM)([0-9]{2})$',     # PlanetiQ
+    r'^(S)([0-9]{3})$',      # Spire
+    r'^(GO)([0-9]{2})$'      # GeoOptics
+]
+
+satIdLists = [
+    [267, 268, 768],             # PlanetiQ
+    [269],                  # Spire
+    [265, 266]              # GeoOptics
+]
+
 
 def main(args):
-
     dtg = datetime.strptime(args.date, '%Y%m%d%H')
     qc = args.qualitycontrol
     addLSW = args.localspectralwidth
+    only_bang = args.onlybendingangle
+    use_average_tangent_point = args.use_average_tangent_point
 
     # read / process files in parallel
     pool_input_01 = args.input
@@ -53,7 +74,7 @@ def main(args):
     obs_data = {}
     # create a thread pool
     with ProcessPoolExecutor(max_workers=args.threads) as executor:
-        for file_obs_data in executor.map(read_input, pool_inputs, repeat(qc), repeat(addLSW)):
+        for file_obs_data in executor.map(read_input, pool_inputs, repeat(qc), repeat(addLSW), repeat(only_bang), repeat(use_average_tangent_point)):
             if not file_obs_data:
                 print(f"INFO: non-nominal file skipping")
                 continue
@@ -119,7 +140,43 @@ def main(args):
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
 
-def read_input(input_file_and_record, add_qc, addLSW):
+def fill_missing_satellite_subidentifier(input_file, profile_meta_data):
+    "Extract missing satelliteSubIdentifier from filename, if possible"
+    #  Handle special case of satelliteSubIdentifier. This attribute was a late
+    #  addition to the BUFR RO specification, so it is consider optional and is not
+    #  always included in the BUFR message. If it is missing, look to see if the
+    #  value can be deduced from the input filename.
+    satSubIdName = 'satelliteSubIdentifier'
+    satIdName = 'satelliteIdentifier'
+    if satSubIdName in profile_meta_data:
+        return
+    if satIdName not in profile_meta_data:
+        return
+
+    filename = os.path.basename(input_file)  # Strip the directory from the path.
+    match = re.search(r'^[a-z]+Prf_([A-Z][A-Z0-9]{3})[\._]', filename)
+    if match:
+        # Parse the leo_id from the "IIII" group of the UCAR filenaming convention, documented
+        # here: https://cdaac-www.cosmic.ucar.edu/cdaac/cgi_bin/fileFormats.cgi?type=bfrPrf
+        # Confirm the satelliteIdentifier from BUFR is consistent with the satellite id in the filename.
+        leo_id = match.group(1)
+        leo_match = None
+        satId = profile_meta_data[satIdName]
+        for (pattern, satIdList) in zip(satIdPatterns, satIdLists):
+            leo_match = re.search(pattern, leo_id)
+            if leo_match:
+                profile_meta_data[satSubIdName] = int(leo_match.group(2))
+                print(f"  NOTICE: Set missing {satSubIdName} to {profile_meta_data[satSubIdName]}"
+                      f" from leo_id {leo_id} parsed from filename {input_file}")
+                break
+
+        if not leo_match:
+            print(f"  WARNING: Could not deduce missing {satSubIdName} from leo_id {leo_id} "
+                  f"parsed from filename {input_file}")
+    return
+
+
+def read_input(input_file_and_record, add_qc, addLSW, only_bang, use_average_tangent_point):
     """
     Reads/converts input file(s)
 
@@ -134,14 +191,25 @@ def read_input(input_file_and_record, add_qc, addLSW):
     """
     input_file = input_file_and_record[0]
     record_number = input_file_and_record[1]
-    print("Reading: %s" % input_file)
+    print(f"Reading: {input_file} (record_number {record_number})")
     f = open(input_file, 'rb')
     bufr = codes_bufr_new_from_file(f)
     codes_set(bufr, 'unpack', 1)
 
     profile_meta_data = get_meta_data(bufr)
+    if not profile_meta_data:
+        f.close()
+        return None
 
-    obs_data = get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=record_number)
+    #  Special case if satelliteSubIdentifier is missing in BUFR message.
+    fill_missing_satellite_subidentifier(input_file, profile_meta_data)
+
+    obs_data = get_obs_data(bufr, profile_meta_data, add_qc, addLSW,
+                            record_number=record_number,
+                            only_bang=only_bang,
+                            use_average_tangent_point=use_average_tangent_point)
+
+    f.close()
 
     return obs_data
 
@@ -154,7 +222,10 @@ def get_meta_data(bufr):
     # these are the MetaData we are interested in
     profile_meta_data = {}
     for k, v in meta_data_keys.items():
-        profile_meta_data[k] = codes_get(bufr, v)
+        try:
+            profile_meta_data[k] = codes_get(bufr, v)
+        except Exception as e:
+            print(f'  WARNING: could not retrieve key: {k} -- Skipping')
 
     # do the hokey time structure to time structure
     year = codes_get(bufr, 'year')
@@ -163,7 +234,7 @@ def get_meta_data(bufr):
     hour = codes_get(bufr, 'hour')
     minute = codes_get(bufr, 'minute')
     second = codes_get(bufr, 'second')  # non-integer value
-    second = round(second)
+    second = np.floor(second)
 
     # get string date, translate to a datetime object, then offset from epoch
     dtg = ("%4i-%.2i-%.2iT%.2i:%.2i:%.2iZ" % (year, month, day, hour, minute, second))
@@ -174,7 +245,7 @@ def get_meta_data(bufr):
     return profile_meta_data
 
 
-def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None):
+def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None, only_bang=False, use_average_tangent_point=False):
 
     # allocate space for output depending on which variables are to be saved
     obs_data = {}
@@ -197,9 +268,19 @@ def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None):
     # get the bending angle
     lats = codes_get_array(bufr, 'latitude')[1:]                     # geolocation -- first value is the average
     lons = codes_get_array(bufr, 'longitude')[1:]
+    if use_average_tangent_point:
+        #  Override all lat-lons with average value
+        avg_lat = codes_get_array(bufr, 'latitude')[0]
+        avg_lon = codes_get_array(bufr, 'longitude')[0]
+        print(f"Overriding lat, lon with {avg_lat}, {avg_lon}")
+        lats[:] = avg_lat
+        lons[:] = avg_lon
+
     impact = codes_get_array(bufr, 'impactParameter')[offset::drepfac[0]]
     bang = codes_get_array(bufr, 'bendingAngle')[offset*2::drepfac[0]*2]
     bang_err = codes_get_array(bufr, 'bendingAngle')[offset*2+1::drepfac[0]*2]
+    if only_bang:
+        bang_err[:] = 0.003
     bang_conf = codes_get_array(bufr, 'percentConfidence')[1:krepfac[0]+1]
     # len (bang) Out[19]: 1482  (krepfac * 6) -or- (krepfac * drepfac * 2 )`
 
@@ -227,12 +308,20 @@ def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None):
     obs_data[('bendingAngle', "PreQC")] = np.full(krepfac[0], 0, dtype=ioda_int_type)
 
     # (geometric) height is read as integer but expected as float in output
-    height = codes_get_array(bufr, 'height', ktype=float)
+    if only_bang:
+        refrac = np.empty_like(bang)
+        refrac[:] = float_missing_value
+        refrac_err = np.empty_like(bang_err)
+        refrac_err[:] = float_missing_value
+    else:
+        # get the refractivity
+        refrac = codes_get_array(bufr, 'atmosphericRefractivity')[0::2]
+        refrac_err = codes_get_array(bufr, 'atmosphericRefractivity')[1::2]
 
-    # get the refractivity
-    refrac = codes_get_array(bufr, 'atmosphericRefractivity')[0::2]
-    refrac_err = codes_get_array(bufr, 'atmosphericRefractivity')[1::2]
-    refrac_conf = codes_get_array(bufr, 'percentConfidence')[sum(krepfac[:1])+1:sum(krepfac[:2])+1]
+    try:
+        height = codes_get_array(bufr, 'height', ktype=float)
+    except Exception as e:
+        height = codes_get_array(bufr, 'geopotentialHeight', ktype=float)
 
     # value, ob_error, qc
     obs_data[('atmosphericRefractivity', "ObsValue")] = assign_values(refrac)
@@ -244,7 +333,11 @@ def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None):
     obs_data[('latitude', 'MetaData')] = assign_values(lats)
     obs_data[('longitude', 'MetaData')] = assign_values(lons)
     obs_data[('impactParameterRO', 'MetaData')] = assign_values(impact)
-    obs_data[('height', 'MetaData')] = assign_values(height)
+    if only_bang:
+        obs_data[('height', 'MetaData')] = assign_values(impact)
+    else:
+        obs_data[('height', 'MetaData')] = assign_values(height)
+
     for k, v in profile_meta_data.items():
         if type(v) is np.int64:
             obs_data[(k, 'MetaData')] = np.array(np.repeat(v, krepfac[0]), dtype=np.int64)
@@ -262,13 +355,6 @@ def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None):
         nrec = record_number
     obs_data[('sequenceNumber', 'MetaData')] = np.array(np.repeat(nrec, krepfac[0]), dtype=ioda_int_type)
 
-    # get derived profiles
-    geop = codes_get_array(bufr, 'geopotentialHeight')[:-1]
-    pres = codes_get_array(bufr, 'nonCoordinatePressure')[0:-2:2]
-    temp = codes_get_array(bufr, 'airTemperature')[0::2]
-    spchum = codes_get_array(bufr, 'specificHumidity')[0::2]
-    prof_conf = codes_get_array(bufr, 'percentConfidence')[sum(krepfac[:2])+1:sum(krepfac)+1]
-
     # Compute impact height
     obs_data[('impactHeightRO', 'MetaData')] = \
         obs_data[('impactParameterRO', 'MetaData')] - \
@@ -276,7 +362,8 @@ def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None):
         obs_data[('earthRadiusCurvature', 'MetaData')]
 
     if add_qc:
-        good = quality_control(profile_meta_data, height, lats, lons)
+        impactHeight = obs_data[('impactHeightRO', 'MetaData')]
+        good = quality_control(profile_meta_data, impactHeight, lats, lons)
         if len(lats[good]) == 0:
             # exit if entire profile is missing
             return {}
@@ -294,12 +381,12 @@ def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None):
     return obs_data
 
 
-def quality_control(profile_meta_data, heights, lats, lons):
+def quality_control(profile_meta_data, impact_heights, lats, lons):
     try:
-        good = (heights > 0.) & (heights < 100000.) & (abs(lats) <= 90.) & (abs(lons) <= 360.)
+        good = (impact_heights > 0.) & (impact_heights < 100000.) & (abs(lats) <= 90.) & (abs(lons) <= 360.)
     except ValueError:
         print(f" quality control on impact_height and lat/lon did not pass")
-        print(f" maybe length of vectors not consistent: {len(heights)}, {len(lats)}, {len(lons)}")
+        print(f" maybe length of vectors not consistent: {len(impact_heights)}, {len(lats)}, {len(lons)}")
         return []
 
     # bad radius or
@@ -320,6 +407,7 @@ def def_meta_data():
         # "timeIncrement": 'timeIncrement',
         "earthRadiusCurvature": 'earthLocalRadiusOfCurvature',
         "satelliteIdentifier": 'satelliteIdentifier',
+        "satelliteSubIdentifier": 'satelliteSubIdentifier',
         "satelliteInstrument": 'satelliteInstruments',
         "dataProviderOrigin": 'centre',
         "satelliteTransmitterId": 'platformTransmitterIdNumber',
@@ -342,6 +430,7 @@ def def_meta_types():
         "geoidUndulation": 'float',
         "earthRadiusCurvature": 'float',
         "satelliteIdentifier": 'integer',
+        "satelliteSubIdentifier": 'integer',
         "satelliteInstrument": 'integer',
         "dataProviderOrigin": 'string',
         "satelliteTransmitterId": 'integer',
@@ -434,6 +523,17 @@ if __name__ == "__main__":
         '-lsw', '--localspectralwidth',
         help='Calculate and output error metrics, LSW and STD4060',
         default=False, action='store_true', required=False)
+
+    optional.add_argument(
+        '--onlybendingangle',
+        help='only encode bending angle ignore refractivity and profiles',
+        action='store_true', required=False)
+
+    optional.add_argument(
+        '--use-average-tangent-point',
+        help='Disable tangent point drift by using the average lat, lon as tangent '
+             'point for all rays in a profile',
+        action='store_true', required=False)
 
     args = parser.parse_args()
     main(args)
