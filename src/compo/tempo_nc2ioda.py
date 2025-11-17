@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #
-# (C) Copyright 2020 UCAR
+# (C) Copyright 2025 UCAR
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -100,6 +100,12 @@ class tempo(object):
             qa_value = ncd.groups['product'].variables['main_data_quality_flag'][:]\
                 .ravel()
 
+            # additional variables
+            #lat_bounds = ncd.groups['geolocation'].variables['latitude_bounds'][:].ravel()
+            #lon_bounds = ncd.groups['geolocation'].variables['longitude_bounds'][:].ravel()
+            #snow_ice_fraction = ncd.groups['support_data'].variables['snow_ice_fraction'][:].ravel()
+            
+
             # there are inconsitencies in masking between different variables
             # choose one from one variable and apply it to all the other variables
             mask1 = np.ma.getmask(qa_value)
@@ -119,6 +125,13 @@ class tempo(object):
             vza = np.ma.array(vza, mask=mask)
             albedo.mask = False
             albedo = np.ma.array(albedo, mask=mask)
+            #lat_bounds.mask = False
+            #lat_bounds = np.ma.array(lat_bounds, mask=mask)
+            #lon_bounds.mask = False
+            #lon_bounds = np.ma.array(lon_bounds, mask=mask)
+            #snow_ice_fraction.mask = False
+            #snow_ice_fraction = np.ma.array(snow_ice_fraction, mask=mask)
+
 
             # adding ability to pre filter the data using the qa value
             # and also perform thinning using random uniform draw
@@ -126,8 +139,7 @@ class tempo(object):
             thi = np.random.uniform(size=len(qa_value)) > self.thin
             flg = np.logical_and(qaf, thi)
 
-            # add cloud fraction filter here as UFO one doesn't work
-            # needs FIX in future
+            # remove cloudy data
             cld = cld_fra < 0.5   # from TEMPO STM meetings, experimental
             flg = np.logical_and(flg, cld)
 
@@ -197,18 +209,28 @@ class tempo(object):
                     avg_kernel = np.ma.array(avg_kernel, mask=np.repeat(mask, levels))
 
                 # obs value and error
-                col_amf = ncd.groups['support_data'].variables[col_amf_name][:].ravel()
-                col_amf.mask = False
-                col_amf = np.ma.array(col_amf, mask=mask)
-                obs = ncd.groups[group_name].variables[obs_name][:]\
-                    .ravel() * conv
+
+                # from ATBD:
+                # total vertical column = stratospheric + tropospheric vertical column
+                # Do not use support_data/vertical_column_total as it is influenced by a priori
+                if self.columnType == "total":
+                    obs = (ncd.groups['product'].variables['vertical_column_troposphere'][:].ravel()\
+                        + ncd.groups['product'].variables['vertical_column_stratosphere'][:].ravel())*conv
+                    col_amf = tot_amf
+                else:
+                    obs = ncd.groups['product'].variables[obs_name][:]\
+                        .ravel() * conv
+                    col_amf = ncd.groups['support_data'].variables[col_amf_name][:].ravel()
+                    col_amf.mask = False
+                    col_amf = np.ma.array(col_amf, mask=mask)
                 obs.mask = False
                 obs = np.ma.array(obs, mask=mask)
 
                 # error calculation:
-                err = ncd.groups[group_name].variables[err_name+'_uncertainty'][:].ravel()
-                err = err * conv
-
+                # err = fitted_slant_column_uncertainty / AMF (total, tropospheric, or stratospheric)
+                # for tropospheric this is the same is product/vertical_column_troposphere_uncertainty
+                err = (ncd.groups['support_data']['fitted_slant_column_uncertainty'][:].ravel()\
+                      / col_amf) * conv
                 err.mask = False
                 err = np.ma.array(err, mask=mask)
 
