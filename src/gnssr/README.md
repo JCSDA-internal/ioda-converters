@@ -1,4 +1,7 @@
-# GNSS-R L2 IODA-converter
+# GNSS-R L2 IODA-converters
+
+# gnssrL2_2ioda.py
+This is a converter for native L2 wind speed data files in the NASA CYGNSS L2 format.
 
 This simple converter has been developed by Spire Global UK Ltd under NASA CYGNSS ROSES-2020 proposal Grant number: 80NSSC21K1120
 
@@ -6,3 +9,8 @@ The converter takes as input a yaml file defining inputs for the converter such 
 
 The code is distribited under license: Apache Licence Version 2.0
  which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+
+# gnssr_spireL2trackwise_2ioda.py
+This is a converter for native L2 wind speed data files in the Spire trackwise L2 format.
+
+Adapted by the Met Office, UK, from the original converter developed by Spire Global UK Ltd.
