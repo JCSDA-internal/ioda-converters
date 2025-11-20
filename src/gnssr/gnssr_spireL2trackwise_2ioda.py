@@ -11,6 +11,7 @@ import netCDF4 as nc
 import numpy as np
 from datetime import datetime, timedelta
 from pathlib import Path
+import re
 import time
 import yaml
 
@@ -140,6 +141,16 @@ class GnssrL2(object):
         self.gnssrData["quality_flags"] = np.zeros(nlocs)
         self.gnssrData["quality_ice_flag"] = np.zeros(nlocs)
         self.gnssrData["sp_coast_distance"] = np.zeros(nlocs)  # m
+        self.gnssrData["reflect_snr_at_sp"] = np.zeros(nlocs)
+        self.gnssrData["sigma0_dB"] = np.zeros(nlocs)
+        self.gnssrData["mss"] = np.zeros(nlocs)
+        self.gnssrData["rx_id"] = np.zeros(nlocs)
+        self.gnssrData["tx_prn"] = np.zeros(nlocs)
+        self.gnssrData["tx_svn"] = np.zeros(nlocs)
+        self.gnssrData["tx_id"] = np.full(nlocs, '', dtype=np.object_)    # constellation string e.g. G = GPS
+        self.gnssrData["gnss_constellation_id"] = np.zeros(nlocs)         # set from tx_id string
+        self.gnssrData["code"] = np.full(nlocs, '', dtype=np.object_)     # gnsss code type e.g. L1_CA
+        self.gnssrData["constellation"] = np.full(nlocs, '', dtype=np.object_)     # e.g. spire
         
         ns = 0
         for filename in self.gnssrData["file_list"]:
@@ -169,8 +180,31 @@ class GnssrL2(object):
             self.gnssrData["incidence_angle"][ns:ns+nlocs_local] = np.array(dataset_input['sp_incidence_angle'][:])
             self.gnssrData["quality_flags"][ns:ns+nlocs_local] = np.array(dataset_input['quality_flags'][:])
             self.gnssrData["quality_ice_flag"][ns:ns+nlocs_local] = np.array(dataset_input['quality_ice_flag'][:])
-            self.gnssrData["sp_coast_distance"][ns:ns+nlocs_local] = np.array(dataset_input['sp_coast_distance'][:] * -1000.) # convert to m from km, positive values over sea
-
+            self.gnssrData["sp_coast_distance"][ns:ns+nlocs_local] = np.array(dataset_input['sp_coast_distance'][:] * -1000.)  # convert to m from km, positive values over sea
+            self.gnssrData["reflect_snr_at_sp"][ns:ns+nlocs_local] = np.array(dataset_input['reflect_snr_at_sp'][:]) 
+            self.gnssrData["sigma0_dB"][ns:ns+nlocs_local] = np.array(dataset_input['sigma0_dB'][:]) 
+            self.gnssrData["mss"][ns:ns+nlocs_local] = np.array(dataset_input['mss'][:])
+            # Get values from global file attributes
+            rx_id_int = int(re.findall(r'\d+', nc_attrs["rx_id"])[0])  #  Convert to int e.g. FM172 -> 172
+            self.gnssrData["rx_id"][ns:ns+nlocs_local] = np.full(nlocs_local, rx_id_int)
+            self.gnssrData["tx_prn"][ns:ns+nlocs_local] = np.full(nlocs_local, nc_attrs["tx_prn"])
+            self.gnssrData["tx_svn"][ns:ns+nlocs_local] = np.full(nlocs_local, nc_attrs["tx_svn"])
+            self.gnssrData["code"][ns:ns+nlocs_local] = nc_attrs["code"]
+            self.gnssrData["constellation"][ns:ns+nlocs_local] = nc_attrs["constellation"]
+            tx_id_str = re.findall(r'\D+', nc_attrs["tx_id"])[0]  #  Convert to string e.g. G9 -> G
+            self.gnssrData["tx_id"][ns:ns+nlocs_local] = tx_id_str
+            # fill constellation ID
+            match tx_id_str:
+                case "G":
+                    # GPS / 401
+                    self.gnssrData["gnss_constellation_id"][ns:ns+nlocs_local] = np.full(nlocs_local, 401)
+                case "R":
+                    # GLONASS / 402
+                    self.gnssrData["gnss_constellation_id"][ns:ns+nlocs_local] = np.full(nlocs_local, 402)
+                case "E":
+                    # GALILEO / 403
+                    self.gnssrData["gnss_constellation_id"][ns:ns+nlocs_local] = np.full(nlocs_local, 403)               
+            
             dataset_input.close()
             ns += nlocs_local
     
@@ -213,7 +247,17 @@ class GnssrL2(object):
         self.outdata[('qualityFlags', 'MetaData')] = self.gnssrData["quality_flags"][loc_idxs].astype('int32')
         self.outdata[('qualityIceFlag', 'MetaData')] = self.gnssrData["quality_ice_flag"][loc_idxs].astype('int32')
         self.outdata[('distanceToCoastline', 'MetaData')] = self.gnssrData["sp_coast_distance"][loc_idxs].astype('float32')
-
+        self.outdata[('signalToNoiseRatio', 'MetaData')] = self.gnssrData["reflect_snr_at_sp"][loc_idxs].astype('float32')
+        self.outdata[('sigma0', 'MetaData')] = self.gnssrData["sigma0_dB"][loc_idxs].astype('float32')
+        self.outdata[('meanSquareSlope', 'MetaData')] = self.gnssrData["mss"][loc_idxs].astype('float32')
+        self.outdata[('windSpeedStandardDeviation', 'MetaData')] = self.gnssrData["wind_speed_error"][loc_idxs].astype('float32')
+        self.outdata[('satelliteReceiverId', 'MetaData')] = self.gnssrData["rx_id"][loc_idxs].astype('int32')
+        self.outdata[('satelliteTransmitterId', 'MetaData')] = self.gnssrData["tx_prn"][loc_idxs].astype('int32')
+        self.outdata[('gnssSpaceVehicleNumber', 'MetaData')] = self.gnssrData["tx_svn"][loc_idxs].astype('int32')
+        self.outdata[('gnssConstellation', 'MetaData')] = self.gnssrData["gnss_constellation_id"][loc_idxs].astype('int32')
+        self.outdata[('gnssCodeType', 'MetaData')] = self.gnssrData["code"][loc_idxs]
+        self.outdata[('satelliteConstellation', 'MetaData')] = self.gnssrData["constellation"][loc_idxs]
+        
         # add output variables
         for iodavar in ['windSpeed']:
             # We populate each preqc variable with the qflg value given in the GNSS-R L2 file. Hence, the qflg MetaData
