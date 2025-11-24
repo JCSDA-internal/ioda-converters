@@ -1,33 +1,29 @@
 list(APPEND programs
-  amdar_bufr2ioda.py
-  amv_ssec_ascii2ioda.py
-  balloon_sonde_json2ioda.py
-  buoy_bufr2ioda.py
-  metar_csv2ioda.py
-  saber2ioda.py
-  saber_download.py
-  ship_bufr2ioda.py
-  sonde_bufr2ioda.py
-  sonde_tac2ioda.py
-  synop_bufr2ioda.py
+  altimeter_spacebased_tec_madrigal2ioda.py
+  gnss_gridded_ground_tec_madrigal2ioda.py
+  gnss_los_ground_tec_json2ioda.py
+  gnss_los_ground_tec_madrigal2ioda.py
+  gnss_tec_bufr2ioda.py
+  gnss_tec_ground_based.py
+  ionosonde_ascii2ioda.py
 )
 
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )
 conf_targets_deps( "${programs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
                    ${CMAKE_BINARY_DIR}/bin
-                   bin_metar_scripts_deps)
+                   bin_space_weather_scripts_deps)
 
 # Configure files for install prefix bin
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_INSTALL_FULL_BINDIR} ${PYIODACONV_INSTALL_LIBDIR} )
 conf_targets_deps( "${programs}"
                    ${CMAKE_CURRENT_SOURCE_DIR}
                    ${CMAKE_BINARY_DIR}/install-bin
-                   install_bin_metar_scripts_deps)
+                   install_bin_space_weather_scripts_deps)
 
-install( PROGRAMS ${install_bin_metar_scripts_deps} DESTINATION ${CMAKE_INSTALL_BINDIR} )
+install( PROGRAMS ${install_bin_space_weather_scripts_deps} DESTINATION ${CMAKE_INSTALL_BINDIR} )
 
-ecbuild_add_test( TARGET  ${PROJECT_NAME}_conventional_coding_norms
+ecbuild_add_test( TARGET  ${PROJECT_NAME}_space_weather_coding_norms
                   TYPE    SCRIPT
                   COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}_lint.sh
                   ARGS    ${CMAKE_CURRENT_SOURCE_DIR} ${IODACONV_PYLINT_CFG_DIR} )

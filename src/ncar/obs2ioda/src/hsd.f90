@@ -31,6 +31,7 @@ integer(i_llong) :: epochtime
 integer(i_kind)  :: iyear, imonth, iday, ihour, imin, isec
 
 integer(i_kind) :: subsample
+character(len=3)  :: ahi_satid
 
 integer(i_kind), parameter :: npixel = 5500
 integer(i_kind), parameter :: nline  = 5500
@@ -238,9 +239,8 @@ character(len=16)   :: dummy16
 character(len=8)    :: ccyymmdd
 character(len=4)    :: ccyy, hhnn
 character(len=2)    :: mm, dd, hh, nn
-character(len=3)    :: satellite = 'H08'
 character(len=4)    :: region = 'FLDK'
-character(len=3)    :: resolution = 'R20'
+character(len=3)    :: resolution = 'R20'  ! hard-coded for IR channels; other resolutions R05 and R10 for VIS/NIR
 character(len=5)    :: segment ! S0110, S0210, etc
 character(len=3)    :: band    ! B07 - B16
 integer(i_short), allocatable :: idata(:)
@@ -251,7 +251,7 @@ integer(i_kind) :: ipixel, iline
 integer(i_kind) :: startLine, endLine
 integer(i_kind) :: radcount, i, ii, jj, ij, iv
 integer(i_kind) :: iband, isegm
-integer(i_kind) :: ierr
+integer(i_kind) :: ierr, ierrr
 integer(i_kind) :: nlocs, nvars, iloc
 integer(i_kind) :: ihh, imm, idd, jday, flength, rvalue, offset
 integer(i_kind) :: iunit = 21
@@ -300,13 +300,13 @@ do iband = 1, nband
       write(band, '(a,i2.2)') 'B', iband+6
       write(segment,'(a,i2.2,i2.2)') 'S', isegm, nsegm
       ij = isegm + (iband-1) * nsegm
-      fnames(ij) = trim(inpdir)//'HS_'//satellite//'_'//ccyymmdd//'_'//hhnn//'_'//band//'_'//region//'_'//resolution//'_'//segment//'.DAT'
+      fnames(ij) = trim(inpdir)//'HS_'//ahi_satid//'_'//ccyymmdd//'_'//hhnn//'_'//band//'_'//region//'_'//resolution//'_'//segment//'.DAT'
 !write(33,*) 'wget -np -nd -nc http://noaa-himawari8.s3.amazonaws.com/AHI-L1b-FLDK/' &
 !& //ccyy//'/'//mm//'/'//dd//'/'//hhnn//'/'//trim(fnames(ij))//'.bz2'
       inquire(file=trim(fnames(ij)), exist=fexist(ij))
       if ( fexist(ij) .eqv. .false. ) then
          write(segment,'(a,i2.2,i2.2)') 'S', isegm, nodivisionsegm
-         fnames(ij) = trim(inpdir)//'HS_'//satellite//'_'//ccyymmdd//'_'//hhnn//'_'//band//'_'//region//'_'//resolution//'_'//segment//'.DAT'
+         fnames(ij) = trim(inpdir)//'HS_'//ahi_satid//'_'//ccyymmdd//'_'//hhnn//'_'//band//'_'//region//'_'//resolution//'_'//segment//'.DAT'
          inquire(file=trim(fnames(ij)), exist=fexist(ij))
       end if
 !print*,iband, isegm, trim(fnames(ij)), fexist(ij)
@@ -316,11 +316,15 @@ end do
 do iband = 1, nband
    do isegm = 1, nsegm
       ifile = isegm + (iband-1) * nsegm
-      if ( .not. fexist(ifile) ) cycle
+      if ( .not. fexist(ifile) ) then
+!        print*,'Cannot find file ',trim(fnames(ifile))
+         cycle
+      end if
       open(iunit, file=trim(fnames(ifile)), form='unformatted', action='read', access='stream', status='old', convert='little_endian')
       print*,'Reading from ', trim(fnames(ifile))
 
-      read(iunit) header%basic%headerNum, &
+      read(iunit, iostat=ierrr) &
+                  header%basic%headerNum, &
                   header%basic%blockLen, &
                   header%basic%numHeader, &
                   header%basic%byteOrder, &
@@ -341,14 +345,18 @@ do iband = 1, nband
                   header%basic%version, &
                   header%basic%fileName, &
                   header%basic%dummy40
-      read(iunit) header%data%headerNum, &
+      call read_error(ierrr)
+      read(iunit, iostat=ierrr) &
+                  header%data%headerNum, &
                   header%data%blockLen,&
                   header%data%bitPix, &
                   header%data%nPix, &
                   header%data%nLin, &
                   header%data%compression, &
                   header%data%dummy40
-      read(iunit) header%proj%headerNum, &
+      call read_error(ierrr)
+      read(iunit, iostat=ierrr) &
+                  header%proj%headerNum, &
                   header%proj%blockLen, &
                   header%proj%subLon, &
                   header%proj%cfac, &
@@ -365,7 +373,9 @@ do iband = 1, nband
                   header%proj%resampleKind, &
                   header%proj%resampleSize, &
                   header%proj%dummy40
-      read(iunit) header%navi%headerNum, &
+      call read_error(ierrr)
+      read(iunit, iostat=ierrr) &
+                  header%navi%headerNum, &
                   header%navi%blockLen, &
                   header%navi%navTime, &
                   header%navi%sspLon, &
@@ -380,7 +390,9 @@ do iband = 1, nband
                   header%navi%moonPos_y, &
                   header%navi%moonPos_z, &
                   header%navi%dummy40
-      read(iunit) header%calib%headerNum, &
+      call read_error(ierrr)
+      read(iunit, iostat=ierrr) &
+                  header%calib%headerNum, &
                   header%calib%blockLen, &
                   header%calib%bandNo, &
                   header%calib%waveLen, &
@@ -399,54 +411,84 @@ do iband = 1, nband
                   header%calib%planckConst, &
                   header%calib%bolzConst, &
                   header%calib%dummy40
-      read(iunit) header%interCalib%headerNum, &
+      call read_error(ierrr)
+      read(iunit, iostat=ierrr) &
+                  header%interCalib%headerNum, &
                   header%interCalib%blockLen, &
                   header%interCalib%dummy256
-      read(iunit) header%segm%headerNum, &
+      call read_error(ierrr)
+      read(iunit, iostat=ierrr) &
+                  header%segm%headerNum, &
                   header%segm%blockLen, &
                   header%segm%totalSegNum, &
                   header%segm%segSeqNo, &
                   header%segm%startLineNo, &
                   header%segm%dummy40
-      read(iunit) header%navicorr%headerNum, &
+      call read_error(ierrr)
+      read(iunit, iostat=ierrr) &
+                  header%navicorr%headerNum, &
                   header%navicorr%blockLen, &
                   header%navicorr%RoCenterColumn, &
                   header%navicorr%RoCenterLine, &
                   header%navicorr%RoCorrection, &
                   header%navicorr%correctNum
+      call read_error(ierrr)
       if ( header%navicorr%correctNum > 0 ) then
          numCorrect = header%navicorr%correctNum
          allocate(header%navicorr%lineNo(numCorrect))
          allocate(header%navicorr%columnShift(numCorrect))
          allocate(header%navicorr%lineShift(numCorrect))
+      else
+         write(*,'(3a,i6)') " Error reading file ",trim(fnames(ifile)), &
+                            " correctNum = ",header%navicorr%correctNum
+         call abort()
       end if
-      read(iunit) header%navicorr%lineNo(numCorrect), &
+      read(iunit, iostat=ierrr) &
+                  header%navicorr%lineNo(numCorrect), &
                   header%navicorr%columnShift(numCorrect), &
                   header%navicorr%lineShift(numCorrect), &
                   header%navicorr%dummy40
+      call read_error(ierrr)
       rewind(iunit)
-      read(iunit) header%obstime%headerNum, &
+      read(iunit, iostat=ierrr) &
+                  header%obstime%headerNum, &
                   header%obstime%blockLen, &
                   header%obstime%obsNum
+      call read_error(ierrr)
       if ( header%obsTime%obsNum > 0 ) then
          numObs = header%obsTime%obsNum
          allocate(header%obsTime%lineNo(numObs))
          allocate(header%obsTime%obsMJD(numObs))
+      else
+         write(*,'(3a,i6)') " Error reading file ",trim(fnames(ifile)), &
+                            " obsNum = ",header%obsTime%obsNum
+         call abort()
       end if
-      read(iunit) header%obstime%lineNo, &
+      read(iunit, iostat=ierrr) &
+                  header%obstime%lineNo, &
                   header%obstime%obsMJD, &
                   header%obstime%dummy40
-      read(iunit) header%error%headerNum, &
+      call read_error(ierrr)
+      read(iunit, iostat=ierrr) &
+                  header%error%headerNum, &
                   header%error%blockLen, &
                   header%error%errorNum, &
                   header%error%dummy40
-      read(iunit) header%dummy%headerNum, &
+      call read_error(ierrr)
+      read(iunit, iostat=ierrr) &
+                  header%dummy%headerNum, &
                   header%dummy%blockLen, &
                   header%dummy%dummy256
+      call read_error(ierrr)
       npix = header%data%nPix
       nlin = header%data%nLin
       ntotal = npix * nlin
-      allocate(idata(ntotal))
+      if (ntotal > 0) then
+         allocate(idata(ntotal))
+      else
+         write(*,'(a,i6)') " Error allocating idata, ntotal = ",ntotal
+         call abort()
+      end if
 
       inquire(file=trim(fnames(ifile)), size=flength)
       ! Offset relative to the beginning of the file
@@ -1006,6 +1048,19 @@ subroutine hisd_radiance_to_tbb (radiance, tbb)
  end if
  return
 end subroutine hisd_radiance_to_tbb
+
+subroutine read_error(ierr)
+
+ integer(i_kind) :: ierr
+
+ if (ierr /= 0) then
+    write(*,'(a,i6)') "Error in reading file, ierr = ",ierr
+    call abort()
+ endif
+
+ return
+
+end subroutine read_error
 
 !> @brief Compute the superobbed brightness temperature from a slice of BT values.
 !!

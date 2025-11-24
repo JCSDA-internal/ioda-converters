@@ -14,7 +14,6 @@ ecbuild_add_executable( TARGET  gnssro_gsidiag2ioda
 
 # config for scripts
 list(APPEND scripts
-  gnss_tec_ground_based.py
   gnssaro_netcdf2ioda.py
   gnssro_AWSopendataNetcdf2ioda.py
   gnssro_bufr2ioda.py

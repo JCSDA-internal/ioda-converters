@@ -221,7 +221,10 @@ subroutine read_prepbufr(filename, filedate)
       call ufbint(iunit,obs,8,255,nlevels,obstr)
 
       r8sid = hdr(1)
-      t29 = nint(hdr(7))
+      t29 = missing_i
+      if (hdr(7) < r8bfms) then
+         t29 = nint(hdr(7))
+      end if
       kx  = nint(hdr(5))
 
       if ( use_errtable ) then
@@ -840,6 +843,9 @@ subroutine sort_obs_conv(filedate, nfgat)
                   else
                      xdata(ityp,itim)%xinfo_int64(iloc(ityp,itim),i) = plink%epochtime
                   end if
+               end if
+               if ( trim(name_var_info(i)) == 'launchTime' ) then
+                  xdata(ityp,itim)%xinfo_int64(iloc(ityp,itim),i) =plink%epochtime
                end if
             end if ! type_var_info
          end do
