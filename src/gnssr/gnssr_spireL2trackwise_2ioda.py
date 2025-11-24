@@ -303,7 +303,7 @@ def main():
         
         scf.setup_ioda_vars()
         attr_data["date_time_string"] = current_da_time.strftime('%Y-%m-%dT%H:%M:%SZ')
-        out_file_name = 'gnssr_windspeed_L2_' + current_da_time.strftime('%Y-%m-%dT%H:%M:%SZ') + ".nc4"
+        out_file_name = 'gnssr_windspeed_L2_' + current_da_time.strftime('%Y%m%dT%H%MZ') + ".nc4"
         out_file_path = os.path.join(out_dir, out_file_name)
         writer = iconv.IodaWriter(out_file_path, locationKeyList, dim_dict)
         writer.BuildIoda(scf.outdata, var_dims, scf.varAttrs, attr_data)  # write the output file
