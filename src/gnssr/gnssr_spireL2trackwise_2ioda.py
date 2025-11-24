@@ -52,7 +52,7 @@ in_dir = yaml_data['in_dir']
 
 assim_datetimes = []
 da_time = datetime_start
-while da_time < datetime_end:
+while da_time <= datetime_end:
     assim_datetimes.append(da_time)
     da_time += timedelta(hours=da_window_length)
 
