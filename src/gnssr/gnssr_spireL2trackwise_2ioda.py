@@ -5,6 +5,7 @@
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 
+from cmath import nan
 import os, sys
 import argparse
 import netCDF4 as nc
@@ -125,7 +126,7 @@ class GnssrL2(object):
                 continue
             nc_dim_dict = dataset_input.dimensions
             nlocs += nc_dim_dict["sample_time"].size
-        print(self.gnssrData["file_list"])
+        #print(self.gnssrData["file_list"])
         
         # Set total number of locations
         self.gnssrData["nlocs"] = nlocs
@@ -169,8 +170,9 @@ class GnssrL2(object):
             file_start_datetime = datetime.strptime(file_start_timestring, '%Y-%m-%dT%H:%M:%S.%f')
             self.gnssrData["obs_times"][ns:ns+nlocs_local]  = file_start_datetime + time_deltavals
             
-            print(f'ns = {ns}')
-            print(f'nlocs = {nlocs}')
+            #print(f'ns = {ns}')
+            #print(filename)
+            #print(f'nlocs_local = {nlocs_local}')
             
             self.gnssrData["sample_flags"][ns:ns+nlocs_local] = np.array(dataset_input['wind_confidence'][:])
             self.gnssrData["wind_speed"][ns:ns+nlocs_local] = np.array(dataset_input['wind'][:])
@@ -208,7 +210,7 @@ class GnssrL2(object):
             dataset_input.close()
             ns += nlocs_local
     
-        print(self.gnssrData) 
+        #print(self.gnssrData) 
 
     def setup_ioda_vars(self):
         loc_idxs = self.loc_idxs
@@ -220,12 +222,12 @@ class GnssrL2(object):
             self.varDict[iodavar]['qcKey'] = iodavar, iconv.OqcName()
             self.varAttrs[iodavar, iconv.OvalName()]['coordinates'] = 'latitude longitude'
             self.varAttrs[iodavar, iconv.OqcName()]['coordinates'] = 'latitude longitude'
-            self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'latitdue longitude'
+            self.varAttrs[iodavar, iconv.OerrName()]['coordinates'] = 'latitude longitude'
             self.varAttrs[iodavar, iconv.OvalName()]['units'] = 'm/s'
             self.varAttrs[iodavar, iconv.OerrName()]['units'] = 'm/s'
             self.varAttrs[iodavar, iconv.OqcName()]['units'] = 'unitless'
-            self.varAttrs[iodavar, iconv.OvalName()]['_FillValue'] = -999.
-            self.varAttrs[iodavar, iconv.OerrName()]['_FillValue'] = -999.
+            self.varAttrs[iodavar, iconv.OvalName()]['_FillValue'] = nan
+            self.varAttrs[iodavar, iconv.OerrName()]['_FillValue'] = nan
             self.varAttrs[iodavar, iconv.OqcName()]['_FillValue'] = -999
 
         # write global attributes out
@@ -251,6 +253,7 @@ class GnssrL2(object):
         self.outdata[('sigma0', 'MetaData')] = self.gnssrData["sigma0_dB"][loc_idxs].astype('float32')
         self.outdata[('meanSquareSlope', 'MetaData')] = self.gnssrData["mss"][loc_idxs].astype('float32')
         self.outdata[('windSpeedStandardDeviation', 'MetaData')] = self.gnssrData["wind_speed_error"][loc_idxs].astype('float32')
+        self.varAttrs[('windSpeedStandardDeviation', 'MetaData')]['_FillValue'] = np.nan  # avoid outputting Nan
         self.outdata[('satelliteReceiverId', 'MetaData')] = self.gnssrData["rx_id"][loc_idxs].astype('int32')
         self.outdata[('satelliteTransmitterId', 'MetaData')] = self.gnssrData["tx_prn"][loc_idxs].astype('int32')
         self.outdata[('gnssSpaceVehicleNumber', 'MetaData')] = self.gnssrData["tx_svn"][loc_idxs].astype('int32')
@@ -286,6 +289,10 @@ def main():
         scf.time_idxs = np.array([i for i, o in enumerate(all_datetimes)
                                   if ((o-current_da_time).total_seconds() / 3600. <   da_window_shift and
                                       (o-current_da_time).total_seconds() / 3600. >= -da_window_shift)])
+        #all_indices = np.arange(len(all_datetimes))
+        #not_in_window = np.setdiff1d(all_indices, scf.time_idxs)
+        #print(f"Indices NOT in DA window: {not_in_window}")
+        #print(f"Observation times NOT in DA window: {[all_datetimes[i] for i in not_in_window]}")
         print(f"time_idx = {scf.time_idxs.shape}")
         if len(scf.time_idxs) == 0:
             print(f'No data matches requested time interval')
@@ -298,8 +305,11 @@ def main():
             scf.loc_idxs = scf.time_idxs[idx_qc_window]
         else:
             scf.loc_idxs = scf.time_idxs
-        print(f'QC flags are {qflg}, the total number of observations in this DA window are {len(scf.time_idxs)} '
-              f'with the number passing QC = {len(scf.loc_idxs)}')
+        print(f'QC flags are {qflg}')
+        print(f'Total number of observations read in = {len(all_datetimes)}')
+        print(f'Number of observations outside the DA window = {len(all_datetimes) - len(scf.time_idxs)}')
+        print(f'Total number of observations in this DA window are {len(scf.time_idxs)} ')
+        print(f'with the number passing QC = {len(scf.loc_idxs)}')
         
         scf.setup_ioda_vars()
         attr_data["date_time_string"] = current_da_time.strftime('%Y-%m-%dT%H:%M:%SZ')
