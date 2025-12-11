@@ -195,7 +195,7 @@ class GnssrL2(object):
             self.gnssrData["constellation"][ns:ns+nlocs_local] = nc_attrs["constellation"]
             tx_id_str = re.findall(r'\D+', nc_attrs["tx_id"])[0]  #  Convert to string e.g. G9 -> G
             self.gnssrData["tx_id"][ns:ns+nlocs_local] = tx_id_str
-            # fill constellation ID
+            # fill constellation ID / WMO TABLE_CODE_FLAG/002020
             match tx_id_str:
                 case "G":
                     # GPS / 401
@@ -205,7 +205,13 @@ class GnssrL2(object):
                     self.gnssrData["gnss_constellation_id"][ns:ns+nlocs_local] = np.full(nlocs_local, 402)
                 case "E":
                     # GALILEO / 403
-                    self.gnssrData["gnss_constellation_id"][ns:ns+nlocs_local] = np.full(nlocs_local, 403)               
+                    self.gnssrData["gnss_constellation_id"][ns:ns+nlocs_local] = np.full(nlocs_local, 403)
+                case "C":
+                    # BDS Beidou / 404
+                    self.gnssrData["gnss_constellation_id"][ns:ns+nlocs_local] = np.full(nlocs_local, 404)  
+                case "J":
+                    # QZSS / 405
+                    self.gnssrData["gnss_constellation_id"][ns:ns+nlocs_local] = np.full(nlocs_local, 405)             
             
             dataset_input.close()
             ns += nlocs_local
