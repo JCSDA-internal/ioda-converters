@@ -70,7 +70,7 @@ class DataIdInfo:
         self.central_wavelength = float(wavelength_match.group(1)) if wavelength_match else None
 
 
-def get_seviri_scene(filenames, resample=True, ref_dataset='IR_108'):
+def get_seviri_scene(args, resample=True, ref_dataset='IR_108'):
 
     """
     decode an EUMETSAT MeteoSat SEVIRI native L1B file using satpy
@@ -87,6 +87,8 @@ def get_seviri_scene(filenames, resample=True, ref_dataset='IR_108'):
     # filenames = ['MSG4-SEVI-MSG15-0100-NA-20220622191243.890000000Z-NA.nat']
 
     # what datasets are available
+    filenames = args.input
+    resolution = args.resolution
     header = seviri_l1b_native.read_header(filenames[0])
     available_datasets = seviri_l1b_native.get_available_channels(header)
     aload = [k for k, v in available_datasets.items() if v]
@@ -118,13 +120,10 @@ def get_seviri_scene(filenames, resample=True, ref_dataset='IR_108'):
     if not resample:
         return scn, ancillary_data
 
-    # Create a target area with the default 0.25 degree resolution
-    target_area = create_latlon_area(resolution_deg=0.25)
+    # Create a target area with the default degree resolution
+    target_area = create_latlon_area(resolution_deg=resolution)
     # print(f"target area shape: {target_area.shape}")
 
-    # Create a target area with a higher 0.05 degree resolution
-    # target_area = create_latlon_area(resolution_deg=0.05)
-    # print(f"target area shape: {target_area.shape}")
 
     resampled_satellite_zenith = resample_ancillary_data(scn, satellite_zenith_angle, target_area)
     resampled_dateTime = resample_ancillary_data(scn, locationDateTime, target_area, missing_value=np.datetime64('NaT'))
@@ -158,7 +157,7 @@ def get_seviri_scene(filenames, resample=True, ref_dataset='IR_108'):
     return scn_latlon, ancillary_data
 
 
-def create_latlon_area(resolution_deg=0.1, area_extent=(-81, -81, 81, 81)):
+def create_latlon_area(resolution_deg=0.25, area_extent=(-81, -81, 81, 81)):
     """
     Creates a lat/lon AreaDefinition
 
@@ -461,9 +460,6 @@ def get_WMO_sat_ID(satellite_name):
         WMO_sat_ID
     """
 
-    # Create a tuple of the satellite names
-    meteosat_series = ('Meteosat-8', 'Meteosat-9', 'Meteosat-10', 'Meteosat-11')
-
     print(f"{satellite_name=}")
     if 'Meteosat-8' in satellite_name:
         WMO_sat_ID = Meteosat08_WMO_sat_ID
@@ -477,6 +473,30 @@ def get_WMO_sat_ID(satellite_name):
         # Code for other satellite IDs
         WMO_sat_ID = -1
     return WMO_sat_ID
+
+
+def get_platform_short_name(WMO_sat_ID):
+    """
+    use the WMO BUFR satellite identifier to create a platform shortname
+    Args:
+        WMO BUFR satellite Identifier - integer input
+
+    Returns:
+        platform
+    """
+
+    if WMO_sat_ID == Meteosat08_WMO_sat_ID:
+        platform = 'm08'
+    elif WMO_sat_ID == Meteosat09_WMO_sat_ID:
+        platform = 'm09'
+    elif WMO_sat_ID == Meteosat10_WMO_sat_ID:
+        platform = 'm10'
+    elif WMO_sat_ID == Meteosat11_WMO_sat_ID:
+        platform = 'm11'
+    else:
+        platform = 'meteosat'
+
+    return platform
 
 
 def get_metadata(scn, dataset='IR_108'):
@@ -654,7 +674,7 @@ def main():
     optional.add_argument(
         '--resolution',
         help='output resolution in degrees on fixed lat lon grid',
-        type=str, required=False, default=0.1)
+        type=str, required=False, default=0.25)
     optional.add_argument(
         '-d', '--date',
         metavar="YYYYMMDDTHHMMSSZ",
@@ -664,15 +684,15 @@ def main():
     args = parser.parse_args()
 
     GlobalAttrs['converter'] = os.path.basename(__file__)
-    obs_scene, ancillary_data = get_seviri_scene(args.input)
+    obs_scene, ancillary_data = get_seviri_scene(args)
 
     VarDims, VarAttrs, DimDict = get_obs_properties(obs_scene)
 
     obs = variables_to_obs(obs_scene, ancillary_data, VarDims)
     del obs_scene
     del ancillary_data
-#   for k in obs.keys():
-#       print(f"{k=}  {np.shape(obs[k])}  {np.min(obs[k])}  {np.max(obs[k])}  {np.mean(obs[k])}")
+    platform = get_platform_short_name(obs[('satelliteIdentifier', metaDataName)][0])
+    GlobalAttrs["platformCommonName"] = " ".join([GlobalAttrs["platformCommonName"], platform])
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
