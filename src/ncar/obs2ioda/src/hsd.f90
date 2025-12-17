@@ -969,6 +969,8 @@ subroutine calc_solar_zenith_angle(xlat, xlon, gmt, minute, julian, solzen)
  real(r_single) :: slon   ! longitude of the sun
  real(r_single) :: declin ! declination of the sun
  real(r_single) :: hrang, da, eot, xt, tloctm, rlat
+ real(r_single) :: asin_arg, coszen_arg
+
  ! Check for valid hour (gmt), minute, and Julian day
  if (gmt < 0 .or. gmt > 23) then
      solzen = ieee_value(solzen, ieee_quiet_nan)
@@ -992,7 +994,11 @@ subroutine calc_solar_zenith_angle(xlat, xlon, gmt, minute, julian, solzen)
  if ( julian >= 80 ) slon = (julian - 80 ) * deg_per_day
  if ( julian <  80 ) slon = (julian + 285) * deg_per_day
 
- declin = asin(sin(obliq*deg2rad)*sin(slon*deg2rad)) ! in radian
+ ! compute ASIN argument and clamp to [-1,1] to prevent NaN
+ asin_arg = sin(obliq*deg2rad) * sin(slon*deg2rad)
+ if (asin_arg > 1.0) asin_arg = 1.0
+ if (asin_arg < -1.0) asin_arg = -1.0
+ declin = asin(asin_arg) ! in radian
 
  da = 6.2831853071795862*(julian-1)/365.
  eot = (0.000075+0.001868*cos(da)-0.032077*sin(da) &
@@ -1003,8 +1009,15 @@ subroutine calc_solar_zenith_angle(xlat, xlon, gmt, minute, julian, solzen)
  tloctm = xt + xlon/15.0
  hrang = 15.0*(tloctm-12.0) * deg2rad
  rlat = xlat * deg2rad
- solzen = acos( sin(rlat)*sin(declin) + &
-                cos(rlat)*cos(declin)*cos(hrang) )
+
+ coszen_arg = sin(rlat)*sin(declin) + &
+              cos(rlat)*cos(declin)*cos(hrang)
+
+ ! clamp acos argument to [-1,1] to avoid NaN from tiny floating-point overshoot
+ if (coszen_arg > 1.0) coszen_arg = 1.0
+ if (coszen_arg < -1.0) coszen_arg = -1.0
+
+ solzen = acos(coszen_arg)
  solzen = solzen * rad2deg
 
  return
