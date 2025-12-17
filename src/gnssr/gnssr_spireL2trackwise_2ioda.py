@@ -81,6 +81,8 @@ var_dims = {
     'windSpeed': ['Location'],
 }
 
+def convert_longitude_array(longitudes):
+    return (np.mod(longitudes + 180, 360)) - 180
 
 class GnssrL2(object):
 
@@ -105,7 +107,7 @@ class GnssrL2(object):
         preqc[np.where(qflgs == 0)] = 11
         #preqc[np.where(self.gnssrData['wind_speed'] == -9999)] = 11
         self.gnssrData['preqc'] = preqc.astype('int32')
-        
+
     def read_gnssr_files(self):
         # Walk through the directory and read in all the GNSS-R files
         # Also findout how many total nlocs we will hold in the dictionary
@@ -177,7 +179,8 @@ class GnssrL2(object):
             self.gnssrData["sample_flags"][ns:ns+nlocs_local] = np.array(dataset_input['wind_confidence'][:])
             self.gnssrData["wind_speed"][ns:ns+nlocs_local] = np.array(dataset_input['wind'][:])
             self.gnssrData["wind_speed_error"][ns:ns+nlocs_local] = np.array(dataset_input['wind_std'][:])
-            self.gnssrData["lons"][ns:ns+nlocs_local] = np.array(dataset_input['sp_lon'][:])
+            # Need to convert longitudes from [0-360] to [-180,180]
+            self.gnssrData["lons"][ns:ns+nlocs_local] = convert_longitude_array(np.array(dataset_input['sp_lon'][:]))
             self.gnssrData["lats"][ns:ns+nlocs_local] = np.array(dataset_input['sp_lat'][:])
             self.gnssrData["incidence_angle"][ns:ns+nlocs_local] = np.array(dataset_input['sp_incidence_angle'][:])
             self.gnssrData["quality_flags"][ns:ns+nlocs_local] = np.array(dataset_input['quality_flags'][:])
