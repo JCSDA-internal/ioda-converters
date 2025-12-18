@@ -22,10 +22,15 @@ from satpy.readers import seviri_l1b_native
 
 import pyiodaconv.ioda_conv_engines as iconv
 from pyiodaconv.orddicts import DefaultOrderedDict
-from pyiodaconv.def_jedi_utils import set_metadata_attributes, set_obspace_attributes
-from pyiodaconv.def_jedi_utils import compute_scan_angle
-from pyiodaconv.def_jedi_utils import ioda_int_type, ioda_float_type, epoch
-from pyiodaconv.def_jedi_utils import concat_obs_dict
+from pyiodaconv.def_jedi_utils import (
+    compute_scan_angle,
+    concat_obs_dict,
+    epoch,
+    ioda_float_type,
+    ioda_int_type,
+    set_metadata_attributes,
+    set_obspace_attributes,
+)
 
 # globals
 Meteosat08_WMO_sat_ID = 55
@@ -80,10 +85,10 @@ def get_seviri_scene(args, resample=True, ref_dataset='IR_108'):
 
     Returns:
        obs_scene - the resampled obs_scene to a common lat/lon projection
-       obs_dateTime - the datetime for each new pixel in lat/lon projection
+       ancillary_data - scene lat, lon, dateTime, sensorZenigth and scanPosition
     """
 
-    # filename(s) to be read
+    # filename(s) to be read example below
     # filenames = ['MSG4-SEVI-MSG15-0100-NA-20220622191243.890000000Z-NA.nat']
 
     # what datasets are available
@@ -101,7 +106,7 @@ def get_seviri_scene(args, resample=True, ref_dataset='IR_108'):
     # scn.calibrate()
 
     # ancillary information
-    # latitude, longitude and satellite zenith
+    # latitude, longitude and dateTime, satelliteZenith, sensorScan
     lat, lon, satellite_zenith_angle = get_zenith_angle(scn)
     # get a time for each pixel on new target area
     locationDateTime = get_pixel_time(scn)
@@ -124,7 +129,6 @@ def get_seviri_scene(args, resample=True, ref_dataset='IR_108'):
     target_area = create_latlon_area(resolution_deg=resolution)
     # print(f"target area shape: {target_area.shape}")
 
-
     resampled_satellite_zenith = resample_ancillary_data(scn, satellite_zenith_angle, target_area)
     resampled_dateTime = resample_ancillary_data(scn, locationDateTime, target_area, missing_value=np.datetime64('NaT'))
 
@@ -138,7 +142,7 @@ def get_seviri_scene(args, resample=True, ref_dataset='IR_108'):
     longitude = scn_latlon[ref_dataset].coords['x']
     lon_2d, lat_2d = np.meshgrid(longitude, latitude)
 
-#   # Access the new latitude and longitude coordinates
+#   # Access the new latitude and longitude coordinates (example)
 #   latitude = scn_latlon['IR_108'].coords['y']
 #   longitude = scn_latlon['IR_108'].coords['x']
 
