@@ -396,7 +396,7 @@ def get_obs_properties(obs_scene, dataset='IR_108', albedo=False):
         obs_scene - Scene structure from satpy
 
     Returns:
-        VarDims, DimDict
+        VarDims, VarAttrs, DimDict
     """
 
     nlocs = obs_scene[dataset].size
