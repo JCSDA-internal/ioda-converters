@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# converter for tcvitals format (tropical storm central pressure) data
+
 import numpy as np
 import netCDF4 as nc
 import argparse
