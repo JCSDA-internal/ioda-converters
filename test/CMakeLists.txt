@@ -112,6 +112,7 @@ list( APPEND test_input
   testinput/balloonsonde_sample_20241001T00Z_PT15M.json
   testinput/tec_groundBased_TENET_20201001T00Z.tec
   testinput/COWVR_TSDR.020421.20240430T215845.20240430T230345.V1001.sample.h5
+  testinput/gfs.231010.t00z.syndata.tcvitals.txt
 )
 
 list( APPEND test_output
@@ -215,6 +216,7 @@ list( APPEND test_output
   testoutput/obs.20241001T000000Z_PT15M_balloonsonde.nc4
   testoutput/obs.20201001T000000Z_PT1M_tec_groundbased.nc4
   testoutput/obs.20240430T220600Z_PT2M_cowvr_iss.nc4
+  testoutput/tcp_obs_2023101000.nc4
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -873,15 +875,15 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pace_radiance_L1B
                           -d 2019032112"
                           pace_radiance_L1B.nc ${IODA_CONV_COMP_TOL})
 
-ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_water_leaving_radiance_L2                                               
-                  TYPE    SCRIPT                                                                               
-                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"                                              
-                  COMMAND bash                                                                                 
-                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh                                             
-                          netcdf                                                                               
-                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/oc_l2_radiance2ioda.py                 
-                          -i testinput/modis_aqua_Rrs_OC_L2.nc                                                    
-                          -o testrun/modis_water_leaving_radiance_L2.nc                                                      
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_water_leaving_radiance_L2
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/oc_l2_radiance2ioda.py
+                          -i testinput/modis_aqua_Rrs_OC_L2.nc
+                          -o testrun/modis_water_leaving_radiance_L2.nc
                           -d 2021080112"
                           modis_water_leaving_radiance_L2.nc ${IODA_CONV_COMP_TOL})
 
@@ -980,6 +982,21 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_sondetac
                           2021081612_sonde_small.nc ${IODA_CONV_COMP_TOL})
 
 #===============================================================================
+# Conventional data, tropical storm central pressure
+#===============================================================================
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tcvitals
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/sonde_tac2ioda.py
+                          -i testinput/gfs.231010.t00z.syndata.tcvitals.txt
+                          -o testrun/tcp_obs_2023101000.nc4"
+                          tcp_obs_2023101000.nc4 ${IODA_CONV_COMP_TOL})
+
+#===============================================================================
 # MRMS (multi-radar, multi-sensor) radar reflectivity CONUS converter
 #===============================================================================
 
@@ -1021,7 +1038,7 @@ ecbuild_add_test( TARGET  test_iodaconv_tropics
                   -o testrun/20220216T00Z_PT3H_tms_tropics-01.nc4
                   -d 2022021600"
                   20220216T00Z_PT3H_tms_tropics-01.nc4 ${IODA_CONV_COMP_TOL})
-                  
+
 ecbuild_add_test( TARGET  test_iodaconv_amsr2_gcom-w1
                   TYPE    SCRIPT
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
@@ -1033,7 +1050,7 @@ ecbuild_add_test( TARGET  test_iodaconv_amsr2_gcom-w1
                   -o testrun/20220216T00Z_PT1H_amsr2_sample.nc4
                   -d 2022021600"
                   20220216T00Z_PT1H_amsr2_sample.nc4 ${IODA_CONV_COMP_TOL})
-                  
+
 ecbuild_add_test( TARGET  test_iodaconv_gmi_gpm
                   TYPE    SCRIPT
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
@@ -1479,7 +1496,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_aod
                           -i testinput/modis_aod.hdf
                           --platform Terra
 			  --date_range 2021080100 2021080101
-                          -o testrun/modis_aod.nc"			
+                          -o testrun/modis_aod.nc"
                           modis_aod.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_aeronet_aod
@@ -2307,8 +2324,8 @@ endif()
                     COMMAND bash
                     ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                             netcdf
-                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/cowvr_hdf5_2ioda.py 
-                            -i testinput/COWVR_TSDR.020421.20240430T215845.20240430T230345.V1001.sample.h5 
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/cowvr_hdf5_2ioda.py
+                            -i testinput/COWVR_TSDR.020421.20240430T215845.20240430T230345.V1001.sample.h5
                             -o testrun/obs.20240430T220600Z_PT2M_cowvr_iss.nc4
                             -d 2024050100"
                             obs.20240430T220600Z_PT2M_cowvr_iss.nc4 ${IODA_CONV_COMP_TOL})
