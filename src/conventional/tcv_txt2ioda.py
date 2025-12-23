@@ -52,7 +52,7 @@ def create_output(data, output_name):
     obssubtype = np.full(nobs, 0)
     preqc = np.full(nobs, 2)
     preuseflg = np.full(nobs, 1)
-    tempK = np.full(nobs,float_missing_value)
+    tempK = np.full(nobs, float_missing_value)
     psminPa = data.pcen*100.
     oberrPa = oberr*100.
     epoch = datetime.fromisoformat("1970-01-01T00:00:00Z")
