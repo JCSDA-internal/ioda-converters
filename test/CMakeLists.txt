@@ -991,7 +991,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tcvitals
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
-                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/sonde_tac2ioda.py
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tcv_txt2ioda.py
                           -i testinput/gfs.231010.t00z.syndata.tcvitals.txt
                           -o testrun/tcp_obs_2023101000.nc4"
                           tcp_obs_2023101000.nc4 ${IODA_CONV_COMP_TOL})
