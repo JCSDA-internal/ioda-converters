@@ -3,7 +3,7 @@ list(APPEND programs
   gnss_gridded_ground_tec_madrigal2ioda.py
   gnss_los_ground_tec_json2ioda.py
   gnss_los_ground_tec_madrigal2ioda.py
-  gnss_tec_bufr2ioda.py
+  gnss_tec_spacebased_cdaac2ioda.py
   gnss_tec_ground_based.py
   ionosonde_ascii2ioda.py
 )
