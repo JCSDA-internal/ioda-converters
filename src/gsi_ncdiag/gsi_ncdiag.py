@@ -53,6 +53,9 @@ conv_platforms = {
     ],
     "conv_sst": [
         'sst',
+    ],
+    "conv_tcp": [
+        'tcp',
     ]
 }
 
@@ -81,6 +84,7 @@ conv_bufrtypes = {
             722, 723, 740, 741, 742, 743, 744, 745, \
             750, 751, 752, 753, 754, 755, 786, 803, 804, 820, 821, 825],
     "sst": [181, 182, 183, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202],
+    "tcp": [112],
     # 132 are dropsondes
 }
 
@@ -195,6 +199,7 @@ conv_varnames = {
     "bend": ["bendingAngle"],
     "refract": ["atmosphericRefractivity"],
     "sst": ["seaSurfaceTemperature"],
+    "tcp": ["stationPressure"],
 }
 
 conv_gsivarnames = {
@@ -206,6 +211,7 @@ conv_gsivarnames = {
     "bend": ["Observation"],
     "refract": ["Observation"],
     "sst": ["Observation"],
+    "tcp": ["Observation"],
 }
 
 gsi_add_vars_allsky = {
@@ -782,6 +788,9 @@ class Conv(BaseGSI):
                 if (v == 'sst'):
                     outname = OutDir + '/' + v + '_geoval_' + \
                         self.validtime.strftime("%Y%m%d%H") + '.nc4'
+                if (v == 'tcp'):
+                    outname = OutDir + '/' + v + '_geoval_' + \
+                        self.validtime.strftime("%Y%m%d%H") + '.nc4'
                 if (p == 'windprof' or p == 'satwind' or p == 'scatwind' or p == 'vadwind' or p == 'pibal'):
                     outname = OutDir + '/' + p + '_geoval_' + \
                         self.validtime.strftime("%Y%m%d%H") + '.nc4'
@@ -903,6 +912,9 @@ class Conv(BaseGSI):
                 outname = OutDir + '/' + p + '_' + v + '_obs_' + \
                     self.validtime.strftime("%Y%m%d%H") + '.nc4'
                 if (v == 'sst'):
+                    outname = OutDir + '/' + v + '_obs_' + \
+                        self.validtime.strftime("%Y%m%d%H") + '.nc4'
+                if (v == 'tcp'):
                     outname = OutDir + '/' + v + '_obs_' + \
                         self.validtime.strftime("%Y%m%d%H") + '.nc4'
                 if (p == 'windprof' or p == 'satwind' or p == 'scatwind' or p == 'vadwind' or p == 'pibal'):
