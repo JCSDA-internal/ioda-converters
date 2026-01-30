@@ -1004,6 +1004,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mrms
                   TYPE    SCRIPT
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND bash
+				  LABELS tier2
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/mrms_grib2ioda.py
