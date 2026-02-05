@@ -1,6 +1,7 @@
 list(APPEND programs
   gnssrL2_2ioda.py
   gnssr_spireL2trackwise_2ioda.py
+  gnssr_noccygnssL2merged_2ioda.py
 )
 
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )

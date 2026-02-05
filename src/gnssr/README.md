@@ -14,3 +14,8 @@ The code is distribited under license: Apache Licence Version 2.0
 This is a converter for native L2 wind speed data files in the Spire trackwise L2 format.
 
 Adapted by the Met Office, UK, from the original converter developed by Spire Global UK Ltd.
+
+# gnssr_noccygnssL2merged_2ioda.py
+This is a converter for native L2 CYGNSS wind speed data files in the NOC-Spire merged L2 format.
+
+Adapted by the Met Office, UK, from the original converter developed by Spire Global UK Ltd.
