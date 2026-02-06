@@ -133,10 +133,12 @@ def get_meta_data(ds, indices, file_type):
     meta_data['latitude'] = lats3d.ravel()
     meta_data['longitude'] = lons3d.ravel()
     meta_data['dateTime'] = times3d.ravel()
+    meta_data['sequenceNumber'] = np.arange(len(times3d.ravel()))
 
     meta_data['latitude'] = np.asarray(meta_data['latitude'], dtype=ioda_float_type)
     meta_data['longitude'] = np.asarray(meta_data['longitude'], dtype=ioda_float_type)
     meta_data['dateTime'] = np.asarray(meta_data['dateTime'], dtype=np.int64)
+    meta_data['sequenceNumber'] = np.asarray(meta_data['sequenceNumber'], dtype=np.int64)
 
     return meta_data
 

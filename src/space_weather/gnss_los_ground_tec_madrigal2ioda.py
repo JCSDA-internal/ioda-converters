@@ -129,6 +129,7 @@ def get_meta_data(ds, tindex):
     glonass = np.where(gnss_type == b'GLONASS ')
     meta_data['satelliteID'][gps] = 401
     meta_data['satelliteID'][glonass] = 401
+    meta_data['sequenceNumber'] = np.arange(len(gnss_type))
 
     meta_data['stationLatitude'] = np.asarray(meta_data['stationLatitude'], dtype=ioda_float_type)
     meta_data['stationLongitude'] = np.asarray(meta_data['stationLongitude'], dtype=ioda_float_type)
@@ -138,6 +139,7 @@ def get_meta_data(ds, tindex):
     meta_data['elevationAngle'] = np.asarray(meta_data['elevationAngle'], dtype=ioda_float_type)
     meta_data['azimuthAngle'] = np.asarray(meta_data['azimuthAngle'], dtype=ioda_float_type)
     meta_data['dateTime'] = np.asarray(meta_data['dateTime'], dtype=np.int64)
+    meta_data['sequenceNumber'] = np.asarray(meta_data['sequenceNumber'], dtype=np.int64)
 
     return meta_data
 
