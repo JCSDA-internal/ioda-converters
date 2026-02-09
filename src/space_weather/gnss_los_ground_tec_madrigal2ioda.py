@@ -37,6 +37,7 @@ locationKeyList = [
 def main(args):
     files = args.input
     window = args.window * 60  # window time in seconds
+    seqStart = args.sequence
     print(f'{len(files)} files to read')
     obs_data = {}
     for ifile in files:
@@ -54,7 +55,7 @@ def main(args):
             wend = ctime + int(window / 2)
 
             tindex = (times > wbegin) & (times <= wend)
-            obs_data = get_obs_data(ds, tindex)
+            obs_data = get_obs_data(ds, tindex, seqStart)
 
             if not obs_data:
                 print(f"INFO: non-nominal file skipping")
@@ -62,6 +63,7 @@ def main(args):
 
             if obs_data[('dateTime', 'MetaData')][-1] < wend and ifile != files[-1]:
                 part_one = obs_data.copy()
+                seqStart = obs_data['squenceNumber'][-1] + 1
                 continue
             if ifile != files[0] and part_one:
                 for k in part_one.keys():
@@ -109,7 +111,7 @@ def main(args):
             ctime = ctime + window
 
 
-def get_meta_data(ds, tindex):
+def get_meta_data(ds, tindex, seqStart):
 
     # these are the MetaData we are interested in
     meta_data = {}
@@ -129,7 +131,7 @@ def get_meta_data(ds, tindex):
     glonass = np.where(gnss_type == b'GLONASS ')
     meta_data['satelliteID'][gps] = 401
     meta_data['satelliteID'][glonass] = 401
-    meta_data['sequenceNumber'] = np.arange(len(gnss_type))
+    meta_data['sequenceNumber'] = np.arange(seqStart, len(gnss_type) + seqStart, 1)
 
     meta_data['stationLatitude'] = np.asarray(meta_data['stationLatitude'], dtype=ioda_float_type)
     meta_data['stationLongitude'] = np.asarray(meta_data['stationLongitude'], dtype=ioda_float_type)
@@ -144,11 +146,11 @@ def get_meta_data(ds, tindex):
     return meta_data
 
 
-def get_obs_data(ds, tindex):
+def get_obs_data(ds, tindex, seqStart):
     # allocate space for output depending on which variables are to be saved
     obs_data = {}
 
-    meta_data = get_meta_data(ds, tindex)
+    meta_data = get_meta_data(ds, tindex, seqStart)
     for k in meta_data.keys():
         obs_data[(k, 'MetaData')] = meta_data[k]
 
@@ -199,6 +201,11 @@ if __name__ == "__main__":
         '-w', '--window',
         help="Number of minutes to output to file. Default 60 minutes",
         type=int, default=60)
+    optional.add_argument(
+        '-s', '--sequence',
+        help="Value to use as first sequence number. SequenceNumber variable will count up by one from this number."
+             "Default 1"
+        type=int, default=1)
 
     args = parser.parse_args()
     main(args)
