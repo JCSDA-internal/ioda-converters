@@ -204,7 +204,7 @@ if __name__ == "__main__":
         help="Number of minutes to output to file. Will be rounded down to multiples of 5. Default 60 minutes",
         type=int, default=60)
     optional.add_argument(
-        '-s', '--sequence',
+        '--sequence',
         help="Value to use as first sequence number. SequenceNumber variable will count up by one from this number."
              "Default 1"
         type=int, default=1)
