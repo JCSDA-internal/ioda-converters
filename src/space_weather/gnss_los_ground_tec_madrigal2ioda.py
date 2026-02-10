@@ -52,10 +52,6 @@ def main(args):
         while ctime <= times[-1] + int(window / 2):
             wbegin = ctime
             wend = ctime + window
-            beg = datetime.fromtimestamp(wbegin)
-            end = datetime.fromtimestamp(wend)
-            dtg = datetime.fromtimestamp(ctime+ int(window / 2))
-            print(beg.strftime("%Y-%m-%dT%H:%M:%SZ"), end.strftime("%Y-%m-%dT%H:%M:%SZ"), dtg.strftime("%Y-%m-%dT%H:%M:%SZ"))
 
             tindex = (times > wbegin) & (times <= wend)
             obs_data = get_obs_data(ds, tindex)
