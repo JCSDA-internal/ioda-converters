@@ -36,7 +36,7 @@ locationKeyList = [
 
 def main(args):
     files = args.input
-    window = args.time-window * 60  # window time in seconds
+    window = args.time_window * 60  # window time in seconds
     seqStart = args.sequence
     print(f'{len(files)} files to read')
     obs_data = {}
