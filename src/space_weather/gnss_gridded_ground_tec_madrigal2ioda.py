@@ -77,13 +77,9 @@ def main(args):
                 dtg = datetime.utcfromtimestamp(ds['timestamps'][og_sindex + int(inc/2)])
             else:
                 dtg = datetime.utcfromtimestamp(ds['Data']['Array Layout']['timestamps'][og_sindex + int(inc/2)])
-                times = obs_data[('dateTime', 'MetaData')]
 
             GlobalAttrs['datetimeReference'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
             date_time = np.array(int(dtg.strftime("%Y%m%d%H%M")), dtype=str)
-            beg = datetime.fromtimestamp(times[0])
-            end = datetime.fromtimestamp(times[-1])
-            print(beg.strftime("%Y-%m-%dT%H:%M:%SZ"), end.strftime("%Y-%m-%dT%H:%M:%SZ"), dtg.strftime("%Y-%m-%dT%H:%M:%SZ"))
             GlobalAttrs['date_time'] = date_time.item()
 
             GlobalAttrs['converter'] = os.path.basename(__file__)
