@@ -56,7 +56,6 @@ def main(args):
         nout = 0
         for sindex in range(0, times, int(inc/2)):
             obs_data = get_obs_data(ds, (sindex, sindex + int(inc/2)), file_type)
-            nout = nout + 1
 
             if not obs_data:
                 print(f"INFO: non-nominal file skipping")
@@ -64,20 +63,27 @@ def main(args):
 
             if nout % 2 == 0:
                 part_one = obs_data.copy()
+                og_sindex = sindex
+                nout = nout + 1
                 continue
             elif nout % 2 != 0 and part_one:
                 for k in part_one.keys():
                     obs_data[k] = np.append(part_one[k], obs_data[k])
+                nout = nout + 1
             # prepare global attributes we want to output in the file,
             # in addition to the ones already loaded in from the input file
             GlobalAttrs = {}
             if file_type == 'nc':
-                dtg = datetime.utcfromtimestamp(ds['timestamps'][sindex + int(inc/2)])
+                dtg = datetime.utcfromtimestamp(ds['timestamps'][og_sindex + int(inc/2)])
             else:
-                dtg = datetime.utcfromtimestamp(ds['Data']['Array Layout']['timestamps'][sindex + int(inc/2)])
+                dtg = datetime.utcfromtimestamp(ds['Data']['Array Layout']['timestamps'][og_sindex + int(inc/2)])
+                times = obs_data[('dateTime', 'MetaData')]
 
             GlobalAttrs['datetimeReference'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
             date_time = np.array(int(dtg.strftime("%Y%m%d%H%M")), dtype=str)
+            beg = datetime.fromtimestamp(times[0])
+            end = datetime.fromtimestamp(times[-1])
+            print(beg.strftime("%Y-%m-%dT%H:%M:%SZ"), end.strftime("%Y-%m-%dT%H:%M:%SZ"), dtg.strftime("%Y-%m-%dT%H:%M:%SZ"))
             GlobalAttrs['date_time'] = date_time.item()
 
             GlobalAttrs['converter'] = os.path.basename(__file__)
