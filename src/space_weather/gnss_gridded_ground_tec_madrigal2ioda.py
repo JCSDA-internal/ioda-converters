@@ -35,8 +35,8 @@ locationKeyList = [
 
 def main(args):
     files = args.input
-    window = args.window * 60  # window time in seconds
-    inc = int(args.window/5)
+    window = args.time_window * 60  # window time in seconds
+    inc = int(args.time_window/5)
     seqStart = args.sequence
     print(f'{len(files)} files to read')
     obs_data = {}
@@ -200,13 +200,14 @@ if __name__ == "__main__":
         type=str, required=True)
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
-        '-w', '--window',
+        '--time-window',
         help="Number of minutes to output to file. Will be rounded down to multiples of 5. Default 60 minutes",
         type=int, default=60)
     optional.add_argument(
         '--sequence',
-        help="Value to use as first sequence number. SequenceNumber variable will count up by one from this number."
-             "Default 1"
+        help="Value to use as first sequence number."
+             "SequenceNumber variable will count up by one from this number."
+             "Default 1",
         type=int, default=1)
 
     args = parser.parse_args()
