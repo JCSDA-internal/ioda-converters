@@ -63,7 +63,7 @@ def main(args):
 
             if obs_data[('dateTime', 'MetaData')][-1] < wend and ifile != files[-1]:
                 part_one = obs_data.copy()
-                seqStart = obs_data['squenceNumber'][-1] + 1
+                seqStart = obs_data['sequenceNumber'][-1] + 1
                 continue
             if ifile != files[0] and part_one:
                 for k in part_one.keys():
