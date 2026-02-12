@@ -35,8 +35,9 @@ locationKeyList = [
 
 def main(args):
     files = args.input
-    window = args.window * 60  # window time in seconds
-    inc = int(args.window/5)
+    window = args.time_window * 60  # window time in seconds
+    inc = int(args.time_window/5)
+    seqStart = args.sequence
     print(f'{len(files)} files to read')
     obs_data = {}
     part_one = None
@@ -55,7 +56,7 @@ def main(args):
 
         nout = 0
         for sindex in range(0, times, int(inc/2)):
-            obs_data = get_obs_data(ds, (sindex, sindex + int(inc/2)), file_type)
+            obs_data = get_obs_data(ds, (sindex, sindex + int(inc/2)), file_type, seqStart)
             nout = nout + 1
 
             if not obs_data:
@@ -133,19 +134,21 @@ def get_meta_data(ds, indices, file_type):
     meta_data['latitude'] = lats3d.ravel()
     meta_data['longitude'] = lons3d.ravel()
     meta_data['dateTime'] = times3d.ravel()
+    meta_data['sequenceNumber'] = np.arange(seqStart, len(times3d.ravel()) + seqStart, 1)
 
     meta_data['latitude'] = np.asarray(meta_data['latitude'], dtype=ioda_float_type)
     meta_data['longitude'] = np.asarray(meta_data['longitude'], dtype=ioda_float_type)
     meta_data['dateTime'] = np.asarray(meta_data['dateTime'], dtype=np.int64)
+    meta_data['sequenceNumber'] = np.asarray(meta_data['sequenceNumber'], dtype=np.int64)
 
     return meta_data
 
 
-def get_obs_data(ds, indices, file_type):
+def get_obs_data(ds, indices, file_type, seqStart):
     # allocate space for output depending on which variables are to be saved
     obs_data = {}
 
-    meta_data = get_meta_data(ds, indices, file_type)
+    meta_data = get_meta_data(ds, indices, file_type, seqStart)
     for k in meta_data.keys():
         obs_data[(k, 'MetaData')] = meta_data[k]
 
@@ -197,9 +200,15 @@ if __name__ == "__main__":
         type=str, required=True)
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
-        '-w', '--window',
+        '--time-window',
         help="Number of minutes to output to file. Will be rounded down to multiples of 5. Default 60 minutes",
         type=int, default=60)
+    optional.add_argument(
+        '--sequence',
+        help="Value to use as first sequence number."
+             "SequenceNumber variable will count up by one from this number."
+             "Default 1",
+        type=int, default=1)
 
     args = parser.parse_args()
     main(args)
