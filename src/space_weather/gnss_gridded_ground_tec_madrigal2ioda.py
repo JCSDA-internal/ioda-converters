@@ -59,7 +59,6 @@ def main(args):
             obs_data = get_obs_data(ds, (sindex, sindex + int(inc/2)), file_type, seqStart)
             nout = nout + 1
 
-
             if not obs_data:
                 print(f"INFO: non-nominal file skipping")
                 continue
