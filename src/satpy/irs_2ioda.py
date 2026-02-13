@@ -65,36 +65,34 @@ GlobalAttrs = {
 
 def main(args):
 
-    # input_files = get_files_in_window(args)
     input_files = args.input
     obs_data = False
     baseEV = args.baseEV
-    print('num files', len(input_files))
     for iii, fff in enumerate(input_files):
         print(iii, fff)
     func_with_args = partial(get_data_from_files, baseEV=baseEV)
     with ProcessPoolExecutor(max_workers=10) as executor:
         for file_obs_data in executor.map(func_with_args, input_files):
-            my_nchans = file_obs_data[0]
-            print(my_nchans)
             if not file_obs_data:
                 print("INFO: non-nominal file skipping")
                 continue
             if obs_data:
-                concat_obs_dict(obs_data, file_obs_data[2])
+                concat_obs_dict(obs_data, file_obs_data[1])
             else:
-                obs_data = file_obs_data[2]
+                obs_data = file_obs_data[1]
+                wavenumber = file_obs_data[0]
 
     # serial option
-    # for afile in input_files:
-    #    file_obs_data = get_data_from_files(afile, baseEV=baseEV)
-    #    if obs_data:
-    #        concat_obs_dict(obs_data, file_obs_data[2])
-    #    else:
-    #        obs_data = file_obs_data[2]
+#   for afile in input_files:
+#       file_obs_data = get_data_from_files(afile, baseEV=baseEV)
+#       if obs_data:
+#           concat_obs_dict(obs_data, file_obs_data[1])
+#       else:
+#           obs_data = file_obs_data[1]
+#           wavenumber = file_obs_data[0]
 
-    obs_data[('sensorCentralWavenumber', metaDataName)] = np.array(file_obs_data[1], dtype='float32')
-
+    obs_data[('sensorCentralWavenumber', metaDataName)] = np.array(wavenumber, dtype='float32')
+    obs_data[('sensorChannelNumber', metaDataName)] = np.arange(1, len(wavenumber)+1, dtype='int32')
     nlocs_int = np.array(len(obs_data[('latitude', metaDataName)]), dtype='int64')
     nlocs = nlocs_int.item()
     nchans = len(obs_data[('sensorChannelNumber', metaDataName)])
@@ -131,7 +129,6 @@ def main(args):
     VarAttrs[(k, 'PreQC')]['_FillValue'] = int_missing_value
     VarAttrs[(k, 'ObsValue')]['units'] = 'K'
     VarAttrs[(k, 'ObsError')]['units'] = 'K'
-    print(obs_data.keys)
 
     obs_data[('longitude', metaDataName)] = obs_data[('longitude', metaDataName)] % 360
     # final write to IODA file
@@ -177,45 +174,6 @@ def applyPc(f, scores, operator_local, scores_local, band):
     return r
 
 
-def get_files_in_window(args):
-    cycle_time = datetime.strptime(args.date, '%Y%m%d%H')
-    # if input is a single file just append the one file to list.
-    print(type(args.input))
-    print(args.input)
-    if (os.path.isfile(args.input)):
-        print('Reading Single File:{}'.format(args.input))
-        rawFiles = []
-        rawFiles.append(args.input)
-    # otherwise figure out if the files available are within a selected window
-    elif (os.path.isdir(args.input)):
-        # Get current cycle and associated file(s)
-        startDateWindow = cycle_time - timedelta(hours=args.window/2)
-        endDateWindow = cycle_time + timedelta(hours=args.window/2)
-        # effectively round off so we get the number of days between
-        startDayWindow = datetime(startDateWindow.year, startDateWindow.month, startDateWindow.day)
-        endDayWindow = datetime(endDateWindow.year, endDateWindow.month, endDateWindow.day)
-        dT = endDayWindow - startDayWindow
-        daysToGo = [startDayWindow + timedelta(days=i) for i in range(dT.days + 1)]
-        # iterate over the number of days in window
-        rawFiles = []
-        for now in daysToGo:
-            year = now.year
-            month = now.month
-            day = now.day
-            rawFiles.extend(glob.glob(os.path.join(args.input, args.prefix+"{:04d}{:02d}{:02d}".format(year, month, day)+"*.nc")))
-        rawFiles.sort()
-        # only read files in window
-        rawFilesOut = []
-        for fi, f in enumerate(rawFiles):
-            vv = os.path.basename(f)[len(args.prefix)::].split('_')
-            startDateFile = datetime.strptime(vv[0], "%Y%m%d%H%M%S")
-            endDateFile = datetime.strptime(vv[1], "%Y%m%d%H%M%S")
-            if (startDateWindow <= startDateFile <= endDateWindow or startDateWindow <= endDateFile <= endDateWindow):
-                rawFilesOut.append(f)
-        rawFiles = rawFilesOut
-    return rawFiles
-
-
 def snake_2_camel(snake):
     items = snake.split('_')
     return items[0]+''.join(i.title() for i in items[1::])
@@ -229,13 +187,12 @@ def r2tb(Radiance, nu, c1=1.191042972e-16, c2=1.4387769e-2):
 
 
 def get_data_from_files(afile, baseEV=None, scan_shape=(160, 160)):
-    print('a file', afile)
+    print('processing file', afile)
     f = nc.Dataset(afile)
     obs_data = {}
 
     # for every data in "data" group make it metadata and camelCase
     for k in f['data'].variables.keys():
-        # print('data',k,f['data/'+k].shape,f['data/'+k][:].dtype)
         if ('dwell' in k or 'time' in k or 'stroke' in k):
             continue
         dtype = str(f['data/'+k][:].dtype)
@@ -268,9 +225,6 @@ def get_data_from_files(afile, baseEV=None, scan_shape=(160, 160)):
     wn_lw = np.asarray(f['data/lwir/wavenumber'][:]).astype('float64')
     wn_mw = np.asarray(f['data/mwir/wavenumber'][:]).astype('float64')
     all_wn = np.concatenate([wn_lw, wn_mw])
-    print(f"{all_wn.shape=}")
-    obs_data[('sensorChannelNumber', metaDataName)] = np.arange(1, all_wn.shape[0]+1, dtype='int32')
-    my_nchans = all_wn.shape[0]
     rads_lw = applyPc(baseEV,
                       f['data/lwir/compressed/global_pc_scores'][:],
                       f['data/lwir/compressed/local_pcr_operator'][:],
@@ -280,12 +234,12 @@ def get_data_from_files(afile, baseEV=None, scan_shape=(160, 160)):
                       f['data/mwir/compressed/local_pcr_operator'][:],
                       f['data/mwir/compressed/local_pc_scores'][:], 'mwir')
     rads = np.concatenate([rads_lw, rads_mw])
-    print(f"{rads.shape=}")
-    obs_data[('brightnessTemperature', obsValName)] = (
-        np.array(r2tb(rads[:].T, all_wn), dtype='float32').
-        transpose().
-        reshape(all_wn.shape[0], *scan_shape)
-    )
+    # removing brightnessTemperature will be computed later on-the-fly
+#   obs_data[('brightnessTemperature', obsValName)] = (
+#       np.array(r2tb(rads[:].T, all_wn), dtype='float32').
+#       transpose().
+#       reshape(all_wn.shape[0], *scan_shape)
+#   )
     pcname = 'principalComponentScore{}'
     nscore_lw = f['data/lwir/compressed/global_pc_scores'][:].shape[2]
     nscore_mw = f['data/mwir/compressed/global_pc_scores'][:].shape[2]
@@ -298,23 +252,24 @@ def get_data_from_files(afile, baseEV=None, scan_shape=(160, 160)):
         obs_data[(pcname.format(i+1), metaDataName)] = big_score[:, :, i]
     obs_data = thinIt(obs_data)
 
-    return my_nchans, all_wn, obs_data
+    return all_wn, obs_data
 
 
-def thinIt(obs_data, chan=500, start_row=40, start_column=40, n_step=3, n_win=4, scan_shape=(160, 160), warmest=False):
+def thinIt(obs_data, warmest_chan=500, start_row=40, start_column=40, n_step=3, n_win=4, scan_shape=(160, 160), warmest=False):
     nx, ny = scan_shape
     x = np.linspace(start_row, scan_shape[0]-start_row, n_step, dtype='int32')
     y = np.linspace(start_column, scan_shape[1]-start_column, n_step, dtype='int32')
     thin_grid = np.meshgrid(x, y)
     if warmest:
-        rad = obs_data[('brightnessTemperature', obsValName)][chan, :]
+        rad = obs_data[('brightnessTemperature', obsValName)][warmest_chan, :]
         # do something smart
     else:
         out_thin_grid = thin_grid
     obs_data_out = {}
     for k in list(obs_data.keys()):
         if len(obs_data[k].shape) > 2 and 'brightnessTemperature' == k[0]:
-            obs_data_out[k] = obs_data[k][:, ::start_row, ::start_column].reshape(1953, 16).T
+            nchans = obs_data[('brightnessTemperature', 'ObsValue')].shape[0]
+            obs_data_out[k] = obs_data[k][:, ::start_row, ::start_column].reshape(nchans, 16).T
         elif len(obs_data[k].shape) > 1:
             obs_data_out[k] = obs_data[k][::start_row, ::start_column].flatten()
         else:
