@@ -26,7 +26,8 @@ from pyiodaconv.def_jedi_utils import set_metadata_attributes, set_obspace_attri
 from pyiodaconv.def_jedi_utils import compute_scan_angle
 from pyiodaconv.def_jedi_utils import ioda_int_type, ioda_float_type, epoch
 from pyiodaconv.def_jedi_utils import concat_obs_dict
-# from concurrent.futures import ProcessPoolExecutor
+from functools import partial
+from concurrent.futures import ProcessPoolExecutor
 
 float_missing_value = iconv.get_default_fill_val(np.float32)
 int_missing_value = iconv.get_default_fill_val(np.int32)
@@ -64,19 +65,21 @@ GlobalAttrs = {
 
 def main(args):
 
-    input_files = get_files_in_window(args)
+#   input_files = get_files_in_window(args)
+    input_files = args.input
     obs_data = False
     baseEV = args.baseEV
     print('num files', len(input_files))
     for iii, fff in enumerate(input_files):
         print(iii, fff)
-#   with ProcessPoolExecutor(max_workers=10) as executor:
-#       for file_obs_data in executor.map(get_data_from_files, input_files, baseEV=baseEV):
-    if True:
-        for afile in input_files:
-            print(f"openfile {afile=}")
-            print(f"{baseEV=}")
-            file_obs_data = get_data_from_files(afile, baseEV=baseEV)
+    func_with_args = partial(get_data_from_files, baseEV=baseEV)
+    with ProcessPoolExecutor(max_workers=10) as executor:
+        for file_obs_data in executor.map(func_with_args, input_files):
+#   if True:
+#       for afile in input_files:
+#           print(f"openfile {afile=}")
+#           print(f"{baseEV=}")
+#           file_obs_data = get_data_from_files(afile, baseEV=baseEV)
             my_nchans = file_obs_data[0]
             print(my_nchans)
             if not file_obs_data:
@@ -393,7 +396,7 @@ if __name__ == "__main__":
     required.add_argument(
         '-i', '--input',
         help="path of satellite observation input file(s)",
-        type=str, required=True)
+        type=str, nargs='+', required=True)
     required.add_argument(
         '--baseEV',
         help="full path to PC base to project over",
