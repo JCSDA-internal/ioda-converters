@@ -65,7 +65,7 @@ GlobalAttrs = {
 
 def main(args):
 
-#   input_files = get_files_in_window(args)
+    # input_files = get_files_in_window(args)
     input_files = args.input
     obs_data = False
     baseEV = args.baseEV
@@ -75,11 +75,6 @@ def main(args):
     func_with_args = partial(get_data_from_files, baseEV=baseEV)
     with ProcessPoolExecutor(max_workers=10) as executor:
         for file_obs_data in executor.map(func_with_args, input_files):
-#   if True:
-#       for afile in input_files:
-#           print(f"openfile {afile=}")
-#           print(f"{baseEV=}")
-#           file_obs_data = get_data_from_files(afile, baseEV=baseEV)
             my_nchans = file_obs_data[0]
             print(my_nchans)
             if not file_obs_data:
@@ -90,6 +85,7 @@ def main(args):
             else:
                 obs_data = file_obs_data[2]
 
+    # serial option
     # for afile in input_files:
     #    file_obs_data = get_data_from_files(afile, baseEV=baseEV)
     #    if obs_data:
@@ -135,7 +131,6 @@ def main(args):
     VarAttrs[(k, 'PreQC')]['_FillValue'] = int_missing_value
     VarAttrs[(k, 'ObsValue')]['units'] = 'K'
     VarAttrs[(k, 'ObsError')]['units'] = 'K'
-    # VarAttrs[(k, 'PreQC')]['units'] = 'unitless'
     print(obs_data.keys)
 
     obs_data[('longitude', metaDataName)] = obs_data[('longitude', metaDataName)] % 360
@@ -233,7 +228,7 @@ def r2tb(Radiance, nu, c1=1.191042972e-16, c2=1.4387769e-2):
     return Temperature
 
 
-def get_data_from_files(afile, baseEV=None):
+def get_data_from_files(afile, baseEV=None, scan_shape=(160, 160)):
     print('a file', afile)
     f = nc.Dataset(afile)
     obs_data = {}
@@ -254,12 +249,7 @@ def get_data_from_files(afile, baseEV=None):
     obs_data[('dwellType', metaDataName)] = np.full(f['data/longitude'].shape, f['data/dwell_type'][:], dtype='int32')
     obs_data[('dwellNumber', metaDataName)] = np.full(f['data/longitude'].shape, f['data/dwell_number'][:], dtype='int32')
 
-    # for k in f['data/lwir'].variables.keys():
-    #    print('lwir',k)
-    # for k in f['data/lwir/compressed'].variables.keys():
-    #    print('compressed',k,f['data/lwir/compressed/'+k].shape)
-    # next fill in wavenumbers and radiance values. You know, what we need in the first place
-    # besides all this metadata and flagzzz?
+    # fill in wavenumbers and radiance values
     lw_quality = {}
     for k in f['data/lwir/quality_band'].variables.keys():
         if ('warning' in k and 'number' not in k):
@@ -278,7 +268,7 @@ def get_data_from_files(afile, baseEV=None):
     wn_lw = np.asarray(f['data/lwir/wavenumber'][:]).astype('float64')
     wn_mw = np.asarray(f['data/mwir/wavenumber'][:]).astype('float64')
     all_wn = np.concatenate([wn_lw, wn_mw])
-    # obs_data[('sensorCentralWavenumber', metaDataName)] = np.array(all_wn[:], dtype='float64')
+    print(f"{all_wn.shape=}")
     obs_data[('sensorChannelNumber', metaDataName)] = np.arange(1, all_wn.shape[0]+1, dtype='int32')
     my_nchans = all_wn.shape[0]
     rads_lw = applyPc(baseEV,
@@ -290,13 +280,17 @@ def get_data_from_files(afile, baseEV=None):
                       f['data/mwir/compressed/local_pcr_operator'][:],
                       f['data/mwir/compressed/local_pc_scores'][:], 'mwir')
     rads = np.concatenate([rads_lw, rads_mw])
-    print('rads shape', rads.shape)
-    obs_data[('brightnessTemperature', obsValName)] = np.array(r2tb(rads[:].T, all_wn), dtype='float32').transpose().reshape(all_wn.shape[0], 160, 160)
+    print(f"{rads.shape=}")
+    obs_data[('brightnessTemperature', obsValName)] = (
+        np.array(r2tb(rads[:].T, all_wn), dtype='float32').
+        transpose().
+        reshape(all_wn.shape[0], *scan_shape)
+    )
     pcname = 'principalComponentScore{}'
     nscore_lw = f['data/lwir/compressed/global_pc_scores'][:].shape[2]
     nscore_mw = f['data/mwir/compressed/global_pc_scores'][:].shape[2]
 
-    big_score = np.zeros([160, 160, nscore_lw+nscore_mw])
+    big_score = np.zeros([scan_shape[0], scan_shape[1], nscore_lw+nscore_mw])
     big_score[:, :, 0:nscore_lw] = np.asarray(f['data/lwir/compressed/global_pc_scores'][:])     # .T
     big_score[:, :, nscore_lw:nscore_lw+nscore_mw] = np.asarray(f['data/mwir/compressed/global_pc_scores'][:])   # .T
     big_score = big_score.astype('float32')
@@ -307,10 +301,10 @@ def get_data_from_files(afile, baseEV=None):
     return my_nchans, all_wn, obs_data
 
 
-def thinIt(obs_data, chan=500, start_row=40, start_column=40, n_step=3, n_win=4, warmest=False):
-    nx, ny = 160, 160
-    x = np.linspace(start_row, 160-start_row, n_step, dtype='int32')
-    y = np.linspace(start_column, 160-start_column, n_step, dtype='int32')
+def thinIt(obs_data, chan=500, start_row=40, start_column=40, n_step=3, n_win=4, scan_shape=(160, 160), warmest=False):
+    nx, ny = scan_shape
+    x = np.linspace(start_row, scan_shape[0]-start_row, n_step, dtype='int32')
+    y = np.linspace(start_column, scan_shape[1]-start_column, n_step, dtype='int32')
     thin_grid = np.meshgrid(x, y)
     if warmest:
         rad = obs_data[('brightnessTemperature', obsValName)][chan, :]
@@ -320,67 +314,19 @@ def thinIt(obs_data, chan=500, start_row=40, start_column=40, n_step=3, n_win=4,
     obs_data_out = {}
     for k in list(obs_data.keys()):
         if len(obs_data[k].shape) > 2 and 'brightnessTemperature' == k[0]:
-            obs_data_out[k] = obs_data[k][:, ::40, ::40].reshape(1953, 16).T
-            # obs_data_out[k] = obs_data[k][:, :, :].reshape(1953, 160*160).T
-            # obs_data_out[k] = obs_data[k][:, :, :].reshape(1953, 160*160).T
+            obs_data_out[k] = obs_data[k][:, ::start_row, ::start_column].reshape(1953, 16).T
         elif len(obs_data[k].shape) > 1:
-            obs_data_out[k] = obs_data[k][::40, ::40].flatten()
-            # obs_data_out[k] = obs_data[k][:, :].flatten()
-            # obs_data_out[k] = obs_data[k][:, :].flatten()
+            obs_data_out[k] = obs_data[k][::start_row, ::start_column].flatten()
         else:
             obs_data_out[k] = obs_data[k]
         # obs_data_out[k] = obs_data[k][out_thin_grid]
     return obs_data_out
 
 
-def get_normalized_bit(value, bit_index):
-    return (value >> bit_index) & 1
-
-
-def assign_values(data):
-    if data.dtype == float:
-        data[np.abs(data) >= np.abs(float_missing_value)] = float_missing_value
-        return np.array(data, dtype=ioda_float_type)
-    elif data.dtype == int:
-        data[np.abs(data) >= np.abs(int_missing_value)] = int_missing_value
-        return np.array(data, dtype=ioda_int_type)
-
-
-def get_header_info(f):
-
-    WMO_sat_ID = get_WMO_satellite_ID(f)
-    nscans = len(f['scans'])
-    nbeam_pos = len(f['spots'])
-    nchans = len(f['channels'])
-    return WMO_sat_ID, nscans, nbeam_pos, nchans
-
-
 def assign_WMO_ID(obs_data, WMO_sat_ID):
     nlocs = len(obs_data[('latitude', metaDataName)])
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
     return obs_data
-
-
-def init_obs_loc():
-    obs = {
-        ('brightnessTemperature', "ObsValue"): [],
-        ('brightnessTemperature', "ObsError"): [],
-        ('brightnessTemperature', "PreQC"): [],
-        ('satelliteIdentifier', metaDataName): [],
-        ('sensorChannelNumber', metaDataName): [],
-        ('latitude', metaDataName): [],
-        ('longitude', metaDataName): [],
-        ('dateTime', metaDataName): [],
-        ('sensorScanPosition', metaDataName): [],
-        ('solarZenithAngle', metaDataName): [],
-        ('solarAzimuthAngle', metaDataName): [],
-        ('sensorZenithAngle', metaDataName): [],
-        ('sensorAzimuthAngle', metaDataName): [],
-        ('sensorViewAngle', metaDataName): [],
-        ('satelliteAscendingFlag', metaDataName): [],
-    }
-
-    return obs
 
 
 if __name__ == "__main__":
@@ -429,5 +375,4 @@ if __name__ == "__main__":
         default="W_??-EUMETSAT-Darmstadt,SND+SAT,MTS1+IRS-1B-PC--Q4--CHK-BODY---NC4E_C_EUMT_??????????????_IDPFS_DEV_",
         dest='prefix')
     args = parser.parse_args()
-    # W_XX-EUMETSAT-Darmstadt,SND+SAT,MTS1+IRS-1B-PC--Q4--CHK-BODY---NC4E_C_EUMT_20250110114003_IDPFS_DEV_20210624135710_20210624135720_N__T_0024_0073.nc
     main(args)
