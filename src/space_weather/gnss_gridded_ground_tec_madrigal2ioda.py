@@ -41,6 +41,7 @@ def main(args):
     print(f'{len(files)} files to read')
     obs_data = {}
     part_one = None
+    og_sindex = 0
     for ifile in files:
         ds = h5py.File(ifile)
 
@@ -57,7 +58,6 @@ def main(args):
         nout = 0
         for sindex in range(0, times, int(inc/2)):
             obs_data = get_obs_data(ds, (sindex, sindex + int(inc/2)), file_type, seqStart)
-            nout = nout + 1
 
             if not obs_data:
                 print(f"INFO: non-nominal file skipping")
@@ -117,7 +117,7 @@ def main(args):
             writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
 
-def get_meta_data(ds, indices, file_type):
+def get_meta_data(ds, indices, file_type, seqStart):
     # these are the MetaData we are interested in
     meta_data = {}
 

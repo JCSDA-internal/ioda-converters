@@ -50,7 +50,7 @@ def main(args):
             continue
 
         ctime = times[0]
-        while ctime <= times[-1] + int(window / 2):
+        while ctime <= times[-1]:
             wbegin = ctime
             wend = ctime + window
 
@@ -204,8 +204,9 @@ if __name__ == "__main__":
         type=int, default=60)
     optional.add_argument(
         '--sequence',
-        help="Value to use as first sequence number. SequenceNumber variable will count up by one from this number."
-             "Default 1"
+        help="Value to use as first sequence number."
+             "SequenceNumber variable will count up by one from this number."
+             "Default 1",
         type=int, default=1)
 
     args = parser.parse_args()
