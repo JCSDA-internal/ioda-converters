@@ -195,7 +195,7 @@ class GnssrL2(object):
             self.gnssrData["mss"][ns:ns+nlocs_local] = np.array(dataset_input['mss'][:])
             self.gnssrData["channel"][ns:ns+nlocs_local] = np.array(dataset_input['channel'][:])
             self.gnssrData["ddm_ant"][ns:ns+nlocs_local] = np.array(dataset_input['nasa_ddm_ant'][:])
-            self.gnssrData["rx_id"][ns:ns+nlocs_local] = np.array(dataset_input['nasa_spacecraft_num'][:])
+            self.gnssrData["rx_id"][ns:ns+nlocs_local] = 900 + np.array(dataset_input['nasa_spacecraft_num'][:]) # 901-908
             self.gnssrData["tx_svn"][ns:ns+nlocs_local] = np.array(dataset_input['nasa_sv_num'][:])
             
             dataset_input.close()
@@ -246,7 +246,7 @@ class GnssrL2(object):
         self.varAttrs[('windSpeedStandardDeviation', 'MetaData')]['_FillValue'] = np.nan  # avoid outputting Nan
         self.outdata[('satelliteReceiverId', 'MetaData')] = self.gnssrData["rx_id"][loc_idxs].astype('int32')
         self.outdata[('gnssSpaceVehicleNumber', 'MetaData')] = self.gnssrData["tx_svn"][loc_idxs].astype('int32')
-        self.outdata[('channel', 'MetaData')] = self.gnssrData["channel"][loc_idxs].astype('int32')
+        self.outdata[('receiverChannel', 'MetaData')] = self.gnssrData["channel"][loc_idxs].astype('int32')
         self.outdata[('receiverAntennaNumber', 'MetaData')] = self.gnssrData["ddm_ant"][loc_idxs].astype('int32')
         self.outdata[('qualityFlagsNOC', 'MetaData')] = self.gnssrData["noc_quality_flag"][loc_idxs].astype('int32')
         self.outdata[('qualityFlagsNOCddm', 'MetaData')] = self.gnssrData["noc_quality_flag_ddm"][loc_idxs].astype('int32')
