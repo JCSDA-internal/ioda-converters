@@ -50,9 +50,9 @@ def main(args):
             continue
 
         ctime = times[0]
-        while ctime <= times[-1] + int(window / 2):
-            wbegin = ctime - int(window / 2)
-            wend = ctime + int(window / 2)
+        while ctime <= times[-1]:
+            wbegin = ctime
+            wend = ctime + window
 
             tindex = (times > wbegin) & (times <= wend)
             obs_data = get_obs_data(ds, tindex, seqStart)
@@ -72,7 +72,7 @@ def main(args):
             # prepare global attributes we want to output in the file,
             # in addition to the ones already loaded in from the input file
             GlobalAttrs = {}
-            dtg = datetime.fromtimestamp(ctime)
+            dtg = datetime.fromtimestamp(ctime + int(window / 2))
             GlobalAttrs['datetimeReference'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
             date_time = np.array(int(dtg.strftime("%Y%m%d%H%M")), dtype=str)
             GlobalAttrs['date_time'] = date_time.item()
@@ -106,6 +106,7 @@ def main(args):
             VarAttrs[('longitude', 'MetaData')]['_FillValue'] = float_missing_value
 
             # final write to IODA file
+            print(f'writing {output}')
             writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
             ctime = ctime + window
@@ -203,8 +204,9 @@ if __name__ == "__main__":
         type=int, default=60)
     optional.add_argument(
         '--sequence',
-        help="Value to use as first sequence number. SequenceNumber variable will count up by one from this number."
-             "Default 1"
+        help="Value to use as first sequence number."
+             "SequenceNumber variable will count up by one from this number."
+             "Default 1",
         type=int, default=1)
 
     args = parser.parse_args()
