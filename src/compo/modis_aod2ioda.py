@@ -135,6 +135,7 @@ class AOD(object):
             except Exception as e:
                 # Catch and print any errors
                 print(f"An error occurred: {e}")
+
             #  Get variables
             modis_time = hdf.select(modis_time_key)[:].ravel()
             print(f"length of time var: {len(modis_time)}")
@@ -167,7 +168,7 @@ class AOD(object):
             winmsk = ((obs_time >= self.wbeg) & (obs_time <= self.wend))
 
             # uncertainty estimates:
-            # From MODIS file (over ocean) and Levy, 2010 (over land)
+            # From MODIS file (over land) and Levy, 2010 (over ocean)
             # https://acp.copernicus.org/articles/10/10399/2010/acp-10-10399-2010.pdf
             # flag = 0 (ocean) 1(land) 2(coastal)
 
