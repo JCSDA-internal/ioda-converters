@@ -10,15 +10,13 @@ namespace Obs2Ioda {
     std::vector<char>
     flattenCharArray(const char *const *values, size_t numStrings,
                      size_t stringLen) {
-        std::vector<char> flattened(numStrings * stringLen,
-                                    ' ');  // default to space padding
+        std::vector<char> flattened(numStrings * stringLen, ' ');  // default to space padding
 
         for (size_t i = 0; i < numStrings; ++i) {
-            size_t len = std::min(std::strlen(values[i]), stringLen -
-                                                          1);  // leave room for null terminator
+            size_t len = std::min(std::strlen(values[i]), stringLen - 1);
+            // leave room for null terminator
             std::memcpy(&flattened[i * stringLen], values[i], len);
-            flattened[i * stringLen +
-                      len] = '\0';  // explicitly null-terminate
+            flattened[i * stringLen + len] = '\0';  // explicitly null-terminate
         }
         return flattened;
     }
@@ -29,34 +27,47 @@ namespace Obs2Ioda {
             const char *varName,
             nc_type netcdfDataType,
             int numDims,
-            const char **dimNames
+            const char **dimNames,
+            const ZlibSettings *zlibSettings
     ) {
         try {
             auto file = FileMap::getInstance().getFile(netcdfID);
-            const auto group = setNetcdfGroup(
-                    file,
-                    groupName
-            );
+            const auto group = setNetcdfGroup(file, groupName);
             std::vector<netCDF::NcDim> dims;
             dims.reserve(numDims);
             for (int i = 0; i < numDims; i++) {
                 dims.push_back(file->getDim(iodaSchema.getDimension(
                         dimNames[i])->getValidName()));;
             }
-            auto iodaVarName = iodaSchema.getVariable(
-                    varName)->getValidName();
-            auto var = group->addVar(
-                    iodaVarName,
-                    netCDF::NcType(netcdfDataType),
-                    dims
-            );
+            auto iodaVarName = iodaSchema.getVariable(varName)->getValidName();
+            auto var = group->addVar(iodaVarName,
+                                     netCDF::NcType(netcdfDataType),
+                                     dims);
+            // Skip types not supported by deflate
+            bool compressible = netcdfDataType != NC_STRING && netcdfDataType != NC_CHAR;
+
+            if (compressible && !dims.empty() && zlibSettings->enabled) {
+                std::vector<size_t> chunks;
+                chunks.reserve(dims.size());
+
+                for (const auto &d: dims) {
+                    size_t n = d.getSize();
+
+                    // avoid huge chunks (important for performance)
+                    if (n > 256) n = 256;
+                    if (n == 0) n = 1;
+                    chunks.push_back(n);
+                }
+
+                // Required before compression
+                var.setChunking(netCDF::NcVar::nc_CHUNKED, chunks);
+                // shuffle filter + deflate level 4
+                var.setCompression(zlibSettings->shuffle, zlibSettings->deflate,
+                                   zlibSettings->deflateLevel);
+            }
             return 0;
         } catch (netCDF::exceptions::NcException &e) {
-            return netcdfErrorMessage(
-                    e,
-                    __LINE__,
-                    __FILE__
-            );
+            return netcdfErrorMessage(e, __LINE__, __FILE__);
         }
     }
 
@@ -69,12 +80,8 @@ namespace Obs2Ioda {
     ) {
         try {
             auto file = FileMap::getInstance().getFile(netcdfID);
-            const auto group = setNetcdfGroup(
-                    file,
-                    groupName
-            );
-            auto iodaVarName = iodaSchema.getVariable(
-                    varName)->getValidName();
+            const auto group = setNetcdfGroup(file, groupName);
+            auto iodaVarName = iodaSchema.getVariable(varName)->getValidName();
             const auto var = group->getVar(iodaVarName);
             // Validate the data type of the variable
             validateNetcdfDataType<T>(
@@ -84,33 +91,25 @@ namespace Obs2Ioda {
                     "': expected " + std::string(typeid(T).name()) +
                     ", got NetCDF type ID " + var.getType().getName()
             );
-            if constexpr (std::is_same<T, const char *>::value &&
-                          netcdfChar) {
+            if constexpr (std::is_same<T, const char *>::value && netcdfChar) {
                 if (var.getDims().size() != 2) {
                     std::string msg =
                             "Expected a 2D char variable for NetCDF variable '" +
                             std::string(varName) + "', but got " +
                             std::to_string(var.getDims().size()) +
                             " dimensions.";
-                    throw netCDF::exceptions::NcBadDim(msg.c_str(), __FILE__,
-                                                       __LINE__);
+                    throw netCDF::exceptions::NcBadDim(msg.c_str(), __FILE__, __LINE__);
                 }
                 auto numStrings = var.getDims()[0].getSize();
                 auto stringLen = var.getDims()[1].getSize();
-                auto flattenedCharValues = flattenCharArray(values,
-                                                            numStrings,
-                                                            stringLen);
+                auto flattenedCharValues = flattenCharArray(values, numStrings, stringLen);
                 var.putVar(flattenedCharValues.data());
                 return 0;
             }
             var.putVar(values);
             return 0;
         } catch (netCDF::exceptions::NcException &e) {
-            return netcdfErrorMessage(
-                    e,
-                    __LINE__,
-                    __FILE__
-            );
+            return netcdfErrorMessage(e, __LINE__, __FILE__);
         }
     }
 
@@ -120,12 +119,7 @@ namespace Obs2Ioda {
             const char *varName,
             const int *values
     ) {
-        return netcdfPutVar(
-                netcdfID,
-                groupName,
-                varName,
-                values
-        );
+        return netcdfPutVar(netcdfID, groupName, varName, values);
     }
 
     int netcdfPutVarInt64(
@@ -134,12 +128,7 @@ namespace Obs2Ioda {
             const char *varName,
             const long long *values
     ) {
-        return netcdfPutVar(
-                netcdfID,
-                groupName,
-                varName,
-                values
-        );
+        return netcdfPutVar(netcdfID, groupName, varName, values);
     }
 
     int netcdfPutVarReal(
@@ -148,12 +137,7 @@ namespace Obs2Ioda {
             const char *varName,
             const float *values
     ) {
-        return netcdfPutVar(
-                netcdfID,
-                groupName,
-                varName,
-                values
-        );
+        return netcdfPutVar(netcdfID, groupName, varName, values);
     }
 
     int netcdfPutVarDouble(
@@ -162,12 +146,7 @@ namespace Obs2Ioda {
             const char *varName,
             const double *values
     ) {
-        return netcdfPutVar(
-                netcdfID,
-                groupName,
-                varName,
-                values
-        );
+        return netcdfPutVar(netcdfID, groupName, varName, values);
     }
 
     int netcdfPutVarChar(
@@ -176,12 +155,7 @@ namespace Obs2Ioda {
             const char *varName,
             const char **values
     ) {
-        return netcdfPutVar<const char *, true>(
-                netcdfID,
-                groupName,
-                varName,
-                values
-        );
+        return netcdfPutVar<const char *, true>(netcdfID, groupName, varName, values);
     }
 
     int netcdfPutVarString(
@@ -190,12 +164,7 @@ namespace Obs2Ioda {
             const char *varName,
             const char **values
     ) {
-        return netcdfPutVar(
-                netcdfID,
-                groupName,
-                varName,
-                values
-        );
+        return netcdfPutVar(netcdfID, groupName, varName, values);
     }
 
     template<typename T>
@@ -208,12 +177,8 @@ namespace Obs2Ioda {
     ) {
         try {
             auto file = FileMap::getInstance().getFile(netcdfID);
-            const auto group = setNetcdfGroup(
-                    file,
-                    groupName
-            );
-            auto iodaVarName = iodaSchema.getVariable(
-                    varName)->getValidName();
+            const auto group = setNetcdfGroup(file, groupName);
+            auto iodaVarName = iodaSchema.getVariable(varName)->getValidName();
             auto var = group->getVar(iodaVarName);
             // Validate the data type of the variable
             validateNetcdfDataType<T>(
@@ -223,17 +188,11 @@ namespace Obs2Ioda {
                     "': expected " + std::string(typeid(T).name()) +
                     ", got NetCDF type ID " + var.getType().getName()
             );
-            var.setFill(
-                    fillMode != 0,  // true if fillMode is non-zero
-                    fillValue
-            );
+            var.setFill(fillMode != 0,  // true if fillMode is non-zero
+                        fillValue);
             return 0;
         } catch (netCDF::exceptions::NcException &e) {
-            return netcdfErrorMessage(
-                    e,
-                    __LINE__,
-                    __FILE__
-            );
+            return netcdfErrorMessage(e, __LINE__, __FILE__);
         }
     }
 
@@ -244,13 +203,7 @@ namespace Obs2Ioda {
             int fillMode,
             int fillValue
     ) {
-        return netcdfSetFill(
-                netcdfID,
-                groupName,
-                varName,
-                fillMode,
-                fillValue
-        );
+        return netcdfSetFill(netcdfID, groupName, varName, fillMode, fillValue);
     }
 
     int netcdfSetFillReal(
@@ -260,13 +213,7 @@ namespace Obs2Ioda {
             int fillMode,
             float fillValue
     ) {
-        return netcdfSetFill(
-                netcdfID,
-                groupName,
-                varName,
-                fillMode,
-                fillValue
-        );
+        return netcdfSetFill(netcdfID, groupName, varName, fillMode, fillValue);
     }
 
     int netcdfSetFillInt64(
@@ -276,13 +223,7 @@ namespace Obs2Ioda {
             int fillMode,
             long long fillValue
     ) {
-        return netcdfSetFill(
-                netcdfID,
-                groupName,
-                varName,
-                fillMode,
-                fillValue
-        );
+        return netcdfSetFill(netcdfID, groupName, varName, fillMode, fillValue);
     }
 
     int netcdfSetFillString(
@@ -292,13 +233,6 @@ namespace Obs2Ioda {
             int fillMode,
             const char *fillValue
     ) {
-        return netcdfSetFill(
-                netcdfID,
-                groupName,
-                varName,
-                fillMode,
-                fillValue
-
-        );
+        return netcdfSetFill(netcdfID, groupName, varName, fillMode, fillValue);
     }
 }

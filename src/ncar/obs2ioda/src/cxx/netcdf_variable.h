@@ -3,6 +3,13 @@
 
 #include <netcdf>
 
+    struct ZlibSettings {
+        int enabled = 0;
+        int shuffle = 1;
+        int deflate = 1;
+        int deflateLevel = 4;
+    };
+
 namespace Obs2Ioda {
 
     /**
@@ -38,6 +45,8 @@ namespace Obs2Ioda {
      * @param netcdfDataType The NetCDF data type of the variable (e.g., NC_INT, NC_FLOAT).
      * @param numDims The number of dimensions associated with the variable.
      * @param dimNames An array of dimension names specifying the shape of the variable.
+     * @param zlibSettings Compression settings to be applied to the variable.
+     *                     If compression is not desired, all fields should be set to 0.
      * @return int A status code indicating the outcome of the operation:
      *         - 0: Success.
      *         - Non-zero: Failure, with an error message logged.
@@ -48,7 +57,8 @@ namespace Obs2Ioda {
             const char *varName,
             nc_type netcdfDataType,
             int numDims,
-            const char **dimNames
+            const char **dimNames,
+            const ZlibSettings *zlibSettings
     );
 
     /**
