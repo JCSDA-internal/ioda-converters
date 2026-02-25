@@ -1,3 +1,10 @@
+/*
+ * (C) Copyright 2026 UCAR
+ *
+ * This software is licensed under the terms of the Apache Licence Version 2.0
+ * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ */
+
 #include "netcdf_variable.h"
 #include "netcdf_file.h"
 #include "netcdf_error.h"
@@ -36,8 +43,8 @@ namespace Obs2Ioda {
             std::vector<netCDF::NcDim> dims;
             dims.reserve(numDims);
             for (int i = 0; i < numDims; i++) {
-                dims.push_back(file->getDim(iodaSchema.getDimension(
-                        dimNames[i])->getValidName()));;
+                dims.push_back(file->getDim(
+                    iodaSchema.getDimension(dimNames[i])->getValidName()));;
             }
             auto iodaVarName = iodaSchema.getVariable(varName)->getValidName();
             auto var = group->addVar(iodaVarName,
@@ -50,7 +57,7 @@ namespace Obs2Ioda {
                 std::vector<size_t> chunks;
                 chunks.reserve(dims.size());
 
-                for (const auto &d: dims) {
+                for (const auto &d : dims) {
                     size_t n = d.getSize();
 
                     // avoid huge chunks (important for performance)
@@ -89,8 +96,7 @@ namespace Obs2Ioda {
                     "Invalid data type for NetCDF variable '" +
                     std::string(varName) +
                     "': expected " + std::string(typeid(T).name()) +
-                    ", got NetCDF type ID " + var.getType().getName()
-            );
+                    ", got NetCDF type ID " + var.getType().getName());
             if constexpr (std::is_same<T, const char *>::value && netcdfChar) {
                 if (var.getDims().size() != 2) {
                     std::string msg =
@@ -126,7 +132,7 @@ namespace Obs2Ioda {
             int netcdfID,
             const char *groupName,
             const char *varName,
-            const long long *values
+            const int64_t *values
     ) {
         return netcdfPutVar(netcdfID, groupName, varName, values);
     }
@@ -186,8 +192,7 @@ namespace Obs2Ioda {
                     "Invalid data type for NetCDF variable '" +
                     std::string(varName) +
                     "': expected " + std::string(typeid(T).name()) +
-                    ", got NetCDF type ID " + var.getType().getName()
-            );
+                    ", got NetCDF type ID " + var.getType().getName());
             var.setFill(fillMode != 0,  // true if fillMode is non-zero
                         fillValue);
             return 0;
@@ -221,7 +226,7 @@ namespace Obs2Ioda {
             const char *groupName,
             const char *varName,
             int fillMode,
-            long long fillValue
+            int64_t fillValue
     ) {
         return netcdfSetFill(netcdfID, groupName, varName, fillMode, fillValue);
     }
@@ -235,4 +240,4 @@ namespace Obs2Ioda {
     ) {
         return netcdfSetFill(netcdfID, groupName, varName, fillMode, fillValue);
     }
-}
+}  // namespace Obs2Ioda

@@ -1,3 +1,10 @@
+/*
+ * (C) Copyright 2026 UCAR
+ *
+ * This software is licensed under the terms of the Apache Licence Version 2.0
+ * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ */
+
 #include "ioda_obs_schema.h"
 
 void
@@ -86,7 +93,7 @@ void IodaObsVariable::load(const std::shared_ptr<IYamlNode> &node,
                            const eckit::LocalConfiguration &config) {
     static constexpr std::array<const char *, 2> keys = {"Variable",
                                                          "Dimension"};
-    for (const auto &key: keys) {
+    for (const auto &key : keys) {
         if (node->hasKey(config, key) && node->isKeySequence(config, key)) {
             this->setNames(node, config, key);
             break;

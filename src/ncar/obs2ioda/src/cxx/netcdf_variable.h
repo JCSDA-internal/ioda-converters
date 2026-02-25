@@ -1,5 +1,12 @@
-#ifndef NETCDF_VARIABLE_H
-#define NETCDF_VARIABLE_H
+/*
+ * (C) Copyright 2026 UCAR
+ *
+ * This software is licensed under the terms of the Apache Licence Version 2.0
+ * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ */
+
+#ifndef NCAR_OBS2IODA_SRC_CXX_NETCDF_VARIABLE_H_
+#define NCAR_OBS2IODA_SRC_CXX_NETCDF_VARIABLE_H_
 
 #include <netcdf>
 
@@ -58,8 +65,7 @@ namespace Obs2Ioda {
             nc_type netcdfDataType,
             int numDims,
             const char **dimNames,
-            const ZlibSettings *zlibSettings
-    );
+            const ZlibSettings *zlibSettings);
 
     /**
     * @brief Writes data to a variable in a NetCDF file.
@@ -76,43 +82,37 @@ namespace Obs2Ioda {
             int netcdfID,
             const char *groupName,
             const char *varName,
-            const int *values
-    );
+            const int *values);
 
     int netcdfPutVarInt64(
             int netcdfID,
             const char *groupName,
             const char *varName,
-            const long long *values
-    );
+            const int64_t *values);
 
     int netcdfPutVarReal(
             int netcdfID,
             const char *groupName,
             const char *varName,
-            const float *values
-    );
+            const float *values);
 
     int netcdfPutVarDouble(
             int netcdfID,
             const char *groupName,
             const char *varName,
-            const double *values
-    );
+            const double *values);
 
     int netcdfPutVarString(
             int netcdfID,
             const char *groupName,
             const char *varName,
-            const char **values
-    );
+            const char **values);
 
     int netcdfPutVarChar(
             int netcdfID,
             const char *groupName,
             const char *varName,
-            const char **values
-    );
+            const char **values);
 
     /**
     * @brief Sets the fill mode and fill value for a variable in a NetCDF file.
@@ -133,33 +133,29 @@ namespace Obs2Ioda {
             const char *groupName,
             const char *varName,
             int fillMode,
-            int fillValue
-    );
+            int fillValue);
 
     int netcdfSetFillReal(
             int netcdfID,
             const char *groupName,
             const char *varName,
             int fillMode,
-            float fillValue
-    );
+            float fillValue);
 
     int netcdfSetFillInt64(
             int netcdfID,
             const char *groupName,
             const char *varName,
             int fillMode,
-            long long fillValue
-    );
+            int64_t fillValue);
 
     int netcdfSetFillString(
             int netcdfID,
             const char *groupName,
             const char *varName,
             int fillMode,
-            const char *fillValue
-    );
+            const char *fillValue);
     }
-}
+}  // namespace Obs2Ioda
 
-#endif //NETCDF_VARIABLE_H
+#endif  // NCAR_OBS2IODA_SRC_CXX_NETCDF_VARIABLE_H_

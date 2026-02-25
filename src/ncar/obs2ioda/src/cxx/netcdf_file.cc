@@ -1,3 +1,10 @@
+/*
+ * (C) Copyright 2026 UCAR
+ *
+ * This software is licensed under the terms of the Apache Licence Version 2.0
+ * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ */
+
 #include "netcdf_file.h"
 #include "netcdf_error.h"
 #include <memory>
@@ -23,8 +30,7 @@ namespace Obs2Ioda {
             throw netCDF::exceptions::NcCantCreate(
                     "NetCDF ID already exists in the NetCDF file map",
                     __FILE__,
-                    __LINE__
-            );
+                    __LINE__);
         }
         this->fileMap[netcdfID] = file;
     }
@@ -38,8 +44,7 @@ namespace Obs2Ioda {
             throw netCDF::exceptions::NcBadId(
                     "NetCDF ID not found in the NetCDF file map",
                     __FILE__,
-                    __LINE__
-            );
+                    __LINE__);
         }
         this->fileMap.erase(netcdfFileIterator);
     }
@@ -51,8 +56,7 @@ namespace Obs2Ioda {
             throw netCDF::exceptions::NcBadId(
                     "NetCDF ID not found in the NetCDF file map",
                     __FILE__,
-                    __LINE__
-            );
+                    __LINE__);
         }
         return netcdfFileIterator->second;
     }
@@ -65,21 +69,18 @@ namespace Obs2Ioda {
         try {
             const auto file = std::make_shared<netCDF::NcFile>(
                     path,
-                    static_cast<netCDF::NcFile::FileMode>(fileMode)
-            );
+                    static_cast<netCDF::NcFile::FileMode>(fileMode));
             *netcdfID = file->getId();
             FileMap::getInstance().addFile(
                     *netcdfID,
-                    file
-            );
+                    file);
 
             return 0;
         } catch (netCDF::exceptions::NcException &e) {
             return netcdfErrorMessage(
                     e,
                     __LINE__,
-                    __FILE__
-            );
+                    __FILE__);
         }
     }
 
@@ -92,8 +93,7 @@ namespace Obs2Ioda {
             return netcdfErrorMessage(
                     e,
                     __LINE__,
-                    __FILE__
-            );
+                    __FILE__);
         }
     }
-}
+}  // namespace Obs2Ioda

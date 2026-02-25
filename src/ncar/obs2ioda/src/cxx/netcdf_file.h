@@ -1,5 +1,12 @@
-#ifndef OBS2IODA_NETCDF_FILE_H
-#define OBS2IODA_NETCDF_FILE_H
+/*
+ * (C) Copyright 2026 UCAR
+ *
+ * This software is licensed under the terms of the Apache Licence Version 2.0
+ * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ */
+
+#ifndef NCAR_OBS2IODA_SRC_CXX_NETCDF_FILE_H_
+#define NCAR_OBS2IODA_SRC_CXX_NETCDF_FILE_H_
 
 #include <netcdf>
 #include <unordered_map>
@@ -14,7 +21,7 @@ namespace Obs2Ioda {
      * @brief Singleton class for managing a mapping of NetCDF file IDs to file objects.
      */
     class FileMap {
-    public:
+     public:
         /**
          * @brief Retrieves the singleton instance of the NetcdfFileMap.
          *
@@ -50,8 +57,7 @@ namespace Obs2Ioda {
          */
         void addFile(
             int netcdfID,
-            const std::shared_ptr<netCDF::NcFile> &file
-        );
+            const std::shared_ptr<netCDF::NcFile> &file);
 
         /**
          * @brief Removes a NetCDF file from the map.
@@ -63,30 +69,29 @@ namespace Obs2Ioda {
          * @throws netCDF::exceptions::NcBadId if the `netcdfID` does not exist in the map.
          */
         void removeFile(
-            int netcdfID
-        );
+            int netcdfID);
 
         /**
          * @brief Retrieves a NetCDF file from the map.
          *
-         * Retrieves the `std::shared_ptr` to the `netCDF::NcFile` object associated with the given
-         * NetCDF file ID.
+         * Retrieves the `std::shared_ptr` to the `netCDF::NcFile` object
+         *  associated with the given NetCDF file ID.
          *
          * @param netcdfID The unique NetCDF file ID to retrieve.
          * @return A shared pointer to the NetCDF file.
          * @throws netCDF::exceptions::NcBadId if the `netcdfID` does not exist in the map.
          */
         std::shared_ptr<netCDF::NcFile> getFile(
-            int netcdfID
-        );
+            int netcdfID);
 
-    private:
+     private:
         /**
          * @brief Private constructor to prevent direct instantiation.
          */
         FileMap() = default;
 
-        /// Map associating NetCDF file IDs with their corresponding shared pointers to NetCDF files.
+        /// Map associating NetCDF file IDs with their
+        /// corresponding shared pointers to NetCDF files.
         std::unordered_map<int, std::shared_ptr<netCDF::NcFile> >
         fileMap;
     };
@@ -109,12 +114,12 @@ namespace Obs2Ioda {
      * @return 0 on success, or a non-zero error code on failure.
      */
     int netcdfCreate(
+        /// < The path to the NetCDF file to be created.
         const char *path,
-        ///< The path to the NetCDF file to be created.
+        /// < The ID of the created NetCDF file.
         int *netcdfID,
-        ///< The ID of the created NetCDF file.
-        int fileMode ///< File mode for creating the NetCDF file.
-    );
+        /// < File mode for creating the NetCDF file.
+        int fileMode);
 
     /**
      * @brief Closes the NetCDF file associated with the given ID.
@@ -126,9 +131,9 @@ namespace Obs2Ioda {
      * @return 0 on success, or a non-zero error code on failure.
      */
     int netcdfClose(
-        int netcdfID
-    ); ///< The ID of the NetCDF file to be closed.
+        /// < The ID of the NetCDF file to be closed.
+        int netcdfID);
     }
-} // namespace Obs2Ioda
+}  // namespace Obs2Ioda
 
-#endif // OBS2IODA_NETCDF_FILE_H
+#endif  // NCAR_OBS2IODA_SRC_CXX_NETCDF_FILE_H_
