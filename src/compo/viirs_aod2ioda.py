@@ -310,7 +310,7 @@ class AOD(object):
                 self.qcfs = self.qcfs[mask_thin]
                 self.obs_time = self.obs_time[mask_thin]
 
-            # create the final mask for output based on time window
+            # after the thinning above apply a mask based on time window
             winmsk = ((self.obs_time >= self.wbeg) & (self.obs_time <= self.wend))
 
             # Write out data
