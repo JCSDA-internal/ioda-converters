@@ -298,7 +298,6 @@ class AOD(object):
 
             # assign the observation time based on time coverage
             self.obs_time = np.full(np.shape(self.lons), round(0.5*(self.s_time + self.e_time)), dtype=np.int64)
-            winmsk = ((self.obs_time >= self.wbeg) & (self.obs_time <= self.wend))
 
             # apply thinning mask
             if self.thin > 0.0:
@@ -311,7 +310,10 @@ class AOD(object):
                 self.qcfs = self.qcfs[mask_thin]
                 self.obs_time = self.obs_time[mask_thin]
 
-            #  Write out data
+            # after the thinning above apply a mask based on time window
+            winmsk = ((self.obs_time >= self.wbeg) & (self.obs_time <= self.wend))
+
+            # Write out data
             self.outdata[('latitude', metaDataName)] = np.append(
                 self.outdata[('latitude', metaDataName)], np.array(self.lats[winmsk], dtype=np.float32))
             self.outdata[('longitude', metaDataName)] = np.append(
