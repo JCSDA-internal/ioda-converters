@@ -65,16 +65,17 @@ GlobalAttrs = {
 
 def main(args):
 
-    input_files = args.input
     obs_data = False
-    includeRR = args.include_reconstructed_radiance
-    baseEV = args.baseEV
-    dtg = args.date
-    resolution = args.resolution
+    # convert namespace to a dictionary
+    task_params = vars(args)
+    input_files = task_params.pop('input')
     for iii, fff in enumerate(input_files):
         print(iii, fff)
-    func_with_args = partial(get_data_from_files, resolution=resolution, include_reconstructed_radiances=includeRR, baseEV=baseEV)
-    with ProcessPoolExecutor(max_workers=10) as executor:
+    output_file = task_params.pop('output')
+    dtg = task_params.pop('date')
+    threads = task_params.pop('threads')
+    func_with_args = partial(get_data_from_files, **task_params)
+    with ProcessPoolExecutor(max_workers=threads) as executor:
         for file_obs_data in executor.map(func_with_args, input_files):
             if not file_obs_data:
                 print("INFO: non-nominal file skipping")
@@ -87,7 +88,7 @@ def main(args):
 
     # serial option
 #   for afile in input_files:
-#       file_obs_data = get_data_from_files(afile)
+#       file_obs_data = get_data_from_files(afile, **task_params)
 #       if obs_data:
 #           concat_obs_dict(obs_data, file_obs_data[1])
 #       else:
@@ -120,7 +121,7 @@ def main(args):
         'Location': nlocs,
         'Channel': obs_data[('sensorChannelNumber', metaDataName)],
     }
-    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
+    writer = iconv.IodaWriter(output_file, locationKeyList, DimDict)
 
     VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
     set_obspace_attributes(VarAttrs)
@@ -189,7 +190,7 @@ def r2tb(Radiance, nu, c1=1.191042972e-16, c2=1.4387769e-2):
     return Temperature
 
 
-def get_data_from_files(afile, resolution=160, scan_shape=(160, 160), include_reconstructed_radiances=False, baseEV=None):
+def get_data_from_files(afile, resolution=160, scan_shape=(160, 160), include_reconstructed_radiance=False, baseEV=None):
     print('processing file', afile)
     f = nc.Dataset(afile)
     obs_data = {}
@@ -230,7 +231,7 @@ def get_data_from_files(afile, resolution=160, scan_shape=(160, 160), include_re
     all_wn = np.concatenate([wn_lw, wn_mw])
 
     # only when requested compute reconstructed radiances and add to IODA output
-    if include_reconstructed_radiances:
+    if include_reconstructed_radiance:
         rads_lw = applyPc(baseEV,
                           f['data/lwir/compressed/global_pc_scores'][:],
                           f['data/lwir/compressed/local_pcr_operator'][:],
@@ -262,12 +263,14 @@ def get_data_from_files(afile, resolution=160, scan_shape=(160, 160), include_re
     return all_wn, obs_data
 
 
-def thinIt(obs_data, resolution=160, scan_shape=(160, 160)):
+def thinIt(obs_data, resolution=160):
 
     # do a thinning of the data from native (base) resolution
     # the base resolution is assumed 4 km, and scan shape 160, 160
     obs_data_out = {}
     base_resolution = 4
+    if resolution == base_resolution:
+        return obs_data
     stride = int(resolution / base_resolution)
     start_row = stride
     start_column = stride
@@ -335,12 +338,19 @@ if __name__ == "__main__":
         type=int,
         choices=[4, 8, 16, 32, 64, 128, 160],
         default=160,
-        help="Target resolution in km (Base is 4km; default is 160km)")
+        help="Target resolution in km [Base is 4km (i.e. no thinning); default is 160km]")
     optional.add_argument(
         '-d', '--date',
         metavar="YYYYMMDDHH",
         help="base date for the center of the window",
         type=str, default=None)
+    optional.add_argument(
+        '--scan_shape',
+        nargs=2,
+        metavar=('ROWS', 'COLS'),
+        help="Dimensions of the scan (default: 160 160)",
+        type=int,
+        default=(160, 160),)
     optional.add_argument(
         '--include_reconstructed_radiance',
         help="include computation of reconstructed radiances (requires --baseEV)",
