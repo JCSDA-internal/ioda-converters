@@ -139,7 +139,7 @@ def get_meta_data(ds):
 
     # the time convert to epoch and handle array of values
     gps_offset = datetime(1980, 1, 6).timestamp()
-    leap_seconds = 18  # current leap seconds as of 2026 for COSMIC2 era
+    leap_seconds = 18  # valid from Jan 1, 2017 and current through at least 2026
     profile_meta_data['dateTime'] = np.array(gps_offset + ds['time'][:] - leap_seconds, np.int64)
 
     # bespoke table of letter to WMO code
