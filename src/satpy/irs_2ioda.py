@@ -106,9 +106,9 @@ def main(args):
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
-    # if dtg:
-    #    GlobalAttrs['datetimeReference'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
     GlobalAttrs['converter'] = os.path.basename(__file__)
+    if dtg:
+        GlobalAttrs['datetimeReference'] = dtg.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     # pass parameters to the IODA writer
     VarDims = {
@@ -257,6 +257,7 @@ def get_data_from_files(afile, resolution=160, scan_shape=(160, 160), include_re
     for i in range(nscore_lw+nscore_mw):
         obs_data[(pcname.format(i+1), metaDataName)] = big_score[:, :, i]
     obs_data = thinIt(obs_data, resolution=resolution)
+    obs_data = assign_WMO_ID(obs_data, f.platform)
 
     return all_wn, obs_data
 
@@ -292,8 +293,15 @@ def thinIt(obs_data, resolution=160, scan_shape=(160, 160)):
     return obs_data_out
 
 
-def assign_WMO_ID(obs_data, WMO_sat_ID):
+def assign_WMO_ID(obs_data, platform):
     nlocs = len(obs_data[('latitude', metaDataName)])
+    if platform == 'MTS1':
+        WMO_sat_ID = MTG_S1_WMO_sat_ID
+    elif platform == 'MTS2':
+        WMO_sat_ID = MTG_S2_WMO_sat_ID
+    else:
+        print(f" Warning unknown satellite: {platform=}")
+        WMO_sat_ID = int_missing_value
     obs_data[('satelliteIdentifier', metaDataName)] = np.full((nlocs), WMO_sat_ID, dtype='int32')
     return obs_data
 
@@ -351,4 +359,11 @@ if __name__ == "__main__":
     if args.baseEV:
         if not os.path.isfile(args.baseEV):
             parser.error(f"The file specified in --baseEV does not exist: {args.baseEV}")
+
+    if args.date:
+        try:
+            args.date = datetime.strptime(args.date, "%Y%m%d%H")
+        except ValueError:
+            parser.error(f"Invalid date format: '{args.date}'. Expected YYYYMMDDHH")
+
     main(args)
