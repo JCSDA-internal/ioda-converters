@@ -67,10 +67,13 @@ def main(args):
 
     input_files = args.input
     obs_data = False
+    includeRR = args.include_reconstructed_radiance
     baseEV = args.baseEV
+    dtg = args.date
+    resolution = args.resolution
     for iii, fff in enumerate(input_files):
         print(iii, fff)
-    func_with_args = partial(get_data_from_files, baseEV=baseEV)
+    func_with_args = partial(get_data_from_files, resolution=resolution, include_reconstructed_radiances=includeRR, baseEV=baseEV)
     with ProcessPoolExecutor(max_workers=10) as executor:
         for file_obs_data in executor.map(func_with_args, input_files):
             if not file_obs_data:
@@ -84,7 +87,7 @@ def main(args):
 
     # serial option
 #   for afile in input_files:
-#       file_obs_data = get_data_from_files(afile, baseEV=baseEV)
+#       file_obs_data = get_data_from_files(afile)
 #       if obs_data:
 #           concat_obs_dict(obs_data, file_obs_data[1])
 #       else:
@@ -186,7 +189,7 @@ def r2tb(Radiance, nu, c1=1.191042972e-16, c2=1.4387769e-2):
     return Temperature
 
 
-def get_data_from_files(afile, baseEV=None, scan_shape=(160, 160)):
+def get_data_from_files(afile, resolution=160, scan_shape=(160, 160), include_reconstructed_radiances=False, baseEV=None):
     print('processing file', afile)
     f = nc.Dataset(afile)
     obs_data = {}
@@ -225,21 +228,24 @@ def get_data_from_files(afile, baseEV=None, scan_shape=(160, 160)):
     wn_lw = np.asarray(f['data/lwir/wavenumber'][:]).astype('float64')
     wn_mw = np.asarray(f['data/mwir/wavenumber'][:]).astype('float64')
     all_wn = np.concatenate([wn_lw, wn_mw])
-    rads_lw = applyPc(baseEV,
-                      f['data/lwir/compressed/global_pc_scores'][:],
-                      f['data/lwir/compressed/local_pcr_operator'][:],
-                      f['data/lwir/compressed/local_pc_scores'][:], 'lwir')
-    rads_mw = applyPc(baseEV,
-                      f['data/mwir/compressed/global_pc_scores'][:],
-                      f['data/mwir/compressed/local_pcr_operator'][:],
-                      f['data/mwir/compressed/local_pc_scores'][:], 'mwir')
-    rads = np.concatenate([rads_lw, rads_mw])
-    # removing brightnessTemperature will be computed later on-the-fly
-#   obs_data[('brightnessTemperature', obsValName)] = (
-#       np.array(r2tb(rads[:].T, all_wn), dtype='float32').
-#       transpose().
-#       reshape(all_wn.shape[0], *scan_shape)
-#   )
+
+    # only when requested compute reconstructed radiances and add to IODA output
+    if include_reconstructed_radiances:
+        rads_lw = applyPc(baseEV,
+                          f['data/lwir/compressed/global_pc_scores'][:],
+                          f['data/lwir/compressed/local_pcr_operator'][:],
+                          f['data/lwir/compressed/local_pc_scores'][:], 'lwir')
+        rads_mw = applyPc(baseEV,
+                          f['data/mwir/compressed/global_pc_scores'][:],
+                          f['data/mwir/compressed/local_pcr_operator'][:],
+                          f['data/mwir/compressed/local_pc_scores'][:], 'mwir')
+        rads = np.concatenate([rads_lw, rads_mw])
+        # put reconstructed radiances into output if requested
+        obs_data[('brightnessTemperature', obsValName)] = (
+            np.array(r2tb(rads[:].T, all_wn), dtype='float32').
+            transpose().
+            reshape(all_wn.shape[0], *scan_shape)
+        )
     pcname = 'principalComponentScore{}'
     nscore_lw = f['data/lwir/compressed/global_pc_scores'][:].shape[2]
     nscore_mw = f['data/mwir/compressed/global_pc_scores'][:].shape[2]
@@ -250,31 +256,39 @@ def get_data_from_files(afile, baseEV=None, scan_shape=(160, 160)):
     big_score = big_score.astype('float32')
     for i in range(nscore_lw+nscore_mw):
         obs_data[(pcname.format(i+1), metaDataName)] = big_score[:, :, i]
-    obs_data = thinIt(obs_data)
+    obs_data = thinIt(obs_data, resolution=resolution)
 
     return all_wn, obs_data
 
 
-def thinIt(obs_data, warmest_chan=500, start_row=40, start_column=40, n_step=3, n_win=4, scan_shape=(160, 160), warmest=False):
-    nx, ny = scan_shape
-    x = np.linspace(start_row, scan_shape[0]-start_row, n_step, dtype='int32')
-    y = np.linspace(start_column, scan_shape[1]-start_column, n_step, dtype='int32')
-    thin_grid = np.meshgrid(x, y)
-    if warmest:
-        rad = obs_data[('brightnessTemperature', obsValName)][warmest_chan, :]
-        # do something smart
-    else:
-        out_thin_grid = thin_grid
+def thinIt(obs_data, resolution=160, scan_shape=(160, 160)):
+
+    # do a thinning of the data from native (base) resolution
+    # the base resolution is assumed 4 km, and scan shape 160, 160
     obs_data_out = {}
-    for k in list(obs_data.keys()):
-        if len(obs_data[k].shape) > 2 and 'brightnessTemperature' == k[0]:
-            nchans = obs_data[('brightnessTemperature', 'ObsValue')].shape[0]
-            obs_data_out[k] = obs_data[k][:, ::start_row, ::start_column].reshape(nchans, 16).T
-        elif len(obs_data[k].shape) > 1:
-            obs_data_out[k] = obs_data[k][::start_row, ::start_column].flatten()
+    base_resolution = 4
+    stride = int(resolution / base_resolution)
+    start_row = stride
+    start_column = stride
+    for k, data in obs_data.items():
+        # 3D Data (Channels, Rows, Cols) - e.g. Brightness Temps
+        if data.ndim > 2 and 'brightnessTemperature' in str(k):
+            nchans = data.shape[0]
+            # Slice: Keep all channels, skip rows and cols by stride
+            sliced = data[:, ::stride, ::stride]
+
+            # Dynamically compute the number of spatial points remaining
+            num_points = sliced.shape[1] * sliced.shape[2]
+            obs_data_out[k] = sliced.reshape(nchans, num_points).T
+
+        # 2D Data (Rows, Cols) - e.g. Lat/Lon grids
+        elif data.ndim > 1:
+            obs_data_out[k] = data[::stride, ::stride].flatten()
+
+        # 1D or Scalar Data - keep as is
         else:
-            obs_data_out[k] = obs_data[k]
-        # obs_data_out[k] = obs_data[k][out_thin_grid]
+            obs_data_out[k] = data
+
     return obs_data_out
 
 
@@ -298,11 +312,6 @@ if __name__ == "__main__":
         '-i', '--input',
         help="path of satellite observation input file(s)",
         type=str, nargs='+', required=True)
-    required.add_argument(
-        '--baseEV',
-        help="full path to PC base to project over",
-        type=str, required=True,
-        default=None,)
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
         '-j', '--threads',
@@ -314,20 +323,32 @@ if __name__ == "__main__":
         help='path to output ioda file',
         type=str, default=os.path.join(os.getcwd(), 'output.nc4'))
     optional.add_argument(
+        '--resolution',
+        type=int,
+        choices=[4, 8, 16, 32, 64, 128, 160],
+        default=160,
+        help="Target resolution in km (Base is 4km; default is 160km)")
+    optional.add_argument(
         '-d', '--date',
         metavar="YYYYMMDDHH",
         help="base date for the center of the window",
         type=str, default=None)
     optional.add_argument(
-        '--window',
-        help="Length of DA window default 6 hours",
-        type=int, default=6)
-
+        '--include_reconstructed_radiance',
+        help="include computation of reconstructed radiances (requires --baseEV)",
+        action='store_true',)
     optional.add_argument(
-        '-p', '--prefix',
-        help="irs filename prefix (default=OMI-Aura_L2-OMTO3)",
-        type=str, required=False,
-        default="W_??-EUMETSAT-Darmstadt,SND+SAT,MTS1+IRS-1B-PC--Q4--CHK-BODY---NC4E_C_EUMT_??????????????_IDPFS_DEV_",
-        dest='prefix')
+        '--baseEV',
+        help="full path to PC base to project over",
+        type=str,
+        default=None,)
     args = parser.parse_args()
+    # Check dependency: if flag is True, baseEV must not be None
+    if args.include_reconstructed_radiance and args.baseEV is None:
+        parser.error("--include_reconstructed_radiance requires --baseEV to be specified.")
+
+    # Check file existence: if baseEV is provided, verify the path
+    if args.baseEV:
+        if not os.path.isfile(args.baseEV):
+            parser.error(f"The file specified in --baseEV does not exist: {args.baseEV}")
     main(args)
