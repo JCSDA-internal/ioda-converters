@@ -355,6 +355,7 @@ if( iodaconv_bufr_query_ENABLED )
     testinput/bufr_gpsipw.yaml
     testinput/bufr_gpsztd.yaml
     testinput/obs.20240806T00Z.ipw_gnssgb.ncep.bufr
+    testinput/EUMT_IDPFS_DEV_20210624080230_20210624080240_N__T_0001_0015.nc
   )
 
   list( APPEND test_output
@@ -423,6 +424,7 @@ if( iodaconv_bufr_query_ENABLED )
     testoutput/rtma.t00z.adpupa.tm00.nc
     testoutput/20240806T00Z_PT1M_ipw_gnssgb_ncep.nc
     testoutput/20240806T00Z_PT1M_ztd_gnssgb_ncep.nc
+    testoutput/obs.20210624T080200_PT1M_irs_mtg-s01.nc
   )
 endif()
 
@@ -2331,7 +2333,7 @@ endif()
                             -d 2024050100"
                             obs.20240430T220600Z_PT2M_cowvr_iss.nc4 ${IODA_CONV_COMP_TOL})
 
-ecbuild_add_test( TARGET  test_${PROJECT_NAME}_osw_cygnss
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_osw_cygnss
                     TYPE    SCRIPT
                     ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                     COMMAND bash
@@ -2353,6 +2355,19 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_osw_cygnss
                             -o testrun/20220214T21Z_PT6H_ozonecolumn_omps_n20.sample.nc4
                             -d 2022021500"
                             20220214T21Z_PT6H_ozonecolumn_omps_n20.sample.nc4 ${IODA_CONV_COMP_TOL})
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_irs_mtg_pcs
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/irs_2ioda.py
+                            -i testinput/EUMT_IDPFS_DEV_20210624080230_20210624080240_N__T_0001_0015.nc
+                            --scan_shape 8 8
+                            -o testrun/obs.20210624T080200_PT1M_irs_mtg-s01.nc
+                            -d 2021062406"
+                            obs.20210624T080200_PT1M_irs_mtg-s01.nc ${IODA_CONV_COMP_TOL})
 
 #==============================================================================
 # PrepBUFR and BUFR tests
