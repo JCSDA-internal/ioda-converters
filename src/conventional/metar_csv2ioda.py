@@ -35,7 +35,7 @@ locationKeyList = [("stationICAO", "string", ""),
                    ("dateTime", "long", "seconds since 1970-01-01T00:00:00Z")]
 meta_keys = [m_item[0] for m_item in locationKeyList]
 
-obsvars = ['airTemperature',
+obsvars = ['airTemperatureAt2M',
            'specificHumidity',
            'stationPressure',
            'windEastward',
@@ -43,7 +43,7 @@ obsvars = ['airTemperature',
 obsvars_units = ['K', 'kg kg-1', 'Pa', 'm s-1', 'm s-1']
 obserrlist = [1.2, 0.75E-3, 120.0, 1.7, 1.7]
 
-VarDims = {'airTemperature': ['Location'],
+VarDims = {'airTemperatureAt2M': ['Location'],
            'specificHumidity': ['Location'],
            'stationPressure': ['Location'],
            'windEastward': ['Location'],
@@ -215,7 +215,7 @@ class reformatMetar(object):
                 data['stationElevation'].append(elev)
                 data['height'].append(hght)
                 data['stationPressure'].append(psfc)
-                data['airTemperature'].append(temp)
+                data['airTemperatureAt2M'].append(temp)
                 data['specificHumidity'].append(spfh)
                 data['windEastward'].append(uwnd)
                 data['windNorthward'].append(vwnd)
