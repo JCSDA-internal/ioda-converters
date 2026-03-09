@@ -2365,6 +2365,7 @@ endif()
                             "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/irs_2ioda.py
                             -i testinput/EUMT_IDPFS_DEV_20210624080230_20210624080240_N__T_0001_0015.nc
                             --scan_shape 8 8
+                            --resolution 32
                             -o testrun/obs.20210624T080200_PT1M_irs_mtg-s01.nc"
                             obs.20210624T080200_PT1M_irs_mtg-s01.nc ${IODA_CONV_COMP_TOL})
 
