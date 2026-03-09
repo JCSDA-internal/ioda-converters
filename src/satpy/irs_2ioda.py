@@ -59,7 +59,7 @@ locationKeyList = [
 
 GlobalAttrs = {
     "platformCommonName": "IRS",
-    "platformLongDescription": "IRS Brightness Temperature Data",
+    "platformLongDescription": "MeteoSat Third Generation MTG-IRS Principle Component Score Data",
 }
 
 
@@ -257,39 +257,48 @@ def get_data_from_files(afile, resolution=160, scan_shape=(160, 160), include_re
     big_score = big_score.astype('float32')
     for i in range(nscore_lw+nscore_mw):
         obs_data[(pcname.format(i+1), metaDataName)] = big_score[:, :, i]
-    obs_data = thinIt(obs_data, resolution=resolution)
+    obs_data = subsample_and_flatten(obs_data, resolution=resolution)
     obs_data = assign_WMO_ID(obs_data, f.platform)
 
     return all_wn, obs_data
 
 
-def thinIt(obs_data, resolution=160):
+def subsample_and_flatten(obs_data, resolution=160, base_resolution=4):
 
-    # do a thinning of the data from native (base) resolution
-    # the base resolution is assumed 4 km, and scan shape 160, 160
-    obs_data_out = {}
-    base_resolution = 4
-    if resolution == base_resolution:
-        return obs_data
+    """
+    Downsamples observation grids based on resolution and
+    flattens spatial dimensions for downstream processing.
+
+    Inputs
+    obs_data :  observation data dictionary
+    resolution : desired output resolution in km
+    base_resolution : assumed full resolution in km
+
+    Output:
+    obs_data_out : sampled and flattened arrays
+
+    """
     stride = int(resolution / base_resolution)
-    start_row = stride
-    start_column = stride
+    # Calculate the center of the stride block
+    # For stride=1 (no thinning), offset is 0
+    # For stride=40 (thinning), offset is 20
+    offset = stride // 2
+    obs_data_out = {}
+
     for k, data in obs_data.items():
-        # 3D Data (Channels, Rows, Cols) - e.g. Brightness Temps
-        if data.ndim > 2 and 'brightnessTemperature' in str(k):
-            nchans = data.shape[0]
-            # Slice: Keep all channels, skip rows and cols by stride
-            sliced = data[:, ::stride, ::stride]
+        # Case 1: 3D Data (e.g., [Channels, Rows, Cols])
+        if data.ndim == 3 and 'brightnessTemperature' in str(k):
+            # Slicing with [0::1] is effectively a no-op, keeping logic consistent
+            sliced = data[:, offset::stride, offset::stride]
+            nchans, rows, cols = sliced.shape
+            # Reshape to [Points, Channels]
+            obs_data_out[k] = sliced.reshape(nchans, rows * cols).T
 
-            # Dynamically compute the number of spatial points remaining
-            num_points = sliced.shape[1] * sliced.shape[2]
-            obs_data_out[k] = sliced.reshape(nchans, num_points).T
+        # Case 2: 2D Data (e.g., [Rows, Cols] Lat/Lon grids)
+        elif data.ndim == 2:
+            obs_data_out[k] = data[offset::stride, offset::stride].flatten()
 
-        # 2D Data (Rows, Cols) - e.g. Lat/Lon grids
-        elif data.ndim > 1:
-            obs_data_out[k] = data[::stride, ::stride].flatten()
-
-        # 1D or Scalar Data - keep as is
+        # Case 3: 1D or Scalar Data
         else:
             obs_data_out[k] = data
 
