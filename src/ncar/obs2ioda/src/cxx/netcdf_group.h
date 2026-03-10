@@ -1,5 +1,12 @@
-#ifndef NETCDF_GROUP_H
-#define NETCDF_GROUP_H
+/*
+ * (C) Copyright 2026 UCAR
+ *
+ * This software is licensed under the terms of the Apache Licence Version 2.0
+ * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ */
+
+#ifndef NCAR_OBS2IODA_SRC_CXX_NETCDF_GROUP_H_
+#define NCAR_OBS2IODA_SRC_CXX_NETCDF_GROUP_H_
 
 namespace Obs2Ioda {
 
@@ -32,11 +39,8 @@ namespace Obs2Ioda {
         int netcdfAddGroup(
                 int netcdfID,
                 const char *parentGroupName,
-                const char *groupName
-        );
-
+                const char *groupName);
     }
+}  // namespace Obs2Ioda
 
-}
-
-#endif //NETCDF_GROUP_H
+#endif  // NCAR_OBS2IODA_SRC_CXX_NETCDF_GROUP_H_

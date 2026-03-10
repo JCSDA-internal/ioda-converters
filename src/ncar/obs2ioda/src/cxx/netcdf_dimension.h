@@ -1,5 +1,12 @@
-#ifndef NETCDF_DIMENSION_H
-#define NETCDF_DIMENSION_H
+/*
+ * (C) Copyright 2026 UCAR
+ *
+ * This software is licensed under the terms of the Apache Licence Version 2.0
+ * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ */
+
+#ifndef NCAR_OBS2IODA_SRC_CXX_NETCDF_DIMENSION_H_
+#define NCAR_OBS2IODA_SRC_CXX_NETCDF_DIMENSION_H_
 
 
 namespace Obs2Ioda {
@@ -34,9 +41,8 @@ namespace Obs2Ioda {
         const char *groupName,
         const char *dimName,
         int len,
-        int *dimID
-    );
+        int *dimID);
     }
-}
+}  // namespace Obs2Ioda
 
-#endif //NETCDF_DIMENSION_H
+#endif  // NCAR_OBS2IODA_SRC_CXX_NETCDF_DIMENSION_H_
