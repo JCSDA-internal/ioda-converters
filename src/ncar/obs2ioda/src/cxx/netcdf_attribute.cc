@@ -1,3 +1,10 @@
+/*
+ * (C) Copyright 2026 UCAR
+ *
+ * This software is licensed under the terms of the Apache Licence Version 2.0
+ * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ */
+
 #include "netcdf_attribute.h"
 #include "netcdf_file.h"
 #include "netcdf_error.h"
@@ -15,28 +22,21 @@ namespace Obs2Ioda {
             if (varName == nullptr) {
                 std::string msg = "Variable name cannot be null";
                 throw netCDF::exceptions::NcBadName(
-                    msg.c_str(), __FILE__, __LINE__
-                );
+                    msg.c_str(), __FILE__, __LINE__);
             }
             if (!std::string(varName).empty()) {
                 auto iodaVarName = iodaSchema.getVariable(varName)->getValidName();
                 auto var = group->getVar(iodaVarName);
                 if constexpr(std::is_same_v<const char *, T> && netcdfString) {
-                    var.putAtt(
-                        attName, std::string(
-                            reinterpret_cast<const char *>(values)
-                        )
-                    );
+                    var.putAtt(attName, std::string(
+                            reinterpret_cast<const char *>(values)));
                 } else {
                     var.putAtt(attName, netcdfDataType, len, values);
                 }
             } else {
                 if constexpr(std::is_same_v<const char *, T> && netcdfString) {
-                    group->putAtt(
-                        attName, std::string(
-                            reinterpret_cast<const char *>(values)
-                        )
-                    );
+                    group->putAtt(attName, std::string(
+                            reinterpret_cast<const char *>(values)));
                 } else {
                     group->putAtt(attName, netcdfDataType, len, values);
                 }
@@ -54,8 +54,7 @@ namespace Obs2Ioda {
     ) {
         return netcdfPutAtt(
             netcdfID, attName, attValue, varName, groupName,
-            netCDF::NcType(netCDF::ncInt), attLen
-        );
+            netCDF::NcType(netCDF::ncInt), attLen);
     }
 
     int netcdfPutAttRealArray(
@@ -64,8 +63,7 @@ namespace Obs2Ioda {
     ) {
         return netcdfPutAtt(
             netcdfID, attName, attValue, varName, groupName,
-            netCDF::NcType(netCDF::ncFloat), attLen
-        );
+            netCDF::NcType(netCDF::ncFloat), attLen);
     }
 
     int netcdfPutAttInt(
@@ -74,8 +72,7 @@ namespace Obs2Ioda {
     ) {
         return netcdfPutAtt(
             netcdfID, attName, attValue, varName, groupName,
-            netCDF::NcType(netCDF::ncInt), 1
-        );
+            netCDF::NcType(netCDF::ncInt), 1);
     }
 
     int netcdfPutAttString(
@@ -84,7 +81,6 @@ namespace Obs2Ioda {
     ) {
         return netcdfPutAtt<const char *, true>(
             netcdfID, attName, attValue, varName, groupName,
-            netCDF::NcType(netCDF::ncString), strlen(attValue)
-        );
+            netCDF::NcType(netCDF::ncString), strlen(attValue));
     }
-}
+}  // namespace Obs2Ioda
