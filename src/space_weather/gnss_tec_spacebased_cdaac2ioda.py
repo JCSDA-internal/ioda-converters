@@ -113,6 +113,30 @@ def main(args):
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
 
+def compute_tangent_point(xleo, yleo, zleo, xgps, ygps, zgps):
+
+    # direction vector
+    dx = xgps - xleo
+    dy = ygps - yleo
+    dz = zgps - zleo
+
+    r = np.sqrt(dx*dx + dy*dy + dz*dz)
+
+    dx /= r
+    dy /= r
+    dz /= r
+
+    # dot product
+    sp1 = xleo*dx + yleo*dy + zleo*dz
+
+    # tangent point
+    px = xleo - dx*sp1
+    py = yleo - dy*sp1
+    pz = zleo - dz*sp1
+
+    return px, py, pz
+
+
 def get_meta_data(ds):
 
     # get some of the global attributes that we are interested in
@@ -252,20 +276,29 @@ def get_GNSS_mission(ds):
 
 
 def get_geolocation(obs_data):
-    # wrapper to compute a reasonably accurate latitude and longitude
+    #  wrapper to compute latitude, longitude and height 
     #  from the Earth-centered Earth fixed coordinates
     import pyproj
-    obs_data[("latitude", "MetaData")] = np.full_like(obs_data[("xECEFPosition", "MetaData")], float_missing_value)
-    obs_data[("longitude", "MetaData")] = np.full_like(obs_data[("xECEFPosition", "MetaData")], float_missing_value)
-    obs_data[("height", "MetaData")] = np.full_like(obs_data[("xECEFPosition", "MetaData")], float_missing_value)
+    xleo = obs_data[("xECEFPosition", "MetaData")]
+    yleo = obs_data[("yECEFPosition", "MetaData")]
+    zleo = obs_data[("zECEFPosition", "MetaData")]
+
+    xgps = obs_data[("xECEFPositionGNSS", "MetaData")]
+    ygps = obs_data[("yECEFPositionGNSS", "MetaData")]
+    zgps = obs_data[("zECEFPositionGNSS", "MetaData")]
+
+    nxleo = len(xleo)
+
+    lat = np.full(nxleo, float_missing_value)
+    lon = np.full(nxleo, float_missing_value)
+    height = np.full(nxleo, float_missing_value)
+
     transformer = pyproj.Transformer.from_crs({"proj": 'geocent', "ellps": 'WGS84', "datum": 'WGS84'},
                                               {"proj": 'latlong', "ellps": 'WGS84', "datum": 'WGS84'})
     # handling of km to meters should be automated
-    for i, x in enumerate(obs_data[("xECEFPosition", "MetaData")]):
-        lon, lat, height = transformer.transform(1000.*x,
-                                                 1000.*obs_data[("yECEFPosition", "MetaData")][i],
-                                                 1000.*obs_data[("zECEFPosition", "MetaData")][i],
-                                                 radians=False)
+    for i in range(nxleo):
+        px, py, pz = compute_tangent_point(xleo[i], yleo[i], zleo[i], xgps[i], ygps[i], zgps[i])
+        lon, lat, height = transformer.transform(1000.*px, 1000.*py, 1000.*pz, radians=False)
         obs_data[("latitude", "MetaData")][i] = lat
         obs_data[("longitude", "MetaData")][i] = lon
         obs_data[("height", "MetaData")][i] = height
