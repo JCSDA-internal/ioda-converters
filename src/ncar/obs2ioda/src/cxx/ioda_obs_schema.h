@@ -1,5 +1,12 @@
-#ifndef IODASCHEMA_H
-#define IODASCHEMA_H
+/*
+ * (C) Copyright 2026 UCAR
+ *
+ * This software is licensed under the terms of the Apache Licence Version 2.0
+ * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ */
+
+#ifndef NCAR_OBS2IODA_SRC_CXX_IODA_OBS_SCHEMA_H_
+#define NCAR_OBS2IODA_SRC_CXX_IODA_OBS_SCHEMA_H_
 
 #include <memory>
 #include <string>
@@ -20,7 +27,7 @@
  * YAML library (e.g., yaml-cpp). It enables dependency injection and mocking.
  */
 class IYamlNode {
-public:
+ public:
     /**
      * @brief Check whether a category (eg: "Variables") exists in the node.
      * @param category The category to check.
@@ -85,7 +92,7 @@ public:
  * generic access to YAML keys, sequences, and nested nodes.
  */
 class YamlEckitNode : public IYamlNode {
-public:
+ public:
     /**
      * @brief Constructor from a yaml file path.
      * @param yamlPath The path of file to get the node.
@@ -141,7 +148,7 @@ public:
     std::vector<eckit::LocalConfiguration>
     getSequence(const std::string &key) const override;
 
-private:
+ private:
     eckit::YAMLConfiguration node_;  ///< The wrapped eckit YAML node.
 };
 
@@ -152,7 +159,7 @@ private:
  * optionally a list of deprecated aliases.
  */
 class IodaObsSchemaComponent {
-protected:
+ protected:
     std::string validName;              ///< Canonical name (first name in list).
     std::vector<std::string> names;     ///< All known names (canonical + aliases).
     std::string componentType;          ///< Type: "Variable", "Attribute", etc.
@@ -179,7 +186,7 @@ protected:
     explicit IodaObsSchemaComponent(std::string componentType,
                                     std::string name = "");
 
-public:
+ public:
     /**
      * @brief Returns the canonical name of the component.
      * @return Canonical name string.
@@ -210,7 +217,7 @@ public:
  * @brief Represents an attribute entry in the schema.
  */
 class IodaObsAttribute final : public IodaObsSchemaComponent {
-public:
+ public:
     /**
      * @brief Constructor for an attribute component.
      * @param name Optional attribute name.
@@ -222,7 +229,7 @@ public:
  * @brief Represents a group entry in the schema.
  */
 class IodaObsGroup final : public IodaObsSchemaComponent {
-public:
+ public:
     /**
      * @brief Constructor for a group component.
      * @param name Optional group name.
@@ -234,7 +241,7 @@ public:
  * @brief Represents a dimension entry in the schema.
  */
 class IodaObsDimension final : public IodaObsSchemaComponent {
-public:
+ public:
     /**
      * @brief Constructor for a dimension component.
      * @param name Optional dimension name.
@@ -248,7 +255,7 @@ public:
  * Variables may appear under both "Variables" and "Dimensions".
  */
 class IodaObsVariable final : public IodaObsSchemaComponent {
-public:
+ public:
     /**
      * @brief Constructor for a variable component.
      * @param name Optional variable name.
@@ -270,10 +277,14 @@ public:
  * Parses schema components and resolves deprecated names to canonical ones.
  */
 class IodaObsSchema {
-    std::unordered_map<std::string, std::shared_ptr<IodaObsVariable>> variables;   ///< Variable name to variable object.
-    std::unordered_map<std::string, std::shared_ptr<IodaObsDimension>> dimensions; ///< Dimension name to dimension object.
-    std::unordered_map<std::string, std::shared_ptr<IodaObsGroup>> groups;         ///< Group name to group object.
-    std::unordered_map<std::string, std::shared_ptr<IodaObsAttribute>> attributes; ///< Attribute name to attribute object.
+    /// < Variable name to variable object.
+    std::unordered_map<std::string, std::shared_ptr<IodaObsVariable>> variables;
+    /// < Dimension name to dimension object.
+    std::unordered_map<std::string, std::shared_ptr<IodaObsDimension>> dimensions;
+    /// < Group name to group object.
+    std::unordered_map<std::string, std::shared_ptr<IodaObsGroup>> groups;
+    /// < Attribute name to attribute object.
+    std::unordered_map<std::string, std::shared_ptr<IodaObsAttribute>> attributes;
 
     /**
      * @brief Generic component loader from YAML into the component map.
@@ -290,11 +301,11 @@ class IodaObsSchema {
                        const std::string &key,
                        std::unordered_map<std::string, std::shared_ptr<T>> &componentMap) {
         if (schema->hasCategory(category) && schema->isCategorySequence(category)) {
-            for (const auto &item: schema->getSequence(category)) {
+            for (const auto &item : schema->getSequence(category)) {
                 if (schema->hasKey(item, key)) {
                     auto component = std::make_shared<T>();
                     component->load(schema, item);
-                    for (const auto &n: component->getNames()) {
+                    for (const auto &n : component->getNames()) {
                         componentMap.emplace(n, component);
                     }
                 }
@@ -322,7 +333,7 @@ class IodaObsSchema {
         return component;
     }
 
-public:
+ public:
     /**
      * @brief Construct and populate schema from YAML node.
      * @param schema Shared pointer to parsed YAML root node.
@@ -362,4 +373,4 @@ public:
     getVariable(const std::string &name);
 };
 
-#endif  // IODASCHEMA_H
+#endif  // NCAR_OBS2IODA_SRC_CXX_IODA_OBS_SCHEMA_H_

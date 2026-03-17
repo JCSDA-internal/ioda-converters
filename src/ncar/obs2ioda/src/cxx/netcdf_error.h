@@ -1,10 +1,18 @@
-#ifndef OBS2IODA_NETCDF_ERROR_H
-#define OBS2IODA_NETCDF_ERROR_H
+/*
+ * (C) Copyright 2026 UCAR
+ *
+ * This software is licensed under the terms of the Apache Licence Version 2.0
+ * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ */
+
+#ifndef NCAR_OBS2IODA_SRC_CXX_NETCDF_ERROR_H_
+#define NCAR_OBS2IODA_SRC_CXX_NETCDF_ERROR_H_
 
 
 #include <netcdf>
 #include <variant>
 #include <ncChar.h>
+#include <cstdint>
 
 namespace Obs2Ioda {
 
@@ -58,7 +66,7 @@ namespace Obs2Ioda {
             throw netCDF::exceptions::NcBadType(msg.c_str(), __FILE__,
                                                 __LINE__);
         };
-        using SupportedTypes = std::variant<int, float, double, long long, const char *>;
+        using SupportedTypes = std::variant<int, float, double, int64_t, const char *>;
 
         if constexpr (!is_in_variant<T, SupportedTypes>::value) {
             throwBadTypeError(errorMessage);
@@ -74,7 +82,7 @@ namespace Obs2Ioda {
             if (netcdfDataType != NC_DOUBLE)
                 throwBadTypeError(errorMessage);
 
-        } else if constexpr (std::is_same_v<T, long long>) {
+        } else if constexpr (std::is_same_v<T, int64_t>) {
             if (netcdfDataType != NC_INT64)
                 throwBadTypeError(errorMessage);
 
@@ -125,9 +133,8 @@ namespace Obs2Ioda {
     int netcdfErrorMessage(
             const netCDF::exceptions::NcException &e,
             int lineNumber = -1,
-            const std::string &fileName = ""
-    );
+            const std::string &fileName = "");
 
-}
+}  // namespace Obs2Ioda
 
-#endif //OBS2IODA_NETCDF_ERROR_H
+#endif  // NCAR_OBS2IODA_SRC_CXX_NETCDF_ERROR_H_

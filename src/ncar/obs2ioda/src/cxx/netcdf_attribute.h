@@ -1,5 +1,12 @@
-#ifndef NETCDF_ATTRIBUTE_H
-#define NETCDF_ATTRIBUTE_H
+/*
+ * (C) Copyright 2026 UCAR
+ *
+ * This software is licensed under the terms of the Apache Licence Version 2.0
+ * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ */
+
+#ifndef NCAR_OBS2IODA_SRC_CXX_NETCDF_ATTRIBUTE_H_
+#define NCAR_OBS2IODA_SRC_CXX_NETCDF_ATTRIBUTE_H_
 
 namespace Obs2Ioda {
     extern "C" {
@@ -21,8 +28,7 @@ namespace Obs2Ioda {
      */
     int netcdfPutAttInt(
         int netcdfID, const char *attName, const int *attValue,
-        const char *varName, const char *groupName
-    );
+        const char *varName, const char *groupName);
 
     /**
      * @brief Writes an integer array attribute to a variable, group, or as a global attribute in a NetCDF file.
@@ -44,19 +50,16 @@ namespace Obs2Ioda {
      */
     int netcdfPutAttIntArray(
         int netcdfID, const char *attName, const int *attValue,
-        int attLen, const char *varName, const char *groupName
-    );
+        int attLen, const char *varName, const char *groupName);
 
     int netcdfPutAttRealArray(
         int netcdfID, const char *attName, const float *attValue,
-        int attLen, const char *varName, const char *groupName
-    );
+        int attLen, const char *varName, const char *groupName);
 
     int netcdfPutAttString(
         int netcdfID, const char *attName, const char *attValue,
-        const char *varName, const char *groupName
-    );
+        const char *varName, const char *groupName);
     }
-}
+}  // namespace Obs2Ioda
 
-#endif //NETCDF_ATTRIBUTE_H
+#endif  // NCAR_OBS2IODA_SRC_CXX_NETCDF_ATTRIBUTE_H_
