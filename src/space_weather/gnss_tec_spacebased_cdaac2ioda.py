@@ -313,7 +313,7 @@ def get_geolocation(obs_data):
         lon, lat, height = transformer.transform(1000.*px, 1000.*py, 1000.*pz, radians=False)
         obs_data[("latitude", "MetaData")][i] = lat
         obs_data[("longitude", "MetaData")][i] = lon
-        obs_data[("height_wrt_surface", "MetaData")][i] = height
+        obs_data[("height", "MetaData")][i] = height
 
     return obs_data
 
