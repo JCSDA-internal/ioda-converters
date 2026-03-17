@@ -10,6 +10,13 @@ module netcdf_cxx_mod
     implicit none
     public
 
+    type, bind(C) :: zlib_settings_t
+        integer(c_int) :: enabled = 1
+        integer(c_int) :: shuffle = 1
+        integer(c_int) :: deflate = 1
+        integer(c_int) :: deflateLevel = 4
+    end type zlib_settings_t
+
     interface netcdfPutAtt
         module procedure netcdfPutAtt
         module procedure netcdfPutAttArray
@@ -162,12 +169,14 @@ contains
     !       If not provided, the variable will be added as a global variable.
     !     - fillValue (class(*), intent(in), optional):
     !       The fill value to be used for the variable.
+    !     - zlibSettings (type(zlib_settings_t), intent(in), optional):
+    !       The values used for compression setting, if desired.
     !
     !   Returns:
     !     - integer(c_int): A status code indicating the outcome of the operation:
     !         - 0: Success.
     !         - Non-zero: Failure.
-    function netcdfAddVar(netcdfID, varName, netcdfDataType, numDims, dimNames, groupName, fillValue)
+    function netcdfAddVar(netcdfID, varName, netcdfDataType, numDims, dimNames, groupName, fillValue, zlibSettings)
         integer(c_int), value, intent(in) :: netcdfID
         character(len = *), intent(in) :: varName
         integer(c_int), value, intent(in) :: netcdfDataType
@@ -175,20 +184,27 @@ contains
         character(len = *), dimension(numDims), intent(in) :: dimNames
         character(len = *), optional, intent(in) :: groupName
         class(*), intent(in), optional :: fillValue
+        type(zlib_settings_t), intent(in), optional :: zlibSettings
         integer(c_int) :: netcdfAddVar
         integer :: status
         type(c_ptr) :: c_groupName
         type(c_ptr) :: c_varName
         type(c_ptr) :: c_dimNames
+        type(c_ptr) :: c_zlibSettings
         type(f_c_string_t) :: f_c_string_groupName
         type(f_c_string_t) :: f_c_string_varName
         type(f_c_string_array_t) :: f_c_string_array_dimNames
+        type(zlib_settings_t), target :: zlibSettingsLocal
 
         if (present(groupName)) then
             f_c_string_groupName = f_c_string_t(groupName)
         else
             f_c_string_groupName = f_c_string_t("")
         end if
+        if (present(zlibSettings)) then
+            zlibSettingsLocal = zlibSettings
+        end if
+
         status = check_f_c_string(f_c_string_groupName%to_c())
         c_groupName = check_f_c_string(f_c_string_groupName%get_c_string())
         f_c_string_varName = f_c_string_t(varName)
@@ -197,8 +213,10 @@ contains
         f_c_string_array_dimNames = f_c_string_array_t(dimNames)
         status = check_f_c_string_array(f_c_string_array_dimNames%to_c())
         c_dimNames = check_f_c_string_array(f_c_string_array_dimNames%get_c_string_array())
+        c_zlibSettings = c_loc(zlibSettingsLocal)
+
         netcdfAddVar = c_netcdfAddVar(netcdfID, c_groupName, c_varName, &
-                netcdfDataType, numDims, c_dimNames)
+                netcdfDataType, numDims, c_dimNames, c_zlibSettings)
         if (present(fillValue)) then
             netcdfAddVar = netcdfSetFill(netcdfID, varName, 1, fillValue, groupName)
         end if

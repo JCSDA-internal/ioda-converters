@@ -162,7 +162,9 @@ def get_meta_data(ds):
             print(f"Found neither float nor in, type={type(v)}; skipping")
 
     # the time convert to epoch and handle array of values
-    profile_meta_data['dateTime'] = np.array(ds['time'].add_offset + ds['time'][:], np.int64)
+    gps_offset = datetime(1980, 1, 6).timestamp()
+    leap_seconds = 18  # valid from Jan 1, 2017 and current through at least 2026
+    profile_meta_data['dateTime'] = np.array(gps_offset + ds['time'][:] - leap_seconds, np.int64)
 
     # bespoke table of letter to WMO code
     transmitterConstellationId = get_GNSS_constellation(ds.conid)
@@ -192,18 +194,19 @@ def get_obs_data(ifile, get_obs_data_args):
     # number to keep track of profile
     obs_data[('sequenceNumber', 'MetaData')] = np.array(np.repeat(get_obs_data_args.recordnumber, ds['x_LEO'].size), dtype=ioda_int_type)
     # Elevation angle of LEO-GPS link
-    obs_data[("elevationAngleGNSS", "MetaData")] = np.array(ds['elevation'][:])
+    obs_data[("elevationAngleGNSS", "MetaData")] = np.array(ds['elevation'][:], dtype=ioda_float_type)
     # GPS x position (ECF) at time of signal transmission
-    obs_data[("xECEFPositionGNSS", "MetaData")] = np.array(ds['x_GPS'][:])
-    obs_data[("yECEFPositionGNSS", "MetaData")] = np.array(ds['y_GPS'][:])
-    obs_data[("zECEFPositionGNSS", "MetaData")] = np.array(ds['z_GPS'][:])
+    obs_data[("xECEFPositionGNSS", "MetaData")] = np.array(ds['x_GPS'][:], dtype=ioda_float_type)
+    obs_data[("yECEFPositionGNSS", "MetaData")] = np.array(ds['y_GPS'][:], dtype=ioda_float_type)
+    obs_data[("zECEFPositionGNSS", "MetaData")] = np.array(ds['z_GPS'][:], dtype=ioda_float_type)
     # LEO x position (ECF) at time of signal reception
-    obs_data[("xECEFPositionLEO", "MetaData")] = np.array(ds['x_LEO'][:])
-    obs_data[("yECEFPositionLEO", "MetaData")] = np.array(ds['y_LEO'][:])
-    obs_data[("zECEFPositionLEO", "MetaData")] = np.array(ds['z_LEO'][:])
+    obs_data[("xECEFPositionLEO", "MetaData")] = np.array(ds['x_LEO'][:], dtype=ioda_float_type)
+    obs_data[("yECEFPositionLEO", "MetaData")] = np.array(ds['y_LEO'][:], dtype=ioda_float_type)
+    obs_data[("zECEFPositionLEO", "MetaData")] = np.array(ds['z_LEO'][:], dtype=ioda_float_type)
+
     obs_data = get_geolocation(obs_data)
     # the observation value
-    obs_data[("totalElectronContent", "ObsValue")] = np.array(ds['TEC'][:])
+    obs_data[("totalElectronContent", "ObsValue")] = np.array(ds['TEC'][:], dtype=ioda_float_type)
 
     return obs_data
 
