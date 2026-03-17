@@ -30,9 +30,9 @@ locationKeyList = [
     ('latitude', 'float'),
     ('longitude', 'float'),
     ('height', 'float'),
-    ('xECEFPositionLEO', 'float'),
-    ('yECEFPositionLEO', 'float'),
-    ('zECEFPositionLEO', 'float'),
+    ('xECEFPosition', 'float'),
+    ('yECEFPosition', 'float'),
+    ('zECEFPosition', 'float'),
     ('xECEFPositionGNSS', 'float'),
     ('yECEFPositionGNSS', 'float'),
     ('zECEFPositionGNSS', 'float'),
@@ -86,9 +86,9 @@ def main(args):
     VarAttrs[('latitude', 'MetaData')]['units'] = 'degree'
     VarAttrs[('longitude', 'MetaData')]['units'] = 'degree'
     VarAttrs[('height', 'MetaData')]['units'] = 'm'
-    VarAttrs[('xECEFPositionLEO', 'MetaData')]['units'] = 'km'
-    VarAttrs[('yECEFPositionLEO', 'MetaData')]['units'] = 'km'
-    VarAttrs[('zECEFPositionLEO', 'MetaData')]['units'] = 'km'
+    VarAttrs[('xECEFPosition', 'MetaData')]['units'] = 'km'
+    VarAttrs[('yECEFPosition', 'MetaData')]['units'] = 'km'
+    VarAttrs[('zECEFPosition', 'MetaData')]['units'] = 'km'
     VarAttrs[('xECEFPositionGNSS', 'MetaData')]['units'] = 'km'
     VarAttrs[('yECEFPositionGNSS', 'MetaData')]['units'] = 'km'
     VarAttrs[('zECEFPositionGNSS', 'MetaData')]['units'] = 'km'
@@ -102,9 +102,9 @@ def main(args):
     VarAttrs[('latitude', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('longitude', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('height', 'MetaData')]['_FillValue'] = float_missing_value
-    VarAttrs[('xECEFPositionLEO', 'MetaData')]['_FillValue'] = float_missing_value
-    VarAttrs[('yECEFPositionLEO', 'MetaData')]['_FillValue'] = float_missing_value
-    VarAttrs[('zECEFPositionLEO', 'MetaData')]['_FillValue'] = float_missing_value
+    VarAttrs[('xECEFPosition', 'MetaData')]['_FillValue'] = float_missing_value
+    VarAttrs[('yECEFPosition', 'MetaData')]['_FillValue'] = float_missing_value
+    VarAttrs[('zECEFPosition', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('xECEFPositionGNSS', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('yECEFPositionGNSS', 'MetaData')]['_FillValue'] = float_missing_value
     VarAttrs[('zECEFPositionGNSS', 'MetaData')]['_FillValue'] = float_missing_value
@@ -200,9 +200,9 @@ def get_obs_data(ifile, get_obs_data_args):
     obs_data[("yECEFPositionGNSS", "MetaData")] = np.array(ds['y_GPS'][:], dtype=ioda_float_type)
     obs_data[("zECEFPositionGNSS", "MetaData")] = np.array(ds['z_GPS'][:], dtype=ioda_float_type)
     # LEO x position (ECF) at time of signal reception
-    obs_data[("xECEFPositionLEO", "MetaData")] = np.array(ds['x_LEO'][:], dtype=ioda_float_type)
-    obs_data[("yECEFPositionLEO", "MetaData")] = np.array(ds['y_LEO'][:], dtype=ioda_float_type)
-    obs_data[("zECEFPositionLEO", "MetaData")] = np.array(ds['z_LEO'][:], dtype=ioda_float_type)
+    obs_data[("xECEFPosition", "MetaData")] = np.array(ds['x_LEO'][:], dtype=ioda_float_type)
+    obs_data[("yECEFPosition", "MetaData")] = np.array(ds['y_LEO'][:], dtype=ioda_float_type)
+    obs_data[("zECEFPosition", "MetaData")] = np.array(ds['z_LEO'][:], dtype=ioda_float_type)
 
     obs_data = get_geolocation(obs_data)
     # the observation value
@@ -236,9 +236,9 @@ def def_meta_types():
         "xECEFPositionGNSS": "float",
         "yECEFPositionGNSS": "float",
         "zECEFPositionGNSS": "float",
-        "xECEFPositionLEO": "float",
-        "yECEFPositionLEO": "float",
-        "zECEFPositionLEO": "float",
+        "xECEFPosition": "float",
+        "yECEFPosition": "float",
+        "zECEFPosition": "float",
         "antennaReceiverId": 'float',
         "satelliteIdentifier": 'integer',
         "satelliteSubIdentifier": 'integer',
@@ -283,9 +283,9 @@ def get_geolocation(obs_data):
     #  from the Earth-centered Earth fixed coordinates
     import pyproj
 
-    xleo = obs_data[("xECEFPositionLEO", "MetaData")]
-    yleo = obs_data[("yECEFPositionLEO", "MetaData")]
-    zleo = obs_data[("zECEFPositionLEO", "MetaData")]
+    xleo = obs_data[("xECEFPosition", "MetaData")]
+    yleo = obs_data[("yECEFPosition", "MetaData")]
+    zleo = obs_data[("zECEFPosition", "MetaData")]
 
     xgps = obs_data[("xECEFPositionGNSS", "MetaData")]
     ygps = obs_data[("yECEFPositionGNSS", "MetaData")]
@@ -297,9 +297,9 @@ def get_geolocation(obs_data):
     lon = np.full(nxleo, float_missing_value)
     height = np.full(nxleo, float_missing_value)
 
-    obs_data[("latitude", "MetaData")] = np.full_like(obs_data[("xECEFPositionLEO", "MetaData")], float_missing_value)
-    obs_data[("longitude", "MetaData")] = np.full_like(obs_data[("xECEFPositionLEO", "MetaData")], float_missing_value)
-    obs_data[("height", "MetaData")] = np.full_like(obs_data[("xECEFPositionLEO", "MetaData")], float_missing_value)
+    obs_data[("latitude", "MetaData")] = np.full_like(obs_data[("xECEFPosition", "MetaData")], float_missing_value)
+    obs_data[("longitude", "MetaData")] = np.full_like(obs_data[("xECEFPosition", "MetaData")], float_missing_value)
+    obs_data[("height", "MetaData")] = np.full_like(obs_data[("xECEFPosition", "MetaData")], float_missing_value)
 
     transformer = pyproj.Transformer.from_crs({"proj": 'geocent', "ellps": 'WGS84', "datum": 'WGS84'},
                                               {"proj": 'latlong', "ellps": 'WGS84', "datum": 'WGS84'})
