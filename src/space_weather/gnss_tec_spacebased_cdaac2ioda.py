@@ -279,7 +279,7 @@ def get_GNSS_mission(ds):
 
 
 def get_geolocation(obs_data):
-    #  wrapper to compute latitude, longitude and height
+    # wrapper to compute latitude, longitude and height
     #  from the Earth-centered Earth fixed coordinates
     import pyproj
 
@@ -305,9 +305,9 @@ def get_geolocation(obs_data):
                                               {"proj": 'latlong', "ellps": 'WGS84', "datum": 'WGS84'})
     # handling of km to meters should be automated
     for i in range(nxleo):
-        # For elevation angle < 0, the point cloest to earth is in between GNSS and LEO and can be
+        # For elevation angle < 0, the point closest to earth is in between GNSS and LEO and can be
         # considered as tangent point since straight line is a sufficient approximation in ionosphere.
-        # For elevation angle > 0, the point cloest to earty is below LEO height. So this is
+        # For elevation angle > 0, the point closest to earth is below LEO height. So this is
         # not a physical tangent point definition. We'll keep this for now.
         px, py, pz = compute_tangent_point(xleo[i], yleo[i], zleo[i], xgps[i], ygps[i], zgps[i])
         lon, lat, height = transformer.transform(1000.*px, 1000.*py, 1000.*pz, radians=False)
