@@ -122,6 +122,10 @@ def compute_tangent_point(xleo, yleo, zleo, xgps, ygps, zgps):
 
     r = np.sqrt(dx*dx + dy*dy + dz*dz)
 
+    # ✅ avoid division by zero
+    if r == 0 or not np.isfinite(r):
+        return np.nan, np.nan, np.nan
+
     dx /= r
     dy /= r
     dz /= r
@@ -279,6 +283,7 @@ def get_geolocation(obs_data):
     #  wrapper to compute latitude, longitude and height 
     #  from the Earth-centered Earth fixed coordinates
     import pyproj
+
     xleo = obs_data[("xECEFPosition", "MetaData")]
     yleo = obs_data[("yECEFPosition", "MetaData")]
     zleo = obs_data[("zECEFPosition", "MetaData")]
@@ -289,9 +294,9 @@ def get_geolocation(obs_data):
 
     nxleo = len(xleo)
 
-    lat = np.full(nxleo, float_missing_value)
-    lon = np.full(nxleo, float_missing_value)
-    height = np.full(nxleo, float_missing_value)
+    obs_data[("latitude", "MetaData")]  = np.full(nxleo, float_missing_value, dtype=ioda_float_type)
+    obs_data[("longitude", "MetaData")] = np.full(nxleo, float_missing_value, dtype=ioda_float_type)
+    obs_data[("height", "MetaData")]    = np.full(nxleo, float_missing_value, dtype=ioda_float_type)
 
     transformer = pyproj.Transformer.from_crs({"proj": 'geocent', "ellps": 'WGS84', "datum": 'WGS84'},
                                               {"proj": 'latlong', "ellps": 'WGS84', "datum": 'WGS84'})
@@ -302,10 +307,18 @@ def get_geolocation(obs_data):
         # For elevation angle > 0, the point cloest to earty is below LEO height. So this is 
         # not a physical tangent point definition. We'll keep this for now. 
         px, py, pz = compute_tangent_point(xleo[i], yleo[i], zleo[i], xgps[i], ygps[i], zgps[i])
-        lon, lat, height = transformer.transform(1000.*px, 1000.*py, 1000.*pz, radians=False)
-        obs_data[("latitude", "MetaData")][i] = lat
-        obs_data[("longitude", "MetaData")][i] = lon
-        obs_data[("height", "MetaData")][i] = height
+
+        if not (np.isfinite(px) and np.isfinite(py) and np.isfinite(pz)):
+            continue
+
+        try:
+            lon, lat, height = transformer.transform(1000.*px, 1000.*py, 1000.*pz, radians=False)
+        except Exception:
+            continue
+
+        obs_data[("latitude", "MetaData")][i] = np.float32(lat)
+        obs_data[("longitude", "MetaData")][i] = np.float32(lon)
+        obs_data[("height", "MetaData")][i] = np.float32(height)
 
     return obs_data
 
