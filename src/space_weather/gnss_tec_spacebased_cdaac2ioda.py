@@ -207,7 +207,6 @@ def get_obs_data(ifile, get_obs_data_args):
     obs_data[("xECEFPosition", "MetaData")] = np.array(ds['x_LEO'][:], dtype=ioda_float_type)
     obs_data[("yECEFPosition", "MetaData")] = np.array(ds['y_LEO'][:], dtype=ioda_float_type)
     obs_data[("zECEFPosition", "MetaData")] = np.array(ds['z_LEO'][:], dtype=ioda_float_type)
-
     obs_data = get_geolocation(obs_data)
     # the observation value
     obs_data[("totalElectronContent", "ObsValue")] = np.array(ds['TEC'][:], dtype=ioda_float_type)
@@ -301,12 +300,9 @@ def get_geolocation(obs_data):
     obs_data[("longitude", "MetaData")] = np.full(nxleo, float_missing_value, dtype=ioda_float_type)
     obs_data[("height", "MetaData")]    = np.full(nxleo, float_missing_value, dtype=ioda_float_type)
 
-    obs_data[("latitude", "MetaData")] = np.full_like(obs_data[("xECEFPosition", "MetaData")], float_missing_value)
-    obs_data[("longitude", "MetaData")] = np.full_like(obs_data[("xECEFPosition", "MetaData")], float_missing_value)
-    obs_data[("height", "MetaData")] = np.full_like(obs_data[("xECEFPosition", "MetaData")], float_missing_value)
-
     transformer = pyproj.Transformer.from_crs({"proj": 'geocent', "ellps": 'WGS84', "datum": 'WGS84'},
                                               {"proj": 'latlong', "ellps": 'WGS84', "datum": 'WGS84'})
+
     # handling of km to meters should be automated
     for i in range(nxleo):
         # When elevation angle < 0, the point closest to earth is between GNSS and LEO receiver
