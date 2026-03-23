@@ -122,7 +122,7 @@ def compute_tangent_point(xleo, yleo, zleo, xgps, ygps, zgps):
 
     r = np.sqrt(dx*dx + dy*dy + dz*dz)
 
-    # ✅ avoid division by zero
+    # Avoid division by zero
     if r == 0 or not np.isfinite(r):
         return np.nan, np.nan, np.nan
 
