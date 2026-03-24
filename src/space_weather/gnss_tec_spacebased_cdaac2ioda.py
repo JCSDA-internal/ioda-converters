@@ -296,9 +296,9 @@ def get_geolocation(obs_data):
 
     nxleo = len(xleo)
 
-    obs_data[("latitude", "MetaData")]  = np.full(nxleo, float_missing_value, dtype=ioda_float_type)
+    obs_data[("latitude", "MetaData")] = np.full(nxleo, float_missing_value, dtype=ioda_float_type)
     obs_data[("longitude", "MetaData")] = np.full(nxleo, float_missing_value, dtype=ioda_float_type)
-    obs_data[("height", "MetaData")]    = np.full(nxleo, float_missing_value, dtype=ioda_float_type)
+    obs_data[("height", "MetaData")] = np.full(nxleo, float_missing_value, dtype=ioda_float_type)
 
     transformer = pyproj.Transformer.from_crs({"proj": 'geocent', "ellps": 'WGS84', "datum": 'WGS84'},
                                               {"proj": 'latlong', "ellps": 'WGS84', "datum": 'WGS84'})
