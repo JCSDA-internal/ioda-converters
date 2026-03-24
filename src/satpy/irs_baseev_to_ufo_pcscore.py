@@ -104,7 +104,7 @@ def readMatrix(f, method, subset):
     M[nchan1:nchan] = M2[:]
     RRop[0:npcs1, 0:nchan1] = RRop1[:, :]
     RRop[npcs1:npcs, nchan1:nchan] = RRop2[:, :]
-    if (type(subset) == list):
+    if type(subset) is list:
         idx = np.asarray(subset) - 1
         RRop = RRop[:, idx]
         M = M[idx]
@@ -125,7 +125,7 @@ def writeFile(outfile, RR, M, subset):
         f.createDimension('Component', npcs)
         chn = f.createVariable('Channel', 'i4', ('Channel',))
         comp = f.createVariable('Component', 'i4', ('Component',))
-        if (type(subset) == list):
+        if type(subset) is list:
             chan = subset
         else:
             chan = np.arange(1, nchan+1)
