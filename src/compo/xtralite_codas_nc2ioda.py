@@ -169,12 +169,13 @@ class CoDASConverter(object):
         self.varAttrs[ak_key]['units']       = '1'
         self.varAttrs[ak_key]['coordinates'] = 'longitude latitude'
 
-        # A priori total column
-        ap_key = ('aprioriTerm', 'RetrievalAncillaryData')
-        self.varAttrs[ap_key]['units']       = units
-        self.varAttrs[ap_key]['coordinates'] = 'longitude latitude'
+        # A priori total column and profile (only present when priorpro exists;
+        # _generic_end in tropomi.py creates priorobs only if priorpro is present)
+        if cfg.has_priorpro:
+            ap_key = ('aprioriTerm', 'RetrievalAncillaryData')
+            self.varAttrs[ap_key]['units']       = units
+            self.varAttrs[ap_key]['coordinates'] = 'longitude latitude'
 
-        # A priori profile (optional)
         if cfg.has_priorpro:
             pp_key = ('aprioriProfile', 'RetrievalAncillaryData')
             self.varAttrs[pp_key]['units']       = units
@@ -205,7 +206,6 @@ class CoDASConverter(object):
             obs       = ncd.variables['obs'][:]
             uncert    = ncd.variables['uncert'][:]
             avgker    = ncd.variables['avgker'][:]
-            priorobs  = ncd.variables['priorobs'][:]
             vert      = ncd.variables[cfg.vert_coord][:]
 
             # Grab units from the file the first time
@@ -213,7 +213,8 @@ class CoDASConverter(object):
                 units = getattr(ncd.variables['obs'], 'units', 'unknown')
                 self._setup_var_keys(units)
 
-            # Optional variables
+            # Optional variables (priorobs only exists when priorpro does)
+            priorobs = ncd.variables['priorobs'][:] if cfg.has_priorpro else None
             priorpro = ncd.variables['priorpro'][:] if cfg.has_priorpro else None
             isbad    = ncd.variables['isbad'][:]     if cfg.has_isbad    else None
 
@@ -239,8 +240,8 @@ class CoDASConverter(object):
             obs_s      = f32(obs)
             uncert_s   = f32(uncert)
             avgker_s   = f32(avgker)
-            priorobs_s = f32(priorobs)
             vert_s     = f32(vert)
+            priorobs_s = f32(priorobs) if priorobs is not None else None
             priorpro_s = f32(priorpro) if priorpro is not None else None
 
             # PreQC: 0=passed explicit QC (isbad filtered), 2=unchecked (no isbad)
@@ -257,9 +258,10 @@ class CoDASConverter(object):
                 self.outdata[self.varDict[iodavar]['qcKey']]  = preqc_s
 
                 self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = avgker_s
-                self.outdata[('aprioriTerm',     'RetrievalAncillaryData')] = priorobs_s
                 self.outdata[(cfg.vert_ioda_name,'RetrievalAncillaryData')] = vert_s
 
+                if priorobs_s is not None:
+                    self.outdata[('aprioriTerm',    'RetrievalAncillaryData')] = priorobs_s
                 if priorpro_s is not None:
                     self.outdata[('aprioriProfile', 'RetrievalAncillaryData')] = priorpro_s
 
@@ -276,9 +278,10 @@ class CoDASConverter(object):
                 cat(self.varDict[iodavar]['qcKey'],  preqc_s)
 
                 cat(('averagingKernel', 'RetrievalAncillaryData'), avgker_s)
-                cat(('aprioriTerm',     'RetrievalAncillaryData'), priorobs_s)
                 cat((cfg.vert_ioda_name,'RetrievalAncillaryData'), vert_s)
 
+                if priorobs_s is not None:
+                    cat(('aprioriTerm',    'RetrievalAncillaryData'), priorobs_s)
                 if priorpro_s is not None:
                     cat(('aprioriProfile', 'RetrievalAncillaryData'), priorpro_s)
 
@@ -338,12 +341,12 @@ def main():
     # Build VarDims dynamically based on what's in the output
     cfg = PRODUCT_CONFIG[args.product]
     VarDims = {
-        cfg.ioda_varname:                ['Location'],
-        'averagingKernel':               ['Location', 'Layer'],
-        'aprioriTerm':                   ['Location'],
-        cfg.vert_ioda_name:              ['Location', 'Vertice'],
+        cfg.ioda_varname:   ['Location'],
+        'averagingKernel':  ['Location', 'Layer'],
+        cfg.vert_ioda_name: ['Location', 'Vertice'],
     }
     if cfg.has_priorpro:
+        VarDims['aprioriTerm']    = ['Location']
         VarDims['aprioriProfile'] = ['Location', 'Layer']
 
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
