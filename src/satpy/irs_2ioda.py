@@ -74,26 +74,28 @@ def main(args):
     output_file = task_params.pop('output')
     dtg = task_params.pop('date')
     threads = task_params.pop('threads')
-    func_with_args = partial(get_data_from_files, **task_params)
-    with ProcessPoolExecutor(max_workers=threads) as executor:
-        for file_obs_data in executor.map(func_with_args, input_files):
-            if not file_obs_data:
-                print("INFO: non-nominal file skipping")
-                continue
+    if (threads > 1):
+        func_with_args = partial(get_data_from_files, **task_params)
+        with ProcessPoolExecutor(max_workers=threads) as executor:
+            for file_obs_data in executor.map(func_with_args, input_files):
+                if not file_obs_data:
+                    print("INFO: non-nominal file skipping")
+                    continue
+                if obs_data:
+                    concat_obs_dict(obs_data, file_obs_data[1])
+                else:
+                    obs_data = file_obs_data[1]
+                    wavenumber = file_obs_data[0]
+
+    # serial option
+    else:
+        for afile in input_files:
+            file_obs_data = get_data_from_files(afile, **task_params)
             if obs_data:
                 concat_obs_dict(obs_data, file_obs_data[1])
             else:
                 obs_data = file_obs_data[1]
                 wavenumber = file_obs_data[0]
-
-    # serial option
-#   for afile in input_files:
-#       file_obs_data = get_data_from_files(afile, **task_params)
-#       if obs_data:
-#           concat_obs_dict(obs_data, file_obs_data[1])
-#       else:
-#           obs_data = file_obs_data[1]
-#           wavenumber = file_obs_data[0]
 
     obs_data[('sensorCentralWavenumber', metaDataName)] = np.array(wavenumber, dtype='float32')
     obs_data[('sensorChannelNumber', metaDataName)] = np.arange(1, len(wavenumber)+1, dtype='int32')
@@ -114,6 +116,7 @@ def main(args):
     # pass parameters to the IODA writer
     VarDims = {
         'brightnessTemperature': ['Location', 'Channel'],
+        'radiance': ['Location', 'Channel'],
         'sensorChannelNumber': ['Channel'],
         'sensorCentralWavenumber': ['Channel'],
     }
@@ -134,23 +137,49 @@ def main(args):
     VarAttrs[(k, 'ObsValue')]['units'] = 'K'
     VarAttrs[(k, 'ObsError')]['units'] = 'K'
 
+    k = 'radiance'
+    VarAttrs[(k, 'ObsValue')]['_FillValue'] = float_missing_value
+    VarAttrs[(k, 'ObsError')]['_FillValue'] = float_missing_value
+    VarAttrs[(k, 'PreQC')]['_FillValue'] = int_missing_value
+    VarAttrs[(k, 'ObsValue')]['units'] = 'W m-2 sr-1 m'
+    VarAttrs[(k, 'ObsError')]['units'] = 'W m-2 sr-1 m'
+
     obs_data[('longitude', metaDataName)] = obs_data[('longitude', metaDataName)] % 360
     # final write to IODA file
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
 
-def readMatrix(f, band):
+def apodizeHammingMatmul(spectrum):
+    A = np.zeros([max(spectrum.shape), max(spectrum.shape)])
+    np.fill_diagonal(A, 0.54)
+    msk_upper = np.eye(A.shape[0], k=1, dtype=bool)
+    msk_lower = np.eye(A.shape[0], k=-1, dtype=bool)
+    A[msk_upper] = 0.23
+    A[msk_lower] = 0.23
+    # Apply Boundary condition for 2 point vs 3 point window on edges
+    A[0, 0] = A[0, 0]/0.77
+    A[0, 1] = A[0, 1]/0.77
+    A[-1, -2] = A[-1, -2]/0.77
+    A[-1, -1] = A[-1, -1]/0.77
+    spectrum_out = A@spectrum.T
+    return spectrum_out.T
+
+
+def readMatrix(f, band, apodize=False):
     h5 = h5py.File(f, 'r')
     ReconstructionOperator = np.asarray(h5[band + '/reconstruction_operator'])
     Mean = np.asarray(h5[band + '/mean_spectrum'])
     h5.close()
+    if (apodize):
+        ReconstructionOperator = apodizeHammingMatmul(ReconstructionOperator)
+        Mean = apodizeHammingMatmul(Mean)
     # flip reconstruction operator to be consistent with what is done for
     # local reconstruction operator
     return ReconstructionOperator.T, Mean
 
 
-def applyPc(f, scores, operator_local, scores_local, band):
-    R, meanz = readMatrix(f, band)
+def applyPc(f, scores, operator_local, scores_local, band, apodize):
+    R, meanz = readMatrix(f, band, apodize)
     Rl = operator_local
     # reshape like this to preserve dwells and columns
     s = np.asarray(scores).transpose([2, 0, 1])
@@ -190,7 +219,15 @@ def r2tb(Radiance, nu, c1=1.191042972e-16, c2=1.4387769e-2):
     return Temperature
 
 
-def get_data_from_files(afile, resolution=160, scan_shape=(160, 160), include_reconstructed_radiance=False, baseEV=None):
+def get_data_from_files(
+    afile,
+    resolution=160,
+    scan_shape=(160, 160),
+    include_reconstructed_radiance=False,
+    include_reconstructed_tb=False,
+    apodize_reconstructed=False,
+    baseEV=None
+):
     print('processing file', afile)
     f = nc.Dataset(afile)
     obs_data = {}
@@ -201,6 +238,9 @@ def get_data_from_files(afile, resolution=160, scan_shape=(160, 160), include_re
             continue
         dtype = str(f['data/'+k][:].dtype)
         kCamel = snake_2_camel(k)
+
+        if ('Angle' in kCamel and 'satellite' in kCamel):
+            kCamel = kCamel.replace('satellite', 'sensor')
         if ('float' in dtype):
             obs_data[(kCamel, metaDataName)] = np.array(f['data/'+k][:], dtype='float32')
         elif ('int' in dtype):
@@ -209,6 +249,17 @@ def get_data_from_files(afile, resolution=160, scan_shape=(160, 160), include_re
     obs_data[('dateTime', metaDataName)] = np.full(f['data/longitude'].shape, f['data/time'][:]+irs_offset, dtype='float64')
     obs_data[('dwellType', metaDataName)] = np.full(f['data/longitude'].shape, f['data/dwell_type'][:], dtype='int32')
     obs_data[('dwellNumber', metaDataName)] = np.full(f['data/longitude'].shape, f['data/dwell_number'][:], dtype='int32')
+    obs_data[('sensorScanPosition', metaDataName)] = np.full(f['data/longitude'].shape, f['data/dwell_number'][:], dtype='int32')
+
+    sat_alt = f['state/platform/platform_altitude'][0]
+
+    cnt_nx, cnt_ny = obs_data[('sensorZenithAngle', metaDataName)].shape
+
+    # compute_scan angle is kind of odd. Only 2nd and 3rd args do anything.
+    obs_data[('sensorViewAngle', metaDataName)] = compute_scan_angle(
+        obs_data[('sensorZenithAngle', metaDataName)].flatten(),
+        sat_alt*np.ones(cnt_nx*cnt_ny),
+        obs_data[('sensorZenithAngle', metaDataName)].flatten()).reshape(cnt_nx, cnt_ny).astype('float32')
 
     # fill in wavenumbers and radiance values
     lw_quality = {}
@@ -226,27 +277,33 @@ def get_data_from_files(afile, resolution=160, scan_shape=(160, 160), include_re
     for k in mw_quality.keys():
         overall_quality += mw_quality[k].astype('int32') + lw_quality[k].astype('int32')
 
+    obs_data[('overallQuality', metaDataName)] = overall_quality
+
     wn_lw = np.asarray(f['data/lwir/wavenumber'][:]).astype('float64')
     wn_mw = np.asarray(f['data/mwir/wavenumber'][:]).astype('float64')
     all_wn = np.concatenate([wn_lw, wn_mw])
 
     # only when requested compute reconstructed radiances and add to IODA output
-    if include_reconstructed_radiance:
+    if include_reconstructed_radiance or include_reconstructed_tb:
         rads_lw = applyPc(baseEV,
                           f['data/lwir/compressed/global_pc_scores'][:],
                           f['data/lwir/compressed/local_pcr_operator'][:],
-                          f['data/lwir/compressed/local_pc_scores'][:], 'lwir')
+                          f['data/lwir/compressed/local_pc_scores'][:], 'lwir', apodize_reconstructed)
         rads_mw = applyPc(baseEV,
                           f['data/mwir/compressed/global_pc_scores'][:],
                           f['data/mwir/compressed/local_pcr_operator'][:],
-                          f['data/mwir/compressed/local_pc_scores'][:], 'mwir')
+                          f['data/mwir/compressed/local_pc_scores'][:], 'mwir', apodize_reconstructed)
         rads = np.concatenate([rads_lw, rads_mw])
         # put reconstructed radiances into output if requested
-        obs_data[('brightnessTemperature', obsValName)] = (
-            np.array(r2tb(rads[:].T, all_wn), dtype='float32').
-            transpose().
-            reshape(all_wn.shape[0], *scan_shape)
-        )
+        if (include_reconstructed_tb):
+            obs_data[('brightnessTemperature', obsValName)] = (
+                np.array(r2tb(rads[:].T, all_wn), dtype='float32').
+                transpose().
+                reshape(all_wn.shape[0], *scan_shape)
+            )
+        if (include_reconstructed_radiance):
+            obs_data[('radiance', obsValName)] = (rads.reshape(all_wn.shape[0], *scan_shape).astype('float32'))
+
     pcname = 'principalComponentScore{}'
     nscore_lw = f['data/lwir/compressed/global_pc_scores'][:].shape[2]
     nscore_mw = f['data/mwir/compressed/global_pc_scores'][:].shape[2]
@@ -255,8 +312,23 @@ def get_data_from_files(afile, resolution=160, scan_shape=(160, 160), include_re
     big_score[:, :, 0:nscore_lw] = np.asarray(f['data/lwir/compressed/global_pc_scores'][:])     # .T
     big_score[:, :, nscore_lw:nscore_lw+nscore_mw] = np.asarray(f['data/mwir/compressed/global_pc_scores'][:])   # .T
     big_score = big_score.astype('float32')
+
     for i in range(nscore_lw+nscore_mw):
         obs_data[(pcname.format(i+1), metaDataName)] = big_score[:, :, i]
+
+    # save relevant PC score metrics
+    obs_data[('globalPcrScoresLw', metaDataName)] = np.asarray(f['data/lwir/compressed/global_pcr_scores']).astype('float32')
+    obs_data[('globalPcrScoresMw', metaDataName)] = np.asarray(f['data/mwir/compressed/global_pcr_scores']).astype('float32')
+
+    obs_data[('globalPcrQualityLw', metaDataName)] = np.asarray(f['data/lwir/compressed/global_pcrs_quality']).astype('int32')
+    obs_data[('globalPcrQualityMw', metaDataName)] = np.asarray(f['data/mwir/compressed/global_pcrs_quality']).astype('int32')
+
+    obs_data[('spatialSampleQualityLw', metaDataName)] = np.asarray(f['data/lwir/compressed/spatial_sample_quality']).astype('int32')
+    obs_data[('spatialSampleQualityMw', metaDataName)] = np.asarray(f['data/mwir/compressed/spatial_sample_quality']).astype('int32')
+
+    obs_data[('detectorSampleQualityLw', metaDataName)] = np.asarray(f['data/lwir/compressed/detector_sample_quality']).astype('int32')
+    obs_data[('detectorSampleQualityMw', metaDataName)] = np.asarray(f['data/mwir/compressed/detector_sample_quality']).astype('int32')
+
     obs_data = subsample_and_flatten(obs_data, resolution=resolution)
     obs_data = assign_WMO_ID(obs_data, f.platform)
 
@@ -287,13 +359,12 @@ def subsample_and_flatten(obs_data, resolution=160, base_resolution=4):
 
     for k, data in obs_data.items():
         # Case 1: 3D Data (e.g., [Channels, Rows, Cols])
-        if data.ndim == 3 and 'brightnessTemperature' in str(k):
+        if data.ndim == 3 and ('brightnessTemperature' in str(k) or 'radiance' in str(k)):
             # Slicing with [0::1] is effectively a no-op, keeping logic consistent
             sliced = data[:, offset::stride, offset::stride]
             nchans, rows, cols = sliced.shape
             # Reshape to [Points, Channels]
             obs_data_out[k] = sliced.reshape(nchans, rows * cols).T
-
         # Case 2: 2D Data (e.g., [Rows, Cols] Lat/Lon grids)
         elif data.ndim == 2:
             obs_data_out[k] = data[offset::stride, offset::stride].flatten()
@@ -365,6 +436,14 @@ if __name__ == "__main__":
         help="include computation of reconstructed radiances (requires --baseEV)",
         action='store_true',)
     optional.add_argument(
+        '--include_reconstructed_tb',
+        help="include computation of reconstructed brightness temperature (requires --baseEV)",
+        action='store_true',)
+    optional.add_argument(
+        '--apodize_reconstructed',
+        help="add hamming apodization reconstructed radiances or brightnesss temperature (requires --baseEV)",
+        action='store_true',)
+    optional.add_argument(
         '--baseEV',
         help="full path to PC base to project over",
         type=str,
@@ -373,6 +452,10 @@ if __name__ == "__main__":
     # Check dependency: if flag is True, baseEV must not be None
     if args.include_reconstructed_radiance and args.baseEV is None:
         parser.error("--include_reconstructed_radiance requires --baseEV to be specified.")
+
+    # Check dependency: if flag is True, baseEV must not be None
+    if args.include_reconstructed_tb and args.baseEV is None:
+        parser.error("--include_reconstructed_tb requires --baseEV to be specified.")
 
     # Check file existence: if baseEV is provided, verify the path
     if args.baseEV:
