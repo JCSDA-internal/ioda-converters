@@ -43,7 +43,7 @@ jobs:
           container_version: latest
           unittest_tag: iodaconv
           target_project_name: iodaconv
-          unittest_dependencies: oops ioda ioda-data
+          test_dependencies: oops ioda ioda-data
           test_script: run_tests.sh
           target_repo_dir: target_repository
           bundle_branch: develop
