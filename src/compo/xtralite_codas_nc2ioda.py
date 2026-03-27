@@ -88,7 +88,7 @@ locationKeyList = [
 ]
 
 # IODA epoch
-_EPOCH = datetime(1993, 1, 1, 0, 0, 0)
+_EPOCH = datetime(1970, 1, 1, 0, 0, 0)
 
 # Module-level dicts populated during _read() (required by IodaWriter)
 DimDict  = {}
@@ -231,8 +231,7 @@ class CoDASConverter(object):
                 mask = mask & (np.array(isbad) == 0)
 
             # Slice and cast to single precision
-            def f32(arr):     return np.array(arr[mask], dtype='float32')
-            def i32(arr):     return np.array(arr[mask], dtype='int32')
+            def f32(arr): return np.array(arr[mask], dtype='float32')
 
             lats_s     = f32(lats)
             lons_s     = f32(lons)

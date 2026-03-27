@@ -52,7 +52,7 @@ _SENSOR_PLATFORM = {
     'acos_oco3':  ('ACOS',  'OCO-3'),
 }
 
-_EPOCH = datetime(1993, 1, 1, 0, 0, 0)
+_EPOCH = datetime(1970, 1, 1, 0, 0, 0)
 
 DimDict  = {}
 AttrData = {
