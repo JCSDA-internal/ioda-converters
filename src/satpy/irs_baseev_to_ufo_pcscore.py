@@ -4,30 +4,37 @@ import netCDF4, h5py, os, argparse
 import numpy as np
 
 
-def main(infile, outfile, method, subset):
+def main(args):
+    infile = args.input
+    outfile = args.output
+    method = args.apodization_method if args.apodize else ''
+    subset = args.subset
 
     RR, M = readMatrix(infile, method, subset)
-    print("{} Read, applied apodization method: {}".format(infile, method))
+    if args.apodize:
+        print(f"{infile} Read, applied apodization method: {method}")
+    else:
+        print(f"{infile} Read")
     writeFile(outfile, RR, M, subset)
-    print("Output written to: {} ".format(outfile))
+    print(f"Output written to: {outfile}")
 
 
 def selectApod(spectrum, method=''):
-    if (method == 'hamming_moving_ave'):
-        if (len(spectrum.shape) > 1):
+    if method == 'hamming_moving_avg':
+        if len(spectrum.shape) > 1:
             spectrum_out = np.zeros(spectrum.shape)
             for i in range(0, spectrum.shape[0]):
-                spectrum_out[i, :] = apodizeHammingMovingAve(spectrum[i, :])
+                spectrum_out[i, :] = apodizeHammingMovingAvg(spectrum[i, :])
             return spectrum_out
         else:
-            return apodizeHammingMovingAve(spectrum)
-    elif (method == 'hamming_matmul'):
+            return apodizeHammingMovingAvg(spectrum)
+    elif method == 'hamming_matmul':
         return apodizeHammingMatmul(spectrum)
     else:
         return spectrum
 
 
-def apodizeHammingMovingAve(spectrum):
+def apodizeHammingMovingAvg(spectrum):
     weights = np.asarray([0.54, 0.23])
     spectrum_apodized = np.zeros(spectrum.shape)
     # take care of end points special case (2 points in window vs. 3)
@@ -108,12 +115,14 @@ def readMatrix(f, method, subset):
         idx = np.asarray(subset) - 1
         RRop = RRop[:, idx]
         M = M[idx]
-        if (all(idx+1 <= nchan1)):
+        min_idx_plus_1 = idx.min() + 1
+        max_idx_plus_1 = idx.max() + 1
+        # all subset channels in first set of PCs
+        if max_idx_plus_1 <= nchan1:
             RRop = RRop[0:npcs1, :]
-            npcs = npcs1
-        elif (all(idx+1 > nchan1)):
+        # all subset channels in second set of PCs
+        elif min_idx_plus_1 > nchan1:
             RRop = RRop[npcs1:npcs2, :]
-            npcs = npcs
     return RRop, M
 
 
@@ -163,10 +172,14 @@ if __name__ == "__main__":
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
         '--apodize',
+        help='add apodization (default False)',
+        action='store_true', required=False)
+    optional.add_argument(
+        '--apodization_method',
         type=str,
-        choices=['none', 'hamming_matmul', 'hamming_moving_ave'],
-        default='none',
-        help="select addiontional apodization default is none.")
+        choices=['hamming_matmul', 'hamming_moving_avg'],
+        default='hamming_matmul',
+        help="Method if --apodize is flagged (default: %(default)s) (choices: %(choices)s.")
     optional.add_argument(
         '--subset',
         type=int,
@@ -175,4 +188,4 @@ if __name__ == "__main__":
         help="specify subset of channels.")
 
     args = parser.parse_args()
-    main(args.input, args.output, args.apodize, args.subset)
+    main(args)
