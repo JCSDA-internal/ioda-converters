@@ -163,7 +163,7 @@ if __name__ == "__main__":
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
         '-i', '--input',
-        help="Input BASEEV file from EUMETSAT.",
+        help="Input BASEEV file from EUMETSAT",
         type=str, required=True)
     required.add_argument(
         '-o', '--output',
@@ -179,7 +179,7 @@ if __name__ == "__main__":
         type=str,
         choices=['hamming_matmul', 'hamming_moving_avg'],
         default='hamming_matmul',
-        help="Method if --apodize is flagged (default: %(default)s) (choices: %(choices)s.")
+        help="Method if --apodize is flagged (default: %(default)s) (choices: %(choices)s)")
     optional.add_argument(
         '--subset',
         type=int,
