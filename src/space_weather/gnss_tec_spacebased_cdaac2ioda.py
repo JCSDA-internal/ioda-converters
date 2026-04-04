@@ -113,6 +113,34 @@ def main(args):
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
 
+def compute_tangent_point(xleo, yleo, zleo, xgps, ygps, zgps):
+
+    # direction vector
+    dx = xgps - xleo
+    dy = ygps - yleo
+    dz = zgps - zleo
+
+    r = np.sqrt(dx*dx + dy*dy + dz*dz)
+
+    # Avoid division by zero
+    if r == 0 or not np.isfinite(r):
+        return np.nan, np.nan, np.nan
+
+    dx /= r
+    dy /= r
+    dz /= r
+
+    # dot product
+    sp1 = xleo*dx + yleo*dy + zleo*dz
+
+    # tangent point
+    px = xleo - dx*sp1
+    py = yleo - dy*sp1
+    pz = zleo - dz*sp1
+
+    return px, py, pz
+
+
 def get_meta_data(ds):
 
     # get some of the global attributes that we are interested in
@@ -138,7 +166,9 @@ def get_meta_data(ds):
             print(f"Found neither float nor in, type={type(v)}; skipping")
 
     # the time convert to epoch and handle array of values
-    profile_meta_data['dateTime'] = np.array(ds['time'].add_offset + ds['time'][:], np.int64)
+    gps_offset = datetime(1980, 1, 6).timestamp()
+    leap_seconds = 18  # valid from Jan 1, 2017 and current through at least 2026
+    profile_meta_data['dateTime'] = np.array(gps_offset + ds['time'][:] - leap_seconds, np.int64)
 
     # bespoke table of letter to WMO code
     transmitterConstellationId = get_GNSS_constellation(ds.conid)
@@ -168,18 +198,18 @@ def get_obs_data(ifile, get_obs_data_args):
     # number to keep track of profile
     obs_data[('sequenceNumber', 'MetaData')] = np.array(np.repeat(get_obs_data_args.recordnumber, ds['x_LEO'].size), dtype=ioda_int_type)
     # Elevation angle of LEO-GPS link
-    obs_data[("elevationAngleGNSS", "MetaData")] = np.array(ds['elevation'][:])
+    obs_data[("elevationAngleGNSS", "MetaData")] = np.array(ds['elevation'][:], dtype=ioda_float_type)
     # GPS x position (ECF) at time of signal transmission
-    obs_data[("xECEFPositionGNSS", "MetaData")] = np.array(ds['x_GPS'][:])
-    obs_data[("yECEFPositionGNSS", "MetaData")] = np.array(ds['y_GPS'][:])
-    obs_data[("zECEFPositionGNSS", "MetaData")] = np.array(ds['z_GPS'][:])
+    obs_data[("xECEFPositionGNSS", "MetaData")] = np.array(ds['x_GPS'][:], dtype=ioda_float_type)
+    obs_data[("yECEFPositionGNSS", "MetaData")] = np.array(ds['y_GPS'][:], dtype=ioda_float_type)
+    obs_data[("zECEFPositionGNSS", "MetaData")] = np.array(ds['z_GPS'][:], dtype=ioda_float_type)
     # LEO x position (ECF) at time of signal reception
-    obs_data[("xECEFPosition", "MetaData")] = np.array(ds['x_LEO'][:])
-    obs_data[("yECEFPosition", "MetaData")] = np.array(ds['y_LEO'][:])
-    obs_data[("zECEFPosition", "MetaData")] = np.array(ds['z_LEO'][:])
+    obs_data[("xECEFPosition", "MetaData")] = np.array(ds['x_LEO'][:], dtype=ioda_float_type)
+    obs_data[("yECEFPosition", "MetaData")] = np.array(ds['y_LEO'][:], dtype=ioda_float_type)
+    obs_data[("zECEFPosition", "MetaData")] = np.array(ds['z_LEO'][:], dtype=ioda_float_type)
     obs_data = get_geolocation(obs_data)
     # the observation value
-    obs_data[("totalElectronContent", "ObsValue")] = np.array(ds['TEC'][:])
+    obs_data[("totalElectronContent", "ObsValue")] = np.array(ds['TEC'][:], dtype=ioda_float_type)
 
     return obs_data
 
@@ -252,23 +282,46 @@ def get_GNSS_mission(ds):
 
 
 def get_geolocation(obs_data):
-    # wrapper to compute a reasonably accurate latitude and longitude
+    # wrapper to compute latitude, longitude and height
     #  from the Earth-centered Earth fixed coordinates
     import pyproj
-    obs_data[("latitude", "MetaData")] = np.full_like(obs_data[("xECEFPosition", "MetaData")], float_missing_value)
-    obs_data[("longitude", "MetaData")] = np.full_like(obs_data[("xECEFPosition", "MetaData")], float_missing_value)
-    obs_data[("height", "MetaData")] = np.full_like(obs_data[("xECEFPosition", "MetaData")], float_missing_value)
+
+    xleo = obs_data[("xECEFPosition", "MetaData")]
+    yleo = obs_data[("yECEFPosition", "MetaData")]
+    zleo = obs_data[("zECEFPosition", "MetaData")]
+
+    xgps = obs_data[("xECEFPositionGNSS", "MetaData")]
+    ygps = obs_data[("yECEFPositionGNSS", "MetaData")]
+    zgps = obs_data[("zECEFPositionGNSS", "MetaData")]
+
+    nxleo = len(xleo)
+
+    obs_data[("latitude", "MetaData")] = np.full(nxleo, float_missing_value, dtype=ioda_float_type)
+    obs_data[("longitude", "MetaData")] = np.full(nxleo, float_missing_value, dtype=ioda_float_type)
+    obs_data[("height", "MetaData")] = np.full(nxleo, float_missing_value, dtype=ioda_float_type)
+
     transformer = pyproj.Transformer.from_crs({"proj": 'geocent', "ellps": 'WGS84', "datum": 'WGS84'},
                                               {"proj": 'latlong', "ellps": 'WGS84', "datum": 'WGS84'})
+
     # handling of km to meters should be automated
-    for i, x in enumerate(obs_data[("xECEFPosition", "MetaData")]):
-        lon, lat, height = transformer.transform(1000.*x,
-                                                 1000.*obs_data[("yECEFPosition", "MetaData")][i],
-                                                 1000.*obs_data[("zECEFPosition", "MetaData")][i],
-                                                 radians=False)
-        obs_data[("latitude", "MetaData")][i] = lat
-        obs_data[("longitude", "MetaData")][i] = lon
-        obs_data[("height", "MetaData")][i] = height
+    for i in range(nxleo):
+        # When elevation angle < 0, the point closest to earth is between GNSS and LEO receiver
+        # and can be considered the tangent point
+        # When elevation angle > 0, the point closest to earth is not between GNSS and receiver
+        # and is not a physical tangent point definition, will keep but will generally QC away
+        px, py, pz = compute_tangent_point(xleo[i], yleo[i], zleo[i], xgps[i], ygps[i], zgps[i])
+
+        if not (np.isfinite(px) and np.isfinite(py) and np.isfinite(pz)):
+            continue
+
+        try:
+            lon, lat, height = transformer.transform(1000.*px, 1000.*py, 1000.*pz, radians=False)
+        except Exception:
+            continue
+
+        obs_data[("latitude", "MetaData")][i] = np.float32(lat)
+        obs_data[("longitude", "MetaData")][i] = np.float32(lon)
+        obs_data[("height", "MetaData")][i] = np.float32(height)
 
     return obs_data
 
