@@ -34,12 +34,20 @@ DimDict = {
 # DU to mol.m-2 conversion factor
 DU2molsqm = 4.4615E-4
 
+# ATBD lookup table for observation error (from ATBD section 7.1)
+# In the ATBD: https://www.star.nesdis.noaa.gov/jpss/
+# ATBD/D0001-M01-S01-006_JPSS_ATBD_OMPS-TC-Ozone_C.pdf
+# Total ozone column (DU) and corresponding obs error (DU)        
+ATBD_OBS_DU = np.array([50, 125, 175, 225, 275, 325, 375, 425, 475, 525, 575, 625])
+ATBD_ERR_DU = np.array([5.43, 5.54, 5.65, 5.89, 6.08, 6.63, 7.54, 7.85, 7.79, 8.05, 8.32, 8.79])
+
 
 class omps_nm(object):
-    def __init__(self, filenames, qa_flg, obsVar):
+    def __init__(self, filenames, qa_flg, obsVar, error_method='fixed'):
         self.filenames = filenames
         self.qa_flg = qa_flg
         self.obsVar = obsVar
+        self.error_method = error_method
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -86,14 +94,19 @@ class omps_nm(object):
             flg = qa_value <= self.qa_flg
 
             # obs value, we prefer to convert DU to mol.m-2
-            obs = sci.variables['ColumnAmountO3'][:].ravel() * DU2molsqm
+            obs_du = sci.variables['ColumnAmountO3'][:].ravel()
+            obs = obs_du * DU2molsqm
 
-            # for obs error, it is not provided in the
-            # product. In the ATBD: https://www.star.nesdis.noaa.gov/jpss/documents/
-            # ATBD/D0001-M01-S01-006_JPSS_ATBD_OMPS-TC-Ozone_C.pdf
-            # using section 7.1 and figure and tables 7.1-1 and 7.1-2 we can derive
-            # a linear relationship between obs value and obs error
-            err = (5.84347E-3 * obs + 18.58484) * DU2molsqm
+            # for obs error, it is not provided in the product.
+            # Use selected error calculation method
+            if self.error_method == 'fixed':
+                err_du = 6.0
+            elif self.error_method == 'atbd':
+                err_du = np.interp(obs_du, ATBD_OBS_DU, ATBD_ERR_DU)
+            else:
+                raise ValueError(f"Unknown error_method: {self.error_method}. "
+                               f"Choose from: 'fixed', 'atbd'")
+            err = err_du * DU2molsqm
 
             # seems like obs (hence err) has a mask so need to apply to all other
             # quantities
@@ -168,14 +181,20 @@ def main():
         " https://snpp-omps.gesdisc.eosdis.nasa.gov/data/SNPP_OMPS_Level2/"
         "OMPS_NPP_NMTO3_L2.2/doc/README.OMPS_NPP_NMTO3_L2.2.pdf",
         type=float, default=128)
+    optional.add_argument(
+        '-e', '--error_method',
+        help="Observation error calculation method. "
+        "'fixed': use GSI fixed value of 6.0 DU; "
+        "'atbd': linear interpolation from ATBD lookup table (default); ",
+        type=str, default='fixed', choices=['fixed', 'atbd'])
 
     args = parser.parse_args()
 
     obsVar = {'ozone_total_column': 'ozoneTotal'}
     varDims = {'ozoneTotal': ['Location']}
 
-    # Read in the NO2 data
-    var = omps_nm(args.input, args.qa_value, obsVar)
+    # Read in the O3 data
+    var = omps_nm(args.input, args.qa_value, obsVar, args.error_method)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
