@@ -11,12 +11,9 @@
 """
 Python code to ingest netCDF4 IRS data
 """
-from matplotlib import pyplot as plt
 import argparse
 from datetime import datetime, timezone, timedelta
 import os.path
-import sys
-import glob
 import h5py
 import netCDF4 as nc
 import numpy as np
@@ -60,6 +57,22 @@ locationKeyList = [
 GlobalAttrs = {
     "platformCommonName": "IRS",
     "platformLongDescription": "MeteoSat Third Generation MTG-IRS Principle Component Score Data",
+}
+
+
+# Map coverage string attribute to a 0-based integer index
+coverage_2_index = {'Q1': 0, 'Q2': 1, 'Q3': 2, 'Q4': 3}
+
+# create a set of pairs that are
+# the next lowest allowable resolution
+resolution_pairs = {
+    160: 128,
+    128: 64,
+    64: 32,
+    32: 16,
+    16: 8,
+    8: 4,
+    4: 4,
 }
 
 
@@ -226,7 +239,14 @@ def get_data_from_files(
     include_reconstructed_radiance=False,
     include_reconstructed_tb=False,
     apodize_reconstructed=False,
-    baseEV=None
+    baseEV=None,
+    max_zenith=90,
+    step_resolution=None,
+    resolution_step=60,
+    get_largest_pc=False,
+    get_cloud_fraction=False,
+    window=3,
+    max_dwells=73
 ):
     print('processing file', afile)
     f = nc.Dataset(afile)
@@ -249,7 +269,38 @@ def get_data_from_files(
     obs_data[('dateTime', metaDataName)] = np.full(f['data/longitude'].shape, f['data/time'][:]+irs_offset, dtype='float64')
     obs_data[('dwellType', metaDataName)] = np.full(f['data/longitude'].shape, f['data/dwell_type'][:], dtype='int32')
     obs_data[('dwellNumber', metaDataName)] = np.full(f['data/longitude'].shape, f['data/dwell_number'][:], dtype='int32')
-    obs_data[('sensorScanPosition', metaDataName)] = np.full(f['data/longitude'].shape, f['data/dwell_number'][:], dtype='int32')
+
+    # --- sensorScanPosition: unique identifier across all coverages and pixels ---
+    # Encoding: coverage_idx * (N_DWELLS * n_rows * n_cols)
+    #         + dwell_number  * (n_rows * n_cols)
+    #         + dwell_row     * n_cols
+    #         + dwell_col
+    #
+    # coverage attribute is one of Q1, Q2, Q3, Q4 (N dwells each default 73).
+    # dwell_number is converted 0-based within the coverage (0–N).
+    #    dwell_row and dwell_col are the 2D pixel indices within the dwell (scan_shape).
+
+    coverage_str = str(f.coverage)                             # e.g. 'Q2'
+    coverage_idx = coverage_2_index.get(coverage_str, -1)
+    if coverage_idx == -1:
+        raise ValueError(f"Unknown coverage attribute '{coverage_str}'. "
+                         f"Expected one of {list(coverage_2_index.keys())}.")
+
+    n_rows, n_cols = scan_shape
+    dwell_num = int(f['data/dwell_number'][:]) - 1             # scalar, 0-based
+
+    # Build row/col index grids that match the spatial shape of the dwell
+    row_idx = np.arange(n_rows, dtype='int32')
+    col_idx = np.arange(n_cols, dtype='int32')
+    row_grid, col_grid = np.meshgrid(row_idx, col_idx, indexing='ij')  # (n_rows, n_cols)
+
+    # multiplication in int64 is on purpose to avoid potential silent overflow
+    obs_data[('sensorScanPosition', metaDataName)] = (
+        np.int64(coverage_idx) * np.int64(max_dwells * n_rows * n_cols)
+        + np.int64(dwell_num) * np.int64(n_rows * n_cols)
+        + row_grid * np.int64(n_cols)
+        + col_grid
+    ).astype('int32')
 
     sat_alt = f['state/platform/platform_altitude'][0]
 
@@ -329,13 +380,122 @@ def get_data_from_files(
     obs_data[('detectorSampleQualityLw', metaDataName)] = np.asarray(f['data/lwir/compressed/detector_sample_quality']).astype('int32')
     obs_data[('detectorSampleQualityMw', metaDataName)] = np.asarray(f['data/mwir/compressed/detector_sample_quality']).astype('int32')
 
-    obs_data = subsample_and_flatten(obs_data, resolution=resolution)
+    obs_data = subsample_and_flatten(
+        obs_data,
+        scan_shape=scan_shape,
+        resolution=resolution,
+        max_zenith=max_zenith,
+        get_largest_pc=get_largest_pc,
+        window=window,
+        step_resolution=step_resolution,
+        resolution_step=resolution_step,
+    )
     obs_data = assign_WMO_ID(obs_data, f.platform)
 
     return all_wn, obs_data
 
 
-def subsample_and_flatten(obs_data, resolution=160, base_resolution=4):
+def get_clearest_fov(clear_quantity, scan_shape, stride, window, fill=1e300):
+    """
+    Vectorized version of clearest based on modified spoc implementation.
+    For a given dwell, find the indices with the "clearest" field of view.
+
+    Parameters
+    ----------
+    clear_quantity : np.ndarray, shape (scan_shape, scan_shape)
+        A value indicating how "clear" the FOV is.
+    scan_shape : int
+        Number of pixels along one axis of the square dwell grid.
+    stride : int
+        Size of each thinning block in pixels.
+    window : int
+        Size of the inner search window within each block. Must satisfy:
+            1 <= window <= stride
+            (stride - window) % 2 == 0
+    fill : float, optional
+        Values >= fill are treated as missing and will never be selected.
+
+    Returns
+    -------
+    imax : np.ndarray, shape (n_blocks²,)
+        Global row indices of the selected best pixel per block.
+    jmax : np.ndarray, shape (n_blocks²,)
+        Global col indices of the selected best pixel per block.
+        Blocks where all values are fill get index -1.
+    """
+    assert 1 <= window <= stride, (
+        f"window must be between 1 and {stride}, got {window}"
+    )
+    assert (stride - window) % 2 == 0, (
+        f"window={window} cannot be symmetrically centered in a "
+        f"{stride}x{stride} block"
+    )
+
+    margin = (stride - window) // 2
+    n_blocks = scan_shape // stride
+
+    # mask fill values so they are never selected
+    masked = np.where(np.abs(clear_quantity) < fill, clear_quantity, -np.inf)
+
+    # Step 1: reshape into non-overlapping stride x stride blocks
+    # masked shape: (scan_shape, scan_shape)
+    # after reshape:    (n_blocks, stride, n_blocks, stride)
+    # after transpose:  (n_blocks, n_blocks, stride, stride)
+    # so blocks[bi, bj, ri, ci] == masked[bi*stride + ri, bj*stride + ci]
+    blocks = (
+        masked
+        .reshape(n_blocks, stride, n_blocks, stride)
+        .transpose(0, 2, 1, 3)
+    )
+
+    # Step 2: slice the inner window x window patch using margin
+    # inner[bi, bj, li, lj] == masked[bi*stride + margin + li,
+    #                                  bj*stride + margin + lj]
+    inner = blocks[:, :, margin:margin + window, margin:margin + window]
+    # shape: (n_blocks, n_blocks, window, window)
+
+    # Step 3: flatten blocks and find argmax within each patch
+    inner_flat = inner.reshape(n_blocks * n_blocks, window * window)
+    flat_idx = np.argmax(inner_flat, axis=1)              # (n_blocks²,)
+    local_i, local_j = np.unravel_index(flat_idx, (window, window))
+
+    # Step 4: map back to global indices
+    # flat block k -> bi = k // n_blocks, bj = k % n_blocks
+    k = np.arange(n_blocks * n_blocks)
+    bi = k // n_blocks
+    bj = k % n_blocks
+
+    imax = bi * stride + margin + local_i
+    jmax = bj * stride + margin + local_j
+
+    # Step 5: mark all-fill blocks as -1
+    all_fill_mask = np.all(inner_flat == -np.inf, axis=1)
+    imax[all_fill_mask] = -1
+    jmax[all_fill_mask] = -1
+
+    return imax, jmax
+
+
+def get_idx_by_stride(offset, scan_shape, stride):
+    i_idx = np.arange(offset, scan_shape[0], stride)
+    j_idx = np.arange(offset, scan_shape[1], stride)
+    ii, jj = np.meshgrid(i_idx, j_idx, indexing='ij')
+
+    return ii.ravel(), jj.ravel()
+
+
+def subsample_and_flatten(
+    obs_data,
+    scan_shape=(160, 160),
+    resolution=160,
+    base_resolution=4,
+    max_zenith=90,
+    step_resolution=False,
+    get_largest_pc=False,
+    get_cloud_fraction=False,
+    window=3,
+    resolution_step=60
+):
 
     """
     Downsamples observation grids based on resolution and
@@ -345,30 +505,55 @@ def subsample_and_flatten(obs_data, resolution=160, base_resolution=4):
     obs_data :  observation data dictionary
     resolution : desired output resolution in km
     base_resolution : assumed full resolution in km
+    max_zenith: maximum allowed sensorZenithAngle
+    step_resolution: true/false allow for a step decrease in resolution
+                     to next lowest allowable resolution (increase in point density)
+    resolution_step: minimum zenith angle where step_resolution is applied
 
     Output:
     obs_data_out : sampled and flattened arrays
 
     """
+    # modify based on zenith angle of center
+    if (step_resolution):
+        nx, ny = obs_data[('sensorZenithAngle', metaDataName)].shape
+        # if the center FOV's sensorZenithAngle is above resolution_zenith_angle_switch
+        # switch to the next denser resolution
+        xc, yc = int(nx/2), int(ny/2)
+        if (obs_data[('sensorZenithAngle', metaDataName)][xc, yc] > resolution_step):
+            resolution = resolution_pairs[resolution]
+
     stride = int(resolution / base_resolution)
     # Calculate the center of the stride block
     # For stride=1 (no thinning), offset is 0
     # For stride=40 (thinning), offset is 20
     offset = stride // 2
     obs_data_out = {}
+    if (get_largest_pc):
+        ix, iy = get_clearest_fov(obs_data[('principalComponentScore1', metaDataName)], scan_shape[0], stride, window)
+    elif (get_cloud_fraction):
+        ix, iy = get_clearest_fov(1.0-obs_data[('cloudFraction', metaDataName)], scan_shape[0], stride, window)
+    else:
+        ix, iy = get_idx_by_stride(offset, scan_shape, stride)
+    # create array of points which meet zenith angle cutoff criteria
+    valid = np.zeros(obs_data[('sensorZenithAngle', metaDataName)].shape)
+    valid[np.where(obs_data[('sensorZenithAngle', metaDataName)] < max_zenith)] = 1
+
+    # apply same slice as done to data to valid array
+    valid_sliced = valid[ix, iy]
 
     for k, data in obs_data.items():
         # Case 1: 3D Data (e.g., [Channels, Rows, Cols])
         if data.ndim == 3 and ('brightnessTemperature' in str(k) or 'radiance' in str(k)):
             # Slicing with [0::1] is effectively a no-op, keeping logic consistent
-            sliced = data[:, offset::stride, offset::stride]
-            nchans, rows, cols = sliced.shape
-            # Reshape to [Points, Channels]
-            obs_data_out[k] = sliced.reshape(nchans, rows * cols).T
+            sliced = data[:, ix, iy]
+            idx = np.where(valid_sliced > 0)
+            obs_data_out[k] = sliced[:, idx].T
         # Case 2: 2D Data (e.g., [Rows, Cols] Lat/Lon grids)
         elif data.ndim == 2:
-            obs_data_out[k] = data[offset::stride, offset::stride].flatten()
-
+            obs_data_out[k] = data[ix, iy]
+            idx = np.where(valid_sliced > 0)
+            obs_data_out[k] = obs_data_out[k][idx]
         # Case 3: 1D or Scalar Data
         else:
             obs_data_out[k] = data
@@ -448,6 +633,39 @@ if __name__ == "__main__":
         help="full path to PC base to project over",
         type=str,
         default=None,)
+    optional.add_argument(
+        '--step_resolution',
+        help="Allow for a step in resolution to next lowest resolution",
+        action='store_true')
+    optional.add_argument(
+        '--resolution_step',
+        type=int,
+        default=60,
+        help="sensorZenithAngle threshold to apply next lowest resolution for step_resolution")
+    optional.add_argument(
+        '--max_zenith',
+        type=int,
+        default=90,
+        help="sensorZenithAngle cutoff")
+    optional.add_argument(
+        '--get_largest_pc',
+        help="Do warmest FOV using PC score",
+        action='store_true')
+    optional.add_argument(
+        '--get_cloud_fraction',
+        help="Do clearest pixel search.",
+        action='store_true')
+    optional.add_argument(
+        '--window',
+        type=int,
+        default=3,
+        help="search window for largest PC score preference")
+    optional.add_argument(
+        '--max_dwells',
+        type=int,
+        default=73,
+        help="Maximum Number of Dwells in coverage area.")
+
     args = parser.parse_args()
     # Check dependency: if flag is True, baseEV must not be None
     if args.include_reconstructed_radiance and args.baseEV is None:
@@ -461,6 +679,10 @@ if __name__ == "__main__":
     if args.baseEV:
         if not os.path.isfile(args.baseEV):
             parser.error(f"The file specified in --baseEV does not exist: {args.baseEV}")
+
+    # Check only one warmest FOV option
+    if args.get_largest_pc and args.get_cloud_fraction:
+        parser.error("Select only one. Either --get_largest_pc or --get_cloud_fraction. Not Both.")
 
     if args.date:
         try:
