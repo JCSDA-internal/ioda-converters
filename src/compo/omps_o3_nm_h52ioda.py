@@ -23,23 +23,33 @@ locationKeyList = [
     ("dateTime", "string"),
 ]
 
+obsVar = {'ozone_total_column': 'ozoneTotal'}
+
 AttrData = {
     'converter': os.path.basename(__file__),
-    'nvars': np.int32(1),
+    'nvars': np.int32(len(obsvar)),
 }
 
 DimDict = {
 }
 
+VarDims = {
+    'ozoneTotal': ['Location'],
+    'averagingKernel': ['Location', 'Layer'],
+    'pressureVertices': ['Location', 'Vertice']
+}
+
 # DU to mol.m-2 conversion factor
 DU2molsqm = 4.4615E-4
 
-# ATBD lookup table for observation error (from ATBD section 7.1)
 # In the ATBD: https://www.star.nesdis.noaa.gov/jpss/
 # ATBD/D0001-M01-S01-006_JPSS_ATBD_OMPS-TC-Ozone_C.pdf
-# Total ozone column (DU) and corresponding obs error (DU)        
+# Total ozone column (DU) and corresponding obs error (DU)  
+# # ATBD lookup table for observation error (from ATBD section 7.1)      
 ATBD_OBS_DU = np.array([50, 125, 175, 225, 275, 325, 375, 425, 475, 525, 575, 625])
 ATBD_ERR_DU = np.array([5.43, 5.54, 5.65, 5.89, 6.08, 6.63, 7.54, 7.85, 7.79, 8.05, 8.32, 8.79])
+# OMPS Umkehr pressure interfaces (hPa) deduced from OMPS ATBD table 2.3-2
+PRESSURE_INTERFACES = np.array([1013.0, 507.0, 253.0, 127.0, 63.3, 31.7, 15.80, 7.92, 3.96, 1.98, 0.99, 0.0])
 
 
 class omps_nm(object):
@@ -75,12 +85,18 @@ class omps_nm(object):
             # get dimensions
             da = ncd.dimensions['DimAlongTrack'].size
             dc = ncd.dimensions['DimCrossTrack'].size
+            nlevs = ncd.dimensions['DimPressureLevel'].size
             geo = ncd.groups['GeolocationData']
             sci = ncd.groups['ScienceData']
+            anc = ncd.groups['AncillaryData']
 
             # geolocation
             lat = geo.variables['Latitude'][:].ravel()
             lon = geo.variables['Longitude'][:].ravel()
+            
+            # surface/terrain pressure
+            anc = ncd.groups['AncillaryData']
+            terrain_pressure = anc.variables['TerrainPressure'][:].ravel()
 
             # time
             time_ref = np.datetime64('1993-01-01T00:00')
@@ -108,14 +124,49 @@ class omps_nm(object):
                                f"Choose from: 'fixed', 'atbd'")
             err = err_du * DU2molsqm
 
-            # seems like obs (hence err) has a mask so need to apply to all other
-            # quantities
+            
+            # make pressure interface matrix
+            press_vert = np.tile(PRESSURE_INTERFACES, (da * dc, 1))
+
+            # get averaging kernel and reshape
+            layer_eff_raw = sci.variables['LayerEfficiency'][:]  # shape (da, dc, 11)
+            averaging_kernel = layer_eff_raw.reshape(da * dc, -1)  # shape (nlocs, 11)
+
+            # get apriori profile
+            apriori_layers = anc.variables['O3AprioriProfile'][:]  # shape (da, dc, 11) 
+            apriori_layers = apriori_layers.reshape(da * dc, -1)  # shape (nlocs, 11)
+
+            # calculate the apriori term which is (I-A)*xa
+            # xa is already in DU so this is straightforward, 
+            # and we can convert to mol.m-2 at the end to match conventions
+            apriori_total = np.zeros(len(obs))
+            for lev in range(nlevs):
+                apriori_total += (1.0 - averaging_kernel[:, lev]) * apriori_layers[:, lev]
+            apriori_total *= DU2molsqm
+
+            # we want to make sure we adjust the pressure grid if terrain is less than any
+            # of the standard pressure levels, as this would cause issues
+            press_vert[:, 0] = terrain_pressure
+            for lev in range(nlevs):
+                zlev = press_vert[:, lev] - press_vert[:, lev+1]
+                press_vert[:, lev+1][zlev < 0] = press_vert[:, lev][zlev < 0]
+
+            # flip pressure levels so they go from surface to TOA (IODA convention), 
+            # and convert to Pa
+            press_vert = np.flip(press_vert, axis=1) * 100.0
+            averaging_kernel = np.flip(averaging_kernel, axis=1)
+
+            # get mask consistent with obs and apply to all variables
             mask = np.ma.getmask(obs)
+            err = np.ma.array(err, mask=mask)
             lat = np.ma.array(lat, mask=mask)
             lon = np.ma.array(lon, mask=mask)
             time = np.ma.array(time, mask=mask)
             qa_value = np.ma.array(qa_value, mask=mask)
             flg = np.ma.array(flg, mask=mask)
+            press_vert = np.ma.array(press_vert, mask=np.column_stack([mask] * (nlevs + 1)))
+            averaging_kernel = np.ma.array(averaging_kernel, mask=np.column_stack([mask] * nlevs))
+            apriori_total = np.ma.array(apriori_total, mask=mask)
 
             # remove masked values and types
             lat = np.ma.compressed(lat).astype('float32')
@@ -124,6 +175,8 @@ class omps_nm(object):
             qa_value = np.ma.compressed(qa_value).astype('int32')
             obs = np.ma.compressed(obs).astype('float32')
             err = np.ma.compressed(err).astype('float32')
+            press_vert = np.ma.compressed(press_vert).astype('float32').reshape(-1, nlevs + 1)
+            averaging_kernel = np.ma.compressed(averaging_kernel).astype('float32').reshape(-1, nlevs)
             flg = np.ma.compressed(flg)
 
             if first:
@@ -133,6 +186,9 @@ class omps_nm(object):
                 self.outdata[self.varDict[iodavar]['valKey']] = obs[flg]
                 self.outdata[self.varDict[iodavar]['errKey']] = err[flg]
                 self.outdata[self.varDict[iodavar]['qcKey']] = qa_value[flg]
+                self.outdata[('aprioriTerm', 'RetrievalAncillaryData')] = apriori_total[flg]
+                self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = averaging_kernel[flg]
+                self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = press_vert[flg]
             else:
                 self.outdata[('dateTime', 'MetaData')] = np.concatenate((
                     self.outdata[('dateTime', 'MetaData')], time[flg]))
@@ -146,11 +202,36 @@ class omps_nm(object):
                     (self.outdata[self.varDict[iodavar]['errKey']], err[flg]))
                 self.outdata[self.varDict[iodavar]['qcKey']] = np.concatenate(
                     (self.outdata[self.varDict[iodavar]['qcKey']], qa_value[flg]))
+                self.outdata[('aprioriTerm', 'RetrievalAncillaryData')] = np.concatenate((
+                    self.outdata[('aprioriTerm', 'RetrievalAncillaryData')], apriori_total[flg]))
+                self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = np.concatenate((
+                    self.outdata[('pressureVertice', 'RetrievalAncillaryData')], press_vert[flg]))
+                self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = np.concatenate((
+                    self.outdata[('averagingKernel', 'RetrievalAncillaryData')], averaging_kernel[flg]))
 
             first = False
 
         DimDict['Location'] = len(self.outdata[('dateTime', 'MetaData')])
         AttrData['Location'] = np.int32(DimDict['Location'])
+        DimDict['Layer'] = nlevs
+        AttrData['Layer'] = np.int32(DimDict['Layer'])
+        DimDict['Vertice'] = nlevs + 1
+        AttrData['Vertice'] = np.int32(DimDict['Vertice'])
+
+        varname = 'pressureVertice'
+        vkey = (varname, 'RetrievalAncillaryData')
+        self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
+        self.varAttrs[vkey]['units'] = 'Pa'
+
+        varname = 'averagingKernel'
+        vkey = (varname, 'RetrievalAncillaryData')
+        self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
+        self.varAttrs[vkey]['units'] = ''
+
+        varname = 'aprioriTerm'
+        vkey = (varname, 'RetrievalAncillaryData')
+        self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
+        self.varAttrs[vkey]['units'] = 'mol m-2'
 
 
 def main():
@@ -189,9 +270,6 @@ def main():
         type=str, default='fixed', choices=['fixed', 'atbd'])
 
     args = parser.parse_args()
-
-    obsVar = {'ozone_total_column': 'ozoneTotal'}
-    varDims = {'ozoneTotal': ['Location']}
 
     # Read in the O3 data
     var = omps_nm(args.input, args.qa_value, obsVar, args.error_method)
