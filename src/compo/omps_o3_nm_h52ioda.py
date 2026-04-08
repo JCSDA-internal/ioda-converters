@@ -36,7 +36,14 @@ DimDict = {
 VarDims = {
     'ozoneTotal': ['Location'],
     'averagingKernel': ['Location', 'Layer'],
-    'pressureVertices': ['Location', 'Vertice']
+    'pressureVertices': ['Location', 'Vertice'],
+    'aprioriTerm': ['Location'],
+    'solarZenithAngle': ['Location'],
+    'qualityFlags': ['Location'],
+    'groundPixelQualityFlags': ['Location'],
+    'algorithmFlags': ['Location'],
+    'measurementQualityFlags': ['Location'],
+    'instrumentQualityFlags': ['Location']
 }
 
 # DU to mol.m-2 conversion factor
@@ -108,6 +115,13 @@ class omps_nm(object):
             # other quantities could be used for future filtering in UFO
             qa_value = sci.variables['QualityFlags'][:].ravel()
             flg = qa_value <= self.qa_flg
+            
+            # read all quality and geometry metadata variables
+            sza = geo.variables['SolarZenithAngle'][:].ravel()
+            gpqf = geo.variables['GroundPixelQualityFlags'][:].ravel()
+            af = sci.variables['AlgorithmFlags'][:].ravel()
+            mqf = sci.variables['MeasurementQualityFlags'][:].ravel()
+            iqf = geo.variables['InstrumentQualityFlags'][:].ravel()
 
             # obs value, we prefer to convert DU to mol.m-2
             obs_du = sci.variables['ColumnAmountO3'][:].ravel()
@@ -164,6 +178,11 @@ class omps_nm(object):
             time = np.ma.array(time, mask=mask)
             qa_value = np.ma.array(qa_value, mask=mask)
             flg = np.ma.array(flg, mask=mask)
+            sza = np.ma.array(sza, mask=mask)
+            gpqf = np.ma.array(gpqf, mask=mask)
+            af = np.ma.array(af, mask=mask)
+            mqf = np.ma.array(mqf, mask=mask)
+            iqf = np.ma.array(iqf, mask=mask)
             press_vert = np.ma.array(press_vert, mask=np.column_stack([mask] * (nlevs + 1)))
             averaging_kernel = np.ma.array(averaging_kernel, mask=np.column_stack([mask] * nlevs))
             apriori_total = np.ma.array(apriori_total, mask=mask)
@@ -175,6 +194,11 @@ class omps_nm(object):
             qa_value = np.ma.compressed(qa_value).astype('int32')
             obs = np.ma.compressed(obs).astype('float32')
             err = np.ma.compressed(err).astype('float32')
+            sza = np.ma.compressed(sza).astype('float32')
+            gpqf = np.ma.compressed(gpqf).astype('int32')
+            af = np.ma.compressed(af).astype('int32')
+            mqf = np.ma.compressed(mqf).astype('int32')
+            iqf = np.ma.compressed(iqf).astype('int32')
             press_vert = np.ma.compressed(press_vert).astype('float32').reshape(-1, nlevs + 1)
             averaging_kernel = np.ma.compressed(averaging_kernel).astype('float32').reshape(-1, nlevs)
             apriori_total = np.ma.compressed(apriori_total).astype('float32')
@@ -184,6 +208,12 @@ class omps_nm(object):
                 self.outdata[('dateTime', 'MetaData')] = time[flg]
                 self.outdata[('latitude', 'MetaData')] = lat[flg]
                 self.outdata[('longitude', 'MetaData')] = lon[flg]
+                self.outdata[('solarZenithAngle', 'MetaData')] = sza[flg]
+                self.outdata[('qualityFlags', 'MetaData')] = qa_value[flg]
+                self.outdata[('groundPixelQualityFlags', 'MetaData')] = gpqf[flg]
+                self.outdata[('algorithmFlags', 'MetaData')] = af[flg]
+                self.outdata[('measurementQualityFlags', 'MetaData')] = mqf[flg]
+                self.outdata[('instrumentQualityFlags', 'MetaData')] = iqf[flg]
                 self.outdata[self.varDict[iodavar]['valKey']] = obs[flg]
                 self.outdata[self.varDict[iodavar]['errKey']] = err[flg]
                 self.outdata[self.varDict[iodavar]['qcKey']] = qa_value[flg]
@@ -197,6 +227,18 @@ class omps_nm(object):
                     self.outdata[('latitude', 'MetaData')], lat[flg]))
                 self.outdata[('longitude', 'MetaData')] = np.concatenate((
                     self.outdata[('longitude', 'MetaData')], lon[flg]))
+                self.outdata[('solarZenithAngle', 'MetaData')] = np.concatenate((
+                    self.outdata[('solarZenithAngle', 'MetaData')], sza[flg]))
+                self.outdata[('qualityFlags', 'MetaData')] = np.concatenate((
+                    self.outdata[('qualityFlags', 'MetaData')], qa_value[flg]))
+                self.outdata[('groundPixelQualityFlags', 'MetaData')] = np.concatenate((
+                    self.outdata[('groundPixelQualityFlags', 'MetaData')], gpqf[flg]))
+                self.outdata[('algorithmFlags', 'MetaData')] = np.concatenate((
+                    self.outdata[('algorithmFlags', 'MetaData')], af[flg]))
+                self.outdata[('measurementQualityFlags', 'MetaData')] = np.concatenate((
+                    self.outdata[('measurementQualityFlags', 'MetaData')], mqf[flg]))
+                self.outdata[('instrumentQualityFlags', 'MetaData')] = np.concatenate((
+                    self.outdata[('instrumentQualityFlags', 'MetaData')], iqf[flg]))
                 self.outdata[self.varDict[iodavar]['valKey']] = np.concatenate(
                     (self.outdata[self.varDict[iodavar]['valKey']], obs[flg]))
                 self.outdata[self.varDict[iodavar]['errKey']] = np.concatenate(
@@ -218,6 +260,37 @@ class omps_nm(object):
         AttrData['Layer'] = np.int32(DimDict['Layer'])
         DimDict['Vertice'] = nlevs + 1
         AttrData['Vertice'] = np.int32(DimDict['Vertice'])
+
+        # Add attributes for metadata variables
+        varname = 'solarZenithAngle'
+        vkey = (varname, 'MetaData')
+        self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
+        self.varAttrs[vkey]['units'] = 'degrees'
+
+        varname = 'qualityFlags'
+        vkey = (varname, 'MetaData')
+        self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
+        self.varAttrs[vkey]['units'] = ''
+
+        varname = 'groundPixelQualityFlags'
+        vkey = (varname, 'MetaData')
+        self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
+        self.varAttrs[vkey]['units'] = ''
+
+        varname = 'algorithmFlags'
+        vkey = (varname, 'MetaData')
+        self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
+        self.varAttrs[vkey]['units'] = ''
+
+        varname = 'measurementQualityFlags'
+        vkey = (varname, 'MetaData')
+        self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
+        self.varAttrs[vkey]['units'] = ''
+
+        varname = 'instrumentQualityFlags'
+        vkey = (varname, 'MetaData')
+        self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
+        self.varAttrs[vkey]['units'] = ''
 
         varname = 'pressureVertice'
         vkey = (varname, 'RetrievalAncillaryData')
