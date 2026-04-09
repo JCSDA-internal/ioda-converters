@@ -23,11 +23,11 @@ locationKeyList = [
     ("dateTime", "string"),
 ]
 
-obsVar = {'ozone_total_column': 'ozoneTotal'}
+ObsVar = {'ozone_total_column': 'ozoneTotal'}
 
 AttrData = {
     'converter': os.path.basename(__file__),
-    'nvars': np.int32(len(obsvar)),
+    'nvars': np.int32(len(ObsVar)),
 }
 
 DimDict = {
@@ -53,10 +53,10 @@ PRESSURE_INTERFACES = np.array([1013.0, 507.0, 253.0, 127.0, 63.3, 31.7, 15.80, 
 
 
 class omps_nm(object):
-    def __init__(self, filenames, qa_flg, obsVar, error_method='fixed'):
+    def __init__(self, filenames, qa_flg, ObsVar, error_method='fixed'):
         self.filenames = filenames
         self.qa_flg = qa_flg
-        self.obsVar = obsVar
+        self.obsVar = ObsVar
         self.error_method = error_method
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
@@ -116,7 +116,7 @@ class omps_nm(object):
             # for obs error, it is not provided in the product.
             # Use selected error calculation method
             if self.error_method == 'fixed':
-                err_du = 6.0
+                err_du = np.full_like(obs_du, 6.0)
             elif self.error_method == 'atbd':
                 err_du = np.interp(obs_du, ATBD_OBS_DU, ATBD_ERR_DU)
             else:
@@ -133,7 +133,7 @@ class omps_nm(object):
             averaging_kernel = layer_eff_raw.reshape(da * dc, -1)  # shape (nlocs, 11)
 
             # get apriori profile
-            apriori_layers = anc.variables['O3AprioriProfile'][:]  # shape (da, dc, 11) 
+            apriori_layers = anc.variables['APrioriLayerO3'][:]  # shape (da, dc, 11) 
             apriori_layers = apriori_layers.reshape(da * dc, -1)  # shape (nlocs, 11)
 
             # calculate the apriori term which is (I-A)*xa
@@ -177,6 +177,7 @@ class omps_nm(object):
             err = np.ma.compressed(err).astype('float32')
             press_vert = np.ma.compressed(press_vert).astype('float32').reshape(-1, nlevs + 1)
             averaging_kernel = np.ma.compressed(averaging_kernel).astype('float32').reshape(-1, nlevs)
+            apriori_total = np.ma.compressed(apriori_total).astype('float32')
             flg = np.ma.compressed(flg)
 
             if first:
@@ -272,13 +273,13 @@ def main():
     args = parser.parse_args()
 
     # Read in the O3 data
-    var = omps_nm(args.input, args.qa_value, obsVar, args.error_method)
+    var = omps_nm(args.input, args.qa_value, ObsVar, args.error_method)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
 
     # write everything out
-    writer.BuildIoda(var.outdata, varDims, var.varAttrs, AttrData)
+    writer.BuildIoda(var.outdata, VarDims, var.varAttrs, AttrData)
 
 
 if __name__ == '__main__':

@@ -1574,7 +1574,8 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_omps_o3_nm
                           -i testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t162415_small.h5
                              testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t180544_small.h5
                           -o testrun/omps_o3_nm.nc
-                          -q 128"
+                          -q 128
+                          -e atbd"
                           omps_o3_nm.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_viirs_j1_l1b_albedo
