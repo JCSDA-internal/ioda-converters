@@ -36,7 +36,7 @@ DimDict = {
 VarDims = {
     'ozoneTotal': ['Location'],
     'averagingKernel': ['Location', 'Layer'],
-    'pressureVertices': ['Location', 'Vertice'],
+    'pressureVertice': ['Location', 'Vertice'],
     'aprioriTerm': ['Location'],
     'solarZenithAngle': ['Location'],
     'qualityFlags': ['Location'],
