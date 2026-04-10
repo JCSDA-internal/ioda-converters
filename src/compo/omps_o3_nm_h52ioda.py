@@ -51,8 +51,8 @@ DU2molsqm = 4.4615E-4
 
 # In the ATBD: https://www.star.nesdis.noaa.gov/jpss/
 # ATBD/D0001-M01-S01-006_JPSS_ATBD_OMPS-TC-Ozone_C.pdf
-# Total ozone column (DU) and corresponding obs error (DU)  
-# # ATBD lookup table for observation error (from ATBD section 7.1)      
+# Total ozone column (DU) and corresponding obs error (DU)
+# # ATBD lookup table for observation error (from ATBD section 7.1)
 ATBD_OBS_DU = np.array([50, 125, 175, 225, 275, 325, 375, 425, 475, 525, 575, 625])
 ATBD_ERR_DU = np.array([5.43, 5.54, 5.65, 5.89, 6.08, 6.63, 7.54, 7.85, 7.79, 8.05, 8.32, 8.79])
 # OMPS Umkehr pressure interfaces (hPa) deduced from OMPS ATBD table 2.3-2
@@ -100,7 +100,7 @@ class omps_nm(object):
             # geolocation
             lat = geo.variables['Latitude'][:].ravel()
             lon = geo.variables['Longitude'][:].ravel()
-            
+
             # surface/terrain pressure
             anc = ncd.groups['AncillaryData']
             terrain_pressure = anc.variables['TerrainPressure'][:].ravel()
@@ -115,7 +115,7 @@ class omps_nm(object):
             # other quantities could be used for future filtering in UFO
             qa_value = sci.variables['QualityFlags'][:].ravel()
             flg = qa_value <= self.qa_flg
-            
+
             # read all quality and geometry metadata variables
             sza = geo.variables['SolarZenithAngle'][:].ravel()
             gpqf = geo.variables['GroundPixelQualityFlags'][:].ravel()
@@ -137,8 +137,9 @@ class omps_nm(object):
             elif self.error_method == 'atbd':
                 err_du = np.interp(obs_du, ATBD_OBS_DU, ATBD_ERR_DU)
             else:
-                raise ValueError(f"Unknown error_method: {self.error_method}. "
-                               f"Choose from: 'fixed', 'atbd'")
+                raise ValueError(
+                    f"Unknown error_method: {self.error_method}. "
+                    f"Choose from: 'fixed', 'atbd'")
             err = err_du * DU2molsqm
 
             # make pressure interface matrix
@@ -149,11 +150,11 @@ class omps_nm(object):
             averaging_kernel = layer_eff_raw.reshape(da * dc, -1)  # shape (nlocs, 11)
 
             # get apriori profile
-            apriori_layers = anc.variables['APrioriLayerO3'][:]  # shape (da, dc, 11) 
+            apriori_layers = anc.variables['APrioriLayerO3'][:]  # shape (da, dc, 11)
             apriori_layers = apriori_layers.reshape(da * dc, -1)  # shape (nlocs, 11)
 
             # calculate the apriori term which is (I-A)*xa
-            # xa is already in DU so this is straightforward, 
+            # xa is already in DU so this is straightforward,
             # and we can convert to mol.m-2 at the end to match conventions
             apriori_total = np.zeros(len(obs))
             for lev in range(nlevs):
@@ -167,14 +168,14 @@ class omps_nm(object):
                 zlev = press_vert[:, lev] - press_vert[:, lev+1]
                 press_vert[:, lev+1][zlev < 0] = press_vert[:, lev][zlev < 0]
 
-            # flip pressure levels so they go from surface to TOA (IODA convention), 
+            # flip pressure levels so they go from surface to TOA (IODA convention),
             # and convert to Pa
             press_vert = np.flip(press_vert, axis=1) * 100.0
             averaging_kernel = np.flip(averaging_kernel, axis=1)
 
             # get mask consistent with obs and apply to all variables
             mask = np.ma.getmask(obs)
-            
+
             # Unmask all variables cleanly - extract data from any masked arrays from netCDF
             lat = np.ma.getdata(lat)
             lon = np.ma.getdata(lon)
@@ -193,7 +194,7 @@ class omps_nm(object):
             apriori_layers = np.ma.getdata(apriori_layers)
             press_vert = np.ma.getdata(press_vert)
             apriori_total = np.ma.getdata(apriori_total)
-            
+
             # Now remask everything with consistent mask from obs
             obs = np.ma.array(obs, mask=mask)
             err = np.ma.array(err, mask=mask)
