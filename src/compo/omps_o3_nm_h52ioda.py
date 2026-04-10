@@ -141,7 +141,6 @@ class omps_nm(object):
                                f"Choose from: 'fixed', 'atbd'")
             err = err_du * DU2molsqm
 
-            
             # make pressure interface matrix
             press_vert = np.tile(PRESSURE_INTERFACES, (da * dc, 1))
 
@@ -175,6 +174,27 @@ class omps_nm(object):
 
             # get mask consistent with obs and apply to all variables
             mask = np.ma.getmask(obs)
+            
+            # Unmask all variables cleanly - extract data from any masked arrays from netCDF
+            lat = np.ma.getdata(lat)
+            lon = np.ma.getdata(lon)
+            terrain_pressure = np.ma.getdata(terrain_pressure)
+            time = np.ma.getdata(time)
+            qa_value = np.ma.getdata(qa_value)
+            flg = np.ma.getdata(flg)
+            obs = np.ma.getdata(obs)
+            err = np.ma.getdata(err)
+            sza = np.ma.getdata(sza)
+            gpqf = np.ma.getdata(gpqf)
+            af = np.ma.getdata(af)
+            mqf = np.ma.getdata(mqf)
+            iqf = np.ma.getdata(iqf)
+            averaging_kernel = np.ma.getdata(averaging_kernel)
+            apriori_layers = np.ma.getdata(apriori_layers)
+            press_vert = np.ma.getdata(press_vert)
+            apriori_total = np.ma.getdata(apriori_total)
+            
+            # Now remask everything with consistent mask from obs
             err = np.ma.array(err, mask=mask)
             lat = np.ma.array(lat, mask=mask)
             lon = np.ma.array(lon, mask=mask)
