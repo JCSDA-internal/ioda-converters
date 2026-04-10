@@ -195,6 +195,7 @@ class omps_nm(object):
             apriori_total = np.ma.getdata(apriori_total)
             
             # Now remask everything with consistent mask from obs
+            obs = np.ma.array(obs, mask=mask)
             err = np.ma.array(err, mask=mask)
             lat = np.ma.array(lat, mask=mask)
             lon = np.ma.array(lon, mask=mask)
