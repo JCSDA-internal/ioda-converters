@@ -1,5 +1,17 @@
 #!/usr/bin/env python
 
+#
+# (C) Copyright 2020-2026 UCAR
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# This script reads in EUMETSAT BASEEV file for MTG-IRS and outputs
+# a reconstructor operator file compatible with the UFO pcscore to
+# radiance variable transform.
+#
+
+
 import netCDF4, h5py, os, argparse
 import numpy as np
 
@@ -157,7 +169,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=(
             'Reads in EUMETSAT BASEEV file for MTG-IRS and outputs '
-            ' a reconstructor operator file compatible with UFO  '
+            ' a reconstructor operator file compatible with the UFO  '
             ' pcscore to radiance variable transform.')
     )
     required = parser.add_argument_group(title='required arguments')
