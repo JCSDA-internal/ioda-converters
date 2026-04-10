@@ -120,8 +120,11 @@ class omps_nm(object):
             sza = geo.variables['SolarZenithAngle'][:].ravel()
             gpqf = geo.variables['GroundPixelQualityFlags'][:].ravel()
             af = sci.variables['AlgorithmFlags'][:].ravel()
-            mqf = sci.variables['MeasurementQualityFlags'][:].ravel()
-            iqf = geo.variables['InstrumentQualityFlags'][:].ravel()
+            # mqf and iqf are 1D (DimAlongTrack only), need to repeat for each cross-track pixel
+            mqf_scan = sci.variables['MeasurementQualityFlags'][:]  # shape (da,)
+            mqf = np.repeat(mqf_scan, dc)  # expand to da*dc
+            iqf_scan = geo.variables['InstrumentQualityFlags'][:]  # shape (da,)
+            iqf = np.repeat(iqf_scan, dc)  # expand to da*dc
 
             # obs value, we prefer to convert DU to mol.m-2
             obs_du = sci.variables['ColumnAmountO3'][:].ravel()
