@@ -26,7 +26,7 @@ def main(args):
     if args.apodize:
         print(f"{infile} Read, applied apodization method: {method}")
     else:
-        print(f"{infile} Read")
+        print(f"{infile} Read, no apodization. Use --apodize to enable.")
     writeFile(outfile, RR, M, subset)
     print(f"Output written to: {outfile}")
 
