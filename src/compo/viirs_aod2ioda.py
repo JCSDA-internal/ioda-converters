@@ -61,6 +61,17 @@ missing_vals = {'string': string_missing_value,
                 'float': float_missing_value,
                 'double': double_missing_value}
 
+# QC mapping array for NASA products (Dark Target and Deep Blue)
+# Dark Target flags: 0 = Bad, 1 = Marginal, 2 = Good, 3 = Very Good
+# Deep Blue flags: 0=no retrieval, 1=poor, 2=moderate, 3=good
+qcmapping = {
+    0: 3,
+    1: 2,
+    2: 1,
+    3: 0,
+}
+nasa_flip_qc = np.array([qcmapping[k] for k in sorted(qcmapping)])
+
 
 class AOD(object):
     def __init__(self, in_dict):
@@ -192,12 +203,15 @@ class AOD(object):
         self.lsfs = self.lsfs[valid_pts]
         self.vals = self.vals[valid_pts]
         self.errs = self.errs[valid_pts]
-        self.qcfs = self.qcfs[valid_pts]
+
+        # Flip QC flags for PreQC (0->3, 3->0)
+        self.qcfs = nasa_flip_qc[self.qcfs[valid_pts].astype(np.int32)]
 
     def get_nasa_db_data(self):
         # For NASA Deep Blue
         self.lons = self.ncd.variables['Longitude'][:].ravel()
         self.lats = self.ncd.variables['Latitude'][:].ravel()
+        # Only QC=3 pixels are retained with Aerosol_Optical_Thickness_550_Land_Ocean_Best_Estimate
         self.vals = self.ncd.variables['Aerosol_Optical_Thickness_550_Land_Ocean_Best_Estimate'][:].ravel()
 
         # Keep valid data points only
@@ -248,6 +262,8 @@ class AOD(object):
             self.errs[mix_equal_pts] = 0.5 * eu_land[mix_equal_pts] + 0.5 * eu_ocean[mix_equal_pts]
             self.qcfs[mix_equal_pts] = np.where(qaf_land[mix_equal_pts] < qaf_ocean[mix_equal_pts],
                                                 qaf_land[mix_equal_pts], qaf_ocean[mix_equal_pts])
+        # Flip QC flags for PreQC (0->3, 3->0)
+        self.qcfs = nasa_flip_qc[self.qcfs.astype(np.int32)]
 
         AttrData['errorMethod'] = 'Pixel-level Uncertainty Estimates (PUE)'
         if self.error_method != "pue":
