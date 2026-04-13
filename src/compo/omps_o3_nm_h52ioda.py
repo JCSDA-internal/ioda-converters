@@ -102,7 +102,6 @@ class omps_nm(object):
             lon = geo.variables['Longitude'][:].ravel()
 
             # surface/terrain pressure
-            anc = ncd.groups['AncillaryData']
             terrain_pressure = anc.variables['TerrainPressure'][:].ravel()
 
             # time
@@ -157,9 +156,7 @@ class omps_nm(object):
             # xa is already in DU so this is straightforward,
             # and we can convert to mol.m-2 at the end to match conventions
             apriori_total = np.zeros(len(obs))
-            for lev in range(nlevs):
-                apriori_total += (1.0 - averaging_kernel[:, lev]) * apriori_layers[:, lev]
-            apriori_total *= DU2molsqm
+            apriori_total = ((1.0 - averaging_kernel) * apriori_layers).sum(axis=1) * DU2molsqm
 
             # we want to make sure we adjust the pressure grid if terrain is less than any
             # of the standard pressure levels, as this would cause issues
@@ -364,8 +361,8 @@ def main():
     optional.add_argument(
         '-e', '--error_method',
         help="Observation error calculation method. "
-        "'fixed': use GSI fixed value of 6.0 DU; "
-        "'atbd': linear interpolation from ATBD lookup table (default); ",
+        "'fixed': use GSI fixed value of 6.0 DU"
+        "'atbd': linear interpolation from ATBD lookup table",
         type=str, default='fixed', choices=['fixed', 'atbd'])
 
     args = parser.parse_args()
