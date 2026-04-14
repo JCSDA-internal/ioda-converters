@@ -254,13 +254,14 @@ def apply_gross_qc(obs_data):
 def set_flagged_value(f, obs_key, obs_data, chk_geolocation, skip=1):
     """
     Use the 'aws_brightnesstemp_flag' [0: invalid, 1: valid]
-    when applying this flag all data rejected
+    however this flag was showing all data as invalid -- needs to be confirmed
     """
     nchans = len(obs_data[('sensorChannelNumber', metaDataName)])
 
     # apply AWS data processing flag
     k_flag = 'data/processing_information/aws_brightnesstemp_flag'
     flags = f['data']['processing_information']['aws_brightnesstemp_flag'][:].reshape(-1, nchans)
+    # this was reporting all data as 0: invalid
 #   invalid_mask = (flags != 1)
 #   obs_data[obs_key][invalid_mask] = float_missing_value
 #   print(f"{np.max(obs_data[('brightnessTemperature', 'ObsValue')][:, 2])=}")
