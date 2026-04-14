@@ -11,9 +11,11 @@
 # and output to the JEDI IODA format
 #
 
-from datetime import datetime, timedelta
+from datetime import datetime, timezone
 import numpy as np
 import h5py
+import os
+import re
 
 import pyiodaconv.ioda_conv_engines as iconv
 from pyiodaconv.orddicts import DefaultOrderedDict
@@ -40,8 +42,12 @@ obsValName = iconv.OvalName()
 GlobalAttrs = {
     "platformCommonName": "AWS",
     "platformLongDescription": "ESA Arctic Weather Satellite L1B Brightness Temperature Data",
-    "sensorCentralWavelength": "[50.3, 89, 165.5, 175.31-191.31, 317.15-333.15, 52.61-57.61]",
+    "sensorCentralFrequency": [50.3, 52.8, 53.246, 53.596, 54.4,
+                               54.94, 55.5, 50.290, 89., 165.5,
+                               176.311, 178.811, 180.311, 181.511, 182.311,
+                               325.15, 325.15, 325.15, 325.15],
 }
+GlobalAttrs['converter'] = os.path.basename(__file__)
 
 locationKeyList = [
     ("latitude", "float"),
@@ -59,11 +65,15 @@ def get_aws_data(afile, skip=1):
     assign_dimension(obs_data, nchans, nscans, nbeam_pos)
 
     # data is not remapped choose one to approximate all
-    j = 1
-    process_aws_metadata(f, obs_data, j)
-#   obs_data[('sensorViewAngle', metaDataName)] = np.array(f['sensor_view_angle'][:, :].flatten(), dtype='float32')
-#   obs_data[('dateTime', metaDataName)] = np.array(get_epoch_time(f), dtype='int64')
-#   obs_data[('satelliteAscendingFlag', metaDataName)] = np.array(f['flagAscDesc'][:, :].flatten(), dtype='int32')
+    iband = 1
+    process_aws_metadata(f, obs_data, iband)
+    sat_altitude = get_sat_altitude(f, repeat_count=nbeam_pos)
+    obs_data[('sensorViewAngle', metaDataName)] = compute_scan_angle(
+        obs_data[('sensorZenithAngle', metaDataName)],
+        sat_altitude,
+        obs_data[('sensorZenithAngle', metaDataName)])
+    obs_data[('dateTime', metaDataName)] = get_epoch_time(f, repeat_count=nbeam_pos)
+    obs_data[('satelliteAscendingFlag', metaDataName)] = get_iasc(f, repeat_count=nbeam_pos)
 
     # assign orbit WMO ID to all locations
     obs_data = assign_WMO_ID(obs_data, WMO_sat_ID)
@@ -71,11 +81,11 @@ def get_aws_data(afile, skip=1):
     assign_brightnessTemperature(f, obs_data)
 
     # apply gross quality control
-    apply_gross_qc(obs_data)
+#   chk_geolocation = apply_gross_qc(obs_data)
 
     # quality control using data Flag and final check for valid ObsValues for all bands
     obs_key = ('brightnessTemperature', "ObsValue")
-    set_flagged_value(nchans, f, obs_key, obs_data, skip=skip)
+#   set_flagged_value(f, obs_key, obs_data, chk_geolocation, skip=skip)
 
     return obs_data
 
@@ -96,6 +106,56 @@ def assign_brightnessTemperature(f, obs_data):
     nlocs = len(obs_data[('latitude', metaDataName)])
     obs_data[(k, "ObsError")] = np.full((nlocs, nchans), 5.0, dtype='float32')
     obs_data[(k, "PreQC")] = np.full((nlocs, nchans), 0, dtype='int32')
+
+
+def get_epoch_time(f, repeat_count=145):
+    """
+    using the specific key for EUMETSAT AWS files and its attribute
+    transform the time to IODA epoch
+    only one time per scan line repeat for each FOV
+    """
+    timekey = 'data/navigation/time_attitude'
+    default_epoch = b'seconds since 2020-01-01T00:00:00.00'
+    time_attribute = f[timekey].attrs.get('units', default_epoch).decode('utf-8')
+    match = re.search(r'since (.*)', time_attribute)
+    if not match:
+        raise ValueError(f"Could not determine IODA epoch from: {timekey=}")
+    date_str = match.group(1)  # Extracted date string
+    # Convert the extracted date to a datetime object
+    iet_epoch = datetime.fromisoformat(date_str)
+    iet_epoch = iet_epoch.replace(tzinfo=timezone.utc)
+    offset = (epoch - iet_epoch).total_seconds()  # Offset in seconds
+    # Convert IET to Unix time
+    ioda_dateTime = np.repeat((f[timekey][:] / 1.e6) - offset, repeat_count).astype('int64')
+
+    return ioda_dateTime
+
+
+def get_sat_altitude(f, repeat_count=145):
+    """
+    Extracts, masks, scales, and repeats satelite altitude
+    """
+    ds_key = 'data/navigation/satellite_altitude'
+    dataset = f[ds_key]
+    scale = dataset.attrs.get('scale_factor', [1.0])[0]
+    offset = dataset.attrs.get('add_offset', [0.0])[0]
+    v_min = dataset.attrs.get('valid_min', [None])[0]
+    v_max = dataset.attrs.get('valid_max', [None])[0]
+
+    data = dataset[:].astype(np.float32)
+
+    # catch anything outside valid range (missing value incorrect as 0. is used)
+    mask = np.zeros(data.shape, dtype=bool)
+    if v_min is not None:
+        mask |= (data < v_min)
+    if v_max is not None:
+        mask |= (data > v_max)
+
+    # scale and convert from km to m (IODA convention)
+    processed_data = (data * scale * 1000.) + offset
+    processed_data[mask] = float_missing_value
+
+    return np.repeat(processed_data, repeat_count)
 
 
 def init_obs_loc():
@@ -141,7 +201,7 @@ def assign_WMO_ID(obs_data, WMO_sat_ID):
     return obs_data
 
 
-def process_aws_metadata(f, obs_data, j):
+def process_aws_metadata(f, obs_data, iband):
     # populate some metaData from the file
     mapping = {
         'data/navigation/aws_lat': 'latitude',
@@ -155,12 +215,25 @@ def process_aws_metadata(f, obs_data, j):
     for path, ioda_name in mapping.items():
         if path in f:
             dset = f[path]
-            data = np.array(dset[:, :, j], dtype='float32').flatten()
+            data = np.array(dset[:, :, iband], dtype='float32').flatten()
             data *= dset.attrs.get('scale_factor', 1.0)
             data += dset.attrs.get('add_offset', 0.0)
             obs_data[(ioda_name, metaDataName)] = data
         else:
             print(f"Warning: {path} not found in file.")
+
+
+def get_iasc(f, repeat_count=145):
+    """
+    retrieve orbit_angle and use to define ascending and descending
+    """
+    dataset = f['data/navigation/orbit_angle']
+    angles = dataset[:]
+
+    # Determine flags: 1 for Ascending (0-180), 0 for Descending (>180)
+    flags = np.where((angles >= 0) & (angles <= 180), 1, 0)
+
+    return np.repeat(flags, repeat_count).astype('int32')
 
 
 def apply_gross_qc(obs_data):
@@ -173,21 +246,65 @@ def apply_gross_qc(obs_data):
     obs_data[('longitude', metaDataName)][chk_geolocation] = float_missing_value
     obs_data[('sensorZenithAngle', metaDataName)][chk_geolocation] = float_missing_value
 
+    return chk_geolocation
 
-def set_flagged_value(nchans, f, obs_key, obs_data, skip=1):
+
+def set_flagged_value(f, obs_key, obs_data, chk_geolocation, skip=1):
+    """
+    Use the 'aws_brightnesstemp_flag' [0: invalid, 1: valid]
+    """
+    nchans = len(obs_data[('sensorChannelNumber', metaDataName)])
+
+    # apply AWS data processing flag
+    k_flag = 'data/processing_information/aws_brightnesstemp_flag'
+    flags = f['data']['processing_information']['aws_brightnesstemp_flag'][:].reshape(-1, nchans)
+    invalid_mask = (flags != 1)
+    obs_data[obs_key][invalid_mask] = float_missing_value
+
+    # apply geolocation physical reality check
     for jchan in np.arange(nchans):
-        chk_ob = ( obs_data[('latitude', metaDataName)][:] == float_missing_value )
-        obs_data[obs_key][:, jchan][chk_ob] = float_missing_value
+        obs_data[obs_key][:, jchan][chk_geolocation] = float_missing_value
 
     tb_key = 'brightnessTemperature'
-    good = (obs_data[(tb_key, obsValName)][:, 0] != float_missing_value) & \
-        (obs_data[(tb_key, obsValName)][:, 8] != float_missing_value) & \
-        (obs_data[(tb_key, obsValName)][:, 11] != float_missing_value)
+    target_channels = [2, 8, 11]  # check a single V-, W-, G-band channel
+#   target_channels = [2, 8, 11, 16]  # check a single V-, W-, G-, and Y-band channel
+    good = (obs_data[(tb_key, obsValName)][:, target_channels] != float_missing_value).all(axis=1)
     for k in obs_data:
         if metaDataName in k[1] and 'sensorChannelNumber' not in k[0]:
-            obs_data[k] = obs_data[k][good][::skip]
+            obs_data[k] = obs_data[k][good][:skip]
         elif tb_key in k[0]:
-            obs_data[k] = obs_data[k][good, :][::skip]
+            obs_data[k] = obs_data[k][good, :][:skip]
+
+
+def get_obs_properties(obs_data):
+    """
+    set obs_data Attributes and Dimensions
+    """
+
+    # pass parameters to the IODA writer
+    VarDims = {
+        'brightnessTemperature': ['Location', 'Channel'],
+        'sensorChannelNumber': ['Channel'],
+    }
+
+    nlocs = len(obs_data[('latitude', metaDataName)])
+    DimDict = {
+        'Location': nlocs,
+        'Channel': obs_data[('sensorChannelNumber', metaDataName)],
+    }
+
+    VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+    set_obspace_attributes(VarAttrs)
+    set_metadata_attributes(VarAttrs)
+
+    k = 'brightnessTemperature'
+    VarAttrs[(k, 'ObsValue')]['_FillValue'] = float_missing_value
+    VarAttrs[(k, 'ObsError')]['_FillValue'] = float_missing_value
+    VarAttrs[(k, 'PreQC')]['_FillValue'] = int_missing_value
+    VarAttrs[(k, 'ObsValue')]['units'] = 'K'
+    VarAttrs[(k, 'ObsError')]['units'] = 'K'
+
+    return VarDims, VarAttrs, DimDict
 
 
 def main():
@@ -207,25 +324,16 @@ def main():
         '-o', '--output',
         help='name of the output netCDF IODA-compliant file',
         type=str, required=True, default='output.nc')
-    optional = parser.add_argument_group(title='optional arguments')
-    optional.add_argument(
-        '-d', '--date',
-        metavar="YYYYMMDDTHHMMSSZ",
-        help="base dateTime for observation window",
-        type=str, required=False, default=None)
 
     args = parser.parse_args()
 
-    GlobalAttrs['converter'] = os.path.basename(__file__)
-
-#   obs = variables_to_obs(obs_scene, ancillary_data, VarDims)
     obs = get_aws_data(args.input)
-#   VarDims, VarAttrs, DimDict = get_obs_properties(obs_scene)
+    VarDims, VarAttrs, DimDict = get_obs_properties(obs)
 
     # setup the IODA writer
-#   writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
+    writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
     # write everything out
-#   writer.BuildIoda(obs, VarDims, VarAttrs, GlobalAttrs)
+    writer.BuildIoda(obs, VarDims, VarAttrs, GlobalAttrs)
 
 
 if __name__ == '__main__':
