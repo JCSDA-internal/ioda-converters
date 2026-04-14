@@ -43,7 +43,7 @@ GlobalAttrs = {
     "platformCommonName": "AWS",
     "platformLongDescription": "ESA Arctic Weather Satellite L1B Brightness Temperature Data",
     "sensorCentralFrequency": [50.3, 52.8, 53.246, 53.596, 54.4,
-                               54.94, 55.5, 50.290, 89., 165.5,
+                               54.94, 55.5, 57.29, 89., 165.5,
                                176.311, 178.811, 180.311, 181.511, 182.311,
                                325.15, 325.15, 325.15, 325.15],
 }
