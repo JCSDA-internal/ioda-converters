@@ -81,11 +81,11 @@ def get_aws_data(afile, skip=1):
     assign_brightnessTemperature(f, obs_data)
 
     # apply gross quality control
-#   chk_geolocation = apply_gross_qc(obs_data)
+    chk_geolocation = apply_gross_qc(obs_data)
 
     # quality control using data Flag and final check for valid ObsValues for all bands
     obs_key = ('brightnessTemperature', "ObsValue")
-#   set_flagged_value(f, obs_key, obs_data, chk_geolocation, skip=skip)
+    set_flagged_value(f, obs_key, obs_data, chk_geolocation, skip=skip)
 
     return obs_data
 
@@ -114,7 +114,7 @@ def get_epoch_time(f, repeat_count=145):
     transform the time to IODA epoch
     only one time per scan line repeat for each FOV
     """
-    timekey = 'data/navigation/time_attitude'
+    timekey = 'data/navigation/time_startscan_utc_earthview'
     default_epoch = b'seconds since 2020-01-01T00:00:00.00'
     time_attribute = f[timekey].attrs.get('units', default_epoch).decode('utf-8')
     match = re.search(r'since (.*)', time_attribute)
@@ -124,9 +124,11 @@ def get_epoch_time(f, repeat_count=145):
     # Convert the extracted date to a datetime object
     iet_epoch = datetime.fromisoformat(date_str)
     iet_epoch = iet_epoch.replace(tzinfo=timezone.utc)
-    offset = (epoch - iet_epoch).total_seconds()  # Offset in seconds
+    offset = (iet_epoch - epoch).total_seconds()  # Offset in seconds
+    raw_time = f[timekey][:].astype(np.float64)
     # Convert IET to Unix time
-    ioda_dateTime = np.repeat((f[timekey][:] / 1.e6) - offset, repeat_count).astype('int64')
+    ioda_dateTime = raw_time + offset
+    ioda_dateTime = np.repeat(ioda_dateTime, repeat_count).astype(np.int64)
 
     return ioda_dateTime
 
@@ -240,7 +242,7 @@ def apply_gross_qc(obs_data):
     # check some global satellite geometry will compress all data using this
     chk_geolocation = (obs_data[('latitude', metaDataName)] > 90) | (obs_data[('latitude', metaDataName)] < -90) | \
         (obs_data[('longitude', metaDataName)] > 180) | (obs_data[('longitude', metaDataName)] < -180) | \
-        (obs_data[('sensorZenithAngle', metaDataName)] > 80) | (obs_data[('sensorZenithAngle', metaDataName)] < 0)
+        (obs_data[('sensorZenithAngle', metaDataName)] < 0) | (obs_data[('sensorZenithAngle', metaDataName)] > 360)
 
     obs_data[('latitude', metaDataName)][chk_geolocation] = float_missing_value
     obs_data[('longitude', metaDataName)][chk_geolocation] = float_missing_value
@@ -252,28 +254,33 @@ def apply_gross_qc(obs_data):
 def set_flagged_value(f, obs_key, obs_data, chk_geolocation, skip=1):
     """
     Use the 'aws_brightnesstemp_flag' [0: invalid, 1: valid]
+    when applying this flag all data rejected
     """
     nchans = len(obs_data[('sensorChannelNumber', metaDataName)])
 
     # apply AWS data processing flag
     k_flag = 'data/processing_information/aws_brightnesstemp_flag'
     flags = f['data']['processing_information']['aws_brightnesstemp_flag'][:].reshape(-1, nchans)
-    invalid_mask = (flags != 1)
-    obs_data[obs_key][invalid_mask] = float_missing_value
+#   invalid_mask = (flags != 1)
+#   obs_data[obs_key][invalid_mask] = float_missing_value
+#   print(f"{np.max(obs_data[('brightnessTemperature', 'ObsValue')][:, 2])=}")
 
     # apply geolocation physical reality check
     for jchan in np.arange(nchans):
-        obs_data[obs_key][:, jchan][chk_geolocation] = float_missing_value
+        obs_data[obs_key][chk_geolocation, jchan] = float_missing_value
 
     tb_key = 'brightnessTemperature'
     target_channels = [2, 8, 11]  # check a single V-, W-, G-band channel
 #   target_channels = [2, 8, 11, 16]  # check a single V-, W-, G-, and Y-band channel
     good = (obs_data[(tb_key, obsValName)][:, target_channels] != float_missing_value).all(axis=1)
+    if skip > 1:
+        mask_skip = (np.arange(len(good)) % skip == 0)
+        good = good & mask_skip
     for k in obs_data:
         if metaDataName in k[1] and 'sensorChannelNumber' not in k[0]:
-            obs_data[k] = obs_data[k][good][:skip]
+            obs_data[k] = obs_data[k][good]
         elif tb_key in k[0]:
-            obs_data[k] = obs_data[k][good, :][:skip]
+            obs_data[k] = obs_data[k][good, :]
 
 
 def get_obs_properties(obs_data):
