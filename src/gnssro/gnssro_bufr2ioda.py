@@ -64,7 +64,6 @@ def main(args):
     dtg = datetime.strptime(args.date, '%Y%m%d%H')
     qc = args.qualitycontrol
     addLSW = args.localspectralwidth
-    only_bang = args.onlybendingangle
     use_average_tangent_point = args.use_average_tangent_point
 
     # read / process files in parallel
@@ -74,7 +73,7 @@ def main(args):
     obs_data = {}
     # create a thread pool
     with ProcessPoolExecutor(max_workers=args.threads) as executor:
-        for file_obs_data in executor.map(read_input, pool_inputs, repeat(qc), repeat(addLSW), repeat(only_bang), repeat(use_average_tangent_point)):
+        for file_obs_data in executor.map(read_input, pool_inputs, repeat(qc), repeat(addLSW), repeat(use_average_tangent_point)):
             if not file_obs_data:
                 print(f"INFO: non-nominal file skipping")
                 continue
@@ -176,7 +175,7 @@ def fill_missing_satellite_subidentifier(input_file, profile_meta_data):
     return
 
 
-def read_input(input_file_and_record, add_qc, addLSW, only_bang, use_average_tangent_point):
+def read_input(input_file_and_record, add_qc, addLSW, use_average_tangent_point):
     """
     Reads/converts input file(s)
 
@@ -206,7 +205,6 @@ def read_input(input_file_and_record, add_qc, addLSW, only_bang, use_average_tan
 
     obs_data = get_obs_data(bufr, profile_meta_data, add_qc, addLSW,
                             record_number=record_number,
-                            only_bang=only_bang,
                             use_average_tangent_point=use_average_tangent_point)
 
     f.close()
@@ -245,7 +243,7 @@ def get_meta_data(bufr):
     return profile_meta_data
 
 
-def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None, only_bang=False, use_average_tangent_point=False):
+def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None, use_average_tangent_point=False):
 
     # allocate space for output depending on which variables are to be saved
     obs_data = {}
@@ -279,6 +277,7 @@ def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None, on
     impact = codes_get_array(bufr, 'impactParameter')[offset::drepfac[0]]
     bang = codes_get_array(bufr, 'bendingAngle')[offset*2::drepfac[0]*2]
     bang_err = codes_get_array(bufr, 'bendingAngle')[offset*2+1::drepfac[0]*2]
+    only_bang = not codes_is_defined(bufr, 'atmosphericRefractivity')
     if only_bang:
         bang_err[:] = 0.003
     bang_conf = codes_get_array(bufr, 'percentConfidence')[1:krepfac[0]+1]
@@ -318,10 +317,12 @@ def get_obs_data(bufr, profile_meta_data, add_qc, addLSW, record_number=None, on
         refrac = codes_get_array(bufr, 'atmosphericRefractivity')[0::2]
         refrac_err = codes_get_array(bufr, 'atmosphericRefractivity')[1::2]
 
-    try:
+    if codes_is_defined(bufr, 'height'):
         height = codes_get_array(bufr, 'height', ktype=float)
-    except Exception as e:
+    elif codes_is_defined(bufr, 'geopotentialHeight'):
         height = codes_get_array(bufr, 'geopotentialHeight', ktype=float)
+    else:
+        height = impact
 
     # value, ob_error, qc
     obs_data[('atmosphericRefractivity', "ObsValue")] = assign_values(refrac)
@@ -523,11 +524,6 @@ if __name__ == "__main__":
         '-lsw', '--localspectralwidth',
         help='Calculate and output error metrics, LSW and STD4060',
         default=False, action='store_true', required=False)
-
-    optional.add_argument(
-        '--onlybendingangle',
-        help='only encode bending angle ignore refractivity and profiles',
-        action='store_true', required=False)
 
     optional.add_argument(
         '--use-average-tangent-point',

@@ -98,6 +98,7 @@ wmo_satid = {
     'noaa-18': 209,
     'noaa-19': 223,
     'noaa-20': 225,
+    'noaa-21': 226,
     'npp': 224,
 }
 
@@ -520,6 +521,7 @@ oz_lay_sensors = [
     'gome',
     'sbuv2',
     'omi',
+    'omieff',
     'ompsnp',
     'ompstc8',
     'ompsnm',
