@@ -23,21 +23,19 @@ from pyiodaconv.def_jedi_utils import (
     compute_scan_angle,
     concat_obs_dict,
     epoch,
+    float_missing_value,
     ioda_float_type,
     ioda_int_type,
+    int_missing_value,
+    long_missing_value,
+    metaDataName,
+    obsValName,
     set_metadata_attributes,
     set_obspace_attributes,
 )
 
 # globals
 AWS_PFM_WMO_sat_ID = 80
-
-float_missing_value = iconv.get_default_fill_val(np.float32)
-int_missing_value = iconv.get_default_fill_val(np.int32)
-long_missing_value = iconv.get_default_fill_val(np.int64)
-
-metaDataName = iconv.MetaDataName()
-obsValName = iconv.OvalName()
 
 GlobalAttrs = {
     "platformCommonName": "AWS",
