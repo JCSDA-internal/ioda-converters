@@ -111,6 +111,8 @@ list( APPEND test_input
   testinput/pandora_site_classification.csv
   testinput/balloonsonde_sample_20241001T00Z_PT15M.json
   testinput/tec_groundBased_TENET_20201001T00Z.tec
+  testinput/TMS02.1B-TB.V00-07.NRT.ST20241115-125911.ET20241115-130757.CT20241119-074232.nc
+  testinput/TROPICS03.BRTT.L1B.Orbit07819.V05-02.ST20241023-003347.ET20241023-020756.CT20241023-145302.nc
   testinput/COWVR_TSDR.020421.20240430T215845.20240430T230345.V1001.sample.h5
   testinput/gfs.231010.t00z.syndata.tcvitals.txt
 )
@@ -215,6 +217,8 @@ list( APPEND test_output
   testoutput/saber_timed.20160101T180000Z.nc4
   testoutput/obs.20241001T000000Z_PT15M_balloonsonde.nc4
   testoutput/obs.20201001T000000Z_PT1M_tec_groundbased.nc4
+  testoutput/tio_converter_tio_tms_l1b_single_V00-07.nc
+  testoutput/tio_converter_tropics03.nc
   testoutput/obs.20240430T220600Z_PT2M_cowvr_iss.nc4
   testoutput/tcp_obs_2023101000.nc4
 )
@@ -2678,6 +2682,27 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_madis_snod
                             -i testinput/madis_2021010100.nc
                             -o testrun/madis_snod_2021010100.nc"
                             madis_snod_2021010100.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tio_conv_tms_tio
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/convert_tio.x
+                            testinput/TMS02.1B-TB.V00-07.NRT.ST20241115-125911.ET20241115-130757.CT20241119-074232.nc
+                            testrun/tio_converter_tio_tms_l1b_single_V00-07.nc"
+                            tio_converter_tio_tms_l1b_single_V00-07.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tio_conv_tms_tropics
+                    TYPE    SCRIPT
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${CMAKE_BINARY_DIR}/bin/convert_tio.x
+                            testinput/TROPICS03.BRTT.L1B.Orbit07819.V05-02.ST20241023-003347.ET20241023-020756.CT20241023-145302.nc
+                            testrun/tio_converter_tropics03.nc"
+                            tio_converter_tropics03.nc ${IODA_CONV_COMP_TOL})
+
 
 #######################################################
 # Auto-generated tests for ioda file validation
