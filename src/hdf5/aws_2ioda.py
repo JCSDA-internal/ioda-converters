@@ -63,7 +63,7 @@ def get_aws_data(afile, skip=1):
     assign_dimension(obs_data, nchans, nscans, nbeam_pos)
 
     # data is not remapped choose one to approximate all
-    iband = 1
+    iband = 0
     process_aws_metadata(f, obs_data, iband)
     sat_altitude = get_sat_altitude(f, repeat_count=nbeam_pos)
     obs_data[('sensorViewAngle', metaDataName)] = compute_scan_angle(
