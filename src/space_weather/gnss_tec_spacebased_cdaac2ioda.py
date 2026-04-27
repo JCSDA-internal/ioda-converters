@@ -210,7 +210,7 @@ def get_obs_data(ifile, get_obs_data_args):
     obs_data = get_geolocation(obs_data)
     # the observation value
     obs_data[("totalElectronContent", "ObsValue")] = np.array(ds['TEC'][:], dtype=ioda_float_type)
-    obs_data[("totalElectronContent", "ObsError")] = np.zeros(np.shape(ds['TEC'][:]), dtype=ioda_float_type) + args.obserror
+    obs_data[("totalElectronContent", "ObsError")] = np.full(np.shape(ds['TEC'][:]), args.obserror, dtype=ioda_float_type)
 
     return obs_data
 
