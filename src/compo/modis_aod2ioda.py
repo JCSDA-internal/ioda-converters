@@ -142,7 +142,6 @@ class AOD(object):
                 print(f"An error occurred: {e}")
             #  Get variables
             modis_time = hdf.select(modis_time_key)[:].ravel()
-            print(f"length of time var: {len(modis_time)}")
             modis_time = modis_time.astype('float32')
             lats = hdf.select('Latitude')[:].ravel()
             lats = lats.astype('float32')
@@ -156,12 +155,13 @@ class AOD(object):
             unc_land = hdf.select('Deep_Blue_Aerosol_Optical_Depth_550_Land_Estimated_Uncertainty')[:].ravel()
 
             # Special treatment for qc flags
-            QC_flag = hdf.select('Land_Ocean_Quality_Flag')[:].ravel()
+            QC_flag = hdf.select('AOD_550_Dark_Target_Deep_Blue_Combined_QA_Flag')[:].ravel()
+            #QC_flag = hdf.select('Land_Ocean_Quality_Flag')[:].ravel()
             QC_flag = QC_flag.astype('int32')
             valid_QC = (QC_flag >= 0) & (QC_flag <= 3)
             # Flip QC flags for PreQC (0->3, 3->0)
             QC_flag[valid_QC] = nasa_flip_qc[QC_flag[valid_QC]]
-            QC_flag = np.where((QC_flag < 0), missing_vals['integer'], QC_flag)
+            QC_flag = np.where(~valid_QC, missing_vals['integer'], QC_flag)
 
             # Remove undefined values
             pos_index = np.where(aod > 0)
