@@ -64,7 +64,9 @@ missing_vals = {'string': string_missing_value,
                 'double': double_missing_value}
 
 # QC mapping array for MODIS collection (Dark Target and Deep Blue)
-# Land_Ocean_Quality_Flag: 0 = no retrieval, 1 = marginal, 2 = good, 3 = very good/best
+# https://darktarget.gsfc.nasa.gov/products/viirs-modis/level-2-product-contents
+# AOD_550_Dark_Target_Deep_Blue_Combined_QA_Flag:
+#   0 = no retrieval, 1 = marginal, 2 = good, 3 = very good/best
 qcmapping = {0: 3, 1: 2, 2: 1, 3: 0}
 nasa_flip_qc = np.array([qcmapping[k] for k in sorted(qcmapping)])
 
@@ -140,6 +142,7 @@ class AOD(object):
             except Exception as e:
                 # Catch and print any errors
                 print(f"An error occurred: {e}")
+
             #  Get variables
             modis_time = hdf.select(modis_time_key)[:].ravel()
             modis_time = modis_time.astype('float32')
@@ -156,7 +159,6 @@ class AOD(object):
 
             # Special treatment for qc flags
             QC_flag = hdf.select('AOD_550_Dark_Target_Deep_Blue_Combined_QA_Flag')[:].ravel()
-            #QC_flag = hdf.select('Land_Ocean_Quality_Flag')[:].ravel()
             QC_flag = QC_flag.astype('int32')
             valid_QC = (QC_flag >= 0) & (QC_flag <= 3)
             # Flip QC flags for PreQC (0->3, 3->0)
@@ -181,7 +183,6 @@ class AOD(object):
             # From MODIS file (over ocean) and Levy, 2010 (over land)
             # https://acp.copernicus.org/articles/10/10399/2010/acp-10-10399-2010.pdf
             # flag = 0 (ocean) 1(land) 2(coastal)
-
             over_ocean = np.logical_not(land_sea_flag > 0)
             over_land = np.logical_not(land_sea_flag == 0)
             UNC = np.where(over_land, unc_land, np.add(0.05, np.multiply(0.15, aod)))
