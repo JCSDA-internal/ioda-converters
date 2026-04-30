@@ -155,7 +155,6 @@ def get_data(f, obs_data):
     sat_altitude = np.empty_like(instr_scan_ang)
     sat_altitude[:] = 407.0
     obs_data[('sensorViewAngle', metaDataName)] = compute_scan_angle(
-        instr_scan_ang,
         sat_altitude,
         instr_scan_ang)
 

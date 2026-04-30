@@ -74,7 +74,7 @@ def set_obspace_attributes(VarAttrs):
     return VarAttrs
 
 
-def compute_scan_angle(instr_scan_ang, sensor_altitude, sensor_zenith, qc_flag=[None]):
+def compute_scan_angle(sensor_altitude, sensor_zenith, qc_flag=None):
 
     # should come from standard table
     earth_mean_radius_km = 6378.1370  # WGS84
@@ -87,18 +87,23 @@ def compute_scan_angle(instr_scan_ang, sensor_altitude, sensor_zenith, qc_flag=[
     d2r = np.pi/180.
     r2d = 180./np.pi
 
-    # do we need a missing here
-    ratio = np.empty_like(sensor_altitude)
+    # Initialize output with missing values
+    scanang = np.full_like(sensor_altitude, np.nan, dtype=float)
 
-    # compute scan angle
-    if not qc_flag[0]:
-        qc_flag = np.zeros_like(sensor_altitude)
-    good = qc_flag[:] == 0
-    if sum(good) > 0:
-        ratio[good] = earth_mean_radius_km/(earth_mean_radius_km + sensor_altitude[good]/1000.)
+    # Handle qc_flag
+    if qc_flag is None: 
+        good = np.ones_like(sensor_altitude, dtype=bool)
+    else:
+        qc_flag = np.asarray(qc_flag)
+        good = (qc_flag == 0)
 
-    # γ = arcsin(R / (R + h) * sin(theta)),h: sat alt; theta: sat zenith angle
-    scanang = np.arcsin(ratio*np.sin(abs(sensor_zenith)*d2r))*r2d
+    # compute scan angle only for good observations
+    if np.any(good):    
+        # γ = arcsin(R / (R + h) * sin(theta)),h: sat alt; theta: sat zenith angle
+        ratio = earth_mean_radius_km/(earth_mean_radius_km + sensor_altitude[good]/1000.)
+        sin_angle = ratio * np.sin(np.abs(sensor_zenith[good]) * d2r)
+        sin_angle = np.clip(sin_angle, -1.0, 1.0)   # avoid arcsin domain error
+        scanang[good] = np.arcsin(sin_angle)*r2d
 
     return scanang
 
