@@ -111,6 +111,7 @@ list( APPEND test_input
   testinput/pandora_site_classification.csv
   testinput/balloonsonde_sample_20241001T00Z_PT15M.json
   testinput/tec_groundBased_TENET_20201001T00Z.tec
+  testinput/gnssro_tec_cosmic2_202010012304.nc
   testinput/COWVR_TSDR.020421.20240430T215845.20240430T230345.V1001.sample.h5
   testinput/gfs.231010.t00z.syndata.tcvitals.txt
 )
@@ -215,6 +216,7 @@ list( APPEND test_output
   testoutput/saber_timed.20160101T180000Z.nc4
   testoutput/obs.20241001T000000Z_PT15M_balloonsonde.nc4
   testoutput/obs.20201001T000000Z_PT1M_tec_groundbased.nc4
+  testoutput/gnssro_tec_cosmic2_202010012304_output.nc4
   testoutput/obs.20240430T220600Z_PT2M_cowvr_iss.nc4
   testoutput/tcp_obs_2023101000.nc4
 )
@@ -2322,6 +2324,17 @@ endif()
                             -i testinput/tec_groundBased_TENET_20201001T00Z.tec
                             -o testrun/obs.20201001T000000Z_PT1M_tec_groundbased.nc4"
                             obs.20201001T000000Z_PT1M_tec_groundbased.nc4 ${IODA_CONV_COMP_TOL})
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tec_spacebased_cdaac
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/gnss_tec_spacebased_cdaac2ioda.py
+                            -i testinput/gnssro_tec_cosmic2_202010012304.nc
+                            -o testrun/gnssro_tec_cosmic2_202010012304_output.nc4"
+                            gnssro_tec_cosmic2_202010012304_output.nc4 ${IODA_CONV_COMP_TOL})
 
   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_cowvr_iss
                     TYPE    SCRIPT
