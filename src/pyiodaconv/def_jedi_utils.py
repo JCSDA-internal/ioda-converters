@@ -19,8 +19,7 @@ qcName = iconv.OqcName()
 
 # Define metaData and ensure epoch object is in UTC
 iso8601_string = "seconds since 1970-01-01T00:00:00Z"
-epoch = datetime.fromisoformat(iso8601_string[14:-1])
-epoch = epoch.replace(tzinfo=timezone.utc)
+epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
 ioda_float_type = 'float32'
 ioda_int_type = 'int32'
 float_missing_value = iconv.get_default_fill_val(np.float32)
