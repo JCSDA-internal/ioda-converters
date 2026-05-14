@@ -38,7 +38,7 @@ np.set_printoptions(threshold=np.inf)
 hPa2Pa = 1E+2
 Na = 6.0221408E+23
 cm2m2 = 1E+4
-molarmass = {"NO2": 46.0055, "HCHO": 30.031, "O3": 48.0}
+molarmass = {"no2": 46.0055, "hcho": 30.031, "o3": 48.0}
 
 
 class tempo(object):
@@ -139,7 +139,7 @@ class tempo(object):
             time = np.ma.array(time, mask=mask, dtype=object)
 
             # NO2 and HCHO
-            if self.varname == 'NO2' or self.varname == 'HCHO':
+            if self.varname == 'no2' or self.varname == 'hcho':
 
                 # pressure levels
                 levels = ncd.dimensions['swt_level'].size
@@ -155,7 +155,7 @@ class tempo(object):
                 # there is a mismatch between the mask in the scattering weights/box amf
                 # so we need to reset the mask and replace with the mask that is used
 
-                if self.varname == 'NO2':
+                if self.varname == 'no2':
                     err_name = 'vertical_column_'+self.columnType
                     obs_name = 'vertical_column_'+self.columnType
                     col_amf_name = 'amf_'+self.columnType
@@ -183,7 +183,7 @@ class tempo(object):
                 avg_kernel = box_amf / tot_amf[:, np.newaxis]
 
                 # for no2 use avk to define strat trop separation
-                if self.varname == 'NO2':
+                if self.varname == 'no2':
                     t_pause = hPa2Pa * ncd.groups['support_data'].variables['tropopause_pressure'][:]\
                         .ravel()
 
@@ -384,14 +384,14 @@ def main():
 
     args = parser.parse_args()
 
-    if args.variable == "HCHO":
+    if args.variable == "hcho":
         var_name = 'formaldehyde'
         if args.column != "troposphere":
             print('hcho is only available for troposphere column, reset column to troposphere', flush=1)
             args.column = 'troposphere'
-    elif args.variable == "NO2":
+    elif args.variable == "no2":
         var_name = 'nitrogendioxide'
-    elif args.variable == "O3":
+    elif args.variable == "o3":
         var_name = 'ozone'
 
     if args.column == "troposphere":
