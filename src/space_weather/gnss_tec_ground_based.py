@@ -467,6 +467,9 @@ def fill_data_with_missing(local_data):
     local_data['xECEFPositionGNSS'] = np.append(local_data['xECEFPositionGNSS'], float_missing_value)
     local_data['yECEFPositionGNSS'] = np.append(local_data['yECEFPositionGNSS'], float_missing_value)
     local_data['zECEFPositionGNSS'] = np.append(local_data['zECEFPositionGNSS'], float_missing_value)
+    if len(local_data['latitude']) < len(local_data['latitudeIPP']):
+        for key in ['latitude', 'longitude', 'stationIdentifier', 'stationIdentifierWMO', 'xECEFPosition', 'yECEFPosition', 'zECEFPosition']:
+            local_data[key] = np.append(local_data[key], local_data[key][-1])
     return local_data
 
 
