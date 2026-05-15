@@ -96,8 +96,8 @@ list( APPEND test_input
   testinput/2021081612_RAOB_small.txt
   testinput/tropomi_co.nc
   testinput/SABER_L2A_2016001_76232_02.0.nc
-  testinput/TEMPO_NO2_L2_V04_no2_tropo.20251002T180000Z.0.nc
-  testinput/TEMPO_NO2_L2_V04_no2_tropo.20251002T180000Z.1.nc
+  testinput/TEMPO_NO2_L2_V04_no2.20251002T180000Z.0.nc
+  testinput/TEMPO_NO2_L2_V04_no2.20251002T180000Z.1.nc
   testinput/gdas.t18z.abias_air
   testinput/MRMS_MergedReflectivityQC_01.50_20230712-152241.grib2
   testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t162415_small.h5
@@ -160,8 +160,8 @@ list( APPEND test_output
   testoutput/viirs_bias.nc
   testoutput/tropomi_no2_total.nc
   testoutput/tropomi_no2_troposphere.nc
-  testoutput/tempo_NO2_total.nc
-  testoutput/tempo_NO2_troposphere.nc
+  testoutput/tempo_no2_total.nc
+  testoutput/tempo_no2_troposphere.nc
   testoutput/mopitt_co.nc
   testoutput/tropess_cris_co.nc
   testoutput/modis_aod.nc
@@ -1454,8 +1454,8 @@ foreach (coltype total troposphere)
                           ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                                   netcdf
                                   "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tempo_nc2ioda.py
-				  -i testinput/TEMPO_NO2_L2_V04_{spec}.20251002T180000Z.0.nc
-				     testinput/TEMPO_NO2_L2_V04_{spec}.20251002T180000Z.1.nc
+				  -i testinput/TEMPO_NO2_L2_V04_${spec}.20251002T180000Z.0.nc
+				     testinput/TEMPO_NO2_L2_V04_${spec}.20251002T180000Z.1.nc
 				  -o testrun/tempo_${spec}_${coltype}.nc
                                   -v ${spec}
                                   -c ${coltype}"
