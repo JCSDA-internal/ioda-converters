@@ -1446,7 +1446,7 @@ endforeach()
 
 foreach (coltype total troposphere)
   foreach (spec no2) #hcho not tested and o3 not out yet with real data
-    if (NOT (${spec} STREQUAL "hcho")))
+    if (NOT (${spec} STREQUAL "hcho"))
        ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tempo_${spec}_${coltype}
                           TYPE    SCRIPT
                           ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
