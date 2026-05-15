@@ -86,6 +86,9 @@ class tempo(object):
             AttrData['date_time_string'] = ncd.getncattr('time_reference')[0:19]+'Z'
             AttrData['sensor'] = ncd.getncattr('project')
             AttrData['platform'] = ncd.getncattr('platform')
+            AttrData['tempo_l2_version'] = ncd.getncattr('processing_version')
+            AttrData['apriori_source'] = ncd.getncattr('apriori_source')
+            AttrData['title'] = ncd.getncattr('title')
 
             # coordinates, mask and RT parameters for BC
             lats = ncd.groups['geolocation'].variables['latitude'][:].ravel()
@@ -126,9 +129,9 @@ class tempo(object):
             thi = np.random.uniform(size=len(qa_value)) > self.thin
             flg = np.logical_and(qaf, thi)
 
-            # add cloud fraction filter here as UFO one doesn't work
-            # needs FIX in future
-            cld = cld_fra < 0.5   # from TEMPO STM meetings, experimental
+            # remove cloudy data with cf>50%
+            cld = cld_fra < 0.5
+
             flg = np.logical_and(flg, cld)
 
             # time
@@ -196,19 +199,27 @@ class tempo(object):
                     avg_kernel.mask = False
                     avg_kernel = np.ma.array(avg_kernel, mask=np.repeat(mask, levels))
 
-                # obs value and error
-                col_amf = ncd.groups['support_data'].variables[col_amf_name][:].ravel()
-                col_amf.mask = False
-                col_amf = np.ma.array(col_amf, mask=mask)
-                obs = ncd.groups[group_name].variables[obs_name][:]\
-                    .ravel() * conv
+                # from ATBD:
+                # total vertical column = stratospheric + tropospheric vertical column
+                # Do not use support_data/vertical_column_total as it is influenced by a priori
+                if self.columnType == "total":
+                    obs = (ncd.groups['product'].variables['vertical_column_troposphere'][:].ravel()\
+                        + ncd.groups['product'].variables['vertical_column_stratosphere'][:].ravel())*conv
+                    col_amf = tot_amf
+                else:
+                    obs = ncd.groups['product'].variables[obs_name][:]\
+                        .ravel() * conv
+                    col_amf = ncd.groups['support_data'].variables[col_amf_name][:].ravel()
+                    col_amf.mask = False
+                    col_amf = np.ma.array(col_amf, mask=mask)
+
                 obs.mask = False
                 obs = np.ma.array(obs, mask=mask)
 
-                # error calculation:
-                err = ncd.groups[group_name].variables[err_name+'_uncertainty'][:].ravel()
-                err = err * conv
-
+                # err = fitted_slant_column_uncertainty / AMF (total, tropospheric, or stratospheric)
+                # for tropospheric this is the same is product.vertical_column_troposphere_uncertainty
+                err = (ncd.groups['support_data']['fitted_slant_column_uncertainty'][:].ravel()\
+                      / col_amf) * conv
                 err.mask = False
                 err = np.ma.array(err, mask=mask)
 
@@ -218,7 +229,7 @@ class tempo(object):
                 exit()
 
             # clean data
-            neg_obs = err > 0.0
+            neg_obs = obs > 0.0
             nan_obs = ((obs != np.nan) & (err != np.nan))
             cln = np.logical_and(neg_obs, nan_obs)
 
@@ -348,9 +359,9 @@ def main():
     parser = argparse.ArgumentParser(
         description=(
             'Reads TEMPO NO2 PROXY netCDF files: '
-            'from ttps://asdc.larc.nasa.gov/data/TEMPO/NO2-PROXY_L2_V01/'
+            'from ttps://asdc.larc.nasa.gov/data/TEMPO/NO2-PROXY_L2_V03/'
             'and converts into IODA formatted output files. Multiple'
-            'files are able to be concatenated.')
+            'files are able to be concatenated. V03 and V04 are supported')
     )
 
     required = parser.add_argument_group(title='required arguments')
