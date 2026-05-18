@@ -203,8 +203,10 @@ class tempo(object):
                 # total vertical column = stratospheric + tropospheric vertical column
                 # Do not use support_data/vertical_column_total as it is influenced by a priori
                 if self.columnType == "total":
-                    obs = (ncd.groups['product'].variables['vertical_column_troposphere'][:].ravel()\
-                        + ncd.groups['product'].variables['vertical_column_stratosphere'][:].ravel())*conv
+                    obs = (
+                        ncd.groups['product'].variables['vertical_column_troposphere'][:].ravel()
+                        + ncd.groups['product'].variables['vertical_column_stratosphere'][:].ravel()
+                    ) * conv
                     col_amf = tot_amf
                 else:
                     obs = ncd.groups['product'].variables[obs_name][:]\
@@ -218,8 +220,10 @@ class tempo(object):
 
                 # err = fitted_slant_column_uncertainty / AMF (total, tropospheric, or stratospheric)
                 # for tropospheric this is the same is product.vertical_column_troposphere_uncertainty
-                err = (ncd.groups['support_data']['fitted_slant_column_uncertainty'][:].ravel()\
-                      / col_amf) * conv
+                err = (
+                    ncd.groups['support_data']['fitted_slant_column_uncertainty'][:].ravel()
+                    / col_amf
+                ) * conv
                 err.mask = False
                 err = np.ma.array(err, mask=mask)
 
