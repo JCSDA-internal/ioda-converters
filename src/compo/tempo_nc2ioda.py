@@ -7,6 +7,23 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 #
 
+# Description:
+#        This code reads TEMPO Level 2 composition netCDF files and writes
+#        selected column retrievals, geolocation, quality information,
+#        pressure vertices, and averaging kernels into IODA format.
+#        It currently supports NO2 and HCHO inputs; O3 is listed as an
+#        option but is not yet implemented.
+#
+# Usage:
+#        python tempo_nc2ioda.py -i tempo_l2_file.nc [tempo_l2_file2.nc ...] \
+#             -o tempo_ioda.nc -v no2 -c troposphere
+#        -i: one or more TEMPO Level 2 netCDF input files
+#        -o: IODA output file path
+#        -v: variable name, one of [no2, hcho, o3]
+#        -c: column type, one of [total, troposphere]
+#        -q: optional maximum QA value to keep before QC, default 0
+#        -t: optional random thinning fraction from 0.0 to 1.0, default 0.0
+
 import argparse
 import netCDF4 as nc
 import numpy as np
@@ -168,7 +185,7 @@ class tempo(object):
                     else:
                         group_name = 'product'
 
-                if self.varname == 'HCHO':
+                if self.varname == 'hcho':
                     tot_amf_name = 'amf'
                     col_amf_name = 'amf'
                     obs_name = 'vertical_column'
@@ -362,10 +379,9 @@ def main():
     # get command line arguments
     parser = argparse.ArgumentParser(
         description=(
-            'Reads TEMPO NO2 PROXY netCDF files: '
-            'from ttps://asdc.larc.nasa.gov/data/TEMPO/NO2-PROXY_L2_V03/'
-            'and converts into IODA formatted output files. Multiple'
-            'files are able to be concatenated. V03 and V04 are supported')
+            'Reads TEMPO Level 2 composition netCDF files and converts them '
+            'into IODA formatted output files. Multiple files are able to be '
+            'concatenated. NO2 proxy V03 and V04 are supported.')
     )
 
     required = parser.add_argument_group(title='required arguments')
@@ -409,6 +425,8 @@ def main():
     elif args.variable == "o3":
         var_name = 'ozone'
 
+    AttrData['column_type'] = args.column
+
     if args.column == "troposphere":
 
         obsVar = {
@@ -422,11 +440,11 @@ def main():
     elif args.column == "total":
 
         obsVar = {
-            var_name+'_total_column': var_name+'Total'
+            var_name+'_total_column': var_name+'Column'
         }
 
         varDims = {
-            var_name+'Total': ['Location']
+            var_name+'Column': ['Location']
         }
 
     varDims['averagingKernel'] = ['Location', 'Layer']
