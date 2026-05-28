@@ -25,7 +25,7 @@
    integer, parameter :: max_dtg_len=10
 
    character(len=max_path_len) :: c_ob_ff
-   character(len=max_dtg_len)  :: cdtg_an,cycle_hr,assim_win,version
+   character(len=max_dtg_len)  :: cdtg_an,cycle_hr,assim_win,version,endian
 !  character(len=max_path_len)  :: cdtg_an,cycle_hr,assim_win,version
 
    real :: t_assim_win
@@ -110,7 +110,7 @@
 ! 1. Parse arguments
 ! ------------------
 
-   CALL parse_arguments(cdtg_an,assim_win,c_ob_ff,version,lmore)
+   call parse_arguments(cdtg_an,assim_win,c_ob_ff,version,endian,lmore)
 
 ! 2. Use environment variables to pass the file version and the path to the file
 ! ------------------------------------------------------------------------------
@@ -120,19 +120,17 @@
        call set_ev('MLS_VER',version)
    endif
 
-! The files were written in BIG ENDIAN
-! ------------------------------------
+! Set endian big/small through the enviroment
+! --------------------------------------------
 
    if (instvar(1:4) .eq. 'mlsT') then
-       call set_ev('F_UFMTENDIAN','big')
+       call set_ev('F_UFMTENDIAN',endian)
    endif
 
-! 3. call mls_prep for the requested platform
-! -------------------------------------------
+! 3. Read the file using the reader routine
+! -----------------------------------------
 
-!  call mls_prep(instvar)
-
-   read(assim_win,*) t_assim_win
+   read (assim_win,*) t_assim_win
 
    if (instvar(1:4) .eq. 'mlsT') then
        call read_mlsT_files(cdtg_an,t_assim_win)
@@ -391,18 +389,18 @@ contains
    END SUBROUTINE epochtimecalculator
 !------------------------------------------------------------------------------!
 
- Subroutine parse_arguments(cdtg_an,assim_win,c_ob_ff,version,lmore)
+ Subroutine parse_arguments(cdtg_an,assim_win,c_ob_ff,version,endian,lmore)
 !------------------------------------------------------------------------------!
       implicit none
 
-      character(len=*), intent(out)  :: cdtg_an,assim_win,version,c_ob_ff
+      character(len=*), intent(out)  :: cdtg_an,assim_win,c_ob_ff,version,endian
 
       logical, intent(out) :: lmore
 
       integer, external :: iargc
       integer :: numarg,i
       logical :: lhelp
-      logical :: lcdtg_an,lassim_win,lc_ob_ff,lversion
+      logical :: lcdtg_an,lassim_win,lc_ob_ff,lversion,lendian
 
       character (len=512) :: harg
 !------------------------------------------------------------------------------!
@@ -447,11 +445,17 @@ contains
               CALL GETARG(i, harg)
               assim_win = TRIM (harg)
               lassim_win = .TRUE.
-         ELSE IF (harg == "-I" .OR. harg == "-i" ) THEN
+         ELSE IF (harg == "-i" .OR. harg == "--i" .OR. &
+                 (harg == "-input" .OR. harg == "--input" ) THEN
               i = i + 1
               CALL GETARG(i, harg)
               c_ob_ff = TRIM(harg)
               lc_ob_ff = .TRUE.
+      ELSE IF (harg == "-endian" .OR. harg == "--endian") THEN
+              i = i + 1
+              CALL GETARG(i, harg)
+              endian = TRIM(harg)
+              lendian = .TRUE.
          ENDIF
 
          i = i + 1
@@ -470,12 +474,20 @@ contains
           version = "0"
       ENDIF
 
-! 4.  Check required arguments
+! 4.  If endian is not passes, set to big
+! --------------------------------------
+
+      IF (.NOT. lendian) THEN
+          endian = "big"
+      ENDIF
+
+
+! 5.  Check required arguments
 ! ----------------------------
 
       IF (.NOT. lcdtg_an .OR. .NOT. lassim_win .OR. .NOT. lc_ob_ff) CALL help
 
-! 5.  END
+! 6.  END
 ! -------
 
       RETURN
@@ -494,7 +506,7 @@ contains
       WRITE (0,'(/,A,/,A)') "USAGE: ","------"
 
       WRITE (0,'(/,1X,4A,/,28X,3A)') trim (cmd), &
-      " [-help -debug] -date analysis_dtg -window assimilation_time_window -i path_to_files -v file_version"
+              " [-help -debug] -date analysis_dtg -window assimilation_time_window -input path_to_files -v file_version -endian little/big"
 
       WRITE (0,'(/,1X,A)') &
        "To convert MLS intermediate binary files (*.dat) into IODA files, with:"
@@ -508,6 +520,8 @@ contains
       WRITE (0,'(/,2(1X,A))') &
       "- version is the version of the input file processing", &
       "expect one number, eg: 4, ommit if not known"
+      WRITE (0,'(/,1X,A)') &
+      "- endian of the binary file to read (big on Narwhal)"
 
       WRITE (0,'(/,A)') "------"
 
