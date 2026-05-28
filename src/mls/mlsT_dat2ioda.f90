@@ -8,7 +8,7 @@
 !------------------------------------------------------------------------------!
 ! Modules
 
-   use def_grid
+!  use def_grid
    use mls_module
    use netcdf
    use, intrinsic :: iso_fortran_env
@@ -21,13 +21,17 @@
 
    character(len=7) :: instvar = "mlsT"
 
-   integer, parameter :: max_path_len=256
+   integer, parameter :: max_path_len=120
    integer, parameter :: max_dtg_len=10
 
    character(len=max_path_len) :: c_ob_ff
-   character(len=max_dtg_len)  :: cdtg_an,cycle_hr,assim_win
+   character(len=max_dtg_len)  :: cdtg_an,cycle_hr,assim_win,version
+!  character(len=max_path_len)  :: cdtg_an,cycle_hr,assim_win,version
 
-   logical :: lmore = .False.
+   real :: t_assim_win
+
+   logical :: lmore = .false.
+
 !------------------------------------------------------------------------------!
 ! Output obs data stucture
 
@@ -106,228 +110,32 @@
 ! 1. Parse arguments
 ! ------------------
 
-   CALL parse_arguments(cdtg_an,cycle_hr,assim_win,c_ob_ff,lmore)
+   CALL parse_arguments(cdtg_an,assim_win,c_ob_ff,version,lmore)
 
-! 2. Use environment variables to pass intout to msls_prep
-! --------------------------------------------------------
+! 2. Use environment variables to pass the file version and the path to the file
+! ------------------------------------------------------------------------------
 
-   call setenv('CRDATE',cdtg_an)
-   call setenv('CYCLE_HR',cycle_hr)
-   call setenv('ASSIM_WIN',assim_win)
-   call setenv('INNOVATIONS',c_ob_ff)
+   if (instvar(1:4) .eq. 'mlsT') then
+       call set_ev('MLS_LOC',c_ob_ff)
+       call set_ev('MLS_VER',version)
+   endif
 
 ! 2. call mls_prep for the requested platform
 ! -------------------------------------------
 
-   call mls_prep(instvar)
+!  call mls_prep(instvar)
 
-   RETURN
-!------------------------------------------------------------------------------!
+   read(assim_win,*) t_assim_win
 
-   i_missing = huge(i_missing)
-   i64_missing = huge(i64_missing)
-   r_missing = huge(i_missing)
-
-   nrec = 0
-   ndata = 0
-   nvars = 2
-   maxobs = 0
-   deflate_level = 6
-
-   runCheck="False"
-   addChecks=.false.
-
-   if (iargc() >= 3) then
-     call getarg(1, anatime)
-     call getarg(2, infile)
-     call getarg(3, outfile)
-     if (iargc() >= 4) then
-        call getarg(4,runCheck)
-     end if
+   if (instvar(1:4) .eq. 'mlsT') then
+       call read_mlsT_files(cdtg_an,t_assim_win)
    else
-     print*, "To run: gnssro_bufr2ioda_generic yyyymmddhh inputBufrFilename  outputNetcdfFilename [optional quality checks: True or False]"
-     stop
-   end if
+       write(*,*) " Platform ",TRIM(instvar)," not implemented"
+       write(*,*) " Possible choices are: mlsT"
+   endif
 
-   if (runCheck(1:1).eq."T" .or. runCheck(1:1).eq."t") then
-        print*, "running converter with extra Checks!"
-        addChecks=.true.
-   end if
-
-   open (lnbufr, file=trim(infile), form='unformatted')
-   call openbf(lnbufr, 'IN', lnbufr)
-   call datelen(10)
-   call readmg(lnbufr, subset, idate, iret)
-   if (iret /= 0) then
-      write (6, *) 'READ_GNSSRO: can not open gnssro file!'
-      stop
-   end if
-
-! loop over all message to estimate maxobs
-   do while (ireadmg(lnbufr, subset, idate) == 0)
-      read_loop_countmaxobs: do while (ireadsb(lnbufr) == 0)
-         call ufbint(lnbufr, bfr1ahdr, n1ahdr, 1, iret, hdr1a)
-         call ufbseq(lnbufr, data1b, 50, maxlevs, levs, 'ROSEQ1')
-         maxobs = maxobs + levs
-      end do read_loop_countmaxobs
-   end do
-
-   allocate (gnssro_data%said(maxobs))
-   allocate (gnssro_data%siid(maxobs))
-   allocate (gnssro_data%sclf(maxobs))
-   allocate (gnssro_data%ptid(maxobs))
-   allocate (gnssro_data%recn(maxobs))
-   allocate (gnssro_data%asce(maxobs))
-   allocate (gnssro_data%ogce(maxobs))
-   allocate (gnssro_data%qcflag(maxobs))
-   allocate (gnssro_data%tinc(maxobs))
-   allocate (gnssro_data%epochtime(maxobs))
-   allocate (gnssro_data%lat(maxobs))
-   allocate (gnssro_data%lon(maxobs))
-   allocate (gnssro_data%rfict(maxobs))
-   allocate (gnssro_data%azim(maxobs))
-   allocate (gnssro_data%geoid(maxobs))
-   allocate (gnssro_data%msl_alt(maxobs))
-   allocate (gnssro_data%ref(maxobs))
-   allocate (gnssro_data%bend_ang(maxobs))
-   allocate (gnssro_data%impact_para(maxobs))
-
-!rewind lnbufr
-   call closbf(lnbufr)
-   open (lnbufr, file=trim(infile), form='unformatted')
-   call openbf(lnbufr, 'IN', lnbufr)
-   call datelen(10)
-   call readmg(lnbufr, subset, idate, iret)
-
-   do while (ireadmg(lnbufr, subset, idate) == 0)
-      read_loop: do while (ireadsb(lnbufr) == 0)
-!    Read/decode data in subset (profile)
-         call ufbint(lnbufr, bfr1ahdr, n1ahdr, 1, iret, hdr1a)
-         call ufbint(lnbufr, qfro, 1, 1, iret, nemo)
-!    observation time in minutes
-         idate5(1) = bfr1ahdr(1) ! year
-         idate5(2) = bfr1ahdr(2) ! month
-         idate5(3) = bfr1ahdr(3) ! day
-         idate5(4) = bfr1ahdr(4) ! hour
-         idate5(5) = bfr1ahdr(5) ! minute
-         idate5(6) = bfr1ahdr(6) ! seconds
-         roc = bfr1ahdr(8)       ! Earth local radius of curvature
-         said = bfr1ahdr(9)      ! Satellite identifier
-         siid = bfr1ahdr(10)     ! Satellite instrument
-         ptid = bfr1ahdr(11)     ! Platform transmitter ID number
-         geoid = bfr1ahdr(12)    ! Geoid undulation
-         sclf = bfr1ahdr(13)     ! Satellite classification
-         ogce = bfr1ahdr(14)     ! Identification of originating/generating centre
-         if (bfr1ahdr(15) >= 1.e+9_real64) then
-            tinc = i_missing
-         else
-            tinc = bfr1ahdr(15)     ! Time increment relative to the start of occultation
-         end if
-         call epochtimecalculator(idate5, epochtime)  ! calculate epochtime since January 1 1970
-
-         if (addChecks) then
-            if (roc > 6450000.0_real64 .or. roc < 6250000.0_real64 .or.       &
-              & abs(geoid) > 200_real64 .or.height < 0._real64) then
-               cycle read_loop
-            end if
-         end if
-
-
-         qcflag = 0
-         asce = 0
-         call upftbv(lnbufr, nemo, qfro, mxib, ibit, nib)
-
-         if (nib > 0) then
-            do i = 1, nib
-               qcflag = qcflag + 2**(16-ibit(i))
-               if (ibit(i) == 3) asce = 1  !this varaible should be removed later once UFO change is made
-            end do
-         end if
-
-         if (addChecks) then
-           if (nib > 0) then
-             do i = 1, nib
-              if (ibit(i) == 5)  cycle read_loop
-             end do
-           end if
-         end if
-
-         call ufbint(lnbufr, nreps_this_ROSEQ2, 1, maxlevs, nreps_ROSEQ1, '{ROSEQ2}')
-         call ufbseq(lnbufr, data1b, 50, maxlevs, levs, 'ROSEQ1')
-         call ufbseq(lnbufr, data2a, 50, maxlevs, levsr, 'ROSEQ3') ! refractivity
-
-         nrec = nrec + 1
-         ndata0 = ndata
-
-         kloop: do k = 1, levs
-            rlat = data1b(1, k)  ! earth relative latitude (degrees)
-            rlon = data1b(2, k)  ! earth relative longitude (degrees)
-            azim = data1b(3, k)
-            height = data2a(1, k)
-            ref = data2a(2, k)
-
-!           Loop over number of replications of ROSEQ2 nested inside this particular replication of ROSEQ1
-            nreps_ROSEQ2_int = nreps_this_ROSEQ2(k)
-            do i = 1, nreps_ROSEQ2_int
-               m = (6*i) - 2
-               freq_chk = data1b(m, k)      ! frequency (hertz)
-               if (nint(freq_chk) .ne. 0) cycle ! do not want non-zero freq., go on to next replication of ROSEQ2
-               impact = data1b(m + 1, k)      ! impact parameter (m)
-               bend = data1b(m + 2, k)        ! bending angle (rad)
-            end do
-
-            if (abs(azim) > 360._real64 .or. azim < 0._real64) then
-               azim = r_missing
-            end if
-            if (abs(rlat) > 90._real64 .or. abs(rlon) > 360._real64) then
-               cycle kloop
-            end if
-
-            if (addChecks) then
-               if (bend >= 1.e+9_real64 .or. bend <= 0._real64 .or. &
-                 & impact >= 1.e+9_real64 .or. impact < roc .or. &
-                 & height <=0._real64) then
-                 cycle kloop
-               end if
-            else
-               if (bend >= 1.e+9_real64)  bend = r_missing
-            end if
-
-            if (ref >= 1.e+9_real64) ref = r_missing
-
-            ndata = ndata + 1
-            gnssro_data%recn(ndata) = nrec
-            gnssro_data%lat(ndata) = rlat
-            gnssro_data%lon(ndata) = rlon
-            gnssro_data%epochtime(ndata) = epochtime
-            gnssro_data%said(ndata) = said
-            gnssro_data%siid(ndata) = siid
-            gnssro_data%sclf(ndata) = sclf
-            gnssro_data%asce(ndata) = asce
-            gnssro_data%ptid(ndata) = ptid
-            gnssro_data%ogce(ndata) = ogce
-            gnssro_data%tinc(ndata) = tinc
-            gnssro_data%qcflag(ndata) = qcflag
-            gnssro_data%ref(ndata) = ref
-            gnssro_data%msl_alt(ndata) = height
-            gnssro_data%bend_ang(ndata) = bend
-            gnssro_data%impact_para(ndata) = impact
-            gnssro_data%rfict(ndata) = roc
-            gnssro_data%geoid(ndata) = geoid
-            gnssro_data%azim(ndata) = azim
-
-         end do kloop
-
-         if (ndata == ndata0) nrec = nrec - 1
-
-      end do read_loop
-   end do
-
-   call closbf(lnbufr)
-   if (nrec == 0) then
-      write (6, *) 'Error. No valid observations found. Cannot create NetCDF ouput.'
-      stop 2
-   end if
+   STOP '9999'
+!------------------------------------------------------------------------------!
 
    call check(nf90_create(trim(outfile), NF90_NETCDF4, ncid))
    call check(nf90_def_dim(ncid, 'Location', ndata, nlocs_dimid))
@@ -576,16 +384,18 @@ contains
    END SUBROUTINE epochtimecalculator
 !------------------------------------------------------------------------------!
 
- Subroutine parse_arguments(cdtg_an,cycle_hr,assim_win,c_ob_ff,lmore)
+ Subroutine parse_arguments(cdtg_an,assim_win,c_ob_ff,version,lmore)
 !------------------------------------------------------------------------------!
       implicit none
 
-      character(len=*), intent(out) :: cdtg_an,cycle_hr,assim_win,c_ob_ff 
+      character(len=*), intent(out)  :: cdtg_an,assim_win,version,c_ob_ff
+
       logical, intent(out) :: lmore
 
-      integer, external :: iarg
+      integer, external :: iargc
       integer :: numarg,i
-      logical :: present_help,present_v,lcdtg_an,lcycle_hr,lassim_win,linnovations
+      logical :: lhelp
+      logical :: lcdtg_an,lassim_win,lc_ob_ff,lversion
 
       character (len=512) :: harg
 !------------------------------------------------------------------------------!
@@ -598,69 +408,65 @@ contains
       IF (numarg == 0) CALL help
 
       i = 1
-      present_v  = .FALSE.
-      present_h  = .FALSE.
+      lhelp      = .FALSE.
       lcdtg_an   = .FALSE.
-      lcycle_hr  = .FALSE.
       lassim_win = .FALSE.
       lc_ob_ff   = .FALSE.
+      lversion   = .FALSE.
       lmore      = .FALSE.
 
       DO WHILE ( i <= numarg)
 
          CALL GETARG(i, harg)
 
-         IF (harg == "-h" || harg == "--h") THEN
-             present_help = .TRUE.
-         ELSE IF (harg == "-help" || harg == "--help") THEN
-             present_help = .TRUE.
-         ELSEIF (harg == "-v" || harg == "-version") THEN
-             present_v = .TRUE.
-         ELSE IF (harg == "-debug" || harg == "--debug") THEN
+         IF (harg == "-h" .OR. harg == "--h") THEN
+             lhelp = .TRUE.
+         ELSE IF (harg == "-help" .OR. harg == "--help") THEN
+             lhelp = .TRUE.
+         ELSE IF (harg == "-debug" .OR. harg == "--debug") THEN
              lmore = .TRUE.
-         ELSE IF (harg == "-CRDATE" || harg == "-crdate" ) THEN
+         ELSEIF (harg == "-v" .OR. harg == "-version" .OR. harg == "--version") THEN
+             i = i + 1
+             CALL GETARG(i, harg)
+             version = TRIM (harg)
+             lversion = .TRUE.
+         ELSE IF (harg == "-date" .OR. harg == "--date" ) THEN
               i = i + 1
               CALL GETARG(i, harg)
               cdtg_an = TRIM (harg)
               lcdtg_an = .TRUE.
-         ELSE IF (harg == "-CYCLE_HR" || harg == "-cycle_hr" ) THEN
-              i = i + 1
-              CALL GETARG(i, harg)
-              cycle_hr = TRIM (harg)
-              lcycle_hr = .TRUE.
-         ELSE IF (harg == "-ASSIM_WIN" || harg == "-assim_win" ) THEN
+         ELSE IF (harg == "-window" .OR. harg == "--window" ) THEN
               i = i + 1
               CALL GETARG(i, harg)
               assim_win = TRIM (harg)
               lassim_win = .TRUE.
-         ENDIF
-         ELSE IF (harg == "-INNOVATIONS" || harg == "-innovations" ) THEN
+         ELSE IF (harg == "-I" .OR. harg == "-i" ) THEN
               i = i + 1
               CALL GETARG(i, harg)
-              c_ob_ff = TRIM (harg)
+              c_ob_ff = TRIM(harg)
               lc_ob_ff = .TRUE.
+         ENDIF
 
          i = i + 1
 
       ENDDO
 
-! 2.  Print version and exit
-! --------------------------
-
-      IF (present_v) THEN
-          WRITE (0,'(A,/)') " convert_mlsTdat2ioda version 1.0"
-          CALL ABORT
-      ENDIF
-
-! 3.  Print help and exit
+! 4.  Print help and exit
 ! -----------------------
 
-      IF (present_help) CALL help
+      IF (lhelp) CALL help
+
+! 3.  If version is not passed, set to 0
+! --------------------------------------
+
+      IF (.NOT. lversion) THEN
+          version = "0"
+      ENDIF
 
 ! 4.  Check required arguments
 ! ----------------------------
 
-      IF (.NOT. lcdtg_an || .NOT. lcycle_hr || .NOT. lassim_win || .NOT. lc_ob_ff) CALL help
+      IF (.NOT. lcdtg_an .OR. .NOT. lassim_win .OR. .NOT. lc_ob_ff) CALL help
 
 ! 5.  END
 ! -------
@@ -681,23 +487,24 @@ contains
       WRITE (0,'(/,A,/,A)') "USAGE: ","------"
 
       WRITE (0,'(/,1X,4A,/,28X,3A)') trim (cmd), &
-      " [-v-help-debug] -CRDATE analysis_dtg -CYCLE_HR cycle_frequency -ASSIM_WIN assimilation_time_window -INNOVATIONS path_to_innovations_files"
+      " [-help -debug] -date analysis_dtg -window assimilation_time_window -i path_to_files -v file_version"
 
       WRITE (0,'(/,1X,A)') &
-       "To convert MLS intermediate (innovations) binary files (*.dat) into IODA files"
+       "To convert MLS intermediate binary files (*.dat) into IODA files, with:"
 
       WRITE (0,'(/,1X,A)') &
-       "analysis_date as CCYYMMDDHH"
+       "- analysis_date as CCYYMMDDHH"
       WRITE (0,'(/,1X,A)') &
-       "cycle_frequency in hours"
+       "- assimilation_time_window in hours"
       WRITE (0,'(/,1X,A)') &
-       "assimilation_time_window in hours"
-      WRITE (0,'(/,1X,A)') &
-       "path_to_innovations_files in 256 characters max"
+       "- path_to_files is the path to the directory holding the input files (256 characters max)"
+      WRITE (0,'(/,2(1X,A))') &
+      "- version is the version of the input file processing", &
+      "expect one number, eg: 4, ommit if not known"
 
       WRITE (0,'(/,A)') "------"
 
-      CALL ABORT
+      STOP
 
  END SUBROUTINE help
 !------------------------------------------------------------------------------!
