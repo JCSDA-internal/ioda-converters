@@ -155,9 +155,9 @@ subroutine read_mlsT_files(cdtg_an,t_upd_cy)
 !     Read mls T file
 !
         if (ifile .eq. 1) then
-           open(lu,file=file,status='OLD',form='UNFORMATTED',access='SEQUENTIAL',iostat=istat)
+           open(lu,file=file,status='OLD',form='UNFORMATTED',access='SEQUENTIAL',iostat=istat)!,convert='BIG_ENDIAN')
         else
-           open(lu,file=file2,status='OLD',form='UNFORMATTED',access='SEQUENTIAL',iostat=istat)
+           open(lu,file=file2,status='OLD',form='UNFORMATTED',access='SEQUENTIAL',iostat=istat)!,convert='BIG_ENDIAN')
         endif
         if (istat .eq. 0) then 
 

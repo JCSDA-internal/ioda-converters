@@ -120,7 +120,14 @@
        call set_ev('MLS_VER',version)
    endif
 
-! 2. call mls_prep for the requested platform
+! The files were written in BIG ENDIAN
+! ------------------------------------
+
+   if (instvar(1:4) .eq. 'mlsT') then
+       call set_ev('F_UFMTENDIAN','big')
+   endif
+
+! 3. call mls_prep for the requested platform
 ! -------------------------------------------
 
 !  call mls_prep(instvar)
