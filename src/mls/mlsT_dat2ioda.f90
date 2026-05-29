@@ -446,7 +446,7 @@ contains
               assim_win = TRIM (harg)
               lassim_win = .TRUE.
          ELSE IF (harg == "-i" .OR. harg == "--i" .OR. &
-                 (harg == "-input" .OR. harg == "--input" ) THEN
+                  harg == "-input" .OR. harg == "--input" ) THEN
               i = i + 1
               CALL GETARG(i, harg)
               c_ob_ff = TRIM(harg)
