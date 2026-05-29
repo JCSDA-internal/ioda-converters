@@ -2,8 +2,12 @@
 #
 # Build 1) mlsT_dat2ioda binary (*.dat) to ioda2 NetCDF4 converter
 
+#dtg_module.f90
 list(APPEND mlsT_dat2ioda_source
-dtg_module.f90
+dtgchk.f
+dtgnum.f
+dtgyrhr.f
+dtgmod.f
 mls_module.f90
 slen.f90
 get_ev.f90
