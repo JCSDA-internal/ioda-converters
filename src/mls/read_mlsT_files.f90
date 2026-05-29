@@ -9,7 +9,7 @@ subroutine read_mlsT_files(cdtg_an,t_upd_cy)
 !   write a fortran HDF reader.
 !
       use mls_module
-      use dtg_module
+!     use dtg_module
 
       implicit none
 
