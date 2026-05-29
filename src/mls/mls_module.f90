@@ -4,7 +4,7 @@ module mls_module
 !  Contains the data read from the MLS files 
 !
 !
-  integer, parameter :: maxprof = 7000  !maximum number of profiles (2 days of mls profiles)
+  integer, parameter :: maxprof = 9000  !maximum number of profiles (2 days of mls profiles)
   integer, parameter :: maxlev = 100    !maximum number of levels    
 
   real,    parameter :: mls_pmax = 100.0 !maximum (low altitude) cutoff for using MLS data. 
