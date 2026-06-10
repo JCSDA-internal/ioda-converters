@@ -3,7 +3,7 @@
 import sys
 import os
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import numpy as np
 import logging
 from urllib.request import Request, urlopen
@@ -59,11 +59,11 @@ dtypes = {'string': object,
 def main(args):
 
     file_names = args.input
-    output_file = args.output
+    output_base = args.output
 
     start_time = time.time()
 
-    data = None
+    all_data = None
     any_data = False
     recordNumber = args.recordnumber
     for fname in file_names:
@@ -72,99 +72,118 @@ def main(args):
         # if there is data do something
         if file_data:
             # first successful read
-            if not data:
-                data = file_data
+            if not all_data:
+                all_data = file_data
             # subsequent successful read
             else:
                 for key in set(varDict.keys()).union(meta_keys):
                     # data[key] = np.concatenate(data[key], file_data[key]) # why not and gotta be much better way
-                    data[key] = np.append(data[key], file_data[key])
+                    all_data[key] = np.append(all_data[key], file_data[key])
             recordNumber += 1
+
+    for key in all_data.keys():
+        all_data[key] = np.asarray(all_data[key])
 
     # if all files have no data
     if not any_data:
-        breakpoint()
         logging.error("No data to write, stopping execution.")
         sys.exit()
 
-    dtg = datetime.fromtimestamp(data['dateTime'][0])
+    dtg_start = datetime.fromtimestamp(all_data['dateTime'][0])
+    dtg_end = datetime.fromtimestamp(all_data['dateTime'][-1])
+    dtg = dtg_start
+    window = args.window
     datetimeRef = dtg.isoformat() + "Z"
+    while dtg <= dtg_end:
 
-    # prepare global attributes we want to output in the file,
-    # in addition to the ones already loaded in from the input file
-    GlobalAttrs = {
-        'sourceFiles': ", ".join(file_names),
-        'datetimeReference': datetimeRef
-   }
+        data = {}
+        start = dtg.timestamp()
+        end_dtg = dtg + timedelta(hours=window)
+        end = end_dtg.timestamp()
+        time_id = (all_data['dateTime'] > start) & (all_data['dateTime'] <= end)
 
-    nlocs = len(data['height'])
-    logging.info(f" found a total of {nlocs} observations")
-    DimDict = {'Location': nlocs}
+        for key in all_data.keys():
+            data[key] = all_data[key][time_id]
 
-    varDims = {}
-    for key in varDict.keys():
-        variable = varDict[key][0]
-        varDims[variable] = ['Location']
-
-    varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-
-    # Set units of the MetaData variables and all _FillValues.
-    for key in meta_keys:
-        dtype = locationKeyList[meta_keys.index(key)][1]
-        if locationKeyList[meta_keys.index(key)][2]:
-            varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
-        varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtype]
-    for key in varDict.keys():
-        if 'electronDensity' in key:
-            continue
-        dtype = varDict[key][1]
-        units = varDict[key][2]
-        if units:
-            varAttrs[(key, metaDataName)]['units'] = units
-        varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtype]
-
-    # Set units and FillValue attributes for groups associated with observed variable.
-    variable = varDict['electronDensity'][0]
-    dtype = varDict['electronDensity'][1]
-    units = varDict['electronDensity'][2]
-    unitsErr = varDict['electronDensityConfidence'][2]
-    varAttrs[(variable, obsValName)]['units'] = units
-    varAttrs[(variable, obsErrName)]['units'] = unitsErr
-    varAttrs[(variable, obsValName)]['coordinates'] = 'longitude latitude'
-    varAttrs[(variable, obsErrName)]['coordinates'] = 'longitude latitude'
-    varAttrs[(variable, qcName)]['coordinates'] = 'longitude latitude'
-    varAttrs[(variable, obsValName)]['_FillValue'] = missing_vals[dtype]
-    varAttrs[(variable, obsErrName)]['_FillValue'] = missing_vals[dtype]
-    varAttrs[(variable, qcName)]['_FillValue'] = int_missing_value
-
-    # Fill the final IODA data:  MetaData then ObsValues, ObsErrors, and QC
-    ioda_data = {}
-
-#   should populate ioda_data directly rather than creating another copy
-    for key in meta_keys:
-        dtype = locationKeyList[meta_keys.index(key)][1]
-        ioda_data[(key, metaDataName)] = np.array(data[key], dtype=dtypes[dtype])
-    for key in varDict.keys():
-        variable = varDict[key][0]
-        dtype = varDict[key][1]
-        if 'electronDensity' not in key:
-            logging.info(f" the variable: {variable} will be placed into MetaData of ioda_data")
-            # these MetaData are arrays nlocs long already
-            ioda_data[(key, metaDataName)] = np.array(data[variable], dtype=dtypes[dtype])
-        elif 'Confidence' not in key:
-            # (electronDensityConfidence) is used as the ObsError
+        # prepare global attributes we want to output in the file,
+        # in addition to the ones already loaded in from the input file
+        GlobalAttrs = {
+            'sourceFiles': ", ".join(file_names),
+            'datetimeReference': datetimeRef
+       }
+     
+        nlocs = len(data['height'])
+        logging.info(f" found a total of {nlocs} observations")
+        DimDict = {'Location': nlocs}
+     
+        varDims = {}
+        for key in varDict.keys():
             variable = varDict[key][0]
-            logging.info(f" the variable: {variable} will be placed into ObsValue of ioda_data")
-            ioda_data[(variable, obsValName)] = np.array(data[variable], dtype=np.float32)
-            ioda_data[(variable, obsErrName)] = np.array(data[variable+'Confidence'], dtype=np.float32)
-            qc_array_hack = apply_gross_quality_control(data, qc_strict=args.qc_strict)
-            ioda_data[(variable, qcName)] = np.array(qc_array_hack, dtype=np.int32)  # how to interpret AQI ?
-
-    logging.debug("Writing file: " + output_file)
-
-    # setup the IODA writer and write everything out.
-    writer = iconv.IodaWriter(output_file, locationKeyList, DimDict)
-    writer.BuildIoda(ioda_data, varDims, varAttrs, GlobalAttrs)
+            varDims[variable] = ['Location']
+     
+        varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
+     
+        # Set units of the MetaData variables and all _FillValues.
+        for key in meta_keys:
+            dtype = locationKeyList[meta_keys.index(key)][1]
+            if locationKeyList[meta_keys.index(key)][2]:
+                varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
+            varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtype]
+        for key in varDict.keys():
+            if 'electronDensity' in key:
+                continue
+            dtype = varDict[key][1]
+            units = varDict[key][2]
+            if units:
+                varAttrs[(key, metaDataName)]['units'] = units
+            varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtype]
+     
+        # Set units and FillValue attributes for groups associated with observed variable.
+        variable = varDict['electronDensity'][0]
+        dtype = varDict['electronDensity'][1]
+        units = varDict['electronDensity'][2]
+        unitsErr = varDict['electronDensityConfidence'][2]
+        varAttrs[(variable, obsValName)]['units'] = units
+        varAttrs[(variable, obsErrName)]['units'] = unitsErr
+        varAttrs[(variable, obsValName)]['coordinates'] = 'longitude latitude'
+        varAttrs[(variable, obsErrName)]['coordinates'] = 'longitude latitude'
+        varAttrs[(variable, qcName)]['coordinates'] = 'longitude latitude'
+        varAttrs[(variable, obsValName)]['_FillValue'] = missing_vals[dtype]
+        varAttrs[(variable, obsErrName)]['_FillValue'] = missing_vals[dtype]
+        varAttrs[(variable, qcName)]['_FillValue'] = int_missing_value
+     
+        # Fill the final IODA data:  MetaData then ObsValues, ObsErrors, and QC
+        ioda_data = {}
+     
+        # should populate ioda_data directly rather than creating another copy
+        for key in meta_keys:
+            dtype = locationKeyList[meta_keys.index(key)][1]
+            ioda_data[(key, metaDataName)] = np.array(data[key], dtype=dtypes[dtype])
+        for key in varDict.keys():
+            variable = varDict[key][0]
+            dtype = varDict[key][1]
+            if 'electronDensity' not in key:
+                logging.info(f" the variable: {variable} will be placed into MetaData of ioda_data")
+                # these MetaData are arrays nlocs long already
+                ioda_data[(key, metaDataName)] = np.array(data[variable], dtype=dtypes[dtype])
+            elif 'Confidence' not in key:
+                # (electronDensityConfidence) is used as the ObsError
+                variable = varDict[key][0]
+                logging.info(f" the variable: {variable} will be placed into ObsValue of ioda_data")
+                ioda_data[(variable, obsValName)] = np.array(data[variable], dtype=np.float32)
+                ioda_data[(variable, obsErrName)] = np.array(data[variable+'Confidence'], dtype=np.float32)
+                qc_array_hack = apply_gross_quality_control(data, qc_strict=args.qc_strict)
+                ioda_data[(variable, qcName)] = np.array(qc_array_hack, dtype=np.int32)  # how to interpret AQI ?
+    
+        mid = dtg + timedelta(hours=window/2)
+        outdate = mid.strftime('%Y%m%dT%H%M%SZ')
+        output_file = f'{output_base}_PT{window}H_{outdate}.nc'
+        logging.debug("Writing file: " + output_file)
+     
+        # setup the IODA writer and write everything out.
+        writer = iconv.IodaWriter(output_file, locationKeyList, DimDict)
+        writer.BuildIoda(ioda_data, varDims, varAttrs, GlobalAttrs)
+        dtg = end_dtg
 
     logging.info("--- {:9.4g} total seconds ---".format(time.time() - start_time))
 
@@ -179,6 +198,8 @@ def read_file(file_name, recordNumber, any_data, qc_strict=True):
     month = date[4:6]
     day = date[6:8]
     lat, lon = get_loc(station_id, year, month, day)
+    if type(lat) == str:
+        return local_data, any_data
 
     # Open the file
     with open(file_name, 'r') as file:
@@ -210,14 +231,14 @@ def read_file(file_name, recordNumber, any_data, qc_strict=True):
                     for pf in plasma_freq:
                         local_data['electronDensity'].append(float(pf) * 12400)
                         local_data['electronDensityConfidence'].append(float(pf) * 12400 * 0.01)
-                        local_data['dateTime'].append(int(datetime.strptime(f'{year}{month}{day}{hour}{minute}{second}', '%Y%m%d%H%M%S').strftime('%j')))
+                        local_data['dateTime'].append(datetime.strptime(f'{year}{month}{day}{hour}{minute}{second}', '%Y%m%d%H%M%S').timestamp())
                         local_data['latitude'].append(lat)
                         local_data['longitude'].append(lon)
                         local_data['stationIdentifier'].append(station_id)
                 else:
                     local_data['electronDensity'].append(np.nan)
                     local_data['electronDensityConfidence'].append(np.nan)
-                    local_data['dateTime'].append(int(datetime.strptime(f'{year}{month}{day}{hour}{minute}{second}', '%Y%m%d%H%M%S').strftime('%j')))
+                    local_data['dateTime'].append(datetime.strptime(f'{year}{month}{day}{hour}{minute}{second}', '%Y%m%d%H%M%S').timestamp())
                     local_data['latitude'].append(lat)
                     local_data['longitude'].append(lon)
                     local_data['stationIdentifier'].append(station_id)
@@ -334,6 +355,10 @@ def get_loc(station_id, year, month, day):
                'YA462': {'lat': 62, 'lon': 129.6},
                'ZH466': {'lat': 66.8, 'lon': 123.4},
                'ZS36R': {'lat': -69.4, 'lon': 76.4}}
+    if station_id not in stations:
+        print(f'Unknown station {station_id}. Skipping')
+        return 'lat', 'lon'
+
     return stations[station_id]['lat'], stations[station_id]['lon']
 
 
@@ -369,11 +394,13 @@ if __name__ == "__main__":
                           help='input files')
     required.add_argument('-o', '--output',
                           action='store', default=None, required=True,
-                          help='output file')
+                          help='output base name. Files will be written out as {basename}_PT{window}_{datetime}.nc')
 
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument('--debug', action='store_true', default=False,
                           help='enable debug messages')
+    optional.add_argument('--window', default=1, type=int,
+                          help='output file window in hours')
     optional.add_argument('--quality-control', action='store_true',
                           default=False, dest='qc_strict',
                           help='add PreQC values')
