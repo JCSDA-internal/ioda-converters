@@ -96,9 +96,8 @@ list( APPEND test_input
   testinput/2021081612_RAOB_small.txt
   testinput/tropomi_co.nc
   testinput/SABER_L2A_2016001_76232_02.0.nc
-  testinput/TEMPO_NO2_L2_V03_20230802T151249Z_S001G01.nc
-  testinput/TEMPO_NO2_L2_V03_20230802T151902Z_S001G02.nc
-  testinput/TEMPO_NO2_L2_V03_20230802T152515Z_S001G03.nc
+  testinput/TEMPO_NO2_L2_V04_no2.20251002T180000Z.0.nc
+  testinput/TEMPO_NO2_L2_V04_no2.20251002T180000Z.1.nc
   testinput/gdas.t18z.abias_air
   testinput/MRMS_MergedReflectivityQC_01.50_20230712-152241.grib2
   testinput/OMPS-NPP_NMTO3-L2_v2.1_2020m0903t162415_small.h5
@@ -111,6 +110,7 @@ list( APPEND test_input
   testinput/pandora_site_classification.csv
   testinput/balloonsonde_sample_20241001T00Z_PT15M.json
   testinput/tec_groundBased_TENET_20201001T00Z.tec
+  testinput/gnssro_tec_cosmic2_202010012304.nc
   testinput/COWVR_TSDR.020421.20240430T215845.20240430T230345.V1001.sample.h5
   testinput/gfs.231010.t00z.syndata.tcvitals.txt
 )
@@ -160,8 +160,8 @@ list( APPEND test_output
   testoutput/viirs_bias.nc
   testoutput/tropomi_no2_total.nc
   testoutput/tropomi_no2_troposphere.nc
-  testoutput/tempo_NO2_total.nc
-  testoutput/tempo_NO2_troposphere.nc
+  testoutput/tempo_no2_total.nc
+  testoutput/tempo_no2_troposphere.nc
   testoutput/mopitt_co.nc
   testoutput/tropess_cris_co.nc
   testoutput/modis_aod.nc
@@ -215,6 +215,7 @@ list( APPEND test_output
   testoutput/saber_timed.20160101T180000Z.nc4
   testoutput/obs.20241001T000000Z_PT15M_balloonsonde.nc4
   testoutput/obs.20201001T000000Z_PT1M_tec_groundbased.nc4
+  testoutput/gnssro_tec_cosmic2_202010012304_output.nc4
   testoutput/obs.20240430T220600Z_PT2M_cowvr_iss.nc4
   testoutput/tcp_obs_2023101000.nc4
 )
@@ -1444,8 +1445,8 @@ foreach (coltype total troposphere)
 endforeach()
 
 foreach (coltype total troposphere)
-  foreach (spec NO2) #hcho not tested and o3 not out yet with real data
-    if (NOT (${spec} STREQUAL "HCHO" AND (${coltype} STREQUAL "total")))
+  foreach (spec no2) #hcho not tested and o3 not out yet with real data
+    if (NOT (${spec} STREQUAL "hcho"))
        ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tempo_${spec}_${coltype}
                           TYPE    SCRIPT
                           ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
@@ -1453,9 +1454,8 @@ foreach (coltype total troposphere)
                           ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                                   netcdf
                                   "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tempo_nc2ioda.py
-				  -i testinput/TEMPO_${spec}_L2_V03_20230802T151249Z_S001G01.nc
-				     testinput/TEMPO_${spec}_L2_V03_20230802T151902Z_S001G02.nc
-				     testinput/TEMPO_${spec}_L2_V03_20230802T152515Z_S001G03.nc
+				  -i testinput/TEMPO_NO2_L2_V04_${spec}.20251002T180000Z.0.nc
+				     testinput/TEMPO_NO2_L2_V04_${spec}.20251002T180000Z.1.nc
 				  -o testrun/tempo_${spec}_${coltype}.nc
                                   -v ${spec}
                                   -c ${coltype}"
@@ -2322,6 +2322,17 @@ endif()
                             -i testinput/tec_groundBased_TENET_20201001T00Z.tec
                             -o testrun/obs.20201001T000000Z_PT1M_tec_groundbased.nc4"
                             obs.20201001T000000Z_PT1M_tec_groundbased.nc4 ${IODA_CONV_COMP_TOL})
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tec_spacebased_cdaac
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/gnss_tec_spacebased_cdaac2ioda.py
+                            -i testinput/gnssro_tec_cosmic2_202010012304.nc
+                            -o testrun/gnssro_tec_cosmic2_202010012304_output.nc4"
+                            gnssro_tec_cosmic2_202010012304_output.nc4 ${IODA_CONV_COMP_TOL})
 
   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_cowvr_iss
                     TYPE    SCRIPT

@@ -7,6 +7,23 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 #
 
+# Description:
+#        This code reads TEMPO Level 2 composition netCDF files and writes
+#        selected column retrievals, geolocation, quality information,
+#        pressure vertices, and averaging kernels into IODA format.
+#        It currently supports NO2 and HCHO inputs; O3 is listed as an
+#        option but is not yet implemented.
+#
+# Usage:
+#        python tempo_nc2ioda.py -i tempo_l2_file.nc [tempo_l2_file2.nc ...] \
+#             -o tempo_ioda.nc -v no2 -c troposphere
+#        -i: one or more TEMPO Level 2 netCDF input files
+#        -o: IODA output file path
+#        -v: variable name, one of [no2, hcho, o3]
+#        -c: column type, one of [total, troposphere]
+#        -q: optional maximum QA value to keep before QC, default 0
+#        -t: optional random thinning fraction from 0.0 to 1.0, default 0.0
+
 import argparse
 import netCDF4 as nc
 import numpy as np
@@ -38,7 +55,7 @@ np.set_printoptions(threshold=np.inf)
 hPa2Pa = 1E+2
 Na = 6.0221408E+23
 cm2m2 = 1E+4
-molarmass = {"NO2": 46.0055, "HCHO": 30.031, "O3": 48.0}
+molarmass = {"no2": 46.0055, "hcho": 30.031, "o3": 48.0}
 
 
 class tempo(object):
@@ -86,6 +103,9 @@ class tempo(object):
             AttrData['date_time_string'] = ncd.getncattr('time_reference')[0:19]+'Z'
             AttrData['sensor'] = ncd.getncattr('project')
             AttrData['platform'] = ncd.getncattr('platform')
+            AttrData['tempo_l2_version'] = ncd.getncattr('processing_version')
+            AttrData['apriori_source'] = ncd.getncattr('apriori_source')
+            AttrData['title'] = ncd.getncattr('title')
 
             # coordinates, mask and RT parameters for BC
             lats = ncd.groups['geolocation'].variables['latitude'][:].ravel()
@@ -126,9 +146,9 @@ class tempo(object):
             thi = np.random.uniform(size=len(qa_value)) > self.thin
             flg = np.logical_and(qaf, thi)
 
-            # add cloud fraction filter here as UFO one doesn't work
-            # needs FIX in future
-            cld = cld_fra < 0.5   # from TEMPO STM meetings, experimental
+            # remove cloudy data with cf>50%
+            cld = cld_fra < 0.5
+
             flg = np.logical_and(flg, cld)
 
             # time
@@ -139,7 +159,7 @@ class tempo(object):
             time = np.ma.array(time, mask=mask, dtype=object)
 
             # NO2 and HCHO
-            if self.varname == 'NO2' or self.varname == 'HCHO':
+            if self.varname == 'no2' or self.varname == 'hcho':
 
                 # pressure levels
                 levels = ncd.dimensions['swt_level'].size
@@ -155,7 +175,7 @@ class tempo(object):
                 # there is a mismatch between the mask in the scattering weights/box amf
                 # so we need to reset the mask and replace with the mask that is used
 
-                if self.varname == 'NO2':
+                if self.varname == 'no2':
                     err_name = 'vertical_column_'+self.columnType
                     obs_name = 'vertical_column_'+self.columnType
                     col_amf_name = 'amf_'+self.columnType
@@ -165,7 +185,7 @@ class tempo(object):
                     else:
                         group_name = 'product'
 
-                if self.varname == 'HCHO':
+                if self.varname == 'hcho':
                     tot_amf_name = 'amf'
                     col_amf_name = 'amf'
                     obs_name = 'vertical_column'
@@ -183,7 +203,7 @@ class tempo(object):
                 avg_kernel = box_amf / tot_amf[:, np.newaxis]
 
                 # for no2 use avk to define strat trop separation
-                if self.varname == 'NO2':
+                if self.varname == 'no2':
                     t_pause = hPa2Pa * ncd.groups['support_data'].variables['tropopause_pressure'][:]\
                         .ravel()
 
@@ -196,19 +216,31 @@ class tempo(object):
                     avg_kernel.mask = False
                     avg_kernel = np.ma.array(avg_kernel, mask=np.repeat(mask, levels))
 
-                # obs value and error
-                col_amf = ncd.groups['support_data'].variables[col_amf_name][:].ravel()
-                col_amf.mask = False
-                col_amf = np.ma.array(col_amf, mask=mask)
-                obs = ncd.groups[group_name].variables[obs_name][:]\
-                    .ravel() * conv
+                # from ATBD:
+                # total vertical column = stratospheric + tropospheric vertical column
+                # Do not use support_data/vertical_column_total as it is influenced by a priori
+                if self.columnType == "total":
+                    obs = (
+                        ncd.groups['product'].variables['vertical_column_troposphere'][:].ravel()
+                        + ncd.groups['product'].variables['vertical_column_stratosphere'][:].ravel()
+                    ) * conv
+                    col_amf = tot_amf
+                else:
+                    obs = ncd.groups['product'].variables[obs_name][:]\
+                        .ravel() * conv
+                    col_amf = ncd.groups['support_data'].variables[col_amf_name][:].ravel()
+                    col_amf.mask = False
+                    col_amf = np.ma.array(col_amf, mask=mask)
+
                 obs.mask = False
                 obs = np.ma.array(obs, mask=mask)
 
-                # error calculation:
-                err = ncd.groups[group_name].variables[err_name+'_uncertainty'][:].ravel()
-                err = err * conv
-
+                # err = fitted_slant_column_uncertainty / AMF (total, tropospheric, or stratospheric)
+                # for tropospheric this is the same is product.vertical_column_troposphere_uncertainty
+                err = (
+                    ncd.groups['support_data']['fitted_slant_column_uncertainty'][:].ravel()
+                    / col_amf
+                ) * conv
                 err.mask = False
                 err = np.ma.array(err, mask=mask)
 
@@ -218,7 +250,7 @@ class tempo(object):
                 exit()
 
             # clean data
-            neg_obs = err > 0.0
+            neg_obs = obs > 0.0
             nan_obs = ((obs != np.nan) & (err != np.nan))
             cln = np.logical_and(neg_obs, nan_obs)
 
@@ -347,10 +379,9 @@ def main():
     # get command line arguments
     parser = argparse.ArgumentParser(
         description=(
-            'Reads TEMPO NO2 PROXY netCDF files: '
-            'from ttps://asdc.larc.nasa.gov/data/TEMPO/NO2-PROXY_L2_V01/'
-            'and converts into IODA formatted output files. Multiple'
-            'files are able to be concatenated.')
+            'Reads TEMPO Level 2 composition netCDF files and converts them '
+            'into IODA formatted output files. Multiple files are able to be '
+            'concatenated. NO2 proxy V03 and V04 are supported.')
     )
 
     required = parser.add_argument_group(title='required arguments')
@@ -384,15 +415,17 @@ def main():
 
     args = parser.parse_args()
 
-    if args.variable == "HCHO":
+    if args.variable == "hcho":
         var_name = 'formaldehyde'
         if args.column != "troposphere":
             print('hcho is only available for troposphere column, reset column to troposphere', flush=1)
             args.column = 'troposphere'
-    elif args.variable == "NO2":
+    elif args.variable == "no2":
         var_name = 'nitrogendioxide'
-    elif args.variable == "O3":
+    elif args.variable == "o3":
         var_name = 'ozone'
+
+    AttrData['column_type'] = args.column
 
     if args.column == "troposphere":
 
@@ -407,11 +440,11 @@ def main():
     elif args.column == "total":
 
         obsVar = {
-            var_name+'_total_column': var_name+'Total'
+            var_name+'_total_column': var_name+'Column'
         }
 
         varDims = {
-            var_name+'Total': ['Location']
+            var_name+'Column': ['Location']
         }
 
     varDims['averagingKernel'] = ['Location', 'Layer']
