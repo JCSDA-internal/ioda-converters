@@ -109,20 +109,19 @@ def main(args):
         # in addition to the ones already loaded in from the input file
         GlobalAttrs = {
             'sourceFiles': ", ".join(file_names),
-            'datetimeReference': datetimeRef
-       }
-     
+            'datetimeReference': datetimeRef}
+
         nlocs = len(data['height'])
         logging.info(f" found a total of {nlocs} observations")
         DimDict = {'Location': nlocs}
-     
+
         varDims = {}
         for key in varDict.keys():
             variable = varDict[key][0]
             varDims[variable] = ['Location']
-     
+
         varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-     
+
         # Set units of the MetaData variables and all _FillValues.
         for key in meta_keys:
             dtype = locationKeyList[meta_keys.index(key)][1]
@@ -137,7 +136,7 @@ def main(args):
             if units:
                 varAttrs[(key, metaDataName)]['units'] = units
             varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtype]
-     
+
         # Set units and FillValue attributes for groups associated with observed variable.
         variable = varDict['electronDensity'][0]
         dtype = varDict['electronDensity'][1]
@@ -151,10 +150,10 @@ def main(args):
         varAttrs[(variable, obsValName)]['_FillValue'] = missing_vals[dtype]
         varAttrs[(variable, obsErrName)]['_FillValue'] = missing_vals[dtype]
         varAttrs[(variable, qcName)]['_FillValue'] = int_missing_value
-     
+
         # Fill the final IODA data:  MetaData then ObsValues, ObsErrors, and QC
         ioda_data = {}
-     
+
         # should populate ioda_data directly rather than creating another copy
         for key in meta_keys:
             dtype = locationKeyList[meta_keys.index(key)][1]
@@ -174,12 +173,12 @@ def main(args):
                 ioda_data[(variable, obsErrName)] = np.array(data[variable+'Confidence'], dtype=np.float32)
                 qc_array_hack = apply_gross_quality_control(data, qc_strict=args.qc_strict)
                 ioda_data[(variable, qcName)] = np.array(qc_array_hack, dtype=np.int32)  # how to interpret AQI ?
-    
+
         mid = dtg + timedelta(hours=window/2)
         outdate = mid.strftime('%Y%m%dT%H%M%SZ')
         output_file = f'{output_base}_PT{window}H_{outdate}.nc'
         logging.debug("Writing file: " + output_file)
-     
+
         # setup the IODA writer and write everything out.
         writer = iconv.IodaWriter(output_file, locationKeyList, DimDict)
         writer.BuildIoda(ioda_data, varDims, varAttrs, GlobalAttrs)
@@ -198,7 +197,7 @@ def read_file(file_name, recordNumber, any_data, qc_strict=True):
     month = date[4:6]
     day = date[6:8]
     lat, lon = get_loc(station_id, year, month, day)
-    if type(lat) == str:
+    if isinstance(lat, str):
         return local_data, any_data
 
     # Open the file
@@ -263,98 +262,98 @@ def get_loc(station_id, year, month, day):
     station list taken from https://www.digisonde.com/stationlist.php
     '''
     stations = {'AA343': {'lat': 43.18, 'lon': 76.95},
-               'AH223': {'lat': 23, 'lon': 72.5},
-               'AL945': {'lat': 45.07, 'lon': 276.44},
-               'AN438': {'lat': 37.39, 'lon': 126.95},
-               'AS00Q': {'lat': -7.95, 'lon': 345.6},
-               'AT138': {'lat': 38, 'lon': 23.5},
-               'AU930': {'lat': 30.4, 'lon': 262.3},
-               'AW426': {'lat': 26.32, 'lon': 127.84},
-               'BC840': {'lat': 40, 'lon': 254.7},
-               'BE145': {'lat': 44.63, 'lon': 20.75},
-               'BLJ03': {'lat': 1.43, 'lon': 311.56},
-               'BP440': {'lat': 40.3, 'lon': 116.2},
-               'BV53Q': {'lat': -37.72, 'lon': 145.05},
-               'BVJ03': {'lat': 2.8, 'lon': 299.3},
-               'CAJ2M': {'lat': -22.7, 'lon': 315},
-               'CGK21': {'lat': -20.5, 'lon': 305},
-               'CO764': {'lat': 64.9, 'lon': 212},
-               'CS999': {'lat': 38.83, 'lon': 255.18},
-               'DB049': {'lat': 50.1, 'lon': 4.6},
-               'DH224': {'lat': 24.24, 'lon': 54.58},
-               'DV36Q': {'lat': -68.6, 'lon': 78},
-               'EA036': {'lat': 37.1, 'lon': 353.3},
-               'EA653': {'lat': 52.73, 'lon': 185.92},
-               'EB040': {'lat': 40.8, 'lon': 0.5},
-               'EI764': {'lat': 64.66, 'lon': 212.93},
-               'FF051': {'lat': 51.7, 'lon': 358.5},
-               'FZA0M': {'lat': -3.9, 'lon': 321.6},
-               'GA313': {'lat': 13.46, 'lon': 79.17},
-               'GA762': {'lat': 62.38, 'lon': 215},
-               'GM037': {'lat': 37.9, 'lon': 14},
-               'GR13L': {'lat': -33.3, 'lon': 26.5},
-               'GSJ53': {'lat': 53.3, 'lon': 299.7},
-               'GU513': {'lat': 13.62, 'lon': 144.86},
-               'HA419': {'lat': 19.4, 'lon': 109},
-               'HE13N': {'lat': -34.42, 'lon': 19.22},
-               'IC437': {'lat': 37.14, 'lon': 127.54},
-               'IF843': {'lat': 43.81, 'lon': 247.32},
-               'IL008': {'lat': 8.5, 'lon': 4.5},
-               'IR352': {'lat': 52.4, 'lon': 104.3},
-               'JI91J': {'lat': -12, 'lon': 283.2},
-               'JJ433': {'lat': 33.43, 'lon': 126.3},
-               'JR055': {'lat': 54.6, 'lon': 13.4},
-               'KJ609': {'lat': 9.4, 'lon': 167.2},
-               'KR835': {'lat': 35, 'lon': 253.47},
-               'KS759': {'lat': 58.4, 'lon': 203.6},
-               'LAA38': {'lat': 38.77, 'lon': 332.91},
-               'LD160': {'lat': 60, 'lon': 30.7},
-               'LL721': {'lat': 21.43, 'lon': 201.85},
-               'LM42B': {'lat': -21.8, 'lon': 114.1},
-               'LV12P': {'lat': -28.5, 'lon': 21.2},
-               'ME929': {'lat': 29.7, 'lon': 278.01},
-               'MH453': {'lat': 52, 'lon': 122.52},
-               'MHJ45': {'lat': 42.6, 'lon': 288.5},
-               'MI540': {'lat': 40.71, 'lon': 141.38},
-               'MIJ42': {'lat': 42.5, 'lon': 288.8},
-               'MO155': {'lat': 55.47, 'lon': 37.3},
-               'MU12K': {'lat': -22.39, 'lon': 30.88},
-               'MU834': {'lat': 33.03, 'lon': 72.01},
-               'N0369': {'lat': 69.4, 'lon': 88.1},
-               'ND328': {'lat': 28.64, 'lon': 77.17},
-               'NDA81': {'lat': 81.4, 'lon': 342.5},
-               'NI135': {'lat': 35.03, 'lon': 33.16},
-               'NQJ61': {'lat': 61.2, 'lon': 314.6},
-               'OK426': {'lat': 26.68, 'lon': 128.15},
-               'PA836': {'lat': 34.8, 'lon': 239.5},
-               'PF765': {'lat': 65.13, 'lon': 212.55},
-               'PQ052': {'lat': 50, 'lon': 14.6},
-               'PRJ18': {'lat': 18.5, 'lon': 292.9},
-               'PSJ5J': {'lat': -51.6, 'lon': 302.1},
-               'RL052': {'lat': 51.5, 'lon': 359.4},
-               'RO041': {'lat': 41.9, 'lon': 12.5},
-               'SA418': {'lat': 18.34, 'lon': 109.42},
-               'SA929': {'lat': 29.45, 'lon': 261.39},
-               'SAA0K': {'lat': -2.6, 'lon': 315.8},
-               'SE834': {'lat': 34.35, 'lon': 253.12},
-               'SH427': {'lat': 26.86, 'lon': 111.5},
-               'SMJ67': {'lat': 67, 'lon': 309.3},
-               'SMK29': {'lat': -29.73, 'lon': 306.29},
-               'SN437': {'lat': 37.1, 'lon': 127},
-               'SO148': {'lat': 47.63, 'lon': 16.72},
-               'THJ76': {'lat': 76.54, 'lon': 291.56},
-               'THJ77': {'lat': 77.5, 'lon': 290.8},
-               'TM308': {'lat': 8.54, 'lon': 76.87},
-               'TR0P2': {'lat': -72.01, 'lon': 2.53},
-               'TR169': {'lat': 69.6, 'lon': 19.2},
-               'VT139': {'lat': 40.6, 'lon': 17.8},
-               'WA619': {'lat': 19.29, 'lon': 166.65},
-               'WP937': {'lat': 37.9, 'lon': 284.5},
-               'WU430': {'lat': 30.5, 'lon': 114.4},
-               'XI434': {'lat': 35.3, 'lon': 113.92},
-               'YA462': {'lat': 62, 'lon': 129.6},
-               'ZH466': {'lat': 66.8, 'lon': 123.4},
-               'ZS36R': {'lat': -69.4, 'lon': 76.4}}
+                'AH223': {'lat': 23, 'lon': 72.5},
+                'AL945': {'lat': 45.07, 'lon': 276.44},
+                'AN438': {'lat': 37.39, 'lon': 126.95},
+                'AS00Q': {'lat': -7.95, 'lon': 345.6},
+                'AT138': {'lat': 38, 'lon': 23.5},
+                'AU930': {'lat': 30.4, 'lon': 262.3},
+                'AW426': {'lat': 26.32, 'lon': 127.84},
+                'BC840': {'lat': 40, 'lon': 254.7},
+                'BE145': {'lat': 44.63, 'lon': 20.75},
+                'BLJ03': {'lat': 1.43, 'lon': 311.56},
+                'BP440': {'lat': 40.3, 'lon': 116.2},
+                'BV53Q': {'lat': -37.72, 'lon': 145.05},
+                'BVJ03': {'lat': 2.8, 'lon': 299.3},
+                'CAJ2M': {'lat': -22.7, 'lon': 315},
+                'CGK21': {'lat': -20.5, 'lon': 305},
+                'CO764': {'lat': 64.9, 'lon': 212},
+                'CS999': {'lat': 38.83, 'lon': 255.18},
+                'DB049': {'lat': 50.1, 'lon': 4.6},
+                'DH224': {'lat': 24.24, 'lon': 54.58},
+                'DV36Q': {'lat': -68.6, 'lon': 78},
+                'EA036': {'lat': 37.1, 'lon': 353.3},
+                'EA653': {'lat': 52.73, 'lon': 185.92},
+                'EB040': {'lat': 40.8, 'lon': 0.5},
+                'EI764': {'lat': 64.66, 'lon': 212.93},
+                'FF051': {'lat': 51.7, 'lon': 358.5},
+                'FZA0M': {'lat': -3.9, 'lon': 321.6},
+                'GA313': {'lat': 13.46, 'lon': 79.17},
+                'GA762': {'lat': 62.38, 'lon': 215},
+                'GM037': {'lat': 37.9, 'lon': 14},
+                'GR13L': {'lat': -33.3, 'lon': 26.5},
+                'GSJ53': {'lat': 53.3, 'lon': 299.7},
+                'GU513': {'lat': 13.62, 'lon': 144.86},
+                'HA419': {'lat': 19.4, 'lon': 109},
+                'HE13N': {'lat': -34.42, 'lon': 19.22},
+                'IC437': {'lat': 37.14, 'lon': 127.54},
+                'IF843': {'lat': 43.81, 'lon': 247.32},
+                'IL008': {'lat': 8.5, 'lon': 4.5},
+                'IR352': {'lat': 52.4, 'lon': 104.3},
+                'JI91J': {'lat': -12, 'lon': 283.2},
+                'JJ433': {'lat': 33.43, 'lon': 126.3},
+                'JR055': {'lat': 54.6, 'lon': 13.4},
+                'KJ609': {'lat': 9.4, 'lon': 167.2},
+                'KR835': {'lat': 35, 'lon': 253.47},
+                'KS759': {'lat': 58.4, 'lon': 203.6},
+                'LAA38': {'lat': 38.77, 'lon': 332.91},
+                'LD160': {'lat': 60, 'lon': 30.7},
+                'LL721': {'lat': 21.43, 'lon': 201.85},
+                'LM42B': {'lat': -21.8, 'lon': 114.1},
+                'LV12P': {'lat': -28.5, 'lon': 21.2},
+                'ME929': {'lat': 29.7, 'lon': 278.01},
+                'MH453': {'lat': 52, 'lon': 122.52},
+                'MHJ45': {'lat': 42.6, 'lon': 288.5},
+                'MI540': {'lat': 40.71, 'lon': 141.38},
+                'MIJ42': {'lat': 42.5, 'lon': 288.8},
+                'MO155': {'lat': 55.47, 'lon': 37.3},
+                'MU12K': {'lat': -22.39, 'lon': 30.88},
+                'MU834': {'lat': 33.03, 'lon': 72.01},
+                'N0369': {'lat': 69.4, 'lon': 88.1},
+                'ND328': {'lat': 28.64, 'lon': 77.17},
+                'NDA81': {'lat': 81.4, 'lon': 342.5},
+                'NI135': {'lat': 35.03, 'lon': 33.16},
+                'NQJ61': {'lat': 61.2, 'lon': 314.6},
+                'OK426': {'lat': 26.68, 'lon': 128.15},
+                'PA836': {'lat': 34.8, 'lon': 239.5},
+                'PF765': {'lat': 65.13, 'lon': 212.55},
+                'PQ052': {'lat': 50, 'lon': 14.6},
+                'PRJ18': {'lat': 18.5, 'lon': 292.9},
+                'PSJ5J': {'lat': -51.6, 'lon': 302.1},
+                'RL052': {'lat': 51.5, 'lon': 359.4},
+                'RO041': {'lat': 41.9, 'lon': 12.5},
+                'SA418': {'lat': 18.34, 'lon': 109.42},
+                'SA929': {'lat': 29.45, 'lon': 261.39},
+                'SAA0K': {'lat': -2.6, 'lon': 315.8},
+                'SE834': {'lat': 34.35, 'lon': 253.12},
+                'SH427': {'lat': 26.86, 'lon': 111.5},
+                'SMJ67': {'lat': 67, 'lon': 309.3},
+                'SMK29': {'lat': -29.73, 'lon': 306.29},
+                'SN437': {'lat': 37.1, 'lon': 127},
+                'SO148': {'lat': 47.63, 'lon': 16.72},
+                'THJ76': {'lat': 76.54, 'lon': 291.56},
+                'THJ77': {'lat': 77.5, 'lon': 290.8},
+                'TM308': {'lat': 8.54, 'lon': 76.87},
+                'TR0P2': {'lat': -72.01, 'lon': 2.53},
+                'TR169': {'lat': 69.6, 'lon': 19.2},
+                'VT139': {'lat': 40.6, 'lon': 17.8},
+                'WA619': {'lat': 19.29, 'lon': 166.65},
+                'WP937': {'lat': 37.9, 'lon': 284.5},
+                'WU430': {'lat': 30.5, 'lon': 114.4},
+                'XI434': {'lat': 35.3, 'lon': 113.92},
+                'YA462': {'lat': 62, 'lon': 129.6},
+                'ZH466': {'lat': 66.8, 'lon': 123.4},
+                'ZS36R': {'lat': -69.4, 'lon': 76.4}}
     if station_id not in stations:
         print(f'Unknown station {station_id}. Skipping')
         return 'lat', 'lon'
