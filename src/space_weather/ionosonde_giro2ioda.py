@@ -175,8 +175,8 @@ def main(args):
                 ioda_data[(variable, qcName)] = np.array(qc_array_hack, dtype=np.int32)  # how to interpret AQI ?
 
         mid = dtg + timedelta(hours=window/2)
-        outdate = mid.strftime('%Y%m%dT%H%M%SZ')
-        output_file = f'{output_base}_PT{window}H_{outdate}.nc'
+        outdate = dtg.strftime('%Y%m%dT%H%M%SZ')
+        output_file = f'{output_base}obs.{outdate}_PT{window}H_ionosonde.nc4'
         logging.debug("Writing file: " + output_file)
 
         # setup the IODA writer and write everything out.
@@ -259,7 +259,7 @@ def init_data_dict():
 def get_loc(station_id, year, month, day):
 
     '''
-    station list taken from https://www.digisonde.com/stationlist.php
+    station list taken from https://www.digisonde.com/stationlist.php and from documentation provided by Iurii Cherniak
     '''
     stations = {'AA343': {'lat': 43.18, 'lon': 76.95},
                 'AH223': {'lat': 23, 'lon': 72.5},
@@ -273,9 +273,12 @@ def get_loc(station_id, year, month, day):
                 'BE145': {'lat': 44.63, 'lon': 20.75},
                 'BLJ03': {'lat': 1.43, 'lon': 311.56},
                 'BP440': {'lat': 40.3, 'lon': 116.2},
+                'BR52P': {'lat': -27.06, 'lon': 153.06},
                 'BV53Q': {'lat': -37.72, 'lon': 145.05},
                 'BVJ03': {'lat': 2.8, 'lon': 299.3},
                 'CAJ2M': {'lat': -22.7, 'lon': 315},
+                'CB53N': {'lat': -35.32, 'lon': 149},
+                'CS31K': {'lat': -12.18, 'lon': 96.83},
                 'CGK21': {'lat': -20.5, 'lon': 305},
                 'CO764': {'lat': 64.9, 'lon': 212},
                 'CS999': {'lat': 38.83, 'lon': 255.18},
@@ -285,6 +288,7 @@ def get_loc(station_id, year, month, day):
                 'EA036': {'lat': 37.1, 'lon': 353.3},
                 'EA653': {'lat': 52.73, 'lon': 185.92},
                 'EB040': {'lat': 40.8, 'lon': 0.5},
+                'EG931': {'lat': 30.5, 'lon': 273.5},
                 'EI764': {'lat': 64.66, 'lon': 212.93},
                 'FF051': {'lat': 51.7, 'lon': 358.5},
                 'FZA0M': {'lat': -3.9, 'lon': 321.6},
