@@ -187,7 +187,6 @@ class caliop_l2ext(object):
         iheight[-1] = height[-1] - 0.5 * thickness[-1]
         for k in reversed(range(nlev)):
             iheight[k] = iheight[k+1] + thickness[k]
-        
 
         min_time = -int_missing_value
         max_time = int_missing_value
@@ -267,8 +266,6 @@ class caliop_l2ext(object):
 
             sd.end()
 
-        self.outdata[('sensorCentralWavelength', metaDataName)] = np.array(wavelength, dtype=np.float32)[output_chidx]
-        self.outdata[('sensorCentralFrequency', metaDataName)] = np.array(frequency, dtype=np.float32)[output_chidx]
         self.outdata[('height', metaDataName)] = np.array(height, dtype=np.float32)
         self.outdata[('heightVertice', metaDataName)] = np.array(iheight, dtype=np.float32)
         self.outdata[('atmosphereLayerThicknessZ', metaDataName)] = np.array(thickness, dtype=np.float32)
