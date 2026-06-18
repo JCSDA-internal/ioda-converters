@@ -16,7 +16,7 @@ from pyiodaconv.def_jedi_utils import iso8601_string, epoch
 os.environ["TZ"] = "UTC"
 
 # these are the unique values in the raw input file
-varDict = {'height': ['height', "float", "m"],
+varDict = {'height': ['height', "float", "km"],
            'electronDensity': ['electronDensity', "float", 'number cm-3'],
            'electronDensityConfidence': ['electronDensityConfidence', "float", 'number cm-3']}
 
@@ -228,8 +228,8 @@ def read_file(file_name, recordNumber, any_data, qc_strict=True):
                 if line.lstrip()[0].isdigit():
                     plasma_freq = line.split()
                     for pf in plasma_freq:
-                        local_data['electronDensity'].append(float(pf) * 12400)
-                        local_data['electronDensityConfidence'].append(float(pf) * 12400 * 0.01)
+                        local_data['electronDensity'].append(float(pf) ** 2 * 12400)
+                        local_data['electronDensityConfidence'].append(float(pf) ** 2 * 12400 * 0.2)
                         local_data['dateTime'].append(datetime.strptime(f'{year}{month}{day}{hour}{minute}{second}', '%Y%m%d%H%M%S').timestamp())
                         local_data['latitude'].append(lat)
                         local_data['longitude'].append(lon)
