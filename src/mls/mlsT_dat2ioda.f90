@@ -3,7 +3,7 @@
 !------------------------------------------------------------------------------!
 ! Return codes:
 !  0 - Success.
-!  1 - Unrecoverable system or logical error.
+!  1 - Urecnoverable system or logical error.
 !  2 - All provided observations are invalid.  Cannot create NetCDF IODA file.
 !------------------------------------------------------------------------------!
 ! Modules
@@ -31,79 +31,6 @@
    real :: t_assim_win
 
    logical :: lmore = .false.
-
-!------------------------------------------------------------------------------!
-! Output obs data stucture
-
-   integer   :: ncid
-   integer   :: nobs_dimid, nlocs_dimid, nvars_dimid, nrecs_dimid
-   integer   :: varid_lat, varid_lon, varid_epochtime
-   integer   :: varid_said, varid_siid, varid_ptid, varid_sclf, varid_asce, varid_ogce
-   integer   :: varid_qcfg, varid_tinc
-   integer   :: varid_recn
-   integer   :: varid_geoid, varid_rfict
-   integer   :: varid_ref, varid_msl
-   integer   :: varid_bnd, varid_impp, varid_imph, varid_azim
-   integer   :: nlev_dimid
-   integer   :: grpid_metadata, grpid_obsvalue
-   integer   :: deflate_level
-   character(len=256)       :: infile, outfile, runCheck
-   logical                  :: addChecks
-   character, dimension(8)  :: subset
-   character(len=10)        :: anatime
-   integer(int32)           :: i, k, m, ireadmg, ireadsb, said, siid, ptid, sclf, asce, ogce, qcflag, tinc
-   integer(int32)           :: lnbufr = 10
-   integer(int32)           :: nread, ndata, nvars, nrec, ndata0
-   integer(int32)           :: idate5(6), idate
-   integer(int64)           :: epochtime
-
-   integer(int32), parameter :: mxib = 31
-   integer(int32)            :: ibit(mxib), nib
-   integer(int32), parameter :: maxlevs = 500
-   integer(int32), parameter :: n1ahdr = 15
-   integer(int32)            :: maxobs
-   type gnssro_type
-      integer(int32), allocatable, dimension(:)    :: said
-      integer(int32), allocatable, dimension(:)    :: siid
-      integer(int32), allocatable, dimension(:)    :: sclf
-      integer(int32), allocatable, dimension(:)    :: ptid
-      integer(int32), allocatable, dimension(:)    :: recn
-      integer(int32), allocatable, dimension(:)    :: asce
-      integer(int32), allocatable, dimension(:)    :: ogce
-      integer(int32), allocatable, dimension(:)    :: qcflag
-      integer(int32), allocatable, dimension(:)    :: tinc
-      integer(int64), allocatable, dimension(:)    :: epochtime
-      real(real64), allocatable, dimension(:)     :: lat
-      real(real64), allocatable, dimension(:)     :: lon
-      real(real64), allocatable, dimension(:)     :: rfict
-      real(real64), allocatable, dimension(:)     :: azim
-      real(real64), allocatable, dimension(:)     :: geoid
-      real(real64), allocatable, dimension(:)     :: msl_alt
-      real(real64), allocatable, dimension(:)     :: ref
-      real(real64), allocatable, dimension(:)     :: bend_ang
-      real(real64), allocatable, dimension(:)     :: impact_para
-   end type gnssro_type
-
-   type(gnssro_type) :: gnssro_data
-
-   real(real64), dimension(n1ahdr)      :: bfr1ahdr
-   real(real64), dimension(50, maxlevs) :: data1b
-   real(real64), dimension(50, maxlevs) :: data2a
-   real(real64), dimension(maxlevs)     :: nreps_this_ROSEQ2
-   integer(int32)                       :: iret, levs, levsr, nreps_ROSEQ1, nreps_ROSEQ2_int
-   real(real64) :: qfro(1), usage, dlat, dlat_earth, dlon, dlon_earth, freq_chk, azim
-   real(real64) :: height, rlat, rlon, ref, bend, impact, roc, geoid
-   real(real64)    :: r_missing
-   integer(int32)  :: i_missing
-   integer(int64)  :: i64_missing
-
-   logical, parameter :: GlobalModel = .true. ! temporary
-
-   character(10) nemo
-   character(80) hdr1a
-
-   data hdr1a/'YEAR MNTH DAYS HOUR MINU SECO PCCF ELRC SAID SIID PTID GEODU SCLF OGCE TISE'/
-   data nemo/'QFRO'/
 
 !------------------------------------------------------------------------------!
 
@@ -141,10 +68,17 @@
 
    STOP '9999'
 
-! 4.  Write out at IODA format  
+! 4. Construct the output file name
+! ---------------------------------
+
+   outfile = "obs."//TRIM(instvar)//"."//TRIM(cdtg_in)//".PT"//assim_win//"H.nc4"
+
+! 5.  Write out at IODA format  
 ! ----------------------------
 
-      CALL mlsT_write2ioda(outfile)
+   CALL mlsT_write2ioda(outfile,cdtg_in,maxprof,maxlev, &
+                        mls_val,mls_err,mls_p,mls_lat,mls_lon,mls_dt, &
+                        nmls,nlev,instvar)
 
 ! 5.  END
 ! -------
@@ -153,10 +87,11 @@
 
  END PROGRAM mlsT_dat2ioda
 !------------------------------------------------------------------------------!
- SUBROUTINE mlsT_write2ioda(outfile,cdtg_in,maxprof,maxlev,mls_val,mls_err,mls_p,mls_lat,mls_lon,mls_dt,nmls,nlev,)
 
-!------------------------------------------------------------------------------!
-!  use module_mls
+ SUBROUTINE mlsT_write2ioda(outfile,cdtg_in,maxprof,maxlev, &
+                            mls_val,mls_err,mls_p,mls_lat,mls_lon,mls_dt, &
+                            nmls,nlev,instvar)
+
 !------------------------------------------------------------------------------!
 
    implicit none
@@ -175,94 +110,46 @@
   integer, intent(in) :: mls_dt(maxprof)   ! time offset in seconds from anaysis time
   integer, intent(in) :: nmls              ! number of mls measurements
   integer, intent(in) :: nlev 
+
+   character(len=7), intent(in) :: instvar
 !------------------------------------------------------------------------------!
 ! Output obs data stucture
 
    integer   :: ncid
-   integer   :: nobs_dimid, nlocs_dimid, nvars_dimid, nrecs_dimid
-   integer   :: varid_lat, varid_lon, varid_epochtime
-   integer   :: varid_said, varid_siid, varid_ptid, varid_sclf, varid_asce, varid_ogce
-   integer   :: varid_qcfg, varid_tinc
-   integer   :: varid_recn
-   integer   :: varid_geoid, varid_rfict
-   integer   :: varid_ref, varid_msl
-   integer   :: varid_bnd, varid_impp, varid_imph, varid_azim
-   integer   :: nlev_dimid
-   integer   :: grpid_metadata, grpid_obsvalue
-   integer   :: deflate_level
-   character(len=256)       :: infile, outfile, runCheck
-   logical                  :: addChecks
-   character, dimension(8)  :: subset
-!  character(len=10)        :: anatime
-   integer(int32)           :: i, k, m, ireadmg, ireadsb, said, siid, ptid, sclf, asce, ogce, qcflag, tinc
-   integer(int32)           :: lnbufr = 10
-   integer(int32)           :: nread, ndata, nvars, nrec, ndata0
-   integer(int32)           :: idate5(6), idate
-   integer(int64)           :: epochtime
+   integer   :: nobs_dimid, nlocs_dimid, nvars_dimid, recns_dimid
+   integer   :: varid_lat, varid_lon, varid_pres
+   integer   :: varid_epochtime
+   integer   :: varid_tinc, varid_recn
+   integer   :: varid_obsvalue, varid_obserror, varid_preqc
 
-   integer(int32), parameter :: mxib = 31
-   integer(int32)            :: ibit(mxib), nib
-   integer(int32), parameter :: maxlevs = 500
-   integer(int32), parameter :: n1ahdr = 15
-   integer(int32)            :: maxobs
-   type gnssro_type
-      integer(int32), allocatable, dimension(:)    :: said
-      integer(int32), allocatable, dimension(:)    :: siid
-      integer(int32), allocatable, dimension(:)    :: sclf
-      integer(int32), allocatable, dimension(:)    :: ptid
-      integer(int32), allocatable, dimension(:)    :: recn
-      integer(int32), allocatable, dimension(:)    :: asce
-      integer(int32), allocatable, dimension(:)    :: ogce
-      integer(int32), allocatable, dimension(:)    :: qcflag
-      integer(int32), allocatable, dimension(:)    :: tinc
-      integer(int64), allocatable, dimension(:)    :: epochtime
-      real(real64), allocatable, dimension(:)     :: lat
-      real(real64), allocatable, dimension(:)     :: lon
-      real(real64), allocatable, dimension(:)     :: rfict
-      real(real64), allocatable, dimension(:)     :: azim
-      real(real64), allocatable, dimension(:)     :: geoid
-      real(real64), allocatable, dimension(:)     :: msl_alt
-      real(real64), allocatable, dimension(:)     :: ref
-      real(real64), allocatable, dimension(:)     :: bend_ang
-      real(real64), allocatable, dimension(:)     :: impact_para
-   end type gnssro_type
+   integer   :: grpid_metadata, grpid_obsvalue, grpid_obserror, grpid_preqc
 
-   type(gnssro_type) :: gnssro_data
+   integer, parameter :: deflate_level = 6
 
-   real(real64), dimension(n1ahdr)      :: bfr1ahdr
-   real(real64), dimension(50, maxlevs) :: data1b
-   real(real64), dimension(50, maxlevs) :: data2a
-   real(real64), dimension(maxlevs)     :: nreps_this_ROSEQ2
-   integer(int32)                       :: iret, levs, levsr, nreps_ROSEQ1, nreps_ROSEQ2_int
-   real(real64) :: qfro(1), usage, dlat, dlat_earth, dlon, dlon_earth, freq_chk, azim
-   real(real64) :: height, rlat, rlon, ref, bend, impact, roc, geoid
    real(real64)    :: r_missing
    integer(int32)  :: i_missing
    integer(int64)  :: i64_missing
 
-   logical, parameter :: GlobalModel = .true. ! temporary
-
-   character(10) nemo
-   character(80) hdr1a
-
-   data hdr1a/'YEAR MNTH DAYS HOUR MINU SECO PCCF ELRC SAID SIID PTID GEODU SCLF OGCE TISE'/
-   data nemo/'QFRO'/
-
+!------------------------------------------------------------------------------!
 
   character(len=10) :: anatime
 
-  integer(int32) :: ndata, nrec
+  integer(int32) :: ndata, irec
 
+  integer(int32), allocatable, dimension(:)   :: recn
   integer(int32), allocatable, dimension(:)   :: toffset
+  integer(int32), allocatable, dimension(:)   :: preqc
+
   real(real64), allocatable, dimension(:)     :: longitude
   real(real64), allocatable, dimension(:)     :: latitude
+  real(real64), allocatable, dimension(:)     :: pressure
   real(real64), allocatable, dimension(:)     :: obsvalue
-  real(real64), allocatable, dimension(:)     :: zvertical
-
-  integer(int32), allocatable, dimension(:)   :: preqc
   real(real64), allocatable, dimension(:)     :: obserror
 
 !------------------------------------------------------------------------------!
+
+    ! data are saved as data mls*nlev data points
+    ! data with same recn value belongs to the same profile
 
     ndata = nmls*nlev
     anatime = cdtg_an
@@ -270,36 +157,59 @@
     allocate (toffset(ndata))
     allocate (lat(ndata))
     allocate (lon(ndata))
-    allocate (obsvalue(ndata))
-    allocate (zvertical(ndata))
 
-    allocate (preqc(ndata))
+    allocate (pressure(ndata))
+
+    allocate (obsvalue(ndata))
     allocate (obserror(ndata))
 
+    allocate (preqc(ndata))
+    allocate (recn(ndata))
 
-    nrec = 1
+
+    irec = 1 ! How many profiles (should be = nmls)
+
     do n = 1, nmls
 
-       latitude(n:n+nlev+1)  = mls_lat(n)
-       longitude(n:n+nlev+1) = mls_lon(n)
-       zvertical(n:n+nlev+1) = mls_p(n)*100.  ! Pa
-       toffset(n:n+nlev+1)   = mls_dt(n)
-
        do k = 1, nlev
-          obsvalue(n+k-1)    = mls_val(n,k)
-          obserror(n+k-1)    = mls_err(n,k)
-          preqc(n+k-1)       = 0
+
+          latitude(n+k-1)  = mls_lat(n)
+          longitude(n+k-1) = mls_lon(n)
+          pressure(n+k-1)  = mls_p(n)*100.  ! Pa
+          toffset(n+k-1)   = mls_dt(n)
+
+          obsvalue(n+k-1)  = mls_val(n,k)
+          obserror(n+k-1)  = mls_err(n,k)
+
+          preqc(n+k-1)     = 0
+
+          recn(n+nlev-1)   = irec
+
        end do 
+
+       irec = irec + 1
+
     end do
+
 !------------------------------------------------------------------------------!
 
+! Open output file
    call check(nf90_create(trim(outfile), NF90_NETCDF4, ncid))
+
+! Write file dimensions
    call check(nf90_def_dim(ncid, 'Location', ndata, nlocs_dimid))
+
+! Write attributes
    call check(nf90_put_att(ncid, NF90_GLOBAL, 'date_time', anatime))
    call check(nf90_put_att(ncid, NF90_GLOBAL, 'ioda_version', 'Fortran generated ioda file'))
+
+! Define groups
    call check(nf90_def_grp(ncid, 'MetaData', grpid_metadata))
    call check(nf90_def_grp(ncid, 'ObsValue', grpid_obsvalue))
+   call check(nf90_def_grp(ncid, 'ObsError', grpid_obserror))
+   call check(nf90_def_grp(ncid, 'PreQC',    grpid_preqc))
 
+! Define variables in Metadata group
    call check(nf90_def_var(grpid_metadata, "latitude", NF90_FLOAT, nlocs_dimid, varid_lat))
    call check(nf90_def_var_fill(grpid_metadata, varid_lat, 0, real(r_missing)))
    call check(nf90_def_var_deflate(grpid_metadata, varid_lat,       &
@@ -332,129 +242,77 @@
    call check(nf90_put_att(grpid_metadata, varid_recn, "longname", "profile identifier"))
    call check(nf90_put_att(grpid_metadata, varid_recn, "units", "1"))
 
-!  call check(nf90_def_var(grpid_metadata, "satelliteConstellationRO", NF90_INT, nlocs_dimid, varid_sclf))
-!  call check(nf90_def_var_fill(grpid_metadata, varid_sclf, 0, i_missing))
-
-!  call check(nf90_def_var_deflate(grpid_metadata, varid_sclf,       &
-!                                   & shuffle=1, deflate=1, deflate_level=deflate_level))
-!  call check(nf90_put_att(grpid_metadata, varid_sclf, "longname", &
-!     & "GNSS satellite classification, e.g., 401=GPS, 402=GLONASS"))
-!  call check(nf90_put_att(grpid_metadata, varid_sclf, "units", "1"))
-
-!  call check(nf90_def_var(grpid_metadata, "satelliteTransmitterId", NF90_INT, nlocs_dimid, varid_ptid))
-!  call check(nf90_def_var_fill(grpid_metadata, varid_ptid, 0, i_missing))
-!  call check(nf90_def_var_deflate(grpid_metadata, varid_ptid,       &
-!                                   & shuffle=1, deflate=1, deflate_level=deflate_level))
-!  call check(nf90_put_att(grpid_metadata, varid_ptid, "longname", "GNSS satellite transmitter identifier (1-32)"))
-!  call check(nf90_put_att(grpid_metadata, varid_ptid, "units", "1"))
-
-!  call check(nf90_def_var(grpid_metadata, "satelliteIdentifier", NF90_INT, nlocs_dimid, varid_said))
-!  call check(nf90_def_var_fill(grpid_metadata, varid_said, 0, i_missing))
-!  call check(nf90_def_var_deflate(grpid_metadata, varid_said,       &
-!                                   & shuffle=1, deflate=1, deflate_level=deflate_level))
-!  call check(nf90_put_att(grpid_metadata, varid_said, "longname", &
-!     & "Low Earth Orbit satellite identifier, e.g., COSMIC2=750-755"))
-!  call check(nf90_put_att(grpid_metadata, varid_said, "units", "1"))
-
-!  call check(nf90_def_var(grpid_metadata, "instrumentIdentifier", NF90_INT, nlocs_dimid, varid_siid))
-!  call check(nf90_def_var_deflate(grpid_metadata, varid_siid,       &
-!                                   & shuffle=1, deflate=1, deflate_level=deflate_level))
-!  call check(nf90_put_att(grpid_metadata, varid_siid, "longname", "satellite instrument"))
-!  call check(nf90_put_att(grpid_metadata, varid_siid, "units", "1"))
-!  call check(nf90_def_var_fill(grpid_metadata, varid_siid, 0, i_missing))
-
-   call check(nf90_def_var(grpid_metadata, "qualityFlags", NF90_INT, nlocs_dimid, varid_qcfg))
-!  call check(nf90_def_var_deflate(grpid_metadata, varid_qcfg,       &
-!                                   & shuffle=1, deflate=1, deflate_level=deflate_level))
-!  call check(nf90_put_att(grpid_metadata, varid_qcfg, "longname", "RO QC flags based on the 16-digit binary table of WMO"))
-
-!  call check(nf90_def_var(grpid_metadata, "satelliteAscendingFlag", NF90_INT, nlocs_dimid, varid_asce))
-!  call check(nf90_def_var_deflate(grpid_metadata, varid_asce,       &
-!                                   & shuffle=1, deflate=1, deflate_level=deflate_level))
-!  call check(nf90_put_att(grpid_metadata, varid_asce, "longname", "the original occultation ascending/descending flag"))
-!  call check(nf90_put_att(grpid_metadata, varid_asce, "valid_range", int((/0, 1/))))
-!  call check(nf90_put_att(grpid_metadata, varid_asce, "flag_values", int((/0, 1/))))
-!  call check(nf90_put_att(grpid_metadata, varid_asce, "flag_meanings", "descending ascending"))
-!  call check(nf90_put_att(grpid_metadata, varid_asce, "units", "1"))
-!  call check(nf90_def_var_fill(grpid_metadata, varid_asce, 0, i_missing))
-
-!  call check(nf90_def_var(grpid_metadata, "dataProviderOrigin", NF90_INT, nlocs_dimid, varid_ogce))
-!  call check(nf90_def_var_deflate(grpid_metadata, varid_ogce,       &
-!                                   & shuffle=1, deflate=1, deflate_level=deflate_level))
-!  call check(nf90_put_att(grpid_metadata, varid_ogce, "longname", "originally data processing_center, &
-!                                                       &e.g., 60 for UCAR, 94 for DMI, 254 for Eumesat, 78 for GFZ"))
-!  call check(nf90_put_att(grpid_metadata, varid_ogce, "units", "1"))
-!  call check(nf90_def_var_fill(grpid_metadata, varid_ogce, 0, i_missing))
-
-!  call check(nf90_def_var(grpid_obsvalue, "atmosphericRefractivity", NF90_FLOAT, nlocs_dimid, varid_ref))
-!  call check(nf90_def_var_deflate(grpid_obsvalue, varid_ref,       &
-!                                   & shuffle=1, deflate=1, deflate_level=deflate_level))
-!  call check(nf90_put_att(grpid_obsvalue, varid_ref, "longname", "Atmospheric refractivity"))
-!  call check(nf90_put_att(grpid_obsvalue, varid_ref, "units", "N"))
-!  call check(nf90_put_att(grpid_obsvalue, varid_ref, "valid_range", real((/0.0, 500.0/))))
-!  call check(nf90_def_var_fill(grpid_obsvalue, varid_ref, 0, real(r_missing)))
-
-   call check(nf90_def_var(grpid_metadata, "pressure", NF90_FLOAT, nlocs_dimid, varid_msl))
-   call check(nf90_def_var_deflate(grpid_metadata, varid_msl,       &
+   call check(nf90_def_var(grpid_metadata, "pressure", NF90_FLOAT, nlocs_dimid, varid_pres))
+   call check(nf90_def_var_deflate(grpid_metadata, varid_pres,       &
                                     & shuffle=1, deflate=1, deflate_level=deflate_level))
-   call check(nf90_put_att(grpid_metadata, varid_msl, "longname", "Pressure"))
-   call check(nf90_put_att(grpid_metadata, varid_msl, "units", "Pa"))
-   call check(nf90_put_att(grpid_obsvalue, varid_bnd, "valid_range", real((/saber_pmin*100.,mls_pmax*100./))))
-   call check(nf90_def_var_fill(grpid_metadata, varid_msl, 0, real(r_missing)))
 
-   call check(nf90_def_var(grpid_obsvalue, "Temperature", NF90_FLOAT, nlocs_dimid, varid_bnd))
-   call check(nf90_def_var_deflate(grpid_obsvalue, varid_bnd,       &
+   call check(nf90_put_att(grpid_metadata, varid_pres, "longname", "Pressure"))
+   call check(nf90_put_att(grpid_metadata, varid_pres, "units", "Pa"))
+   call check(nf90_put_att(grpid_metadata, varid_pres, "valid_range", real((/saber_pmin*100.,mls_pmax*100./))))
+   call check(nf90_def_var_fill(grpid_metadata, varid_pres, 0, real(r_missing)))
+
+! Define obsvalue variable
+   call check(nf90_def_var(grpid_obsvalue, "Temperature", NF90_FLOAT, nlocs_dimid, varid_obsvalue))
+   call check(nf90_def_var_deflate(grpid_obsvalue, varid_obsvalue,       &
                                     & shuffle=1, deflate=1, deflate_level=deflate_level))
-   call check(nf90_put_att(grpid_obsvalue, varid_bnd, "longname", "Temperature"))
-   call check(nf90_put_att(grpid_obsvalue, varid_bnd, "units", "K"))
-   call check(nf90_put_att(grpid_obsvalue, varid_bnd, "valid_range", real((/0., 0.08/))))
-   call check(nf90_def_var_fill(grpid_obsvalue, varid_bnd, 0, real(r_missing)))
+   call check(nf90_put_att(grpid_obsvalue, varid_obsvalue, "longname", "Temperature"))
+   call check(nf90_put_att(grpid_obsvalue, varid_obsvalue, "units", "K"))
+   call check(nf90_put_att(grpid_obsvalue, varid_obsvalue, "valid_range", real((/0., 0.08/))))
 
+   call check(nf90_def_var_fill(grpid_obsvalue, varid_obsvalue, 0, real(r_missing)))
+
+! Define obserror variable
+   call check(nf90_def_var(grpid_obserror, "Temperature", NF90_FLOAT, nlocs_dimid, varid_obserror))
+   call check(nf90_def_var_deflate(grpid_obserror, varid_obserror       &
+                                    & shuffle=1, deflate=1, deflate_level=deflate_level))
+   call check(nf90_put_att(grpid_obserror, varid_obserror, "longname", "Temperature"))
+   call check(nf90_put_att(grpid_obserror, varid_obserror, "units", "K"))
+   call check(nf90_put_att(grpid_obserror, varid_obserror, "valid_range", real((/0., 0.08/))))
+
+   call check(nf90_def_var_fill(grpid_obserror, varid_obserror, 0, real(r_missing)))
+
+! Define preqc variable
+   call check(nf90_def_var(grpid_preqc, "Temperature", NF90_INT32, nlocs_dimid, varid_preqc))
+   call check(nf90_def_var_deflate(grpid_preqc, varid_preqc,      &
+                                    & shuffle=1, deflate=1, deflate_level=deflate_level))
+   call check(nf90_put_att(grpid_preqc, varid_preqc, "longname", "Temperature"))
+   call check(nf90_put_att(grpid_preqc, varid_preqc, "units", "K"))
+   call check(nf90_put_att(grpid_preqc, varid_preqc, "valid_range", real((/0., 30/))))
+
+   call check(nf90_def_var_fill(grpid_preqc, varid_preqc, 0, real(i_missing)))
+
+! End variable definition mode
    call check(nf90_enddef(ncid))
 
-   call check(nf90_put_var(grpid_obsvalue, varid_ref, gnssro_data%ref(1:ndata)))
-   call check(nf90_put_var(grpid_obsvalue, varid_bnd, gnssro_data%bend_ang(1:ndata)))
-   call check(nf90_put_var(grpid_metadata, varid_lat, gnssro_data%lat(1:ndata)))
-   call check(nf90_put_var(grpid_metadata, varid_lon, gnssro_data%lon(1:ndata)))
-   call check(nf90_put_var(grpid_metadata, varid_epochtime, gnssro_data%epochtime(1:ndata)))
-   call check(nf90_put_var(grpid_metadata, varid_tinc, gnssro_data%tinc(1:ndata)))
-   call check(nf90_put_var(grpid_metadata, varid_recn, gnssro_data%recn(1:ndata)))
-   call check(nf90_put_var(grpid_metadata, varid_qcfg, gnssro_data%qcflag(1:ndata)))
-   call check(nf90_put_var(grpid_metadata, varid_said, gnssro_data%said(1:ndata)))
-   call check(nf90_put_var(grpid_metadata, varid_siid, gnssro_data%siid(1:ndata)))
-   call check(nf90_put_var(grpid_metadata, varid_ptid, gnssro_data%ptid(1:ndata)))
-   call check(nf90_put_var(grpid_metadata, varid_sclf, gnssro_data%sclf(1:ndata)))
-   call check(nf90_put_var(grpid_metadata, varid_asce, gnssro_data%asce(1:ndata)))
-   call check(nf90_put_var(grpid_metadata, varid_ogce, gnssro_data%ogce(1:ndata)))
-   call check(nf90_put_var(grpid_metadata, varid_msl, gnssro_data%msl_alt(1:ndata)))
-   call check(nf90_put_var(grpid_metadata, varid_impp, gnssro_data%impact_para(1:ndata)))
-   call check(nf90_put_var(grpid_metadata, varid_imph, gnssro_data%impact_para(1:ndata)   &
-                                      &                - gnssro_data%rfict(1:ndata)         &
-                                      &                - gnssro_data%geoid(1:ndata)))
-   call check(nf90_put_var(grpid_metadata, varid_azim, gnssro_data%azim(1:ndata)))
-   call check(nf90_put_var(grpid_metadata, varid_geoid, gnssro_data%geoid(1:ndata)))
-   call check(nf90_put_var(grpid_metadata, varid_rfict, gnssro_data%rfict(1:ndata)))
+! Write data
+   call check(nf90_put_var(grpid_obsvalue, varid_obsvalue, obsvalue(1:ndata)))
+   call check(nf90_put_var(grpid_obserror, varid_obserror, obserror(1:ndata)))
+   call check(nf90_put_var(grpid_preqc,    varid_preqc, preqc(1:ndata)))
+
+   call check(nf90_put_var(grpid_metadata, varid_lat,  latitude(1:ndata)))
+   call check(nf90_put_var(grpid_metadata, varid_lon,  longitude(1:ndata)))
+   call check(nf90_put_var(grpid_metadata, varid_pres, pressure(1:ndata)))
+   call check(nf90_put_var(grpid_metadata, varid_tinc, tinc(1:ndata)))
+   call check(nf90_put_var(grpid_metadata, varid_recn, recn(1:ndata)))
+
+! Close ouput file
    call check(nf90_close(ncid))
 
-   deallocate (gnssro_data%said)
-   deallocate (gnssro_data%siid)
-   deallocate (gnssro_data%sclf)
-   deallocate (gnssro_data%ptid)
-   deallocate (gnssro_data%recn)
-   deallocate (gnssro_data%asce)
-   deallocate (gnssro_data%ogce)
-   deallocate (gnssro_data%qcflag)
-   deallocate (gnssro_data%epochtime)
-   deallocate (gnssro_data%tinc)
-   deallocate (gnssro_data%lat)
-   deallocate (gnssro_data%lon)
-   deallocate (gnssro_data%rfict)
-   deallocate (gnssro_data%azim)
-   deallocate (gnssro_data%geoid)
-   deallocate (gnssro_data%msl_alt)
-   deallocate (gnssro_data%ref)
-   deallocate (gnssro_data%bend_ang)
-   deallocate (gnssro_data%impact_para)
+! Deallocate memory
+
+    deallocate (latitude)
+
+    deallocate (longitude)
+
+    deallocate (pressure)
+
+    deallocate (toffset)
+
+    deallocate (obsvalue)
+    deallocate (obserror)
+
+    deallocate (preqc)
+    deallocate (recn)
 
 contains
    subroutine check(status)
