@@ -15,6 +15,7 @@ import argparse
 from datetime import datetime, timezone, timedelta
 import os.path
 import h5py
+import netcdf4 as nc
 import numpy as np
 import pyiodaconv.ioda_conv_engines as iconv
 from pyiodaconv.orddicts import DefaultOrderedDict
