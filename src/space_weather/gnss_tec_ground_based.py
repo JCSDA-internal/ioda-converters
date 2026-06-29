@@ -379,8 +379,8 @@ def tenet_10digit_reader(int_10digit_number):
     Source: "SWAFS TENET File Data Definition", dated 24 August, 2001
     """
 
-    # extract exponential and convert into TEC Units (TEC): 1 TECU = 10^16 electrons m-2
-    exponential = np.power(10, int(10 + int(int_10digit_number[8: 9]))) / 1e16
+    # extract exponential and convert into TEC Units (TEC): 1 TECU = 10^10 electrons cm-3
+    exponential = np.power(10, int(10 + int(int_10digit_number[8: 9]))) / 1e10
 
     flag = int(int_10digit_number[9: 10])
     tec = float(int_10digit_number[0: 4]) / 100. * exponential
