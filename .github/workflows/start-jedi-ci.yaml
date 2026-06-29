@@ -38,13 +38,11 @@ jobs:
           aws-region: us-east-2
 
       - name: Run JEDI CI
-        uses: JCSDA-internal/jedi-ci@develop
+        uses: JCSDA-internal/jedi-ci@v2
         with:
           container_version: latest
           unittest_tag: iodaconv
           target_project_name: iodaconv
-          test_dependencies: oops ioda ioda-data
           test_script: run_tests.sh
-          target_repo_dir: target_repository
           bundle_branch: develop
           jedi_ci_token: ${{ steps.generate-token.outputs.token }}
