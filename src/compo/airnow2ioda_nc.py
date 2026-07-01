@@ -282,7 +282,7 @@ if __name__ == '__main__':
     for key in varDict.keys():
         variable = varDict[key][0]
         obsval = data[variable]
-        errval = np.where(obsval < 1e+36, np.maximum(0.1,obsval * 0.1), obsval)  # rough, needs refinement per species TBC
+        errval = np.where(obsval < 1e+36, np.maximum(0.1, obsval * 0.1), obsval)  # rough, needs refinement per species TBC
         qcval = np.where((obsval > 1e+36) | np.isinf(obsval) | np.isnan(obsval), 0, 1)
         ioda_data[(variable, obsValName)] = np.array(obsval, dtype=np.float32)
         ioda_data[(variable, obsErrName)] = np.array(errval, dtype=np.float32)
