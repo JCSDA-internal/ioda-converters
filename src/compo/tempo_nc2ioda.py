@@ -183,8 +183,6 @@ class tempo(object):
                 trop_amf.mask = False
                 trop_amf = np.ma.array(trop_amf, mask=mask)
 
-
-
                 amf_in_ak = ncd.groups['support_data'].variables[col_amf_name][:].ravel()
 
                 # fold amf's native mask + a positive-AMF guard into the global mask
@@ -197,19 +195,13 @@ class tempo(object):
 
                 amf_in_ak = np.ma.array(np.ma.getdata(amf_in_ak), mask=mask)
 
-#                amf_in_ak = ncd.groups['support_data'].variables[col_amf_name][:].ravel()
-#                amf_in_ak.mask = False
-#                amf_in_ak = np.ma.array(amf_in_ak, mask=mask)
-
-
-                box_amf = ncd.groups['support_data'].variables['scattering_weights'][:]\
+                # w = box_amf = scattering_weights
+                w = ncd.groups['support_data'].variables['scattering_weights'][:]\
                     .reshape(mirror * xtrack, levels)
-                # mask1 = np.ma.getmask(box_amf)
-                box_amf.mask = False
-                box_amf = np.ma.array(box_amf, mask=layer_mask)
-                w = box_amf.copy()
-                #avg_kernel = box_amf / tot_amf[:, np.newaxis]
-                avg_kernel = box_amf / amf_in_ak[:, np.newaxis]
+                w.mask = False
+                w = np.ma.array(w, mask=layer_mask)
+
+                avg_kernel = w / amf_in_ak[:, np.newaxis]
 
                 # for no2 use avk to define strat trop separation
                 if self.varname == 'no2':
@@ -524,4 +516,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
