@@ -88,8 +88,9 @@ def main(args):
             nlocs = obs_data[('totalElectronContent', 'ObsValue')].shape[0]
             DimDict = {'Location': nlocs}
             meta_data_types = def_meta_types()
-            for k, v in meta_data_types.items():
-                locationKeyList.append((k, v))
+            #HS: bug? 
+            #HS  for k, v in meta_data_types.items():
+            #HS      locationKeyList.append((k, v))
             output = f'{args.output}_{date_time}.nc4'
             writer = iconv.IodaWriter(output, locationKeyList, DimDict)
             VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -163,6 +164,11 @@ def get_obs_data(ds, tindex, seqStart):
 
     obs_data[("totalElectronContent", "ObsValue")][np.isnan(obs_data[("totalElectronContent", "ObsValue")])] = float_missing_value
     obs_data[("totalElectronContent", "ObsError")][np.isnan(obs_data[("totalElectronContent", "ObsError")])] = float_missing_value
+
+    obs_data[("latitude", "MetaData")] = meta_data["piercePointLatitude"]
+    obs_data[("longitude", "MetaData")] = meta_data["piercePointLongitude"]
+    obs_data[("dateTime", "MetaData")] = meta_data["dateTime"]
+
     return obs_data
 
 
