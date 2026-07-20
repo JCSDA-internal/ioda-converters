@@ -87,10 +87,6 @@ def main(args):
             # write them out
             nlocs = obs_data[('totalElectronContent', 'ObsValue')].shape[0]
             DimDict = {'Location': nlocs}
-            meta_data_types = def_meta_types()
-            #HS: bug? 
-            #HS  for k, v in meta_data_types.items():
-            #HS      locationKeyList.append((k, v))
             output = f'{args.output}_{date_time}.nc4'
             writer = iconv.IodaWriter(output, locationKeyList, DimDict)
             VarAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -167,20 +163,8 @@ def get_obs_data(ds, tindex, seqStart):
 
     obs_data[("latitude", "MetaData")] = meta_data["piercePointLatitude"]
     obs_data[("longitude", "MetaData")] = meta_data["piercePointLongitude"]
-    obs_data[("dateTime", "MetaData")] = meta_data["dateTime"]
 
     return obs_data
-
-
-def def_meta_types():
-
-    meta_data_types = {
-        "latitude": "float",
-        "longitude": "float",
-        "dateTime": "long"
-    }
-
-    return meta_data_types
 
 
 if __name__ == "__main__":
