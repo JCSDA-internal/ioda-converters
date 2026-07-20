@@ -390,9 +390,14 @@ def tenet_10digit_reader(int_10digit_number):
 
 
 def convert_ECEF_string(c):
-    # for all ECEF coordinates 0 in front indicates positive, and 1 indicates negative.
     try:
         # Attempt the conversion logic
+
+        # Per the TENET format documentation:
+        # The station geographic coordinates are provided in units of meters in the Earth Centered Earth Fixed (ECEF) coordinate system.
+        # The format for these coordinates is: XXXXXXXXXXXX,
+        # where the first number X represents the sign of the value and is either positive (0) or negative (1).
+        # The decimal point is located between positions 6 and 7.
         dec = f'{c[0:6]}.{c[6:]}'
         result = -float(dec[1:]) if dec[0] == '1' else float(dec[1:]) if dec[0] == '0' else float(dec)
         return result
