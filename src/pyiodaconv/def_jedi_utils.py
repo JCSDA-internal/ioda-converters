@@ -22,6 +22,7 @@ iso8601_string = "seconds since 1970-01-01T00:00:00Z"
 epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
 ioda_float_type = 'float32'
 ioda_int_type = 'int32'
+double_missing_value = iconv.get_default_fill_val(np.float64)
 float_missing_value = iconv.get_default_fill_val(np.float32)
 int_missing_value = iconv.get_default_fill_val(np.int32)
 long_missing_value = iconv.get_default_fill_val(np.int64)
@@ -90,14 +91,14 @@ def compute_scan_angle(sensor_altitude, sensor_zenith, qc_flag=None):
     scanang = np.full_like(sensor_altitude, float_missing_value, dtype=float)
 
     # Handle qc_flag
-    if qc_flag is None: 
+    if qc_flag is None:
         good = np.ones_like(sensor_altitude, dtype=bool)
     else:
         qc_flag = np.asarray(qc_flag)
         good = (qc_flag == 0)
 
     # compute scan angle only for good observations
-    if np.any(good):    
+    if np.any(good):
         # γ = arcsin(R / (R + h) * sin(theta)),h: sat alt; theta: sat zenith angle
         ratio = earth_mean_radius_km/(earth_mean_radius_km + sensor_altitude[good]/1000.)
         sin_angle = ratio * np.sin(np.abs(sensor_zenith[good]) * d2r)
