@@ -399,7 +399,7 @@ def convert_ECEF_string(c):
         # where the first number X represents the sign of the value and is either positive (0) or negative (1).
         # The decimal point is located between positions 6 and 7.
         dec = f'{c[0:6]}.{c[6:]}'
-        result = -float(dec[1:]) if dec[0] == '1' else float(dec[1:]) if dec[0] == '0' else float(dec)
+        result = -float(dec[1:]) if dec[0] == '1' else float(dec[1:]) if dec[0] == '0' else float_missing_value
         return result
     except (IndexError, ValueError) as e:
         # Raise an exception with a descriptive message
