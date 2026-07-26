@@ -20,7 +20,6 @@ import netCDF4 as nc
 import pyiodaconv.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
 from pyiodaconv.orddicts import DefaultOrderedDict
-from pyiodaconv.def_jedi_utils import compute_scan_angle
 from pyiodaconv.def_jedi_utils import iso8601_string, epoch
 
 os.environ["TZ"] = "UTC"
@@ -129,7 +128,7 @@ class caliop_l2ext(object):
         Args:
             time: list or array of Profile_UTC_Time from CALIOP file (float number: yymmdd.ffffffff)
         """
-        dtarr = [datetime.strptime(str(t)[:6], '%y%m%d') for t in time]
+        dtarr = [datetime.strptime(f"{str(t).split('.')[0]:>06}", '%y%m%d') for t in time]
         delta = [timedelta(frac) for frac in np.mod(time, 1)]
         outarr = [(dt + dl).replace(tzinfo=timezone.utc) for dt, dl in zip(dtarr, delta)]
         return outarr
@@ -188,9 +187,6 @@ class caliop_l2ext(object):
         for k in reversed(range(nlev)):
             iheight[k] = iheight[k+1] + thickness[k]
 
-        min_time = -int_missing_value
-        max_time = int_missing_value
-
         prev_nloc = 0
         for f in self.filenames:
             sd = SD(f, SDC.READ)
@@ -206,8 +202,9 @@ class caliop_l2ext(object):
             profidx = np.arange(prev_nloc, prev_nloc + nloc)
 
             winmsk = ((obs_time >= self.wbeg) & (obs_time <= self.wend))
-            min_time = min(obs_time[winmsk].min(), min_time)
-            max_time = max(obs_time[winmsk].max(), max_time)
+            if not any(winmsk):
+                print(f"No obs in date range, skip {f}")
+                continue
 
             prev_nloc += nloc
 
@@ -277,8 +274,10 @@ class caliop_l2ext(object):
         DimDict['Channel'] = np.arange(nlev) + 1
         DimDict['Vertice'] = nlev + 1
 
-        AttrData['datetimeRange'] = np.array([datetime.fromtimestamp(min_time).strftime("%Y-%m-%dT%H:%M:%SZ"),
-                                              datetime.fromtimestamp(max_time).strftime("%Y-%m-%dT%H:%M:%SZ")], dtype=object)
+        min_time = min(self.outdata[('dateTime', metaDataName)])
+        max_time = max(self.outdata[('dateTime', metaDataName)])
+        AttrData['datetimeRange'] = np.array([datetime.fromtimestamp(min_time, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                                              datetime.fromtimestamp(max_time, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")], dtype=object)
         print(f"Processed data for datetimeRange: {AttrData['datetimeRange']}")
 
 
