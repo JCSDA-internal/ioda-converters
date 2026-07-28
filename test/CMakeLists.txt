@@ -571,18 +571,6 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_nsidc_l4cdr_icec
                           -d 2019010112"
                           nsidc_l4_icec.nc ${IODA_CONV_COMP_TOL})
 
-ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gmao_nsidc_nasa_cice
-                  TYPE    SCRIPT
-                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
-                  COMMAND bash
-                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                          netcdf
-                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/gmao_nsidc_cice2ioda.py
-                          -i testinput/nsidc_nasa_cice_input.nc
-                          -g testinput/nsidc_nasa_grid_north.nc
-                          -o testrun/nsidc_nasa_cice_ioda.nc4"
-                          nsidc_nasa_cice_ioda.nc4 ${IODA_CONV_COMP_TOL})
-
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_copernicus_l4icethk
                   TYPE    SCRIPT
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
@@ -666,6 +654,18 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gmao_argo
                           -i testinput/gmao_argo.nc
                           -o testrun/gmao_argo.nc"
                           gmao_argo.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gmao_nsidc_nasa_cice
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/gmao_nsidc_cice2ioda.py
+                          -i testinput/nsidc_nasa_cice_input.nc
+                          -g testinput/nsidc_nasa_grid_north.nc
+                          -o testrun/nsidc_nasa_cice_ioda.nc4"
+                          nsidc_nasa_cice_ioda.nc4 ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_godae_prof
                   TYPE    SCRIPT
