@@ -88,7 +88,7 @@ def compute_scan_angle(sensor_altitude, sensor_zenith, qc_flag=None):
     r2d = 180./np.pi
 
     # Initialize output with missing values
-    scanang = np.full_like(sensor_altitude, float_missing_value, dtype=float)
+    scanang = np.full_like(sensor_altitude, float_missing_value, dtype=np.float32)
 
     # Handle qc_flag
     if qc_flag is None:
