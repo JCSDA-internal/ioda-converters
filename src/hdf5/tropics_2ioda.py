@@ -329,7 +329,7 @@ def get_data_deprecated(f, obs_data, skip=1):
     instr_scan_ang = np.array(f['losScan_deg'][iband, :, :].flatten(), dtype='float32')
     # compute view angle
     sat_altitude = np.empty_like(instr_scan_ang)
-    sat_altitude[:] = 550.
+    sat_altitude[:] = 550000.
     obs_data[('sensorViewAngle', metaDataName)] = compute_scan_angle(
         sat_altitude,
         instr_scan_ang)
