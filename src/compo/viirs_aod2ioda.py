@@ -163,6 +163,8 @@ class AOD(object):
         self.errs = self.errs[valid_pts]
         self.qcfs = self.qcfs[valid_pts]
         self.lsfs = np.zeros_like(self.lats, dtype=np.int32)
+        if np.count_nonzero(valid_pts) == 0:
+            return np.count_nonzero(valid_pts)
 
         # QCPath is the flag for retrieval path. The valid range is 0-127 in the
         # ATBD: https://www.star.nesdis.noaa.gov/jpss/documents/ATBD/ATBD_EPS_Aerosol_AOD_v3.4.pdf.
@@ -180,6 +182,7 @@ class AOD(object):
             self.errs = 0.111431 + 0.128699 * self.vals    # over land (dark)
             self.errs[qcpath % 2 == 1] = 0.00784394 + 0.219923 * self.vals[qcpath % 2 == 1]  # over ocean
             self.errs[qcpath % 4 == 2] = 0.0550472 + 0.299558 * self.vals[qcpath % 4 == 2]   # over bright land
+        return np.count_nonzero(valid_pts)
 
     def get_nasa_dt_data(self):
         # For NASA Dark Target
@@ -206,6 +209,7 @@ class AOD(object):
 
         # Flip QC flags for PreQC (0->3, 3->0)
         self.qcfs = nasa_flip_qc[self.qcfs[valid_pts].astype(np.int32)]
+        return np.count_nonzero(valid_pts)
 
     def get_nasa_db_data(self):
         # For NASA Deep Blue
@@ -213,13 +217,18 @@ class AOD(object):
         self.lats = self.ncd.variables['Latitude'][:].ravel()
         # Only QC=3 pixels are retained with Aerosol_Optical_Thickness_550_Land_Ocean_Best_Estimate
         self.vals = self.ncd.variables['Aerosol_Optical_Thickness_550_Land_Ocean_Best_Estimate'][:].ravel()
+        eu_land = self.ncd.variables['Aerosol_Optical_Thickness_550_Expected_Uncertainty_Land'][:].ravel()
+        eu_ocean = self.ncd.variables['Aerosol_Optical_Thickness_550_Expected_Uncertainty_Ocean'][:].ravel()
 
         # Keep valid data points only
-        valid_pts = ~self.vals.mask
+        nan_mask = (np.isnan(self.vals) | np.isnan(eu_land) | np.isnan(eu_ocean))
+        valid_pts = (~self.vals.mask & (~(eu_land < 0) | ~(eu_ocean < 0))) & (~nan_mask)
         self.lons = self.lons[valid_pts]
         self.lats = self.lats[valid_pts]
         self.vals = self.vals[valid_pts]
         self.lsfs = np.zeros_like(self.lats, dtype=np.int32)
+        if np.count_nonzero(valid_pts) == 0:
+            return np.count_nonzero(valid_pts)
 
         npts_land = self.ncd.variables['Number_Of_Pixels_Used_Land'][:].ravel()
         npts_ocean = self.ncd.variables['Number_Of_Pixels_Used_Ocean'][:].ravel()
@@ -239,8 +248,9 @@ class AOD(object):
         # Lee et al. (2024): https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2023JD040082?af=R
         # PUE should fit for DA purpose better according to
         # Hsu et al. (2018): https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2018JD029688
-        eu_land = self.ncd.variables['Aerosol_Optical_Thickness_550_Expected_Uncertainty_Land'][:].ravel()[valid_pts]
-        eu_ocean = self.ncd.variables['Aerosol_Optical_Thickness_550_Expected_Uncertainty_Ocean'][:].ravel()[valid_pts]
+        eu_land = eu_land[valid_pts]
+        eu_ocean = eu_ocean[valid_pts]
+
         self.errs = np.ones_like(eu_land)
         qaf_land = self.ncd.variables['Aerosol_Optical_Thickness_QA_Flag_Land'][:].ravel()[valid_pts]
         qaf_ocean = self.ncd.variables['Aerosol_Optical_Thickness_QA_Flag_Ocean'][:].ravel()[valid_pts]
@@ -270,6 +280,7 @@ class AOD(object):
             # VIIRS DeepBlue Expected Error (https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2018JD029688)
             self.errs = np.add(0.05, np.multiply(0.2, self.vals))
             AttrData['errorMethod'] = 'Expected Error (EE)'
+        return np.count_nonzero(valid_pts)
 
     def read(self):
         # Make empty lists for the output vars
@@ -309,8 +320,11 @@ class AOD(object):
             # Get the platform and sensor name
             self.get_platform_sensor_names()
 
-            # Get VIIRS data
-            get_viirs_data()
+            # Get VIIRS data and skip the file if no valid data
+            nvalid_pts = get_viirs_data()
+            if nvalid_pts == 0:
+                print(f"  No valid pixels, skip {f}")
+                continue
 
             # assign the observation time based on time coverage
             self.obs_time = np.full(np.shape(self.lons), round(0.5*(self.s_time + self.e_time)), dtype=np.int64)
@@ -401,13 +415,14 @@ def main():
 
     args = parser.parse_args()
 
-    args_in_dict = {'input': args.input,
-                    'error_method': args.error_method,
-                    'provider': args.provider,
-                    'retrieval_method': args.retrieval_method,
-                    'thin': args.thin,
-                    'date_range': args.date_range,
-                    }
+    args_in_dict = {
+        'input': args.input,
+        'error_method': args.error_method,
+        'provider': args.provider,
+        'retrieval_method': args.retrieval_method,
+        'thin': args.thin,
+        'date_range': args.date_range,
+    }
 
     # setup the IODA writer
 
