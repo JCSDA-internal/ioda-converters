@@ -23,7 +23,6 @@ from satpy.readers import seviri_l1b_native
 import pyiodaconv.ioda_conv_engines as iconv
 from pyiodaconv.orddicts import DefaultOrderedDict
 from pyiodaconv.def_jedi_utils import (
-    compute_scan_angle,
     concat_obs_dict,
     epoch,
     ioda_float_type,
