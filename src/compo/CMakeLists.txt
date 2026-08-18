@@ -2,6 +2,7 @@ list(APPEND programs
   aeronet_aod2ioda.py
   aeronet_aaod2ioda.py
   airnow2ioda_nc.py
+  caliop_l2_ext2ioda.py
   gcas_nc2ioda.py
   icartt_nc2ioda.py
   mls_o3_nc2ioda.py
