@@ -87,17 +87,18 @@ def read_nsidc_obs(obs_filename: str, grid_filename: str, var_name: str = 'F17_I
         lon_2d = np.squeeze(ncgrid.variables['longitude'][:])
         lat_2d = np.squeeze(ncgrid.variables['latitude'][:])
 
-        # Define invalid masks (NSIDC flag conventions)
-        land_mask = (cice_2d == 1200)
-        pole_hole_mask = (cice_2d == 1100)
-        invalid_mask = land_mask | pole_hole_mask | np.isnan(cice_2d)
+        # Use the existing NetCDF mask directly so land/pole-hole locations
+        # are excluded from the output instead of being retained as masked values.
+        cice_data = np.ma.getdata(cice_2d)
+        invalid_mask = np.ma.getmaskarray(cice_2d)
+        invalid_mask |= ~np.isfinite(cice_data)
 
         # Keep only valid data points to reduce memory/disk footprint
         valid = ~invalid_mask
 
-        cice_1d = cice_2d[valid].astype(np.float32)
-        lon_1d = lon_2d[valid].astype(np.float32)
-        lat_1d = lat_2d[valid].astype(np.float32)
+        cice_1d = cice_data[valid].astype(np.float32)
+        lon_1d = np.ma.getdata(lon_2d)[valid].astype(np.float32)
+        lat_1d = np.ma.getdata(lat_2d)[valid].astype(np.float32)
 
         # Convert fraction/percentage to scale [0, 1] if required
         if np.max(cice_1d) > 1.0:
