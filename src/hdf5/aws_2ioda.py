@@ -67,7 +67,6 @@ def get_aws_data(afile, skip=1):
     process_aws_metadata(f, obs_data, iband)
     sat_altitude = get_sat_altitude(f, repeat_count=nbeam_pos)
     obs_data[('sensorViewAngle', metaDataName)] = compute_scan_angle(
-        obs_data[('sensorZenithAngle', metaDataName)],
         sat_altitude,
         obs_data[('sensorZenithAngle', metaDataName)])
     obs_data[('dateTime', metaDataName)] = get_epoch_time(f, repeat_count=nbeam_pos)
