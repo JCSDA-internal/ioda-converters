@@ -23,6 +23,12 @@
 #        -c: column type, one of [total, troposphere]
 #        -q: optional maximum QA value to keep before QC, default 0
 #        -t: optional random thinning fraction from 0.0 to 1.0, default 0.0
+#        -w: optional flag to also write the scattering weights (box AMFs) to
+#            RetrievalAncillaryData/w. Off by default.
+#
+#        The native L2 grid indices are always written as MetaData/mirrorStepIndex
+#        and MetaData/xtrackIndex so that observations can be scattered back onto
+#        the (xtrack, mirror_step) lattice for native-grid finite differences.
 
 import argparse
 import netCDF4 as nc
@@ -59,13 +65,15 @@ molarmass = {"no2": 46.0055, "hcho": 30.031, "o3": 48.0}
 
 
 class tempo(object):
-    def __init__(self, filenames, varname, columnType, qa_flg, thin, obsVar):
+    def __init__(self, filenames, varname, columnType, qa_flg, thin, obsVar,
+                 save_w=False):
         self.filenames = filenames
         self.varname = varname
         self.columnType = columnType
         self.qa_flg = qa_flg
         self.thin = thin
         self.obsVar = obsVar
+        self.save_w = save_w
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -266,6 +274,28 @@ class tempo(object):
             trop_amf = np.ma.array(np.ma.getdata(trop_amf), mask=mask)
             preslev = np.ma.array(np.ma.getdata(preslev), mask=vertice_mask)
 
+            # native L2 grid indices, so that observations can be scattered back
+            # onto the (xtrack, mirror_step) lattice for native-grid finite
+            # differences. All arrays were raveled from (mirror_step, xtrack),
+            # i.e. idx = m * xtrack + t, the same convention as the time array
+            # below, which is repeated xtrack times.
+            #
+            # Read the coordinate variables rather than assuming 0-based counting:
+            # in V04 the granule's mirror_step is indexed absolutely within the
+            # full scan (e.g. 132-263 for the second granule), so np.arange would
+            # silently produce granule-relative indices that collide once several
+            # granules are concatenated into one IODA file.
+            if 'mirror_step' in ncd.variables:
+                ms_vals = np.asarray(ncd.variables['mirror_step'][:], dtype='int32')
+            else:
+                ms_vals = np.arange(mirror, dtype='int32')
+            if 'xtrack' in ncd.variables:
+                xt_vals = np.asarray(ncd.variables['xtrack'][:], dtype='int32')
+            else:
+                xt_vals = np.arange(xtrack, dtype='int32')
+            mirror_idx = np.ma.array(np.repeat(ms_vals, xtrack), mask=mask)
+            xtrack_idx = np.ma.array(np.tile(xt_vals, mirror), mask=mask)
+
             # time
             time_ref = np.datetime64(AttrData['date_time_string'])
             dt = ncd.groups['geolocation'].variables['time'][:].ravel()
@@ -310,7 +340,10 @@ class tempo(object):
             print('err: ', np.shape(err))
             print('preslev: ', np.shape(preslev))
             print('avg_kernel: ', np.shape(avg_kernel))
-            print('w: ', np.shape(w))
+            print('mirror_step: ', np.shape(mirror_idx))
+            print('xtrack: ', np.shape(xtrack_idx))
+            if self.save_w:
+                print('w: ', np.shape(w))
 
             # remove masked Data and make sure types are correct
             lats = np.ma.compressed(lats).astype('float32')
@@ -329,13 +362,17 @@ class tempo(object):
             err = np.ma.compressed(err).astype('float32')
             preslev = np.ma.compress_rowcols(preslev, axis=0).astype('float32')
             avg_kernel = np.ma.compress_rowcols(avg_kernel, axis=0).astype('float32')
-            w = np.ma.compress_rowcols(w, axis=0).astype('float32')
+            mirror_idx = np.ma.compressed(mirror_idx).astype('int32')
+            xtrack_idx = np.ma.compressed(xtrack_idx).astype('int32')
+            if self.save_w:
+                w = np.ma.compress_rowcols(w, axis=0).astype('float32')
 
             # flip 2d arrays to have increaing pressure
             if np.shape(lats)[0] > 0:
                 preslev = np.flip(preslev, axis=1)
                 avg_kernel = np.flip(avg_kernel, axis=1)
-                w = np.flip(w, axis=1)
+                if self.save_w:
+                    w = np.flip(w, axis=1)
 
                 # print after compression
                 print('AFTER COMPRESSION')
@@ -355,7 +392,10 @@ class tempo(object):
                 print('err: ', np.shape(err))
                 print('preslev: ', np.shape(preslev))
                 print('avg_kernel: ', np.shape(avg_kernel))
-                print('w: ', np.shape(w))
+                print('mirror_step: ', np.shape(mirror_idx))
+                print('xtrack: ', np.shape(xtrack_idx))
+                if self.save_w:
+                    print('w: ', np.shape(w))
                 print(np.shape(time[flg]))
                 if first:
                     self.outdata[('dateTime', 'MetaData')] = time[flg]
@@ -367,7 +407,10 @@ class tempo(object):
                     self.outdata[('viewingZenithAngle', 'MetaData')] = vza[flg]
                     self.outdata[('albedo', 'MetaData')] = albedo[flg]
                     self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = avg_kernel[flg]
-                    self.outdata[('w', 'RetrievalAncillaryData')] = w[flg]
+                    self.outdata[('mirrorStepIndex', 'MetaData')] = mirror_idx[flg]
+                    self.outdata[('xtrackIndex', 'MetaData')] = xtrack_idx[flg]
+                    if self.save_w:
+                        self.outdata[('w', 'RetrievalAncillaryData')] = w[flg]
                     self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = preslev[flg]
                     self.outdata[self.varDict[iodavar]['valKey']] = obs[flg]
                     self.outdata[self.varDict[iodavar]['errKey']] = err[flg]
@@ -391,8 +434,13 @@ class tempo(object):
                         self.outdata[('albedo', 'MetaData')], albedo[flg]))
                     self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = np.concatenate((
                         self.outdata[('averagingKernel', 'RetrievalAncillaryData')], avg_kernel[flg]))
-                    self.outdata[('w', 'RetrievalAncillaryData')] = np.concatenate((
-                        self.outdata[('w', 'RetrievalAncillaryData')], w[flg]))
+                    self.outdata[('mirrorStepIndex', 'MetaData')] = np.concatenate((
+                        self.outdata[('mirrorStepIndex', 'MetaData')], mirror_idx[flg]))
+                    self.outdata[('xtrackIndex', 'MetaData')] = np.concatenate((
+                        self.outdata[('xtrackIndex', 'MetaData')], xtrack_idx[flg]))
+                    if self.save_w:
+                        self.outdata[('w', 'RetrievalAncillaryData')] = np.concatenate((
+                            self.outdata[('w', 'RetrievalAncillaryData')], w[flg]))
                     self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = np.concatenate((
                         self.outdata[('pressureVertice', 'RetrievalAncillaryData')], preslev[flg]))
                     self.outdata[self.varDict[iodavar]['valKey']] = np.concatenate(
@@ -421,10 +469,26 @@ class tempo(object):
         self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
         self.varAttrs[vkey]['units'] = ''
 
-        varname = 'w'
-        vkey = (varname, 'RetrievalAncillaryData')
+        varname = 'mirrorStepIndex'
+        vkey = (varname, 'MetaData')
         self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
-        self.varAttrs[vkey]['units'] = ''
+        self.varAttrs[vkey]['units'] = '1'
+        self.varAttrs[vkey]['long_name'] = (
+            'TEMPO scan mirror step index on the native L2 grid, as reported by '
+            'the granule; absolute within the scan, not granule-relative')
+
+        varname = 'xtrackIndex'
+        vkey = (varname, 'MetaData')
+        self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
+        self.varAttrs[vkey]['units'] = '1'
+        self.varAttrs[vkey]['long_name'] = (
+            'TEMPO across-track (slit) pixel index on the native L2 grid')
+
+        if self.save_w:
+            varname = 'w'
+            vkey = (varname, 'RetrievalAncillaryData')
+            self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
+            self.varAttrs[vkey]['units'] = ''
 
 
 def main():
@@ -465,6 +529,13 @@ def main():
         help="percentage of random thinning from 0.0 to 1.0. Zero indicates"
         " no thinning is performed. (default: %(default)s)",
         type=float, default=0.0)
+    optional.add_argument(
+        '-w', '--save_w',
+        help="also write the scattering weights (box AMFs) to"
+        " RetrievalAncillaryData/w. The averaging kernel is written either way;"
+        " this roughly doubles the size of the 2D retrieval arrays."
+        " (default: %(default)s)",
+        action='store_true', default=False)
 
     args = parser.parse_args()
 
@@ -501,11 +572,13 @@ def main():
         }
 
     varDims['averagingKernel'] = ['Location', 'Layer']
-    varDims['w'] = ['Location', 'Layer']
+    if args.save_w:
+        varDims['w'] = ['Location', 'Layer']
     varDims['pressureVertice'] = ['Location', 'Vertice']
 
     # Read in the NO2 data
-    var = tempo(args.input, args.variable, args.column, args.qa_value, args.thin, obsVar)
+    var = tempo(args.input, args.variable, args.column, args.qa_value, args.thin,
+                obsVar, args.save_w)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
