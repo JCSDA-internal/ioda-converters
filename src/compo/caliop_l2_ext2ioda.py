@@ -49,10 +49,8 @@ DimDict = {
 # Locations are flattened one-per-(profile,layer) in layer-major order:
 # location = layer*n_profiles + profile (0-indexed). "height" is each layer's
 # midpoint altitude; combined with atmosphereLayerThicknessZ (top = height +
-# thickness/2, bottom = height - thickness/2) that's enough to recover the
-# layer's interface bounds without a second stored height field. Channel is
-# the CRTM/wavelength channel (532nm=1, 1064nm=2), matching other CRTM
-# operators' convention -- it is no longer used for the vertical layer axis.
+# thickness/2, bottom = height - thickness/2).
+# Channel is the CRTM/wavelength channel (532nm=1, 1064nm=2).
 VarDims = {
     'extinctionCoefficient': ['Location', 'Channel'],
     'pressure': ['Location'],
@@ -173,8 +171,6 @@ class caliop_l2ext(object):
             thickness[tmpidx - 1] = thickness[tmpidx - 1] + np.abs(thickness[tmpidx] - oldthick)
 
         # Accumulate per-profile / per-(profile,layer) data across all input files
-        # first -- the profile x layer -> Location flatten below needs the total
-        # profile count across every file, not just one file at a time.
         lats_list, lons_list, time_list, seq_list = [], [], [], []
         pres_list, cad1_list, cad2_list = [], [], []
         obs_list, err_list, qcf_list = [], [], []
@@ -182,7 +178,7 @@ class caliop_l2ext(object):
         prev_nloc = 0
         for f in self.filenames:
             sd = SD(f, SDC.READ)
-
+            # Read value per profile for each data from the CALIOP file.
             pres = sd.select('Pressure').get() * 1e2  # hPa to Pa
             lats = sd.select('Latitude').get()[:, 1]
             lons = sd.select('Longitude').get()[:, 1]
@@ -228,6 +224,7 @@ class caliop_l2ext(object):
             err = np.where((err == caliop_missing_value), float_missing_value, err)
             pres = np.where(pres < 0, float_missing_value, pres)
 
+            # Append the data in the time window range to the list for this file.
             lats_list.append(np.array(lats[winmsk], dtype=np.float32))
             lons_list.append(np.array(lons[winmsk], dtype=np.float32))
             time_list.append(np.array(obs_time[winmsk], dtype=np.int64))
@@ -241,6 +238,7 @@ class caliop_l2ext(object):
 
             sd.end()
 
+        # Concatenate all the data from the list of files into single arrays for each variable.
         lats_all = np.concatenate(lats_list)
         lons_all = np.concatenate(lons_list)
         time_all = np.concatenate(time_list)
@@ -255,12 +253,10 @@ class caliop_l2ext(object):
 
         n_profiles = lats_all.size
 
-        # Flatten (profile, layer) -> Location in layer-major order:
+        # Flatten (profile, layer) -> Location:
         # location = layer*n_profiles + profile (0-indexed), so locations
         # 0..n_profiles-1 are exactly the n_profiles distinct profiles at
-        # layer 1. This lets the Fortran operator read the GeoVaLs/atmosphere
-        # data for only those n_profiles locations, running CRTM once per
-        # profile rather than once per flattened (profile,layer) row.
+        # layer 1.
         def tile_per_profile(arr):
             # (n_profiles,) -> (nlev*n_profiles,): repeat the whole per-profile
             # array once per layer
@@ -331,8 +327,16 @@ def main():
         help="gzip compression level for the output file, 0-9; 0 disables "
         "compression (default: %(default)s)",
         type=int, default=1, choices=range(0, 10), metavar='0-9')
+    optional.add_argument(
+        '--channels',
+        help="wavelength channel(s) to output: 1=532nm, 2=1064nm "
+        "(default: %(default)s)",
+        type=int, nargs='+', default=[1, 2], choices=[1, 2], metavar='1-2')
 
     args = parser.parse_args()
+
+    global channels
+    channels = sorted(set(args.channels))
 
     # Read CALIPSO extinction profile data
     caliop_l2 = caliop_l2ext(args.input, args.date_range)
