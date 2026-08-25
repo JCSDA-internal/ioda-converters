@@ -1,10 +1,8 @@
 name: start-jedi-ci
 
 on:
-  pull_request:
+  pull_request_target:
     branches:
-     - 'master'
-     - 'main'
      - 'develop'
 
 jobs:
@@ -38,7 +36,7 @@ jobs:
           aws-region: us-east-2
 
       - name: Run JEDI CI
-        uses: JCSDA-internal/jedi-ci@v2
+        uses: JCSDA-internal/jedi-ci@develop
         with:
           container_version: latest
           unittest_tag: iodaconv
