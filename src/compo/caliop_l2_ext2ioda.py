@@ -62,8 +62,8 @@ VarDims = {
 
 obsvars = ["extinctionCoefficient"]
 channels = [1, 2]
-wavelength = np.array([0.532, 1.064]) # wavelength in microns, 532nm and 1064nm
-speed_light = 2.99792458E8 # speed of light in m/s
+wavelength = np.array([0.532, 1.064])  # wavelength in microns, 532nm and 1064nm
+speed_light = 2.99792458E8  # speed of light in m/s
 frequency = speed_light * 1.0E6 / wavelength
 
 metaDataName = iconv.MetaDataName()
@@ -253,7 +253,6 @@ class caliop_l2ext(object):
 
         n_profiles = lats_all.size
 
-
         def tile_per_profile(arr):
             # takes an array of shape (n_profiles,) and returns an array of shape (nlev*n_profiles,)
             # repeats the whole array block-by-block for each layer
@@ -325,11 +324,6 @@ def main():
         type=str, metavar=('begindate', 'enddate'), nargs=2,
         default=('197001010000', '217001010000'))
     optional.add_argument(
-        '--compression',
-        help="gzip compression level for the output file, 0-9; 0 disables "
-        "compression (default: %(default)s)",
-        type=int, default=1, choices=range(0, 10), metavar='0-9')
-    optional.add_argument(
         '--channels',
         help="wavelength channel(s) to output: 1=532nm, 2=1064nm "
         "(default: %(default)s)",
@@ -344,7 +338,7 @@ def main():
     caliop_l2 = caliop_l2ext(args.input, args.date_range)
 
     # write everything out
-    writer = iconv.IodaWriter(args.output, metaKeyList, DimDict, complevel=args.compression)
+    writer = iconv.IodaWriter(args.output, metaKeyList, DimDict)
     writer.BuildIoda(caliop_l2.outdata, VarDims, caliop_l2.varAttrs, AttrData)
 
 

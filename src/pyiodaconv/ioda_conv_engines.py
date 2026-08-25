@@ -79,13 +79,13 @@ _defaultF4 = 9.969209968386869e+36
 
 class IodaWriter(object):
     # Constructor
-    def __init__(self, Fname, LocKeyList, DimDict, TestKeyList=None, complevel=6):
+    def __init__(self, Fname, LocKeyList, DimDict, TestKeyList=None):
         # note: loc_key_list does nothing
         self._loc_key_list = LocKeyList
         self._dim_dict = DimDict
         self._test_key_list = TestKeyList
         # open IODA obs backend
-        self.obsspace = ioda_os.ObsSpace(Fname, mode='w', dim_dict=DimDict, complevel=complevel)
+        self.obsspace = ioda_os.ObsSpace(Fname, mode='w', dim_dict=DimDict)
 
     def WriteGeoVars(self, GeoVars, GeoVarDims, GeoVarAttrs):
         # this method will write out geovals using IODA
