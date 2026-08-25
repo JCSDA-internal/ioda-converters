@@ -62,8 +62,8 @@ VarDims = {
 
 obsvars = ["extinctionCoefficient"]
 channels = [1, 2]
-wavelength = np.array([0.532, 1.064])
-speed_light = 2.99792458E8
+wavelength = np.array([0.532, 1.064]) # wavelength in microns, 532nm and 1064nm
+speed_light = 2.99792458E8 # speed of light in m/s
 frequency = speed_light * 1.0E6 / wavelength
 
 metaDataName = iconv.MetaDataName()
@@ -253,23 +253,25 @@ class caliop_l2ext(object):
 
         n_profiles = lats_all.size
 
-        # Flatten (profile, layer) -> Location:
-        # location = layer*n_profiles + profile (0-indexed), so locations
-        # 0..n_profiles-1 are exactly the n_profiles distinct profiles at
-        # layer 1.
+
         def tile_per_profile(arr):
+            # takes an array of shape (n_profiles,) and returns an array of shape (nlev*n_profiles,)
+            # repeats the whole array block-by-block for each layer
             # (n_profiles,) -> (nlev*n_profiles,): repeat the whole per-profile
             # array once per layer
             return np.tile(arr, nlev)
 
         def flatten_profile_layer(arr):
+            # takes an array of shape (n_profiles, nlev, ...) and returns an array of shape (nlev*n_profiles, ...)
+            # reorders by swapping the first two axes and then flattening the first two axes into one
             # (n_profiles, nlev, ...) -> (nlev*n_profiles, ...)
             moved = np.moveaxis(arr, 0, 1)
             return moved.reshape((nlev * n_profiles,) + moved.shape[2:])
 
         def repeat_per_layer(arr):
-            # (nlev,) -> (nlev*n_profiles,): repeat each layer's value once
-            # per profile
+            # takes and array of shape (nlev,) and returns an array of shape (nlev*n_profiles,)
+            # repeats each element run-by-run
+            # (nlev,) -> (nlev*n_profiles,): repeat each layer's value for every profile
             return np.repeat(arr, n_profiles)
 
         self.outdata[('latitude', metaDataName)] = tile_per_profile(lats_all)
