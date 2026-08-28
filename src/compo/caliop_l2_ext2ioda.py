@@ -36,8 +36,8 @@ metaKeyList = [
     ("longitude", "float", "degrees_east"),
     ("dateTime", "long", iso8601_string),
     ("pressure", "float", "Pa"),
-    ("height", "float", "m"),
-    ("atmosphereLayerThicknessZ", "float", "m"),
+    ("heightTop", "float", "m"),
+    ("heightBottom", "float", "m"),
     ("cloudAerosolDiscriminationHigher", "integer", ""),
     ("cloudAerosolDiscriminationLower", "integer", ""),
     ("sequenceNumber", "integer", ""),
@@ -47,15 +47,18 @@ DimDict = {
 }
 
 # Locations are flattened one-per-(profile,layer) in layer-major order:
-# location = layer*n_profiles + profile (0-indexed). "height" is each layer's
-# midpoint altitude; combined with atmosphereLayerThicknessZ (top = height +
-# thickness/2, bottom = height - thickness/2).
+# location = layer*n_profiles + profile (0-indexed). heightTop/heightBottom
+# are each layer's own interface bounds (computed here, once, from the
+# layer-midpoint altitudes and layer thickness), so the Fortran operator can
+# read them directly instead of deriving them at runtime -- the operator only
+# needs the integration interval's bounds, not a named thickness field
+# (thickness is just heightTop - heightBottom).
 # Channel is the CRTM/wavelength channel (532nm=1, 1064nm=2).
 VarDims = {
     'extinctionCoefficient': ['Location', 'Channel'],
     'pressure': ['Location'],
-    'height': ['Location'],
-    'atmosphereLayerThicknessZ': ['Location'],
+    'heightTop': ['Location'],
+    'heightBottom': ['Location'],
     'cloudAerosolDiscriminationHigher': ['Location'],
     'cloudAerosolDiscriminationLower': ['Location'],
 }
@@ -71,9 +74,9 @@ obsValName = iconv.OvalName()
 obsErrName = iconv.OerrName()
 qcName = iconv.OqcName()
 
-varsKeyList = [('valKey', obsValName, 'float', 'longitude latitude height', "km-1"),
-               ('errKey', obsErrName, 'float', 'longitude latitude height', "km-1"),
-               ('qcKey', qcName, 'integer', 'longitude latitude height', None)]
+varsKeyList = [('valKey', obsValName, 'float', 'longitude latitude', "km-1"),
+               ('errKey', obsErrName, 'float', 'longitude latitude', "km-1"),
+               ('qcKey', qcName, 'integer', 'longitude latitude', None)]
 
 float_missing_value = iconv.get_default_fill_val(np.float32)
 double_missing_value = iconv.get_default_fill_val(np.float64)
@@ -153,6 +156,7 @@ class caliop_l2ext(object):
         nlev = height.size
         vd.detach()
         vs.end()
+        tmphdf.close()
 
         # Calculate the thickness of LiDAR profile
         thickness = np.empty_like(height)
@@ -169,6 +173,15 @@ class caliop_l2ext(object):
         else:
             thickness[tmpidx] = thickness[tmpidx + 1]
             thickness[tmpidx - 1] = thickness[tmpidx - 1] + np.abs(thickness[tmpidx] - oldthick)
+
+        # Height at interface: iheight[k] is the top of layer k, iheight[k+1] is
+        # its bottom, built from the surface (bottom of the last layer) upward.
+        iheight = np.zeros(nlev+1)
+        iheight[-1] = height[-1] - 0.5 * thickness[-1]
+        for k in reversed(range(nlev)):
+            iheight[k] = iheight[k+1] + thickness[k]
+        height_top = iheight[:-1]
+        height_bottom = iheight[1:]
 
         # Accumulate per-profile / per-(profile,layer) data across all input files
         lats_list, lons_list, time_list, seq_list = [], [], [], []
@@ -253,35 +266,40 @@ class caliop_l2ext(object):
 
         n_profiles = lats_all.size
 
-        def tile_per_profile(arr):
-            # takes an array of shape (n_profiles,) and returns an array of shape (nlev*n_profiles,)
-            # repeats the whole array block-by-block for each layer
-            # (n_profiles,) -> (nlev*n_profiles,): repeat the whole per-profile
-            # array once per layer
-            return np.tile(arr, nlev)
+        # Locations are flattened profile-major (profile 1's nlev rows, then
+        # profile 2's, ...) rather than layer-major, so that each profile's
+        # rows are contiguous in the file -- required for the Fortran
+        # operator's obsspace_get_recnum record-boundary detection (paired
+        # with "obsgrouping: group variables: [sequenceNumber]" in the YAML),
+        # which only sees raw file order.
+        def repeat_per_profile(arr):
+            # takes an array of shape (n_profiles,) and returns an array of shape (n_profiles*nlev,)
+            # repeats each profile's single value nlev times consecutively, so its whole
+            # block of rows shares that one value
+            return np.repeat(arr, nlev)
 
         def flatten_profile_layer(arr):
-            # takes an array of shape (n_profiles, nlev, ...) and returns an array of shape (nlev*n_profiles, ...)
-            # reorders by swapping the first two axes and then flattening the first two axes into one
-            # (n_profiles, nlev, ...) -> (nlev*n_profiles, ...)
-            moved = np.moveaxis(arr, 0, 1)
-            return moved.reshape((nlev * n_profiles,) + moved.shape[2:])
+            # takes an array of shape (n_profiles, nlev, ...) and returns an array of shape (n_profiles*nlev, ...)
+            # a plain reshape already gives profile-major order: profile is the
+            # slower/outer axis, layer the faster/inner one
+            return arr.reshape((n_profiles * nlev,) + arr.shape[2:])
 
-        def repeat_per_layer(arr):
-            # takes and array of shape (nlev,) and returns an array of shape (nlev*n_profiles,)
-            # repeats each element run-by-run
-            # (nlev,) -> (nlev*n_profiles,): repeat each layer's value for every profile
-            return np.repeat(arr, n_profiles)
+        def tile_per_layer(arr):
+            # takes an array of shape (nlev,) and returns an array of shape (n_profiles*nlev,)
+            # tiles the whole nlev-length array once per profile, so every
+            # profile's block sees the full, identical set of layer values
+            # (nlev,) -> (n_profiles*nlev,)
+            return np.tile(arr, n_profiles)
 
-        self.outdata[('latitude', metaDataName)] = tile_per_profile(lats_all)
-        self.outdata[('longitude', metaDataName)] = tile_per_profile(lons_all)
-        self.outdata[('dateTime', metaDataName)] = tile_per_profile(time_all)
-        self.outdata[('sequenceNumber', metaDataName)] = tile_per_profile(seq_all)
+        self.outdata[('latitude', metaDataName)] = repeat_per_profile(lats_all)
+        self.outdata[('longitude', metaDataName)] = repeat_per_profile(lons_all)
+        self.outdata[('dateTime', metaDataName)] = repeat_per_profile(time_all)
+        self.outdata[('sequenceNumber', metaDataName)] = repeat_per_profile(seq_all)
         self.outdata[('pressure', metaDataName)] = flatten_profile_layer(pres_all)
         self.outdata[('cloudAerosolDiscriminationHigher', metaDataName)] = flatten_profile_layer(cad1_all)
         self.outdata[('cloudAerosolDiscriminationLower', metaDataName)] = flatten_profile_layer(cad2_all)
-        self.outdata[('height', metaDataName)] = repeat_per_layer(np.array(height, dtype=np.float32))
-        self.outdata[('atmosphereLayerThicknessZ', metaDataName)] = repeat_per_layer(np.array(thickness, dtype=np.float32))
+        self.outdata[('heightTop', metaDataName)] = tile_per_layer(np.array(height_top, dtype=np.float32))
+        self.outdata[('heightBottom', metaDataName)] = tile_per_layer(np.array(height_bottom, dtype=np.float32))
 
         iodavar = "extinctionCoefficient"
         self.outdata[self.varDict[iodavar]['valKey']] = flatten_profile_layer(obs_all)
