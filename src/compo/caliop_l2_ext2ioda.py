@@ -49,10 +49,7 @@ DimDict = {
 # Locations are flattened one-per-(profile,layer) in layer-major order:
 # location = layer*n_profiles + profile (0-indexed). heightTop/heightBottom
 # are each layer's own interface bounds (computed here, once, from the
-# layer-midpoint altitudes and layer thickness), so the Fortran operator can
-# read them directly instead of deriving them at runtime -- the operator only
-# needs the integration interval's bounds, not a named thickness field
-# (thickness is just heightTop - heightBottom).
+# layer-midpoint altitudes and layer thickness).
 # Channel is the CRTM/wavelength channel (532nm=1, 1064nm=2).
 VarDims = {
     'extinctionCoefficient': ['Location', 'Channel'],
@@ -268,10 +265,7 @@ class caliop_l2ext(object):
 
         # Locations are flattened profile-major (profile 1's nlev rows, then
         # profile 2's, ...) rather than layer-major, so that each profile's
-        # rows are contiguous in the file -- required for the Fortran
-        # operator's obsspace_get_recnum record-boundary detection (paired
-        # with "obsgrouping: group variables: [sequenceNumber]" in the YAML),
-        # which only sees raw file order.
+        # rows are contiguous in the file.
         def repeat_per_profile(arr):
             # takes an array of shape (n_profiles,) and returns an array of shape (n_profiles*nlev,)
             # repeats each profile's single value nlev times consecutively, so its whole
@@ -280,15 +274,14 @@ class caliop_l2ext(object):
 
         def flatten_profile_layer(arr):
             # takes an array of shape (n_profiles, nlev, ...) and returns an array of shape (n_profiles*nlev, ...)
-            # a plain reshape already gives profile-major order: profile is the
-            # slower/outer axis, layer the faster/inner one
+            # a plain reshape already gives profile-major order: profile is the outer axis,
+            # layer the inner one
             return arr.reshape((n_profiles * nlev,) + arr.shape[2:])
 
         def tile_per_layer(arr):
             # takes an array of shape (nlev,) and returns an array of shape (n_profiles*nlev,)
             # tiles the whole nlev-length array once per profile, so every
             # profile's block sees the full, identical set of layer values
-            # (nlev,) -> (n_profiles*nlev,)
             return np.tile(arr, n_profiles)
 
         self.outdata[('latitude', metaDataName)] = repeat_per_profile(lats_all)
