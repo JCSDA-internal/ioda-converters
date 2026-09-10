@@ -91,8 +91,8 @@ class GoesLatLon:
         lon = lon_0 - np.arctan(s_y / h_minus_s_x)
         lat = lat * 180.0 / np.pi
         lon = lon * 180.0 / np.pi
-        lat = lat.reshape(len(lat) * len(lat))
-        lon = lon.reshape(len(lon) * len(lon))
+        lat = lat.reshape(lat.size)   # afdemo: sectors need not be square (CONUS is 1500x2500)
+        lon = lon.reshape(lon.size)
         lat = self._goes_util.filter_data_array_by_yaw_flip_flag(lat)
         lon = self._goes_util.filter_data_array_by_yaw_flip_flag(lon)
         lat = np.nan_to_num(lat, nan=-999)
@@ -120,8 +120,8 @@ class GoesLatLon:
         grid_x, grid_y = np.meshgrid(self._x, self._y, indexing='xy')
         scan_angle = grid_x * 180.0 / np.pi
         elevation_angle = grid_y * 180.0 / np.pi
-        scan_angle = scan_angle.reshape(len(scan_angle) * len(scan_angle))
-        elevation_angle = elevation_angle.reshape(len(elevation_angle) * len(elevation_angle))
+        scan_angle = scan_angle.reshape(scan_angle.size)
+        elevation_angle = elevation_angle.reshape(elevation_angle.size)
         scan_angle = self._goes_util.filter_data_array_by_yaw_flip_flag(scan_angle)
         elevation_angle = self._goes_util.filter_data_array_by_yaw_flip_flag(elevation_angle)
         scan_angle = self._filter_by_fill_value(scan_angle)

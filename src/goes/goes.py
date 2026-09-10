@@ -289,7 +289,7 @@ class Goes:
         self._dqf_data_array = self._goes_util.subsample_2d(self._dqf_data_array)
         self._rad_data_array = self._goes_util.subsample_2d(self._rad_data_array)
 
-        shape = len(self._rad_data_array) * len(self._rad_data_array)
+        shape = np.asarray(self._rad_data_array).size   # afdemo: non-square sectors
 
         self._dqf_data_array = np.array(self._dqf_data_array)
         self._dqf_data_array = self._dqf_data_array.reshape(shape)
