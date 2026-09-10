@@ -66,7 +66,7 @@ class GoesUtil:
             return data_array
         current_dim = len(data_array)
         data_array = np.asarray(data_array)
-        data_array = data_array[0:current_dim:self._increment, 0:current_dim:self._increment]
+        data_array = data_array[::self._increment, ::self._increment]   # afdemo: slice each axis by its own length (non-square sectors)
         return data_array
 
     @staticmethod
@@ -96,7 +96,7 @@ class GoesUtil:
             return data_array
         current_dim = len(data_array)
         data_array = np.asarray(data_array)
-        data_array = data_array[0:current_dim:increment, 0:current_dim:increment]
+        data_array = data_array[::increment, ::increment]   # afdemo: non-square sectors
         return data_array
 
     def filter_data_array_by_yaw_flip_flag(self, data_array):
