@@ -36,9 +36,8 @@ metaKeyList = [
     ("longitude", "float", "degrees_east"),
     ("dateTime", "long", iso8601_string),
     ("pressure", "float", "Pa"),
-    ("height", "float", "m"),
-    ("heightVertice", "float", "m"),
-    ("atmosphereLayerThicknessZ", "float", "m"),
+    ("heightTop", "float", "m"),
+    ("heightBottom", "float", "m"),
     ("cloudAerosolDiscriminationHigher", "integer", ""),
     ("cloudAerosolDiscriminationLower", "integer", ""),
     ("sequenceNumber", "integer", ""),
@@ -47,21 +46,24 @@ metaKeyList = [
 DimDict = {
 }
 
+# Locations are flattened one-per-(profile,layer) in layer-major order:
+# location = layer*n_profiles + profile (0-indexed). heightTop/heightBottom
+# are each layer's own interface bounds (computed here, once, from the
+# layer-midpoint altitudes and layer thickness).
+# Channel is the CRTM/wavelength channel (532nm=1, 1064nm=2).
 VarDims = {
-    'extinctionCoefficient_532nm': ['Location', 'Channel'],
-    'extinctionCoefficient_1064nm': ['Location', 'Channel'],
-    'pressure': ['Location', 'Channel'],
-    'height': ['Channel'],
-    'heightVertice': ['Vertice'],
-    'atmosphereLayerThicknessZ': ['Channel'],
-    'cloudAerosolDiscriminationHigher': ['Location', 'Channel'],
-    'cloudAerosolDiscriminationLower': ['Location', 'Channel'],
+    'extinctionCoefficient': ['Location', 'Channel'],
+    'pressure': ['Location'],
+    'heightTop': ['Location'],
+    'heightBottom': ['Location'],
+    'cloudAerosolDiscriminationHigher': ['Location'],
+    'cloudAerosolDiscriminationLower': ['Location'],
 }
 
-obsvars = ["extinctionCoefficient_532nm", "extinctionCoefficient_1064nm"]
+obsvars = ["extinctionCoefficient"]
 channels = [1, 2]
-wavelength = np.array([0.532, 1.064])
-speed_light = 2.99792458E8
+wavelength = np.array([0.532, 1.064])  # wavelength in microns, 532nm and 1064nm
+speed_light = 2.99792458E8  # speed of light in m/s
 frequency = speed_light * 1.0E6 / wavelength
 
 metaDataName = iconv.MetaDataName()
@@ -69,9 +71,9 @@ obsValName = iconv.OvalName()
 obsErrName = iconv.OerrName()
 qcName = iconv.OqcName()
 
-varsKeyList = [('valKey', obsValName, 'float', 'longitude latitude height', "km-1"),
-               ('errKey', obsErrName, 'float', 'longitude latitude height', "km-1"),
-               ('qcKey', qcName, 'integer', 'longitude latitude height', None)]
+varsKeyList = [('valKey', obsValName, 'float', 'longitude latitude', "km-1"),
+               ('errKey', obsErrName, 'float', 'longitude latitude', "km-1"),
+               ('qcKey', qcName, 'integer', 'longitude latitude', None)]
 
 float_missing_value = iconv.get_default_fill_val(np.float32)
 double_missing_value = iconv.get_default_fill_val(np.float64)
@@ -140,20 +142,7 @@ class caliop_l2ext(object):
         nchan = len(channels)
         output_chidx = np.array(channels, dtype=np.int32) - 1
 
-        # Make empty lists for the output vars
-        self.outdata[('latitude', metaDataName)] = np.array([], dtype=np.float32)
-        self.outdata[('longitude', metaDataName)] = np.array([], dtype=np.float32)
-        self.outdata[('dateTime', metaDataName)] = np.array([], dtype=np.int64)
-        self.outdata[('pressure', metaDataName)] = np.array([], dtype=np.float32)
-        self.outdata[('sequenceNumber', metaDataName)] = np.array([], dtype=np.int32)
-        self.outdata[('cloudAerosolDiscriminationHigher', metaDataName)] = np.array([], dtype=np.int32)
-        self.outdata[('cloudAerosolDiscriminationLower', metaDataName)] = np.array([], dtype=np.int32)
-        for iodavar in obsvars:
-            self.outdata[self.varDict[iodavar]['valKey']] = np.array([], dtype=np.float32)
-            self.outdata[self.varDict[iodavar]['errKey']] = np.array([], dtype=np.float32)
-            self.outdata[self.varDict[iodavar]['qcKey']] = np.array([], dtype=np.int32)
-
-        # Get the lidar data altitude
+        # Get the lidar data altitude (per-layer midpoint, shared by every profile)
         tmpfile = self.filenames[0]
         tmphdf = HDF(tmpfile)
         vs = tmphdf.vstart()
@@ -164,6 +153,7 @@ class caliop_l2ext(object):
         nlev = height.size
         vd.detach()
         vs.end()
+        tmphdf.close()
 
         # Calculate the thickness of LiDAR profile
         thickness = np.empty_like(height)
@@ -181,16 +171,24 @@ class caliop_l2ext(object):
             thickness[tmpidx] = thickness[tmpidx + 1]
             thickness[tmpidx - 1] = thickness[tmpidx - 1] + np.abs(thickness[tmpidx] - oldthick)
 
-        # Height at interface
+        # Height at interface: iheight[k] is the top of layer k, iheight[k+1] is
+        # its bottom, built from the surface (bottom of the last layer) upward.
         iheight = np.zeros(nlev+1)
         iheight[-1] = height[-1] - 0.5 * thickness[-1]
         for k in reversed(range(nlev)):
             iheight[k] = iheight[k+1] + thickness[k]
+        height_top = iheight[:-1]
+        height_bottom = iheight[1:]
+
+        # Accumulate per-profile / per-(profile,layer) data across all input files
+        lats_list, lons_list, time_list, seq_list = [], [], [], []
+        pres_list, cad1_list, cad2_list = [], [], []
+        obs_list, err_list, qcf_list = [], [], []
 
         prev_nloc = 0
         for f in self.filenames:
             sd = SD(f, SDC.READ)
-
+            # Read value per profile for each data from the CALIOP file.
             pres = sd.select('Pressure').get() * 1e2  # hPa to Pa
             lats = sd.select('Latitude').get()[:, 1]
             lons = sd.select('Longitude').get()[:, 1]
@@ -228,8 +226,6 @@ class caliop_l2ext(object):
                 qcf[:, :, i] = tmpqcf
 
             # Similar to QC_Flag, it stores higher and lower 30 meter layers' CAD score
-            cad1 = np.zeros_like(pres)
-            cad2 = np.zeros_like(pres)
             tmpcad = sd.select("CAD_Score").get()
             cad1 = tmpcad[:, :, 0]
             cad2 = tmpcad[:, :, 1]
@@ -238,44 +234,76 @@ class caliop_l2ext(object):
             err = np.where((err == caliop_missing_value), float_missing_value, err)
             pres = np.where(pres < 0, float_missing_value, pres)
 
-            self.outdata[('latitude', metaDataName)] = np.append(self.outdata[('latitude', metaDataName)],
-                                                                 np.array(lats[winmsk], dtype=np.float32))
-            self.outdata[('longitude', metaDataName)] = np.append(self.outdata[('longitude', metaDataName)],
-                                                                  np.array(lons[winmsk], dtype=np.float32))
-            self.outdata[('dateTime', metaDataName)] = np.append(self.outdata[('dateTime', metaDataName)],
-                                                                 np.array(obs_time[winmsk], dtype=np.int64))
-            self.outdata[('pressure', metaDataName)] = np.append(self.outdata[('pressure', metaDataName)],
-                                                                 np.array(pres[winmsk], dtype=np.float32))
-            self.outdata[('sequenceNumber', metaDataName)] = np.append(self.outdata[('sequenceNumber', metaDataName)],
-                                                                       np.array(profidx[winmsk], dtype=np.int32))
-            self.outdata[('cloudAerosolDiscriminationHigher', metaDataName)] = np.append(
-                self.outdata[('cloudAerosolDiscriminationHigher', metaDataName)], np.array(cad1[winmsk], dtype=np.int32))
-            self.outdata[('cloudAerosolDiscriminationLower', metaDataName)] = np.append(
-                self.outdata[('cloudAerosolDiscriminationLower', metaDataName)], np.array(cad2[winmsk], dtype=np.int32))
-
-            for i, iodavar in enumerate(obsvars):
-                self.outdata[self.varDict[iodavar]['valKey']] = np.append(
-                    self.outdata[self.varDict[iodavar]['valKey']], np.array(obs[winmsk, :, i], dtype=np.float32))
-                self.outdata[self.varDict[iodavar]['errKey']] = np.append(
-                    self.outdata[self.varDict[iodavar]['errKey']], np.array(err[winmsk, :, i], dtype=np.float32))
-                self.outdata[self.varDict[iodavar]['qcKey']] = np.append(
-                    self.outdata[self.varDict[iodavar]['qcKey']], np.array(qcf[winmsk, :, i], dtype=np.int32))
+            # Append the data in the time window range to the list for this file.
+            lats_list.append(np.array(lats[winmsk], dtype=np.float32))
+            lons_list.append(np.array(lons[winmsk], dtype=np.float32))
+            time_list.append(np.array(obs_time[winmsk], dtype=np.int64))
+            seq_list.append(np.array(profidx[winmsk], dtype=np.int32))
+            pres_list.append(np.array(pres[winmsk, :], dtype=np.float32))
+            cad1_list.append(np.array(cad1[winmsk, :], dtype=np.int32))
+            cad2_list.append(np.array(cad2[winmsk, :], dtype=np.int32))
+            obs_list.append(np.array(obs[winmsk, :, :], dtype=np.float32))
+            err_list.append(np.array(err[winmsk, :, :], dtype=np.float32))
+            qcf_list.append(np.array(qcf[winmsk, :, :], dtype=np.int32))
 
             sd.end()
 
-        self.outdata[('height', metaDataName)] = np.array(height, dtype=np.float32)
-        self.outdata[('heightVertice', metaDataName)] = np.array(iheight, dtype=np.float32)
-        self.outdata[('atmosphereLayerThicknessZ', metaDataName)] = np.array(thickness, dtype=np.float32)
+        # Concatenate all the data from the list of files into single arrays for each variable.
+        lats_all = np.concatenate(lats_list)
+        lons_all = np.concatenate(lons_list)
+        time_all = np.concatenate(time_list)
+        seq_all = np.concatenate(seq_list)
+        seq_all = seq_all - seq_all.min()
+        pres_all = np.concatenate(pres_list, axis=0)   # (n_profiles, nlev)
+        cad1_all = np.concatenate(cad1_list, axis=0)   # (n_profiles, nlev)
+        cad2_all = np.concatenate(cad2_list, axis=0)   # (n_profiles, nlev)
+        obs_all = np.concatenate(obs_list, axis=0)     # (n_profiles, nlev, nchan)
+        err_all = np.concatenate(err_list, axis=0)
+        qcf_all = np.concatenate(qcf_list, axis=0)
 
-        tmpseq = self.outdata[('sequenceNumber', metaDataName)]
-        self.outdata[('sequenceNumber', metaDataName)] = tmpseq - min(tmpseq)
+        n_profiles = lats_all.size
 
-        DimDict['Location'] = len(self.outdata[('dateTime', metaDataName)])
-        DimDict['Channel'] = np.arange(nlev) + 1
-        DimDict['Vertice'] = nlev + 1
+        # Locations are flattened profile-major (profile 1's nlev rows, then
+        # profile 2's, ...) rather than layer-major, so that each profile's
+        # rows are contiguous in the file.
+        def repeat_per_profile(arr):
+            # takes an array of shape (n_profiles,) and returns an array of shape (n_profiles*nlev,)
+            # repeats each profile's single value nlev times consecutively, so its whole
+            # block of rows shares that one value
+            return np.repeat(arr, nlev)
 
-        min_time = min(self.outdata[('dateTime', metaDataName)])
-        max_time = max(self.outdata[('dateTime', metaDataName)])
+        def flatten_profile_layer(arr):
+            # takes an array of shape (n_profiles, nlev, ...) and returns an array of shape (n_profiles*nlev, ...)
+            # a plain reshape already gives profile-major order: profile is the outer axis,
+            # layer the inner one
+            return arr.reshape((n_profiles * nlev,) + arr.shape[2:])
+
+        def tile_per_layer(arr):
+            # takes an array of shape (nlev,) and returns an array of shape (n_profiles*nlev,)
+            # tiles the whole nlev-length array once per profile, so every
+            # profile's block sees the full, identical set of layer values
+            return np.tile(arr, n_profiles)
+
+        self.outdata[('latitude', metaDataName)] = repeat_per_profile(lats_all)
+        self.outdata[('longitude', metaDataName)] = repeat_per_profile(lons_all)
+        self.outdata[('dateTime', metaDataName)] = repeat_per_profile(time_all)
+        self.outdata[('sequenceNumber', metaDataName)] = repeat_per_profile(seq_all)
+        self.outdata[('pressure', metaDataName)] = flatten_profile_layer(pres_all)
+        self.outdata[('cloudAerosolDiscriminationHigher', metaDataName)] = flatten_profile_layer(cad1_all)
+        self.outdata[('cloudAerosolDiscriminationLower', metaDataName)] = flatten_profile_layer(cad2_all)
+        self.outdata[('heightTop', metaDataName)] = tile_per_layer(np.array(height_top, dtype=np.float32))
+        self.outdata[('heightBottom', metaDataName)] = tile_per_layer(np.array(height_bottom, dtype=np.float32))
+
+        iodavar = "extinctionCoefficient"
+        self.outdata[self.varDict[iodavar]['valKey']] = flatten_profile_layer(obs_all)
+        self.outdata[self.varDict[iodavar]['errKey']] = flatten_profile_layer(err_all)
+        self.outdata[self.varDict[iodavar]['qcKey']] = flatten_profile_layer(qcf_all).astype(np.int32)
+
+        DimDict['Location'] = nlev * n_profiles
+        DimDict['Channel'] = np.array(channels, dtype=np.int32)
+
+        min_time = min(time_all)
+        max_time = max(time_all)
         AttrData['datetimeRange'] = np.array([datetime.fromtimestamp(min_time, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
                                               datetime.fromtimestamp(max_time, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")], dtype=object)
         print(f"Processed data for datetimeRange: {AttrData['datetimeRange']}")
@@ -306,8 +334,16 @@ def main():
         "format -r YYYYMMDDHHmm YYYYMMDDHHmm",
         type=str, metavar=('begindate', 'enddate'), nargs=2,
         default=('197001010000', '217001010000'))
+    optional.add_argument(
+        '--channels',
+        help="wavelength channel(s) to output: 1=532nm, 2=1064nm "
+        "(default: %(default)s)",
+        type=int, nargs='+', default=[1, 2], choices=[1, 2], metavar='1-2')
 
     args = parser.parse_args()
+
+    global channels
+    channels = sorted(set(args.channels))
 
     # Read CALIPSO extinction profile data
     caliop_l2 = caliop_l2ext(args.input, args.date_range)
