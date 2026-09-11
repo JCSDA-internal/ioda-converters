@@ -19,6 +19,7 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
    q.add('latitude', '*/YOB')
    q.add('longitude', '*/XOB')
    q.add('obsTimeMinusCycleTime', '*/DHR')
+   q.add('stationIdentification', '*/SID')
    q.add('stationElevation', '*/ELV')
 #   q.add('stationElevation', '*/Z___INFO/Z__EVENT/ZOB')
    q.add('temperatureEventCode', '*/T___INFO/T__EVENT{1}/TPC') 
@@ -64,6 +65,16 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
    print("cycleTimeSinceEpoch: ", cycleTimeSinceEpoch)
    dhr += cycleTimeSinceEpoch
 
+   # Some BUFR files contain station IDs with non-UTF-8 bytes (e.g. Latin-1 accented
+   # characters). pyiodaconv.bufr decodes strings as strict UTF-8 inside the C++ pybind11
+   # layer (DataObject.h: py::str(data_[i])), so the UnicodeDecodeError cannot be caught
+   # mid-call and re-decoded. The proper fix is to change that line in DataObject.h to use
+   # Latin-1 decoding (e.g. py::bytes(data_[i]).attr("decode")("latin-1")) and rebuild.
+   # Until then, fall back to empty strings so the conversion can complete.
+   try:
+       sid = r.get('stationIdentification')
+   except UnicodeDecodeError:
+       sid = np.ma.array(['' for _ in range(lat.shape[0])], dtype=object)
    elv = r.get('stationElevation')
    tpc = r.get('temperatureEventCode', type='int')
 
@@ -132,6 +143,9 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
    datetime = g.vars.create('MetaData/dateTime',  ioda.Types.int64,  scales=[dim_location], params=pint64)
    datetime.atts.create('units', ioda.Types.str).writeVector.str(['seconds since 1970-01-01T00:00:00Z'])
 
+   stationidentification = g.vars.create('MetaData/stationIdentification', ioda.Types.str, scales=[dim_location])
+   stationidentification.atts.create('long_name', ioda.Types.str).writeVector.str(['Station Identification'])
+
    stationelevation = g.vars.create('MetaData/stationElevation', ioda.Types.float, scales=[dim_location], params=pfloat)
    stationelevation.atts.create('units', ioda.Types.str).writeVector.str(['m'])
    stationelevation.atts.create('long_name', ioda.Types.str).writeVector.str(['Station Elevation'])
@@ -199,6 +213,7 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
    longitude.writeNPArray.float(lon.filled().flatten())
    latitude.writeNPArray.float(lat.filled().flatten())
    datetime.writeNPArray.int64(dhr.filled().flatten())
+   stationidentification.writeVector.str(sid.filled().flatten())
    stationelevation.writeNPArray.float(elv.filled().flatten())
    temperatureeventcode.writeNPArray.int(tpc.filled().flatten())
 
