@@ -25,6 +25,8 @@ list( APPEND test_input
   testinput/godae_trak.bin
   testinput/rads_adt.nc
   testinput/smap_sss_rss.nc
+  testinput/smap_2b
+  testinput/smap_2c
   testinput/hgodas_adt.nc
   testinput/hgodas_insitu.nc
   testinput/hgodas_sst.nc
@@ -136,6 +138,8 @@ list( APPEND test_output
   testoutput/godae_trak.nc
   testoutput/rads_adt.nc
   testoutput/smap_sss_rss.nc
+  testoutput/smap_sss_2b.nc
+  testoutput/smap_sss_2c.nc
   testoutput/hgodas_adt.nc
   testoutput/hgodas_insitu.nc
   testoutput/hgodas_sst.nc
@@ -630,6 +634,31 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap_sss
                           -o testrun/smap_sss_rss.nc
                           -d 2018041512"
                           smap_sss_rss.nc ${IODA_CONV_COMP_TOL})
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap2b_sss
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/smap2b_sss2ioda.py
+                          -i testinput/smap_2b
+                          -o testrun/smap_sss_2b.nc
+                          -d 2023070212"
+                          smap_sss_2b.nc ${IODA_CONV_COMP_TOL})
+
+
+  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap2c_sss
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/smap2c_sss2ioda.py
+                          -i testinput/smap_2c
+                          -o testrun/smap_sss_2c.nc
+                          -d 2023070212"
+                          smap_sss_2c.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_rads_adt
                   TYPE    SCRIPT
