@@ -114,6 +114,7 @@ list( APPEND test_input
   testinput/COWVR_TSDR.020421.20240430T215845.20240430T230345.V1001.sample.h5
   testinput/gfs.231010.t00z.syndata.tcvitals.txt
   testinput/caliop_l2_APro.hdf
+  testinput/gold_tdisk_test.nc
 )
 
 list( APPEND test_output
@@ -220,6 +221,7 @@ list( APPEND test_output
   testoutput/obs.20240430T220600Z_PT2M_cowvr_iss.nc4
   testoutput/tcp_obs_2023101000.nc4
   testoutput/caliop_l2_APro.nc4
+  testoutput/gold_tdisk_test.nc4
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -2703,6 +2705,21 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_madis_snod
                             -i testinput/madis_2021010100.nc
                             -o testrun/madis_snod_2021010100.nc"
                             madis_snod_2021010100.nc ${IODA_CONV_COMP_TOL})
+
+# =============================================================================
+# SWx product converters
+#==============================================================================
+
+ecbuild_add_test( TARGET test_${PROJECT_NAME}_gold_tdisk
+                  TYPE SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                       netcdf
+                       "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/gold_tdisk2ioda.py
+                       -i testinput/gold_tdisk_test.nc
+                       -o testrun/gold_tdisk_test.nc4"
+                       gold_tdisk_test.nc4 ${IODA_CONV_COMP_TOL})
 
 #######################################################
 # Auto-generated tests for ioda file validation
