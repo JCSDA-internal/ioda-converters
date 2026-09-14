@@ -1204,7 +1204,7 @@ def grabobsidx(obsdata, platform, var):
         codes = uv_bufrtypes[platform]
     else:
         codes = conv_bufrtypes[platform]
-    idx = np.logical_and(np.in1d(code, codes), idx2)
+    idx = np.logical_and(np.isin(code, codes), idx2)
 
     return idx
 
