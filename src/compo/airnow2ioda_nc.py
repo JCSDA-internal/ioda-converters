@@ -97,7 +97,7 @@ def read_monitor_file(sitefile, is_epa):
 
 
 def filter_bad_values(df):
-    df.loc[(df.obs > 3000) | (df.obs < 0), 'obs'] = np.NaN
+    df.loc[(df.obs > 3000) | (df.obs < 0), 'obs'] = np.nan
     return df
 
 
