@@ -93,6 +93,7 @@ def main(args):
 
     # Loop through input files and concatenate into dataframe
     file_cnt = 0
+    obs_data_list = []
     for file_name in args.file_names:
         # check if file exists
         if not os.path.isfile(file_name):
@@ -111,12 +112,8 @@ def main(args):
         # Get reference time and convert to epoch time
         dat_ref = get_reference_time(file, osw_source)
 
-        # initialize the DF
-        if 'obs_data' not in locals():
-            obs_data = pd.DataFrame(columns=meta_keys+obsvars)
-
         # Get data from file in temporary obs_data_append DF
-        obs_data_append = get_data_from_file(file, obs_data.keys(), osw_source, file_name)
+        obs_data_append = get_data_from_file(file, meta_keys+obsvars, osw_source, file_name)
 
         # Change time reference
         if osw_source != 'Muon-L3':
@@ -128,12 +125,19 @@ def main(args):
         # Apply quality control add strict if selected
         obs_data_append = quality_control(obs_data_append, qc_strict=args.qc_strict)
 
-        # Append to obs_data data frame
-        obs_data = pd.concat([obs_data, obs_data_append], ignore_index=True)
+        # Save for a single concat after the loop (avoids repeated concats
+        # against an empty/all-NA seed frame, which pandas now warns about)
+        obs_data_list.append(obs_data_append)
 
         file.close()
         # count files
         file_cnt += 1
+
+    # Combine all files' data into a single dataframe
+    if obs_data_list:
+        obs_data = pd.concat(obs_data_list, ignore_index=True)
+    else:
+        obs_data = pd.DataFrame(columns=meta_keys+obsvars)
 
 #   a value of 0. is set. Using missing value triggers UFO rejection
     for iodavar in obsvars_dummy:
@@ -142,14 +146,14 @@ def main(args):
 
     # replace missing values
     for MetaDataKey in MetaDataKeyList:
-        obs_data[MetaDataKey[0]].fillna(missing_vals[MetaDataKey[1]], inplace=True)
+        obs_data[MetaDataKey[0]] = obs_data[MetaDataKey[0]].fillna(missing_vals[MetaDataKey[1]])
     iodavar = obsvars[0]
-    obs_data[iodavar].fillna(missing_vals[obsvars_dtype], inplace=True)
+    obs_data[iodavar] = obs_data[iodavar].fillna(missing_vals[obsvars_dtype])
 
     # find where windSpeed is missing and set the components to missing as well
     mask = obs_data['windSpeed'] == missing_vals[obsvars_dtype]
     for iodavar in obsvars_dummy:
-        obs_data[iodavar].mask(mask.values, missing_vals[obsvars_dtype], inplace=True)
+        obs_data[iodavar] = obs_data[iodavar].mask(mask.values, missing_vals[obsvars_dtype])
 
     # sort by instrument and then time
     if args.sort:
@@ -228,6 +232,8 @@ def get_data_source(afile):
             return 'Muon-L3'
         else:
             return 'Muon'
+    elif 'MUON' in title:
+        return 'MUON'
     elif 'spire' in title:
         return 'Spire'
     elif 'SPIRE' in title:
@@ -239,7 +245,7 @@ def get_data_source(afile):
 
 
 def get_reference_time(afile, osw_source):
-    if osw_source == 'CYGNSS' or osw_source == 'Spire-L2':
+    if osw_source == 'CYGNSS' or osw_source == 'Spire-L2' or osw_source == 'MUON':
         dat_ref = afile['sample_time'].attrs['units'].decode('UTF-8').split('since ')[-1]
         dat_ref = datetime.strptime(dat_ref, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc).timestamp()
     elif osw_source == 'Muon-L3':
@@ -266,7 +272,7 @@ def get_reference_time(afile, osw_source):
 def get_data_from_file(afile, col_names, osw_source, file_name):
 
     # Pull each data type (variable) and create a list
-    if osw_source == 'CYGNSS' or osw_source == 'Spire-L2':
+    if osw_source == 'CYGNSS' or osw_source == 'Spire-L2' or osw_source == "MUON":
         latitude = [v for v in afile['lat']]
         longitude = [v for v in afile['lon']]
         dateTime = [int(v) for v in afile['sample_time']]  # datetime with different ref time
@@ -357,6 +363,8 @@ def add_long_description(osw_source):
         long_description = 'OSW derived from Spire GNSS-R receivers.'
     elif osw_source == 'Spire-L2':
         long_description = 'NOAA Level-2 OSW from Spire GNSS-R receivers.'
+    elif osw_source == 'MUON':
+        long_description = 'NOAA Level-2 OSW from Muon GNSS-R receivers.'
     return long_description
 
 
