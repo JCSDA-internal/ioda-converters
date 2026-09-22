@@ -124,10 +124,10 @@ class mopitt(object):
 
             # convert all concentrations and column to correct units to avoid single precision issues
             u_conv = avogadro / scm2sm
-            xa_gd = xa_gd * vmr2col / u_conv
-            xa_tc = xa_tc / u_conv
-            xr_tc = xr_tc / u_conv
-            er_tc = er_tc / u_conv
+            xa_gd = xa_gd * xa_gd.dtype.type(vmr2col) / xa_gd.dtype.type(u_conv)
+            xa_tc = xa_tc / xa_tc.dtype.type(u_conv)
+            xr_tc = xr_tc / xr_tc.dtype.type(u_conv)
+            er_tc = er_tc / er_tc.dtype.type(u_conv)
 
             # mopitt number of levels is dependent on surface pressure, for data points with sp<900hPa
             # nlevs<10. IODA and UFO cannot handle variable nlayers_kernel for a given instrument
@@ -169,7 +169,8 @@ class mopitt(object):
 
                 self.outdata[('aprioriTerm', 'RetrievalAncillaryData')] = ap_tc[flg]
                 self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = ak_tc_dimless[flg]
-                self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = hPa2Pa * pr_gd[flg]
+                self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = \
+                    (hPa2Pa * pr_gd[flg]).astype(pr_gd.dtype)
 
                 self.outdata[self.varDict[iodavar]['valKey']] = xr_tc[flg]
                 self.outdata[self.varDict[iodavar]['errKey']] = er_tc[flg]
@@ -188,7 +189,8 @@ class mopitt(object):
                 self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = np.concatenate((
                     self.outdata[('averagingKernel', 'RetrievalAncillaryData')], ak_tc_dimless[flg]))
                 self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = np.concatenate((
-                    self.outdata[('pressureVertice', 'RetrievalAncillaryData')], hPa2Pa * pr_gd[flg]))
+                    self.outdata[('pressureVertice', 'RetrievalAncillaryData')],
+                    (hPa2Pa * pr_gd[flg]).astype(pr_gd.dtype)))
 
                 self.outdata[self.varDict[iodavar]['valKey']] = np.concatenate(
                     (self.outdata[self.varDict[iodavar]['valKey']], xr_tc[flg]))
