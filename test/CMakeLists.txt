@@ -112,6 +112,8 @@ list( APPEND test_input
   testinput/tec_groundBased_TENET_20201001T00Z.tec
   testinput/gnssro_tec_cosmic2_202010012304.nc
   testinput/COWVR_TSDR.020421.20240430T215845.20240430T230345.V1001.sample.h5
+  testinput/nsidc_nasa_cice_input.nc
+  testinput/nsidc_nasa_grid_north.nc
   testinput/gfs.231010.t00z.syndata.tcvitals.txt
   testinput/caliop_l2_APro.hdf
 )
@@ -125,6 +127,7 @@ list( APPEND test_output
   testoutput/icethk_coperl4.nc
   testoutput/nsidc_l4_icec.nc
   testoutput/amsr2_icec_l2p.nc
+  testoutput/nsidc_nasa_cice_ioda.nc4
   testoutput/20220216T00Z_PT1H_amsr2_sample.nc4
   testoutput/gds2_sst_l2p.nc
   testoutput/gds2_sst_l3u.nc
@@ -653,6 +656,18 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gmao_argo
                           -i testinput/gmao_argo.nc
                           -o testrun/gmao_argo.nc"
                           gmao_argo.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gmao_nsidc_nasa_cice
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/gmao_nsidc_cice2ioda.py
+                          -i testinput/nsidc_nasa_cice_input.nc
+                          -g testinput/nsidc_nasa_grid_north.nc
+                          -o testrun/nsidc_nasa_cice_ioda.nc4"
+                          nsidc_nasa_cice_ioda.nc4 ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_godae_prof
                   TYPE    SCRIPT
