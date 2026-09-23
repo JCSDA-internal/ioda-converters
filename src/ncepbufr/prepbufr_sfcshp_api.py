@@ -61,7 +61,10 @@ def test_bufr_to_ioda(DATA_PATH, OUTPUT_PATH, date):
    # function filled() needs to be called which will convert the values marked invalid
    # to the fill value.
    print("Get time")
-   dhr = (r.get('obsTimeMinusCycleTime') * 3600).astype(np.int64)  # Needs to be converted to seconds since Epoch time from [-3,3]
+   # Scalar ops widen the dtype, so cast back.
+   obsTimeMinusCycleTime = r.get('obsTimeMinusCycleTime')
+   # Needs to be converted to seconds since Epoch time from [-3,3]
+   dhr = (obsTimeMinusCycleTime * 3600).astype(obsTimeMinusCycleTime.dtype).astype(np.int64)
    np.ma.set_fill_value(dhr, long_missing_value)
    print("cycleTimeSinceEpoch") #For now, file time is put in manually 
    cycleTimeSinceEpoch = np.int64(calendar.timegm(time.strptime(date, '%Y%m%d%H%M')))

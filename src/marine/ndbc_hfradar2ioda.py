@@ -65,7 +65,7 @@ class Observation(object):
                 qcKey = vName[j], iconv.OqcName()
                 if vals_u[i] != '--':
                     count += 1
-                    obs_date = int(time[i])
+                    obs_date = int(time[i].item())
                     locKey = lats[i], lons[i], obs_date
                     if j == 0:
                         self.data[locKey][valKey] = vals_u[i]

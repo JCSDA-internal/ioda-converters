@@ -99,10 +99,11 @@ class imsFV3(object):
         sncv = sncv.astype('float32')
         sndv = sndv.astype('float32')
 
-        qcflg = 0*sncv.astype('int32')
-        qdflg = 0*sndv.astype('int32')
-        errsc = 0.0*sncv
-        errsd = 0.0*sndv
+        # Scalar ops widen the dtype, so cast back.
+        qcflg = (0*sncv.astype('int32')).astype('int32')
+        qdflg = (0*sndv.astype('int32')).astype('int32')
+        errsc = (0.0*sncv).astype(sncv.dtype)
+        errsd = (0.0*sndv).astype(sndv.dtype)
         errsd[:] = 80.
 
         times = get_observation_time(self.filename, sncv, ncd)
