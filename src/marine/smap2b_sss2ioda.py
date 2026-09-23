@@ -85,8 +85,8 @@ class Salinity(object):
             epoch_offset = file_date.timestamp()
 
             data['time'] = data['time'] + epoch_offset
-            time_mask = ((data['time'] >= self.start_date.timestamp()) &
-                         (data['time'] <= self.end_date.timestamp()))
+            time_mask = ((data['time'] >= self.start_date.timestamp())
+                         & (data['time'] <= self.end_date.timestamp()))
             mask = np.logical_not(data['sss'].mask) & time_mask
             for v in source_var_name:
                 data[v] = data[v][mask]
@@ -123,43 +123,40 @@ def get_range(date, window):
 
 
 def get_files_in_date_range(base_dir: str, start_date: datetime, end_date: datetime):
-    #all_files = np.array(sorted(glob(f'{base_dir}/*.h5')))
-    #dates = np.array([extract_date(file) for file in all_files])
-    #mask = (dates >= start_date) & (dates <= end_date)
-    #return list(all_files[mask])
     """Find h5 files recursively in directory within specified date range.
-    
+
     Args:
         base_dir: Directory path containing .h5 files (and subdirectories)
         start_date: Minimum file date (UTC)
         end_date: Maximum file date (UTC)
-        
+
     Returns:
         List of sorted file paths matching date criteria
-        
+
     Raises:
         ValueError: If no files are found at all, or if no files match the date range.
     """
     file_paths = Path(base_dir).rglob('*.h5')
     all_files = np.array(sorted(str(p) for p in file_paths))
-    
+
     # Check if any files were found in the directory tree
     if all_files.size == 0:
         raise ValueError(f"No '.h5' files found in {base_dir} or its subdirectories.")
-        
+
     dates = np.array([extract_date(file) for file in all_files])
     mask = (dates >= start_date) & (dates <= end_date)
-    
+
     matched_files = list(all_files[mask])
-    
+
     # Check if any files matched the specific date range mask
     if not matched_files:
         raise ValueError(
             f"No files found between {start_date.strftime('%Y-%m-%d')} "
             f"and {end_date.strftime('%Y-%m-%d')}."
         )
-        
+
     return matched_files
+
 
 def main():
     parser = argparse.ArgumentParser(
