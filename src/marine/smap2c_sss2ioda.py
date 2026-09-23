@@ -39,14 +39,14 @@ epoch = datetime(1970, 1, 1, tzinfo=timezone.utc).replace(tzinfo=timezone.utc)
 
 class Salinity(object):
     """Read and filter SMAP seaSurfaceSalinity observations from NetCDF files.
-    
+
     Supports both JPL and RSS SMAP data sources. Filters observations by
     quality flags and applies temporal window filtering.
     """
-    
+
     def __init__(self, filenames: List[str], start_date: datetime, end_date: datetime):
         """Initialize reader with input files and time window.
-        
+
         Args:
             filenames: List of input NetCDF file paths
             start_date: Minimum observation time (UTC)
@@ -60,7 +60,7 @@ class Salinity(object):
 
     def _read(self) -> None:
         """Read and process observations from input files.
-        
+
         Extracts salinity, latitude, longitude, time, error, and quality control
         flags from input files. Applies quality masks and temporal filtering.
         Handles both JPL and RSS SMAP data source formats.
@@ -99,9 +99,9 @@ class Salinity(object):
             time_units = ncd.variables[source_var_name['time']].units
             basetime_str = time_units.split('since ')[-1]
             try:
-                basetime = dateutil.parser.parse(basetime_str).replace(tzinfo=timezone.utc).replace(tzinfo=timezone.utc)
-            except:
-                basetime = datetime.strptime(basetime_str, "%Y-%m-%d %H:%M:%S %f")
+                basetime = dateutil.parser.parse(basetime_str).replace(tzinfo=timezone.utc)
+            except (ValueError, dateutil.parser.ParserError):
+                basetime = datetime.strptime(basetime_str, "%Y-%m-%d %H:%M:%S %f").replace(tzinfo=timezone.utc)
             data = {}
             for v in source_var_name:
                 if v == 'sss_qc':
@@ -133,18 +133,18 @@ class Salinity(object):
             ncd.close()
 
 
-def extract_date(filepath: str, pattern: str = r'_(\d{8}T\d{6})', 
+def extract_date(filepath: str, pattern: str = r'_(\d{8}T\d{6})',
                  date_format: str = '%Y%m%dT%H%M%S') -> datetime:
     """Extract date from filename using regex pattern.
-    
+
     Args:
         filepath: Full path or filename to parse
         pattern: Regex pattern to match date string
         date_format: strptime format for parsing matched date
-        
+
     Returns:
         datetime: Parsed date with UTC timezone
-        
+
     Raises:
         ValueError: If date cannot be extracted from filename
     """
@@ -157,14 +157,14 @@ def extract_date(filepath: str, pattern: str = r'_(\d{8}T\d{6})',
 
 def get_range(date: str | datetime, window: str) -> Tuple[datetime, datetime]:
     """Calculate start and end times for assimilation window.
-    
+
     Args:
         date: Center date as string (YYYYMMDDHH) or datetime object
         window: Window size (PT6H, PT12H, or PT24H)
-        
+
     Returns:
         Tuple of (start_date, end_date) as UTC datetime objects
-        
+
     Raises:
         ValueError: If window size is not defined
     """
@@ -184,18 +184,18 @@ def get_range(date: str | datetime, window: str) -> Tuple[datetime, datetime]:
 
 def get_files_in_date_range(base_dir: str, start_date: datetime, end_date: datetime) -> List[str]:
     """Find NetCDF files in directory within specified date range.
-    
+
     Args:
         base_dir: Directory path containing .nc files
         start_date: Minimum file date (UTC)
         end_date: Maximum file date (UTC)
-        
+
     Returns:
         List of sorted file paths matching date criteria
     """
     file_paths = Path(base_dir).rglob('*.nc')
     all_files = np.array(sorted(str(p) for p in file_paths))
-    #all_files = np.array(sorted(glob(f'{base_dir}/*.nc')))
+    # all_files = np.array(sorted(glob(f'{base_dir}/*.nc')))
     dates = np.array([extract_date(file) for file in all_files])
     mask = (dates >= start_date) & (dates <= end_date)
     matched_files = list(all_files[mask])
@@ -207,8 +207,9 @@ def get_files_in_date_range(base_dir: str, start_date: datetime, end_date: datet
             f"No files found between {start_date.strftime('%Y-%m-%d')} "
             f"and {end_date.strftime('%Y-%m-%d')}."
         )
-        
+
     return matched_files
+
 
 def main():
     parser = argparse.ArgumentParser(
