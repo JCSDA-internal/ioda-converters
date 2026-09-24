@@ -16,15 +16,15 @@
 #
 # Usage:
 #        python tempo_nc2ioda.py -i tempo_l2_file.nc [tempo_l2_file2.nc ...] \
-#             -o tempo_ioda.nc -v no2 -c troposphere
+#             -o tempo_ioda.nc --variable no2 --column troposphere
 #        -i: one or more TEMPO Level 2 netCDF input files
 #        -o: IODA output file path
-#        -v: variable name, one of [no2, hcho, o3]
-#        -c: column type, one of [total, troposphere]
-#        -q: optional maximum QA value to keep before QC, default 0
-#        -t: optional random thinning fraction from 0.0 to 1.0, default 0.0
-#        -w: optional flag to also write the scattering weights (box AMFs) to
-#            RetrievalAncillaryData/w. Off by default.
+#        --variable: variable name, one of [no2, hcho, o3]
+#        --column: column type, one of [total, troposphere]
+#        --qa_value: optional maximum QA value to keep before QC, default 0
+#        --thin: optional random thinning fraction from 0.0 to 1.0, default 0.0
+#        --save_weights: optional flag to also write the scattering weights
+#                        (box AMFs) to RetrievalAncillaryData/w. Off by default.
 #
 #        The native L2 grid indices are always written as MetaData/mirrorStepIndex
 #        and MetaData/xtrackIndex so that observations can be scattered back onto
@@ -66,14 +66,14 @@ molarmass = {"no2": 46.0055, "hcho": 30.031, "o3": 48.0}
 
 class tempo(object):
     def __init__(self, filenames, varname, columnType, qa_flg, thin, obsVar,
-                 save_w=False):
+                 save_weights=False):
         self.filenames = filenames
         self.varname = varname
         self.columnType = columnType
         self.qa_flg = qa_flg
         self.thin = thin
         self.obsVar = obsVar
-        self.save_w = save_w
+        self.save_weights = save_weights
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -342,7 +342,7 @@ class tempo(object):
             print('avg_kernel: ', np.shape(avg_kernel))
             print('mirror_step: ', np.shape(mirror_idx))
             print('xtrack: ', np.shape(xtrack_idx))
-            if self.save_w:
+            if self.save_weights:
                 print('w: ', np.shape(w))
 
             # remove masked Data and make sure types are correct
@@ -364,14 +364,14 @@ class tempo(object):
             avg_kernel = np.ma.compress_rowcols(avg_kernel, axis=0).astype('float32')
             mirror_idx = np.ma.compressed(mirror_idx).astype('int32')
             xtrack_idx = np.ma.compressed(xtrack_idx).astype('int32')
-            if self.save_w:
+            if self.save_weights:
                 w = np.ma.compress_rowcols(w, axis=0).astype('float32')
 
             # flip 2d arrays to have increaing pressure
             if np.shape(lats)[0] > 0:
                 preslev = np.flip(preslev, axis=1)
                 avg_kernel = np.flip(avg_kernel, axis=1)
-                if self.save_w:
+                if self.save_weights:
                     w = np.flip(w, axis=1)
 
                 # print after compression
@@ -394,7 +394,7 @@ class tempo(object):
                 print('avg_kernel: ', np.shape(avg_kernel))
                 print('mirror_step: ', np.shape(mirror_idx))
                 print('xtrack: ', np.shape(xtrack_idx))
-                if self.save_w:
+                if self.save_weights:
                     print('w: ', np.shape(w))
                 print(np.shape(time[flg]))
                 if first:
@@ -409,7 +409,7 @@ class tempo(object):
                     self.outdata[('averagingKernel', 'RetrievalAncillaryData')] = avg_kernel[flg]
                     self.outdata[('mirrorStepIndex', 'MetaData')] = mirror_idx[flg]
                     self.outdata[('xtrackIndex', 'MetaData')] = xtrack_idx[flg]
-                    if self.save_w:
+                    if self.save_weights:
                         self.outdata[('w', 'RetrievalAncillaryData')] = w[flg]
                     self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = preslev[flg]
                     self.outdata[self.varDict[iodavar]['valKey']] = obs[flg]
@@ -438,7 +438,7 @@ class tempo(object):
                         self.outdata[('mirrorStepIndex', 'MetaData')], mirror_idx[flg]))
                     self.outdata[('xtrackIndex', 'MetaData')] = np.concatenate((
                         self.outdata[('xtrackIndex', 'MetaData')], xtrack_idx[flg]))
-                    if self.save_w:
+                    if self.save_weights:
                         self.outdata[('w', 'RetrievalAncillaryData')] = np.concatenate((
                             self.outdata[('w', 'RetrievalAncillaryData')], w[flg]))
                     self.outdata[('pressureVertice', 'RetrievalAncillaryData')] = np.concatenate((
@@ -484,7 +484,7 @@ class tempo(object):
         self.varAttrs[vkey]['long_name'] = (
             'TEMPO across-track (slit) pixel index on the native L2 grid')
 
-        if self.save_w:
+        if self.save_weights:
             varname = 'w'
             vkey = (varname, 'RetrievalAncillaryData')
             self.varAttrs[vkey]['coordinates'] = 'longitude latitude'
@@ -511,26 +511,26 @@ def main():
         help="path of IODA output file",
         type=str, required=True)
     required.add_argument(
-        '-v', '--variable',
-        help="name of varibale, available list: [no2, hcho, o3]",
+        '--variable',
+        help="name of variable, available list: [no2, hcho, o3]",
         type=str, required=True)
     required.add_argument(
-        '-c', '--column',
+        '--column',
         help="type of column: total, troposphere",
         type=str, required=True)
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
-        '-q', '--qa_value',
-        help="qa value used to preflag data that goes into file before QC"
+        '--qa_value',
+        help="qa value used to preflag data that goes into file before QC. "
         "0 normal, 1 suspicious, 2 bad",
         type=int, default=0)
     optional.add_argument(
-        '-t', '--thin',
+        '--thin',
         help="percentage of random thinning from 0.0 to 1.0. Zero indicates"
         " no thinning is performed. (default: %(default)s)",
         type=float, default=0.0)
     optional.add_argument(
-        '-w', '--save_w',
+        '--save_weights',
         help="also write the scattering weights (box AMFs) to"
         " RetrievalAncillaryData/w. The averaging kernel is written either way;"
         " this roughly doubles the size of the 2D retrieval arrays."
@@ -572,13 +572,13 @@ def main():
         }
 
     varDims['averagingKernel'] = ['Location', 'Layer']
-    if args.save_w:
+    if args.save_weights:
         varDims['w'] = ['Location', 'Layer']
     varDims['pressureVertice'] = ['Location', 'Vertice']
 
     # Read in the NO2 data
     var = tempo(args.input, args.variable, args.column, args.qa_value, args.thin,
-                obsVar, args.save_w)
+                obsVar, args.save_weights)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
