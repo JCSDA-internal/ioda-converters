@@ -16,7 +16,6 @@ import netCDF4 as nc
 import re
 import dateutil.parser
 from glob import glob
-from pathlib import Path
 import pyiodaconv.ioda_conv_engines as iconv
 from pyiodaconv.orddicts import DefaultOrderedDict
 
@@ -122,11 +121,11 @@ def get_range(date, window):
     return mid_date - dt_dic[window], mid_date + dt_dic[window]
 
 
-def get_files_in_date_range(base_dir: str, start_date: datetime, end_date: datetime):
-    """Find h5 files recursively in directory within specified date range.
+def get_files_in_date_range(input_files, start_date: datetime, end_date: datetime):
+    """Select input h5 files within specified date range.
 
     Args:
-        base_dir: Directory path containing .h5 files (and subdirectories)
+        input_files: List of input file paths (e.g. from shell wildcard expansion)
         start_date: Minimum file date (UTC)
         end_date: Maximum file date (UTC)
 
@@ -134,14 +133,13 @@ def get_files_in_date_range(base_dir: str, start_date: datetime, end_date: datet
         List of sorted file paths matching date criteria
 
     Raises:
-        ValueError: If no files are found at all, or if no files match the date range.
+        FileNotFoundError: If any input file does not exist.
+        ValueError: If no files match the date range.
     """
-    file_paths = Path(base_dir).rglob('*.h5')
-    all_files = np.array(sorted(str(p) for p in file_paths))
-
-    # Check if any files were found in the directory tree
-    if all_files.size == 0:
-        raise ValueError(f"No '.h5' files found in {base_dir} or its subdirectories.")
+    missing = [f for f in input_files if not os.path.isfile(f)]
+    if missing:
+        raise FileNotFoundError(f"Input file(s) not found: {', '.join(missing)}")
+    all_files = np.array(sorted(input_files))
 
     dates = np.array([extract_date(file) for file in all_files])
     mask = (dates >= start_date) & (dates <= end_date)
@@ -168,8 +166,8 @@ def main():
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
         '-i', '--input',
-        help='directory of SMAP 2B h5 observations',
-        type=str, required=True)
+        help='path of SMAP 2B h5 observation input file(s)',
+        type=str, nargs='+', required=True)
     required.add_argument(
         '-o', '--output',
         help='name of ioda output file',

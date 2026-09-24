@@ -9,7 +9,6 @@
 
 import os
 import argparse
-from pathlib import Path
 from typing import Tuple, List
 import numpy as np
 from datetime import datetime, timedelta, timezone
@@ -182,20 +181,21 @@ def get_range(date: str | datetime, window: str) -> Tuple[datetime, datetime]:
     return mid_date - dt_dic[window], mid_date + dt_dic[window]
 
 
-def get_files_in_date_range(base_dir: str, start_date: datetime, end_date: datetime) -> List[str]:
-    """Find NetCDF files in directory within specified date range.
+def get_files_in_date_range(input_files: List[str], start_date: datetime, end_date: datetime) -> List[str]:
+    """Select input NetCDF files within specified date range.
 
     Args:
-        base_dir: Directory path containing .nc files
+        input_files: List of input file paths (e.g. from shell wildcard expansion)
         start_date: Minimum file date (UTC)
         end_date: Maximum file date (UTC)
 
     Returns:
         List of sorted file paths matching date criteria
     """
-    file_paths = Path(base_dir).rglob('*.nc')
-    all_files = np.array(sorted(str(p) for p in file_paths))
-    # all_files = np.array(sorted(glob(f'{base_dir}/*.nc')))
+    missing = [f for f in input_files if not os.path.isfile(f)]
+    if missing:
+        raise FileNotFoundError(f"Input file(s) not found: {', '.join(missing)}")
+    all_files = np.array(sorted(input_files))
     dates = np.array([extract_date(file) for file in all_files])
     mask = (dates >= start_date) & (dates <= end_date)
     matched_files = list(all_files[mask])
@@ -221,8 +221,8 @@ def main():
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
         '-i', '--input',
-        help='directory of SMAP 2C nc observations',
-        type=str, required=True)
+        help='path of SMAP 2C nc observation input file(s)',
+        type=str, nargs='+', required=True)
     required.add_argument(
         '-o', '--output',
         help='name of ioda output file',
@@ -239,13 +239,6 @@ def main():
         type=str,
         default='PT6H')
     args = parser.parse_args()
-
-    # Validate input directory exists
-    input_dir = Path(args.input)
-    if not input_dir.exists():
-        raise FileNotFoundError(f"Input directory not found: {args.input}")
-    if not input_dir.is_dir():
-        raise NotADirectoryError(f"Input path is not a directory: {args.input}")
 
     start_date, end_date = get_range(args.date, args.window)
     file_list = get_files_in_date_range(args.input, start_date, end_date)
