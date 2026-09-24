@@ -25,8 +25,10 @@ list( APPEND test_input
   testinput/godae_trak.bin
   testinput/rads_adt.nc
   testinput/smap_sss_rss.nc
-  testinput/smap_2b
-  testinput/smap_2c
+  testinput/RSS_SMAP_SSS_L2C_r44955_20230702T090328_V06.0.sampled.nc
+  testinput/RSS_SMAP_SSS_L2C_r44956_20230702T104154_V06.0.sampled.nc
+  testinput/SMAP_L2B_SSS_NRT_44955_A_20230702T090427.sampled.h5
+  testinput/SMAP_L2B_SSS_NRT_44955_D_20230702T090427.sampled.h5
   testinput/hgodas_adt.nc
   testinput/hgodas_insitu.nc
   testinput/hgodas_sst.nc
@@ -138,8 +140,8 @@ list( APPEND test_output
   testoutput/godae_trak.nc
   testoutput/rads_adt.nc
   testoutput/smap_sss_rss.nc
-  testoutput/smap_sss_2b.nc
-  testoutput/smap_sss_2c.nc
+  testoutput/obs.20230702T090000_PT1H_smap_sss_2b.nc
+  testoutput/obs.20230702T090000_PT6H_smap_sss_2c.nc
   testoutput/hgodas_adt.nc
   testoutput/hgodas_insitu.nc
   testoutput/hgodas_sst.nc
@@ -642,10 +644,10 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap_sss
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/smap2b_sss2ioda.py
-                          -i testinput/smap_2b
-                          -o testrun/smap_sss_2b.nc
+                          -i testinput/SMAP_L2B_SSS_NRL*.h5
+                          -o testrun/obs.20230702T090000_PT1H_smap_sss_2b.nc
                           -d 2023070212"
-                          smap_sss_2b.nc ${IODA_CONV_COMP_TOL})
+                          obs.20230702T090000_PT1H_smap_sss_2b.nc ${IODA_CONV_COMP_TOL})
 
 
   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap2c_sss
@@ -655,10 +657,10 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap_sss
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/smap2c_sss2ioda.py
-                          -i testinput/smap_2c
-                          -o testrun/smap_sss_2c.nc
+                          -i testinput/RSS_SMAP_SSS_L2C*.nc
+                          -o testrun/obs.20230702T090000_PT6H_smap_sss_2c.nc
                           -d 2023070212"
-                          smap_sss_2c.nc ${IODA_CONV_COMP_TOL})
+                          obs.20230702T090000_PT6H_smap_sss_2c.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_rads_adt
                   TYPE    SCRIPT
