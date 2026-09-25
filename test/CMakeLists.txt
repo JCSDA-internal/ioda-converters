@@ -1459,8 +1459,9 @@ foreach (coltype total troposphere)
 				  -i testinput/TEMPO_NO2_L2_V04_${spec}.20251002T180000Z.0.nc
 				     testinput/TEMPO_NO2_L2_V04_${spec}.20251002T180000Z.1.nc
 				  -o testrun/tempo_${spec}_${coltype}.nc
-                                  -v ${spec}
-                                  -c ${coltype}"
+                                  --variable ${spec}
+                                  --column ${coltype}
+                                  --save_grid_indices"
                                   tempo_${spec}_${coltype}.nc ${IODA_CONV_COMP_TOL})
     endif()
   endforeach()
