@@ -296,6 +296,7 @@ if( iodaconv_bufr_query_ENABLED )
     testinput/bufr_ncep_sevcsr.yaml
     testinput/bufr_ncep_mtiasi.yaml
     testinput/bufr_ncep_atms.yaml
+    testinput/bufr_ncep_atms_split.yaml
     testinput/bufr_ncep_atms_remap.yaml
     testinput/bufr_ncep_atms_ta_remap.yaml
     testinput/bufr_simple_groupby.yaml
@@ -1869,6 +1870,34 @@ if(iodaconv_bufr_query_ENABLED)
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_atms.yaml"
                             gdas.t00z.atms_n20.tm00.nc ${IODA_CONV_COMP_TOL}
                     DEPENDS bufr2ioda.x )
+
+  # ATMS split by satellite (split_atms_by_sat.py needs the ncepbufr python module)
+  execute_process( COMMAND ${Python3_EXECUTABLE} -c "import ncepbufr"
+                   RESULT_VARIABLE _iodaconv_ncepbufr_rc OUTPUT_QUIET ERROR_QUIET )
+  if( _iodaconv_ncepbufr_rc EQUAL 0 )
+    # split the NPP+N20 test dump; -c checks every subset (no mixed-satellite messages)
+    ecbuild_add_test( TARGET  test_iodaconv_split_atms_by_sat
+                      TYPE    SCRIPT
+                      COMMAND ${Python3_EXECUTABLE}
+                      ARGS    ${CMAKE_BINARY_DIR}/bin/split_atms_by_sat.py -c
+                              testinput/gdas.t00z.atms.tm00.bufr_d
+                              testrun/gdas.t00z.atms_split n20 )
+
+    # converting the N20-only file must give exactly the existing N20 reference
+    ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_atms_split_n20
+                      TYPE    SCRIPT
+                      COMMAND bash
+                      ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                              netcdf
+                              "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_atms_split.yaml"
+                              gdas.t00z.atms_n20.tm00.nc ${IODA_CONV_COMP_TOL}
+                      DEPENDS bufr2ioda.x
+                      TEST_DEPENDS test_iodaconv_split_atms_by_sat )
+
+    # both ATMS tests write testrun/gdas.t00z.atms_n20.tm00.nc; don't run them at the same time
+    set_tests_properties( test_iodaconv_bufr_ncep_atms test_iodaconv_bufr_ncep_atms_split_n20
+                          PROPERTIES RESOURCE_LOCK atms_n20_output )
+  endif()
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_simple_groupby
                     TYPE    SCRIPT
