@@ -89,7 +89,9 @@ list( APPEND test_input
   testinput/pace_spexone_fmapol_aod.2024110106.nc
   testinput/pace_spexone_remotap_aod.2024110106.nc
   testinput/modis_aqua_Rrs_OC_L2.nc
-  testinput/mls_o3_l2.he5
+  testinput/mls_o3_res_v5_l2.he5
+  testinput/mls_o3_res_v6_l2.he5
+  testinput/mls_o3_nrt_v5_l2.he5
   testinput/omi_o3_l2.he5
   testinput/ompsnm_o3_l2.he5
   testinput/sst_ostia.nc
@@ -199,7 +201,9 @@ list( APPEND test_output
   testoutput/pace_spexone_fmapol_aod.2024110106.nc
   testoutput/pace_spexone_remotap_aod.2024110106.nc
   testoutput/modis_water_leaving_radiance_L2.nc
-  testoutput/mls_o3_l2.nc
+  testoutput/mls_o3_res_v5_l2.nc
+  testoutput/mls_o3_res_v6_l2.nc
+  testoutput/mls_o3_nrt_v5_l2.nc
   testoutput/omi_o3_l2.nc
   testoutput/ompsnm_o3_l2.nc
   testoutput/sst_ostia.nc
@@ -892,20 +896,48 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_water_leaving_radiance_L2
                           -d 2021080112"
                           modis_water_leaving_radiance_L2.nc ${IODA_CONV_COMP_TOL})
 
-ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mls_o3_l2
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mls_o3_res_v5
                   TYPE    SCRIPT
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/mls_o3_nc2ioda.py
-                          -i testinput/mls_o3_l2.he5
-                          -o testrun/mls_o3_l2.nc
-                          -y 2022
-                          -m 06
-                          -d 21
-                          -z 12"
-                          mls_o3_l2.nc ${IODA_CONV_COMP_TOL})
+                          -i testinput/mls_o3_res_v5_l2.he5
+                          -o testrun/mls_o3_res_v5_l2.nc
+                          --mls-version res-v5
+                          --window-begin 2026-09-07T06:00:00Z
+                          --window-end 2026-09-07T07:00:00Z"
+                          mls_o3_res_v5_l2.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mls_o3_res_v6
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/mls_o3_nc2ioda.py
+                          -i testinput/mls_o3_res_v6_l2.he5
+                          -o testrun/mls_o3_res_v6_l2.nc
+                          --mls-version res-v6
+                          --window-begin 2026-09-07T06:00:00Z
+                          --window-end 2026-09-07T07:00:00Z"
+                          mls_o3_res_v6_l2.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mls_o3_nrt_v5
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/mls_o3_nc2ioda.py
+                          -i testinput/mls_o3_nrt_v5_l2.he5
+                          -o testrun/mls_o3_nrt_v5_l2.nc
+                          --mls-version nrt-v5
+                          -t 43
+                          --window-begin 2026-09-07T23:00:00Z
+                          --window-end 2026-09-08T01:00:00Z"
+                          mls_o3_nrt_v5_l2.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_omi_o3_l2
                   TYPE    SCRIPT
