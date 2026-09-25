@@ -131,7 +131,9 @@ def read_input(input_args):
 
     obs_data[output_var_names[0], global_config['oval_name']] = data_in['chlor_a']
     # There is not any obs error in the dataset. we need to come up with a reasonable obs error later
-    obs_data[output_var_names[0], global_config['oerr_name']] = data_in['chlor_a']*0.0
+    # Scalar ops widen the dtype, so cast back.
+    obs_data[output_var_names[0], global_config['oerr_name']] = \
+        (data_in['chlor_a']*0.0).astype(data_in['chlor_a'].dtype)
     obs_data[output_var_names[0], global_config['opqc_name']] = data_in['l2_flags']
 
     return (obs_data, basetime, GlobalAttrs)

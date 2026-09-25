@@ -63,8 +63,9 @@ class Profile(object):
         with np.errstate(invalid='ignore'):
             salinity = np.float32(ncd.variables['salinity'][:])
         errs = np.float32(np.matlib.repmat(0.2, len(lons), 1))
-        Tqcs = ncd.variables['temperature_qc'][:]-1
-        Sqcs = ncd.variables['salinity_qc'][:]-1
+        # Scalar ops widen the dtype, so cast back.
+        Tqcs = (ncd.variables['temperature_qc'][:]-1).astype('int32')
+        Sqcs = (ncd.variables['salinity_qc'][:]-1).astype('int32')
         errs = np.squeeze(errs)
         ncd.close()
 
