@@ -27,6 +27,12 @@ locationKeyList = [
     ("sensorCentralFrequency", "float", "Hz"),
     ("sensorCentralWavelength", "float", "micron"),
     ("surfaceQualifier", "integer", ""),
+    ("aerosolCloudFraction", "float", "1"),
+    ("sensorZenithAngle", "float", "degree"),
+    # Do not use {sensor/solar}AzimuthAngle from PACE UAA: clipped at -99.99 degree (see get_uaa_data)
+    ("sensorAzimuthAngle", "float", "degree"),
+    ("solarZenithAngle", "float", "degree"),
+    ("solarAzimuthAngle", "float", "degree"),
 ]
 
 obsvars = ["aerosolOpticalDepth"]
@@ -43,6 +49,11 @@ VarDims = {
     "sensorCentralFrequency": ['Channel'],
     "sensorCentralWavelength": ['Channel'],
     "surfaceQualifier": ['Location'],
+    "aerosolCloudFraction": ['Location'],
+    "sensorZenithAngle": ['Location'],
+    "sensorAzimuthAngle": ['Location'],
+    "solarZenithAngle": ['Location'],
+    "solarAzimuthAngle": ['Location'],
 }
 
 # Get the group names we use the most.
@@ -143,6 +154,18 @@ class AOD(object):
         self.lons = self.ncd.groups['geolocation_data'].variables['longitude'][:].ravel()
         self.lats = self.ncd.groups['geolocation_data'].variables['latitude'][:].ravel()
         self.landseaflags = self.ncd.groups['geophysical_data'].variables['Land_Sea_Flag'][:].ravel()
+        self.cldfrac = self.ncd.groups['geophysical_data'].variables['Aerosol_Cld_Fraction_Land_Ocean'][:].ravel()
+        self.senzen = self.ncd.groups['geolocation_data'].variables['sensor_zenith_angle'][:].ravel()
+        # Do not use sensorAzimuthAngle and solarAzimuthAngle: the azimuth angles in the UAA
+        # product were clipped at -99.99 degree (raw -9999), i.e. every true value in
+        # [-180, -99.99) is stored as -99.99. They are kept for reference only.
+        self.senazm = self.ncd.groups['geolocation_data'].variables['sensor_azimuth_angle'][:].ravel()
+        self.solzen = self.ncd.groups['geolocation_data'].variables['solar_zenith_angle'][:].ravel()
+        # The clipped solar azimuth (-9999) is the same as _FillValue, so mask solar azimuth angle
+        # only where solar zenith angle is missing
+        solazm = self.ncd.groups['geolocation_data'].variables['solar_azimuth_angle']
+        solazm.set_auto_mask(False)
+        self.solazm = np.ma.masked_where(np.ma.getmaskarray(self.solzen), solazm[:].ravel())
         vals = self.ncd.groups['geophysical_data'].variables['Aerosol_Optical_Depth'][:]
         self.vals = vals.reshape(-1, vals.shape[2])
         qcflags = self.ncd.groups['geophysical_data'].variables['Quality_flag_Aerosol_Optical_Depth'][:].ravel()
@@ -165,6 +188,11 @@ class AOD(object):
         self.lons = self.lons[valid_pts]
         self.lats = self.lats[valid_pts]
         self.landseaflags = self.landseaflags[valid_pts]
+        self.cldfrac = self.cldfrac[valid_pts]
+        self.senzen = self.senzen[valid_pts]
+        self.senazm = self.senazm[valid_pts]
+        self.solzen = self.solzen[valid_pts]
+        self.solazm = self.solazm[valid_pts]
         self.vals = self.vals[valid_pts, :]
         self.errs = self.errs[valid_pts, :]
         self.qcflags = self.qcflags[valid_pts, :]
@@ -221,8 +249,14 @@ class AOD(object):
 
         self.lons = self.ncd.groups['geolocation_data'].variables['longitude'][:].ravel()
         self.lats = self.ncd.groups['geolocation_data'].variables['latitude'][:].ravel()
-        # Fast MAPOL data is over ocean only, surfaceQualifier is zero
-        self.landseaflags = np.zeros_like(self.lats, dtype=np.int32)
+        # FastMAPOL provides separate ocean (MAPOL_OCEAN) and land (MAPOL_LAND) products
+        product_name = self.glb_attrs.get('product_name', os.path.basename(self.ncd.filepath()))
+        if 'MAPOL_OCEAN' in product_name:
+            self.landseaflags = np.zeros_like(self.lats, dtype=np.int32)
+        elif 'MAPOL_LAND' in product_name:
+            self.landseaflags = np.ones_like(self.lats, dtype=np.int32)
+        else:
+            raise Exception(f"Unable to determine surface type of FastMAPOL product: {product_name}")
         vals = self.ncd.groups['geophysical_data'].variables['aot'][:]
         self.vals = vals.reshape(-1, vals.shape[2])
         qcflags = self.ncd.groups['diagnostic_data'].variables['quality_flag'][:].ravel()
@@ -248,6 +282,12 @@ class AOD(object):
         self.outdata[('longitude', metaDataName)] = np.array([], dtype=np.float32)
         self.outdata[('dateTime', metaDataName)] = np.array([], dtype=np.int64)
         self.outdata[('surfaceQualifier', metaDataName)] = np.array([], dtype=np.int32)
+        if self.retrieval_method == 'uaa':
+            self.outdata[('aerosolCloudFraction', metaDataName)] = np.array([], dtype=np.float32)
+            self.outdata[('sensorZenithAngle', metaDataName)] = np.array([], dtype=np.float32)
+            self.outdata[('sensorAzimuthAngle', metaDataName)] = np.array([], dtype=np.float32)
+            self.outdata[('solarZenithAngle', metaDataName)] = np.array([], dtype=np.float32)
+            self.outdata[('solarAzimuthAngle', metaDataName)] = np.array([], dtype=np.float32)
         for iodavar in obsvars:
             self.outdata[self.varDict[iodavar]['valKey']] = np.array([], dtype=np.float32)
             self.outdata[self.varDict[iodavar]['errKey']] = np.array([], dtype=np.float32)
@@ -286,8 +326,6 @@ class AOD(object):
             if self.retrieval_method in ['uaa', 'fmapol']:
                 self.obs_time = np.full(np.shape(self.lons), round(0.5*(self.s_time + self.e_time)), dtype=np.int64)
 
-            winmsk = ((self.obs_time >= self.wbeg) & (self.obs_time <= self.wend))
-
             # apply thinning mask
             if self.thinning_ratio > 0.0:
                 mask_thin = np.random.uniform(size=len(self.lons)) > self.thinning_ratio
@@ -298,6 +336,14 @@ class AOD(object):
                 self.errs = self.errs[mask_thin]
                 self.qcflags = self.qcflags[mask_thin]
                 self.obs_time = self.obs_time[mask_thin]
+                if self.retrieval_method == 'uaa':
+                    self.cldfrac = self.cldfrac[mask_thin]
+                    self.senzen = self.senzen[mask_thin]
+                    self.senazm = self.senazm[mask_thin]
+                    self.solzen = self.solzen[mask_thin]
+                    self.solazm = self.solazm[mask_thin]
+
+            winmsk = ((self.obs_time >= self.wbeg) & (self.obs_time <= self.wend))
 
             #  Write out data
             self.outdata[('latitude', metaDataName)] = np.append(
@@ -308,6 +354,22 @@ class AOD(object):
                 self.outdata[('dateTime', metaDataName)], np.array(self.obs_time[winmsk], dtype=np.int64))
             self.outdata[('surfaceQualifier', metaDataName)] = np.append(
                 self.outdata[('surfaceQualifier', metaDataName)], np.array(self.landseaflags[winmsk], dtype=np.int32))
+            if self.retrieval_method == 'uaa':
+                self.outdata[('aerosolCloudFraction', metaDataName)] = np.append(
+                    self.outdata[('aerosolCloudFraction', metaDataName)],
+                    np.ma.filled(self.cldfrac[winmsk].astype(np.float32), float_missing_value))
+                self.outdata[('sensorZenithAngle', metaDataName)] = np.append(
+                    self.outdata[('sensorZenithAngle', metaDataName)],
+                    np.ma.filled(self.senzen[winmsk].astype(np.float32), float_missing_value))
+                self.outdata[('sensorAzimuthAngle', metaDataName)] = np.append(
+                    self.outdata[('sensorAzimuthAngle', metaDataName)],
+                    np.ma.filled(self.senazm[winmsk].astype(np.float32), float_missing_value))
+                self.outdata[('solarZenithAngle', metaDataName)] = np.append(
+                    self.outdata[('solarZenithAngle', metaDataName)],
+                    np.ma.filled(self.solzen[winmsk].astype(np.float32), float_missing_value))
+                self.outdata[('solarAzimuthAngle', metaDataName)] = np.append(
+                    self.outdata[('solarAzimuthAngle', metaDataName)],
+                    np.ma.filled(self.solazm[winmsk].astype(np.float32), float_missing_value))
 
             for iodavar in obsvars:
                 self.outdata[self.varDict[iodavar]['valKey']] = np.append(
