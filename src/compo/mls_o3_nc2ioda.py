@@ -61,38 +61,41 @@ obsErrName = iconv.OerrName()
 qcName = iconv.OqcName()
 
 # Observation error tables, taken directly from the NASA-provided Fortran
-# ingest programs for each MLS O3 product version. 'lvmin' is the 0-based
-# level index (matching self.lbot) at which the 'oe' list begins. 'inflation'
-# maps 0-based level index to the extra |O3|-scaled term added at that level.
+# ingest programs for each MLS O3 product version to the unit requested by ioda convention
+# mol mol-1. 'lvmin' is the 0-based level index (matching self.lbot) at which
+# the 'oe' list begins. 'inflation' maps 0-based level index to the extra
+# |O3|-scaled term added at that level.
 MLS_ERROR_TABLES = {
     # res/write_mls_netcdf_v5.f90 (v5.04), lvmin=8 lvmax=49 (1-based)
     'res-v5': {
         'lvmin': 7,
-        'oe': [0.02, 0.02, 0.02, 0.02, 0.035, 0.05, 0.05, 0.05,
-               0.125, 0.2, 0.2, 0.2, 0.2, 0.2, 0.225, 0.25, 0.275,
-               0.3, 0.3, 0.3, 0.3, 0.3, 0.275, 0.25, 0.225, 0.2, 0.2,
-               0.2, 0.2, 0.2, 0.15, 0.1, 0.1, 0.1, 0.15, 0.2, 0.2, 0.2,
-               0.3, 0.3, 0.3, 0.3],
+     'oe': [2.0e-08, 2.0e-08, 2.0e-08, 2.0e-08, 3.5e-08, 5.0e-08, 5.0e-08, 5.0e-08,
+         1.25e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.25e-07, 2.5e-07,
+         2.75e-07, 3.0e-07, 3.0e-07, 3.0e-07, 3.0e-07, 3.0e-07, 2.75e-07, 2.5e-07,
+         2.25e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.0e-07, 1.5e-07, 1.0e-07,
+         1.0e-07, 1.0e-07, 1.5e-07, 2.0e-07, 2.0e-07, 2.0e-07, 3.0e-07, 3.0e-07,
+         3.0e-07, 3.0e-07],
         'inflation': {7: 0.30, 8: 0.20, 9: 0.125, 10: 0.05, 11: 0.05, 12: 0.05},
     },
     # nrt/write_mls_netcdf_v5.f90 (NRT v5.03), lvmin=8 lvmax=43 (1-based)
     'nrt-v5': {
         'lvmin': 7,
-        'oe': [0.02, 0.02, 0.02, 0.02, 0.035, 0.05, 0.05, 0.05,
-               0.125, 0.2, 0.2, 0.2, 0.2, 0.2, 0.225, 0.25, 0.275,
-               0.3, 0.3, 0.3, 0.3, 0.3, 0.275, 0.25, 0.225, 0.2, 0.2,
-               0.2, 0.2, 0.2, 0.15, 0.1, 0.1, 0.1, 0.15, 0.2],
+     'oe': [2.0e-08, 2.0e-08, 2.0e-08, 2.0e-08, 3.5e-08, 5.0e-08, 5.0e-08, 5.0e-08,
+         1.25e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.25e-07, 2.5e-07,
+         2.75e-07, 3.0e-07, 3.0e-07, 3.0e-07, 3.0e-07, 3.0e-07, 2.75e-07, 2.5e-07,
+         2.25e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.0e-07, 1.5e-07, 1.0e-07,
+         1.0e-07, 1.0e-07, 1.5e-07, 2.0e-07],
         'inflation': {7: 0.30, 8: 0.20, 9: 0.125, 10: 0.05, 11: 0.05, 12: 0.05},
     },
     # res/write_mls_netcdf_v6.f90 (v6.03), lvmin=8 lvmax=49 (1-based)
     'res-v6': {
         'lvmin': 7,
-        'oe': [0.0200, 0.0101, 0.0074, 0.0050, 0.0050, 0.0050, 0.0523,
-               0.0995, 0.1486, 0.1977, 0.2000, 0.2000, 0.2000, 0.2000,
-               0.2448, 0.2966, 0.3483, 0.4000, 0.3753, 0.3506, 0.3259,
-               0.3012, 0.2780, 0.2550, 0.2320, 0.2089, 0.2000, 0.2000,
-               0.2000, 0.2000, 0.1506, 0.1012, 0.0857, 0.0710, 0.0797,
-               0.0900, 0.0857, 0.1443, 0.1000, 0.3081, 0.3919, 0.9000],
+     'oe': [2.00e-08, 1.01e-08, 7.40e-09, 5.00e-09, 5.00e-09, 5.00e-09, 5.23e-08,
+         9.95e-08, 1.486e-07, 1.977e-07, 2.00e-07, 2.00e-07, 2.00e-07, 2.00e-07,
+         2.448e-07, 2.966e-07, 3.483e-07, 4.00e-07, 3.753e-07, 3.506e-07, 3.259e-07,
+         3.012e-07, 2.780e-07, 2.550e-07, 2.320e-07, 2.089e-07, 2.00e-07, 2.00e-07,
+         2.00e-07, 2.00e-07, 1.506e-07, 1.012e-07, 8.57e-08, 7.10e-08, 7.97e-08,
+         9.00e-08, 8.57e-08, 1.443e-07, 1.00e-07, 3.081e-07, 3.919e-07, 9.00e-07],
         'inflation': {7: 0.10, 8: 0.10, 9: 0.10, 10: 0.07, 11: 0.07, 12: 0.07},
     },
 }
@@ -133,8 +136,8 @@ class mls(object):
         self.varAttrs[iodavar, obsValName]['coordinates'] = 'longitude latitude'
         self.varAttrs[iodavar, obsErrName]['coordinates'] = 'longitude latitude'
         self.varAttrs[iodavar, qcName]['coordinates'] = 'longitude latitude'
-        self.varAttrs[iodavar, obsValName]['units'] = 'ppmv'
-        self.varAttrs[iodavar, obsErrName]['units'] = 'ppmv'
+        self.varAttrs[iodavar, obsValName]['units'] = 'mol mol-1'
+        self.varAttrs[iodavar, obsErrName]['units'] = 'mol mol-1'
 
         varsToAddUnits = list(ioda2nc.keys())
         for v in varsToAddUnits:
@@ -151,9 +154,9 @@ class mls(object):
                 elif ('angle' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'degree'
                 elif ('prior' in v.lower()):
-                    self.varAttrs[vkey]['units'] = 'ppmv'
+                    self.varAttrs[vkey]['units'] = 'mol mol-1'
                 elif (v == 'precision'):
-                    self.varAttrs[vkey]['units'] = 'ppmv'
+                    self.varAttrs[vkey]['units'] = 'mol mol-1'
                 elif (v == 'status'):
                     self.varAttrs[vkey]['units'] = '1'
                     self.varAttrs[vkey]['long_name'] = 'MLS Status flag'
@@ -182,9 +185,6 @@ class mls(object):
             else:
                 d[k] = ncd[ioda2nc[k]][...]
                 d[k].mask = False
-
-            if (k == 'valKey' or k == 'precision'):
-                d[k] = d[k]*1e6  # convert mol/mol to PPMV
         return d
 
     def _calc_error(self, o3, o3_prec, lev):
@@ -193,7 +193,7 @@ class mls(object):
         table = MLS_ERROR_TABLES[self.mls_version]
         ooe = table['oe'][lev - table['lvmin']]
         ooe = ooe + (table['inflation'].get(lev, 0.0) * abs(o3))
-        ooe = np.sqrt(max((0.5*ooe)**2+(o3_prec)**2, 1.e-6))
+        ooe = np.sqrt(max((0.5*ooe)**2+(o3_prec)**2, 1.e-15))
         return ooe
 
     def _just_flatten(self, d):
