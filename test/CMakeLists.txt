@@ -1879,7 +1879,7 @@ if(iodaconv_bufr_query_ENABLED)
     ecbuild_add_test( TARGET  test_iodaconv_split_atms_by_sat
                       TYPE    SCRIPT
                       COMMAND ${Python3_EXECUTABLE}
-                      ARGS    ${CMAKE_BINARY_DIR}/bin/split_atms_by_sat.py -c
+                      ARGS    ${PROJECT_SOURCE_DIR}/src/ncepbufr/split_atms_by_sat.py -c
                               testinput/gdas.t00z.atms.tm00.bufr_d
                               testrun/gdas.t00z.atms_split n20 )
 
