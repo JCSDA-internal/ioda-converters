@@ -61,6 +61,10 @@ class meteo_utils(object):
         temp_K  - temperature (k)
         '''
 
+        # Force float64.
+        pres_Pa = float(pres_Pa)
+        temp_K = float(temp_K)
+
         es = self.e_sub_s(temp_K)
 
         # Even at P=1050hPa and T=55C, sat. vap. pres only contributes to ~15% of total pressure.
@@ -80,6 +84,9 @@ class meteo_utils(object):
         compute saturation vapor pressure (Pa) over liquid with
         polynomial fit of Goff-Gratch (1946) formulation. (Walko, 1991)
         '''
+
+        # Force float64.
+        temp_K = float(temp_K)
 
         c = [610.5851, 44.40316, 1.430341, 0.2641412e-1, 0.2995057e-3, 0.2031998e-5, 0.6936113e-8, 0.2564861e-11, -0.3704404e-13]
         x = max(-80., temp_K-self.C_2_K)
@@ -113,6 +120,10 @@ class meteo_utils(object):
         temp_K  - temperature (k)
         '''
 
+        # Force float64.
+        pres_Pa = float(pres_Pa)
+        temp_K = float(temp_K)
+
         esi = self.e_sub_i(temp_K)
 
         # Even at P=1050hPa and T=55C, sat. vap. pres only contributes to ~15% of total pressure.
@@ -132,6 +143,9 @@ class meteo_utils(object):
         compute saturation vapor pressure (Pa) over ice with
         polynomial fit of Goff-Gratch (1946) formulation. (Walko, 1991)
         '''
+
+        # Force float64.
+        temp_K = float(temp_K)
 
         c = [.609868993E03, .499320233E02, .184672631E01, .402737184E-1, .565392987E-3, .521693933E-5, .307839583E-7, .105785160E-9, .161444444E-12]
         x = max(-80., temp_K-self.C_2_K)
