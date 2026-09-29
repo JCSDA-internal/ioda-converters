@@ -195,10 +195,12 @@ def get_data_from_file(obs_file_handle):
     obs_data[('pressure', META_DATA_NAME)] *= 100.0
 
     # Handle longitudes to be within [-180, 180)
+    # Scalar operations widen the dtype, so cast back.
+    longitudes = obs_data[('longitude', META_DATA_NAME)]
     obs_data[('longitude', META_DATA_NAME)] = numpy.ma.where(
-        obs_data[('longitude', META_DATA_NAME)] > 180,
-        obs_data[('longitude', META_DATA_NAME)] - 360,
-        obs_data[('longitude', META_DATA_NAME)]
+        longitudes > 180,
+        (longitudes - 360).astype(longitudes.dtype),
+        longitudes
     )
 
     # Handle time conversion
