@@ -65,32 +65,23 @@ qcName = iconv.OqcName()
 # mol mol-1. 'lvmin' is the 0-based level index (matching self.lbot) at which
 # the 'oe' list begins. 'inflation' maps 0-based level index to the extra
 # |O3|-scaled term added at that level.
+
 MLS_ERROR_TABLES = {
-    # res/write_mls_netcdf_v5.f90 (v5.04), lvmin=8 lvmax=49 (1-based)
-    'res-v5': {
+    # v5 table (shared between res-v5 and nrt-v5 definitions)
+    'v5': {
         'lvmin': 7,
-     'oe': [2.0e-08, 2.0e-08, 2.0e-08, 2.0e-08, 3.5e-08, 5.0e-08, 5.0e-08, 5.0e-08,
-         1.25e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.25e-07, 2.5e-07,
-         2.75e-07, 3.0e-07, 3.0e-07, 3.0e-07, 3.0e-07, 3.0e-07, 2.75e-07, 2.5e-07,
-         2.25e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.0e-07, 1.5e-07, 1.0e-07,
-         1.0e-07, 1.0e-07, 1.5e-07, 2.0e-07, 2.0e-07, 2.0e-07, 3.0e-07, 3.0e-07,
-         3.0e-07, 3.0e-07],
+        'oe': [2.0e-08, 2.0e-08, 2.0e-08, 2.0e-08, 3.5e-08, 5.0e-08, 5.0e-08, 5.0e-08,
+           1.25e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.25e-07, 2.5e-07,
+           2.75e-07, 3.0e-07, 3.0e-07, 3.0e-07, 3.0e-07, 3.0e-07, 2.75e-07, 2.5e-07,
+           2.25e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.0e-07, 1.5e-07, 1.0e-07,
+           1.0e-07, 1.0e-07, 1.5e-07, 2.0e-07, 2.0e-07, 2.0e-07, 3.0e-07, 3.0e-07,
+           3.0e-07, 3.0e-07],
         'inflation': {7: 0.30, 8: 0.20, 9: 0.125, 10: 0.05, 11: 0.05, 12: 0.05},
-    },
-    # nrt/write_mls_netcdf_v5.f90 (NRT v5.03), lvmin=8 lvmax=43 (1-based)
-    'nrt-v5': {
-        'lvmin': 7,
-     'oe': [2.0e-08, 2.0e-08, 2.0e-08, 2.0e-08, 3.5e-08, 5.0e-08, 5.0e-08, 5.0e-08,
-         1.25e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.25e-07, 2.5e-07,
-         2.75e-07, 3.0e-07, 3.0e-07, 3.0e-07, 3.0e-07, 3.0e-07, 2.75e-07, 2.5e-07,
-         2.25e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.0e-07, 1.5e-07, 1.0e-07,
-         1.0e-07, 1.0e-07, 1.5e-07, 2.0e-07],
-        'inflation': {7: 0.30, 8: 0.20, 9: 0.125, 10: 0.05, 11: 0.05, 12: 0.05},
-    },
+},
     # res/write_mls_netcdf_v6.f90 (v6.03), lvmin=8 lvmax=49 (1-based)
-    'res-v6': {
+    'v6': {
         'lvmin': 7,
-     'oe': [2.00e-08, 1.01e-08, 7.40e-09, 5.00e-09, 5.00e-09, 5.00e-09, 5.23e-08,
+        'oe': [2.00e-08, 1.01e-08, 7.40e-09, 5.00e-09, 5.00e-09, 5.00e-09, 5.23e-08,
          9.95e-08, 1.486e-07, 1.977e-07, 2.00e-07, 2.00e-07, 2.00e-07, 2.00e-07,
          2.448e-07, 2.966e-07, 3.483e-07, 4.00e-07, 3.753e-07, 3.506e-07, 3.259e-07,
          3.012e-07, 2.780e-07, 2.550e-07, 2.320e-07, 2.089e-07, 2.00e-07, 2.00e-07,
@@ -102,7 +93,7 @@ MLS_ERROR_TABLES = {
 
 
 class mls(object):
-    def __init__(self, filenames, lbot, ltop, sTAI, eTAI, errorOn, mls_version='res-v5'):
+    def __init__(self, filenames, lbot, ltop, sTAI, eTAI, errorOn, mls_version='v5'):
         self.filenames = filenames
         self.errorOn = errorOn
         self.mls_version = mls_version
@@ -190,9 +181,15 @@ class mls(object):
     def _calc_error(self, o3, o3_prec, lev):
         # Observation error estimates from MLS, version-specific (see
         # MLS_ERROR_TABLES). 'lev' is the 0-based level index.
+        # If the requested level is outside the nominal table support,
+        # use the nearest supported table level so converter-level level
+        # selection can be deferred to downstream UFO filters.
         table = MLS_ERROR_TABLES[self.mls_version]
-        ooe = table['oe'][lev - table['lvmin']]
-        ooe = ooe + (table['inflation'].get(lev, 0.0) * abs(o3))
+        lvmin = table['lvmin']
+        lvmax = lvmin + len(table['oe']) - 1
+        lev_clamped = min(max(lev, lvmin), lvmax)
+        ooe = table['oe'][lev_clamped - lvmin]
+        ooe = ooe + (table['inflation'].get(lev_clamped, 0.0) * abs(o3))
         ooe = np.sqrt(max((0.5*ooe)**2+(o3_prec)**2, 1.e-15))
         return ooe
 
@@ -315,27 +312,18 @@ def main():
     optional.add_argument('--no-error', dest='error', action='store_false')
     optional.add_argument(
         '--mls-version',
-        help="MLS product version, selects the observation-error table (default=res-v5)",
-        type=str, required=False, default='res-v5',
+        help="MLS product version, selects the observation-error table (default=v5)",
+        type=str, required=False, default='v5',
         choices=list(MLS_ERROR_TABLES.keys()), dest='mls_version')
 
     args = parser.parse_args()
 
     rawFiles = sorted(args.input)
 
-    # The observation-error table only covers levels [table_lvmin, table_lvmax]
-    # (1-based); indexing outside that range would either raise an IndexError
-    # (ltop too high) or silently wrap to the wrong table entry via negative
-    # indexing (lbot too low). Fail loudly here instead.
-    if (args.error):
-        table = MLS_ERROR_TABLES[args.mls_version]
-        table_lvmin = table['lvmin'] + 1
-        table_lvmax = table['lvmin'] + len(table['oe'])
-        if not (table_lvmin <= args.lbot <= args.ltop <= table_lvmax):
-            parser.error(
-                "--level-bottom/--level-top ({}-{}) must be within [{}-{}] for "
-                "--mls-version {} (or pass --no-error).".format(
-                    args.lbot, args.ltop, table_lvmin, table_lvmax, args.mls_version))
+    # Observation-error tables are version-specific and may not span the full
+    # user-requested level range; out-of-range levels are handled by clamping
+    # to nearest supported table level in _calc_error so level selection can
+    # be left to downstream UFO filtering.
 
     # get start and end times for cropping data in MLS native time format
     # (TAI seconds since Jan 1, 1993.). Unbounded on either side if not given.
