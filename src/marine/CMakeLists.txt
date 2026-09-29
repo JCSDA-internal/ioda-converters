@@ -8,6 +8,7 @@ list(APPEND programs
   emc_ice2ioda.py
   gds2_sst2ioda.py
   gmao_obs2ioda.py
+  gmao_nsidc_cice2ioda.py
   godae_profile2ioda.py
   godae_ship2ioda.py
   godae_trak2ioda.py
