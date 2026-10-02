@@ -1,17 +1,18 @@
-module ncio_mod
+module ncio_mod_deprecated
 
    use netcdf
    use iodaconv_kinds, only: i_kind, r_single, r_kind
-   use define_mod, only: nobtype, nvar_info, n_ncdim, n_ncgrp, nstring, ndatetime, &
-                         obtype_list, name_ncdim, name_ncgrp, name_var_met, name_var_info, name_sen_info, &
-                         xdata, itrue, ifalse, vflag, ninst, inst_list, write_nc_conv, write_nc_radiance, &
-                         write_nc_radiance_geo, ninst_geo, geoinst_list, &
-                         var_tb, nsen_info, type_var_info, type_sen_info, dim_var_info, dim_sen_info, &
-                         unit_var_met, iflag_conv, iflag_radiance, set_brit_obserr, set_ahi_obserr
-   use netcdf_mod, only: open_netcdf_for_write, close_netcdf, &
-                         def_netcdf_dims, def_netcdf_grp, def_netcdf_var, def_netcdf_end, &
-                         put_netcdf_var, get_netcdf_dims
-   use ufo_vars_mod, only: ufo_vars_getindex
+   use define_mod_deprecated, only: nobtype, nvar_info, n_ncdim, n_ncgrp, nstring, ndatetime, &
+                                    obtype_list, name_ncdim, name_ncgrp, name_var_met, name_var_info, name_sen_info, &
+                                    xdata, itrue, ifalse, vflag, ninst, inst_list, write_nc_conv, write_nc_radiance, &
+                                    write_nc_radiance_geo, ninst_geo, geoinst_list, &
+                                    var_tb, nsen_info, type_var_info, type_sen_info, dim_var_info, dim_sen_info, &
+                                    unit_var_met, iflag_conv, iflag_radiance, set_brit_obserr, set_ahi_obserr
+   use netcdf_mod_deprecated, only: open_netcdf_for_write, close_netcdf, &
+                                    def_netcdf_dims, def_netcdf_grp, def_netcdf_var, def_netcdf_end, &
+                                    put_netcdf_var, get_netcdf_dims
+   use ufo_vars_mod_deprecated, only: ufo_vars_getindex
+   use ahi_HSD_mod_deprecated, only: ahi_satid
 
    implicit none
 
@@ -82,7 +83,11 @@ contains
          else if (write_opt == write_nc_radiance) then
             ncfname = trim(outdir)//trim(inst_list(ityp))//'_obs_'//trim(filedate)//'.nc4'
          else if (write_opt == write_nc_radiance_geo) then
-            ncfname = trim(outdir)//trim(geoinst_list(ityp))//'_obs_'//trim(filedate)//'.nc4'
+            if (geoinst_list(ityp) == 'ahi_himawari') then
+                ncfname = trim(outdir)//trim(geoinst_list(ityp))//'_'//trim(ahi_satid)//'_obs_'//trim(filedate)//'.nc4'
+            else
+                ncfname = trim(outdir)//trim(geoinst_list(ityp))//'_obs_'//trim(filedate)//'.nc4'
+            end if
          end if
          if (write_opt == write_nc_radiance .or. write_opt == write_nc_radiance_geo) then
             iv = ufo_vars_getindex(name_sen_info, 'sensor_channel')
@@ -90,7 +95,7 @@ contains
             ichan(:) = xdata(ityp, itim)%xseninfo_int(:, iv)
             allocate (obserr(xdata(ityp, itim)%nvars))
             if (write_opt == write_nc_radiance_geo) then
-               if (geoinst_list(ityp) == 'ahi_himawari8') then
+               if (geoinst_list(ityp) == 'ahi_himawari') then
                   call set_ahi_obserr(geoinst_list(ityp), xdata(ityp, itim)%nvars, obserr)
                else
                   call set_brit_obserr(inst_list(ityp), xdata(ityp, itim)%nvars, obserr)
@@ -345,4 +350,4 @@ contains
 
    end subroutine write_obs
 
-end module ncio_mod
+end module ncio_mod_deprecated

@@ -1,13 +1,13 @@
-module radiance_mod
+module radiance_mod_deprecated
 
    use iodaconv_kinds, only: r_kind, i_kind, r_double, i_llong
-   use define_mod, only: missing_r, missing_i, nstring, ndatetime, &
-                         ninst, inst_list, set_name_satellite, set_name_sensor, xdata, name_sen_info, &
-                         nvar_info, name_var_info, type_var_info, nsen_info, type_sen_info, &
-                         dtime_min, dtime_max, strlen
-   use ufo_vars_mod, only: ufo_vars_getindex
+   use define_mod_deprecated, only: missing_r, missing_i, nstring, ndatetime, &
+                                    ninst, inst_list, set_name_satellite, set_name_sensor, xdata, name_sen_info, &
+                                    nvar_info, name_var_info, type_var_info, nsen_info, type_sen_info, &
+                                    dtime_min, dtime_max, strlen
+   use ufo_vars_mod_deprecated, only: ufo_vars_getindex
    use netcdf, only: nf90_float, nf90_int, nf90_char, nf90_int64
-   use utils_mod, only: get_julian_time, da_advance_time, da_get_time_slots
+   use utils_mod_deprecated, only: get_julian_time, da_advance_time, da_get_time_slots
 
    implicit none
    private
@@ -1073,7 +1073,7 @@ contains
             xdata(i, ii)%xseninfo_float(:, :) = missing_r
             xdata(i, ii)%xseninfo_int(:, :) = missing_i
             if (index(inst_list(i), 'iasi') > 0 .or. &
-                index(inst_list(i), 'cris') > 0) then
+                index(inst_list(i), 'cris-fsr') > 0) then
                allocate (xdata(i, ii)%wavenumber(nvars(i)))
             end if
             if (nvars(i) > 0) then
@@ -1250,7 +1250,7 @@ contains
       case ('iasi')
          start = -50.0_r_kind
          step = 5.0_r_kind/6.0_r_kind
-      case ('cris')
+      case ('cris-fsr')
          start = -51.615_r_kind
          step = 3.33_r_kind
       case default
@@ -1280,9 +1280,9 @@ contains
       fgat_loop: do ii = 1, nfgat
          inst_loop: do i = 1, ninst
 
-            if (trim(inst_list(i)) /= 'cris_npp' .and. &
-                trim(inst_list(i)) /= 'cris_n20' .and. &
-                trim(inst_list(i)) /= 'cris_n21' .and. &
+            if (trim(inst_list(i)) /= 'cris-fsr_npp' .and. &
+                trim(inst_list(i)) /= 'cris-fsr_n20' .and. &
+                trim(inst_list(i)) /= 'cris-fsr_n21' .and. &
                 trim(inst_list(i)) /= 'iasi_metop-a' .and. &
                 trim(inst_list(i)) /= 'iasi_metop-b' .and. &
                 trim(inst_list(i)) /= 'iasi_metop-c') then
@@ -1407,4 +1407,4 @@ contains
 
    end subroutine read_spc
 
-end module radiance_mod
+end module radiance_mod_deprecated

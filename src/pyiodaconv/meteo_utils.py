@@ -337,7 +337,7 @@ class meteo_utils(object):
             tenup = self.theta_e(pres_Pa, guess+1, w2, guess+1.)
             cor = (thelcl_K - tenu) / (tenup - tenu)
             guess = guess + cor
-            if((cor < epsilon) and (-cor < epsilon)):
+            if ((cor < epsilon) and (-cor < epsilon)):
                 answer = guess
                 return answer
             # endif

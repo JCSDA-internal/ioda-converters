@@ -46,8 +46,8 @@ observations:
           #ObsValue
           pressure:
             query: "*/PRSLEVLA/P___INFO/P__EVENT/POB"
-#            transforms:
-#              - scale: 100
+            transforms:
+              - scale: 100
           airTemperature:
             query: "*/PRSLEVLA/T___INFO/T__EVENT/TOB"
             transforms:

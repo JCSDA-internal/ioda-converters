@@ -1,8 +1,16 @@
 list(APPEND scripts
   atms_netcdf_hdf5_2ioda.py
   amsr2_2ioda.py
+  cloudsat_netcdf_to_ioda.py
+  cowvr_hdf5_2ioda.py
   gmi_2ioda.py
+  osw_2ioda.py
+  ozone_product_2ioda.py
+  read_cloudsat.py
+  read_dpr_gpm.py
+  ssmis_upp_2ioda.py
   tropics_2ioda.py
+  wsfm_2ioda.py
 )
 
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )

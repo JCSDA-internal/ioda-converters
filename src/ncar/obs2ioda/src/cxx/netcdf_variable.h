@@ -1,0 +1,161 @@
+/*
+ * (C) Copyright 2026 UCAR
+ *
+ * This software is licensed under the terms of the Apache Licence Version 2.0
+ * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+ */
+
+#ifndef NCAR_OBS2IODA_SRC_CXX_NETCDF_VARIABLE_H_
+#define NCAR_OBS2IODA_SRC_CXX_NETCDF_VARIABLE_H_
+
+#include <netcdf>
+
+    struct ZlibSettings {
+        int enabled = 0;
+        int shuffle = 1;
+        int deflate = 1;
+        int deflateLevel = 4;
+    };
+
+namespace Obs2Ioda {
+
+    /**
+     * @brief Flattens an array of C-style strings into a 1D character array.
+     *
+     * This function converts an array of `const char*` strings into a flat
+     * `std::vector<char>` suitable for writing into a NetCDF fixed-length
+     * character array variable with dimensions [numStrings][stringLen].
+     *
+     * Each string is copied into a fixed-length slot of size `stringLen`,
+     * and explicitly null-terminated (with '\0') if possible. Remaining space
+     * is padded with spaces (' ').
+     *
+     * @param values      Array of C-style strings to flatten.
+     * @param numStrings  Number of strings in the array.
+     * @param stringLen   Fixed length for each string in the flattened output.
+     *                    Must be at least 1 to allow space for the null terminator.
+     *
+     * @return A flattened `std::vector<char>` of size `numStrings * stringLen`.
+     */
+    std::vector<char>
+    flattenCharArray(const char *const*values, size_t numStrings,
+                     size_t stringLen);
+
+    extern "C" {
+    /**
+     * @brief Adds a variable to a NetCDF file.
+     *
+     * @param netcdfID The identifier of the NetCDF file where the variable will be added.
+     * @param groupName The name of the group in which the variable should be created.
+     *                  If NULL, the variable is added as a global variable.
+     * @param varName The name of the variable to be created.
+     * @param netcdfDataType The NetCDF data type of the variable (e.g., NC_INT, NC_FLOAT).
+     * @param numDims The number of dimensions associated with the variable.
+     * @param dimNames An array of dimension names specifying the shape of the variable.
+     * @param zlibSettings Compression settings to be applied to the variable.
+     *                     If compression is not desired, all fields should be set to 0.
+     * @return int A status code indicating the outcome of the operation:
+     *         - 0: Success.
+     *         - Non-zero: Failure, with an error message logged.
+     */
+    int netcdfAddVar(
+            int netcdfID,
+            const char *groupName,
+            const char *varName,
+            nc_type netcdfDataType,
+            int numDims,
+            const char **dimNames,
+            const ZlibSettings *zlibSettings);
+
+    /**
+    * @brief Writes data to a variable in a NetCDF file.
+    *
+    * @param netcdfID The identifier of the NetCDF file where the data will be written.
+    * @param groupName The name of the group containing the variable. If NULL, the variable is assumed to be a global variable.
+    * @param varName The name of the variable to which data will be written.
+    * @param values A pointer to the data to be written to the variable.
+    * @return int A status code indicating the outcome of the operation:
+    *         - 0: Success.
+    *         - Non-zero: Failure, with an error message logged.
+    */
+    int netcdfPutVarInt(
+            int netcdfID,
+            const char *groupName,
+            const char *varName,
+            const int *values);
+
+    int netcdfPutVarInt64(
+            int netcdfID,
+            const char *groupName,
+            const char *varName,
+            const int64_t *values);
+
+    int netcdfPutVarReal(
+            int netcdfID,
+            const char *groupName,
+            const char *varName,
+            const float *values);
+
+    int netcdfPutVarDouble(
+            int netcdfID,
+            const char *groupName,
+            const char *varName,
+            const double *values);
+
+    int netcdfPutVarString(
+            int netcdfID,
+            const char *groupName,
+            const char *varName,
+            const char **values);
+
+    int netcdfPutVarChar(
+            int netcdfID,
+            const char *groupName,
+            const char *varName,
+            const char **values);
+
+    /**
+    * @brief Sets the fill mode and fill value for a variable in a NetCDF file.
+    *
+    * @param netcdfID The identifier of the NetCDF file containing the variable.
+    * @param groupName The name of the group containing the variable. If NULL, the variable is assumed to be a global variable.
+    * @param varName The name of the variable for which the fill mode is set.
+    * @param fillMode The fill mode to be applied:
+    *         - 0: Disable fill mode (use uninitialized values).
+    *         - 1: Enable fill mode (use the specified fill value).
+    * @param fillValue The fill value to be applied when fill mode is enabled. Must match the data type of the variable.
+    * @return int A status code indicating the outcome of the operation:
+    *         - 0: Success.
+    *         - Non-zero: Failure, with an error message logged.
+    */
+    int netcdfSetFillInt(
+            int netcdfID,
+            const char *groupName,
+            const char *varName,
+            int fillMode,
+            int fillValue);
+
+    int netcdfSetFillReal(
+            int netcdfID,
+            const char *groupName,
+            const char *varName,
+            int fillMode,
+            float fillValue);
+
+    int netcdfSetFillInt64(
+            int netcdfID,
+            const char *groupName,
+            const char *varName,
+            int fillMode,
+            int64_t fillValue);
+
+    int netcdfSetFillString(
+            int netcdfID,
+            const char *groupName,
+            const char *varName,
+            int fillMode,
+            const char *fillValue);
+    }
+}  // namespace Obs2Ioda
+
+#endif  // NCAR_OBS2IODA_SRC_CXX_NETCDF_VARIABLE_H_

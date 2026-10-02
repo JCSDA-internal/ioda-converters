@@ -19,25 +19,16 @@ parser.add_argument(
     type=str, required=True)
 
 args = parser.parse_args()
-predictor_out = netCDF4.stringtochar(np.array(['constant'], 'S8'))
 channels_out = [4]
 ncfile = netCDF4.Dataset(args.output, mode='w', format='NETCDF4')
-coef_dim = ncfile.createDimension('bias_coefficients', 1)
-coef_err_dim = ncfile.createDimension('bias_coeff_errors', 1)
-npredictors = ncfile.createDimension('npredictors', 1)
-nchannels = ncfile.createDimension('nchannels', 1)
-coef = ncfile.createVariable('bias_coefficients', np.float, ('bias_coefficients', ))
-coef_error = ncfile.createVariable('bias_coeff_errors', np.float, ('bias_coeff_errors', ))
-predictors = ncfile.createVariable('predictors', 'S8', ('npredictors', ))
-channels = ncfile.createVariable('channels', np.int, ('nchannels', ))
-coef.units = 'Aerosol optical depth'
-coef.long_name = 'bias_coefficients'
-coef_error.units = 'Aerosol optical depth'
-coef_error.long_name = 'bias_coeff_errors'
-n_coef = len(coef_dim)
+nrecs = ncfile.createDimension('Record', 1)
+nchannels = ncfile.createDimension('Channel', 1)
+coef = ncfile.createVariable('biasCoefficients/constant', np.float32, ('Record', 'Channel'))
+coef_error = ncfile.createVariable('BiasCoefficientErrors/constant', np.float32, ('Record', 'Channel'))
+channels = ncfile.createVariable('Channel', np.int32, ('Channel', ))
+recs = ncfile.createVariable('Record', np.int32, ('Record', ))
+recs[:] = 0
 coef[:] = -0.0163
 coef_error[:] = .0863
-predictor2 = netCDF4.chartostring(predictor_out)
-predictors[:] = predictor2
 channels[:] = channels_out
 ncfile.close()

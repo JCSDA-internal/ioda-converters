@@ -53,6 +53,9 @@ conv_platforms = {
     ],
     "conv_sst": [
         'sst',
+    ],
+    "conv_tcp": [
+        'tcp',
     ]
 }
 
@@ -77,10 +80,11 @@ conv_bufrtypes = {
     "rass": [126],
     "sfcship": [180, 183],
     "sfc": [181, 187],
-    "gps": [3, 4, 5, 41, 42, 43, 44, 66, 265, 266, 267, 268, 269, 421, 440,\
-            722, 723, 740, 741, 742, 743, 744, 745,\
+    "gps": [3, 4, 5, 41, 42, 43, 44, 66, 265, 266, 267, 268, 269, 421, 440, \
+            722, 723, 740, 741, 742, 743, 744, 745, \
             750, 751, 752, 753, 754, 755, 786, 803, 804, 820, 821, 825],
     "sst": [181, 182, 183, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202],
+    "tcp": [112],
     # 132 are dropsondes
 }
 
@@ -94,6 +98,7 @@ wmo_satid = {
     'noaa-18': 209,
     'noaa-19': 223,
     'noaa-20': 225,
+    'noaa-21': 226,
     'npp': 224,
 }
 
@@ -163,7 +168,7 @@ all_LocKeyList = {
     'SCCF_chan_wavelen': ('sensorCentralFrequency', 'double'),
     'QI_with_FC': ('percentConfidenceWithForecast', 'float'),
     'QI_without_FC': ('percentConfidenceWithoutForecast', 'float'),
-    'Data_Vertical_Velocity': ('windUpward', 'float'),
+    'Data_Vertical_Velocity': ('instantaneousAltitudeRate', 'float'),
     'LaunchTime': ('releaseTime', 'float'),
     'wind_computation_method': ('windComputationMethod', 'integer'),
     'satellite_zenith_angle': ('satelliteZenithAngle', 'float'),
@@ -195,6 +200,7 @@ conv_varnames = {
     "bend": ["bendingAngle"],
     "refract": ["atmosphericRefractivity"],
     "sst": ["seaSurfaceTemperature"],
+    "tcp": ["stationPressure"],
 }
 
 conv_gsivarnames = {
@@ -206,6 +212,7 @@ conv_gsivarnames = {
     "bend": ["Observation"],
     "refract": ["Observation"],
     "sst": ["Observation"],
+    "tcp": ["Observation"],
 }
 
 gsi_add_vars_allsky = {
@@ -396,32 +403,36 @@ chan_metadata_int = [
 geovals_vars = {
     'virtual_temperature': 'virtual_temperature',
     'atmosphere_ln_pressure_coordinate': 'atmosphere_ln_pressure_coordinate',
-    'specific_humidity': 'specific_humidity',
+    'specific_humidity': 'water_vapor_mixing_ratio_wrt_moist_air',
     'Forecast_Saturation_Spec_Hum': 'surface_saturation_specific_humidity',
-    'saturated_specific_humidity_profile': 'saturation_specific_humidity',
+    'saturated_specific_humidity_profile': 'saturation_water_vapor_mixing_ratio_wrt_moist_air',
+    'cloud_ice_number_concentration': 'cloud_ice_number_concentration',
+    'rain_number_concentration': 'rain_number_concentration',
+    'moist_air_density': 'moist_air_density',
     'northward_wind': 'northward_wind',
     'eastward_wind': 'eastward_wind',
     'geopotential_height_levels': 'geopotential_height_levels',
     'geopotential_height': 'geopotential_height',
-    'geometric_height': 'geometric_height',
+    'geometric_height': 'height_above_mean_sea_level',
     'height': 'height_above_mean_sea_level',
     'tropopause_pressure': 'tropopause_pressure',
-    'surface_pressure': 'surface_pressure',
-    'surface_air_pressure': 'surface_pressure',
-    'surface_temperature': 'surface_temperature',
+    'surface_pressure': 'air_pressure_at_surface',
+    'surface_air_pressure': 'air_pressure_at_surface',
+    'surface_temperature': 'air_temperature_at_2m',
     'sea_surface_temperature': 'sea_surface_temperature',
     'surface_roughness': 'surface_roughness_length',
-    'surface_height': 'surface_geometric_height',
-    'surface_geopotential_height': 'surface_geopotential_height',
-    'surface_altitude': 'surface_altitude',
-    'surface_geometric_height': 'surface_geometric_height',
+    'surface_height': 'height_above_mean_sea_level_at_surface',
+    'surface_geopotential_height': 'geopotential_height_at_surface',
+    'surface_altitude': 'height_above_mean_sea_level_at_surface',
+    'surface_geometric_height': 'height_above_mean_sea_level_at_surface',
     'landmask': 'land_area_fraction',
     'air_temperature': 'air_temperature',
+    'air_potential_temperature': 'air_potential_temperature',
     'air_pressure': 'air_pressure',
     'atmosphere_pressure_coordinate': 'air_pressure',
     'atmosphere_pressure_coordinate_interface': 'air_pressure_levels',
     'air_pressure_levels': 'air_pressure_levels',
-    'atmosphere_absorber_01': 'humidity_mixing_ratio',
+    'atmosphere_absorber_01': 'water_vapor_mixing_ratio_wrt_dry_air',
     'atmosphere_absorber_02': 'mole_fraction_of_carbon_dioxide_in_air',
     'mole_fraction_of_ozone_in_air': 'mole_fraction_of_ozone_in_air',
     'atmosphere_absorber_03': 'mole_fraction_of_ozone_in_air',
@@ -433,18 +444,31 @@ geovals_vars = {
     'effective_radius_of_cloud_particle_03': 'effective_radius_of_rain_particle',
     'atmosphere_mass_content_of_cloud_04': 'mass_content_of_snow_in_atmosphere_layer',
     'effective_radius_of_cloud_particle_04': 'effective_radius_of_snow_particle',
+    'atmosphere_mass_content_of_cloud_05': 'mass_content_of_graupel_in_atmosphere_layer',
+    'effective_radius_of_cloud_particle_05': 'effective_radius_of_graupel_particle',
+    'cloud_area_fraction_in_atmosphere': 'cloud_area_fraction_in_atmosphere_layer',
+    'atmosphere_column_mass_content_of_cloud_01': 'mass_content_of_cloud_liquid_water_in_atmosphere_column',
+    'atmosphere_column_mass_content_of_cloud_02': 'mass_content_of_cloud_ice_in_atmosphere_column',
+    'atmosphere_column_mass_content_of_cloud_03': 'mass_content_of_rain_in_atmosphere_column',
+    'atmosphere_column_mass_content_of_cloud_04': 'mass_content_of_snow_in_atmosphere_column',
+    'atmosphere_column_mass_content_of_cloud_05': 'mass_content_of_graupel_in_atmosphere_column',
+    'mass_mixing_ratio_of_cloud_01': 'cloud_liquid_water',
+    'mass_mixing_ratio_of_cloud_02': 'cloud_liquid_ice',
+    'mass_mixing_ratio_of_cloud_03': 'rain_water',
+    'mass_mixing_ratio_of_cloud_04': 'snow_water',
+    'mass_mixing_ratio_of_cloud_05': 'graupel',
     'Water_Fraction': 'water_area_fraction',
     'Land_Fraction': 'land_area_fraction',
     'Ice_Fraction': 'ice_area_fraction',
     'Snow_Fraction': 'surface_snow_area_fraction',
     'Vegetation_Fraction': 'vegetation_area_fraction',
-    'Water_Temperature': 'surface_temperature_where_sea',
-    'Land_Temperature': 'surface_temperature_where_land',
-    'Ice_Temperature': 'surface_temperature_where_ice',
-    'Snow_Temperature': 'surface_temperature_where_snow',
+    'Water_Temperature': 'skin_temperature_at_surface_where_sea',
+    'Land_Temperature': 'skin_temperature_at_surface_where_land',
+    'Ice_Temperature': 'skin_temperature_at_surface_where_ice',
+    'Snow_Temperature': 'skin_temperature_at_surface_where_snow',
     'tsavg5': 'average_surface_temperature_within_field_of_view',
-    'Sfc_Wind_Speed': 'surface_wind_speed',
-    'Sfc_Wind_Direction': 'surface_wind_from_direction',
+    'Sfc_Wind_Speed': 'wind_speed_at_surface',
+    'Sfc_Wind_Direction': 'wind_from_direction_at_surface',
     'Lai': 'leaf_area_index',
     'Soil_Moisture': 'volume_fraction_of_condensed_water_in_soil',
     'Soil_Temperature': 'soil_temperature',
@@ -452,8 +476,8 @@ geovals_vars = {
     'Vegetation_Type': 'vegetation_type_index',
     'Soil_Type': 'soil_type',
     'Snow_Depth': 'surface_snow_thickness',
-    'humidity_mixing_ratio': 'humidity_mixing_ratio',
-    'Sfc_Height': 'surface_geopotential_height',
+    'humidity_mixing_ratio': 'water_vapor_mixing_ratio_wrt_dry_air',
+    'Sfc_Height': 'geopotential_height_at_surface',
     'Wind_Reduction_Factor_at_10m': 'wind_reduction_factor_at_10m',
     'sulf': 'sulf',
     'bc1': 'bc1',
@@ -497,6 +521,7 @@ oz_lay_sensors = [
     'gome',
     'sbuv2',
     'omi',
+    'omieff',
     'ompsnp',
     'ompstc8',
     'ompsnm',
@@ -522,7 +547,7 @@ units_values = {
     'virtualTemperatureAt2M': 'K',
     'specificHumidity': 'kg kg-1',
     'specificHumidityAt2M': 'kg kg-1',
-    'waterVaporMixingRatio': 'kg kg-1',
+    'water_vapor_mixing_ratio_wrt_dry_air': 'kg kg-1',
     'relativeHumidity': '1',
     'windNorthward': 'm s-1',
     'windEastward': 'm s-1',
@@ -558,18 +583,25 @@ units_values = {
     'ozoneProfile': 'mol mol-1',
     'ozoneSurface': 'kg kg-1',
     'carbondioxideLayer': '1',
-    'atmosphere_mass_content_of_cloud_liquid_water': 'kg m-2',
+    'mass_content_of_cloud_liquid_water_in_atmosphere_layer': 'kg m-2',
     'effective_radius_of_cloud_liquid_water_particle': 'm',
-    'atmosphere_mass_content_of_cloud_ice': 'kg m-2',
+    'mass_content_of_cloud_ice_in_atmosphere_layer': 'kg m-2',
     'effective_radius_of_cloud_ice_particle': 'm',
     'mass_content_of_rain_in_atmosphere_layer': 'kg m-2',
     'effective_radius_of_rain_particle': '1e-6 m',
     'mass_content_of_snow_in_atmosphere_layer': 'kg m-2',
     'effective_radius_of_snow_particle': '1e-6 m',
-    'surface_temperature_where_sea': 'K',
-    'surface_temperature_where_land': 'K',
-    'surface_temperature_where_ice': 'K',
-    'surface_temperature_where_snow': 'K',
+    'mass_content_of_graupel_in_atmosphere_layer': 'kg m-2',
+    'mass_content_of_cloud_liquid_water_in_atmosphere_column': 'kg m-2',
+    'mass_content_of_cloud_ice_in_atmosphere_column': 'kg m-2',
+    'mass_content_of_rain_in_atmosphere_column': 'kg m-2',
+    'mass_content_of_snow_in_atmosphere_column': 'kg m-2',
+    'mass_content_of_graupel_in_atmosphere_column': 'kg m-2',
+    'effective_radius_of_graupel_particle': '1e-6 m',
+    'skin_temperature_at_surface_where_sea': 'K',
+    'skin_temperature_at_surface_where_land': 'K',
+    'skin_temperature_at_surface_where_ice': 'K',
+    'skin_temperature_at_surface_where_snow': 'K',
     'leaf_area_index': '1',
     'volume_fraction_of_condensed_water_in_soil': '1',
     'soilTemperature': 'K',
@@ -618,6 +650,11 @@ units_values = {
     'brightnessTemperature': 'K',
     'percentConfidenceWithForecast': 'percent',
     'percentConfidenceWithoutForecast': 'percent',
+    'cloud_liquid_water': 'kg/kg',
+    'cloud_liquid_ice': 'kg/kg',
+    'rain_water': 'kg/kg',
+    'snow_water': 'kg/kg',
+    'graupel': 'kg/kg',
 }
 
 # @TestReference
@@ -753,6 +790,9 @@ class Conv(BaseGSI):
                 if (v == 'sst'):
                     outname = OutDir + '/' + v + '_geoval_' + \
                         self.validtime.strftime("%Y%m%d%H") + '.nc4'
+                if (v == 'tcp'):
+                    outname = OutDir + '/' + v + '_geoval_' + \
+                        self.validtime.strftime("%Y%m%d%H") + '.nc4'
                 if (p == 'windprof' or p == 'satwind' or p == 'scatwind' or p == 'vadwind' or p == 'pibal'):
                     outname = OutDir + '/' + p + '_geoval_' + \
                         self.validtime.strftime("%Y%m%d%H") + '.nc4'
@@ -777,7 +817,7 @@ class Conv(BaseGSI):
                 print("Platform:%s Var:%s #Obs:%d" % (p, v, np.sum(idx)))
                 if v == 'bend':
                     # sort record_number
-                    record_number = self.var('record_number')[idx]
+                    record_number = self.var('Observation_Subtype')[idx]
                     id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
                     print("Sorting ", v, " obs referring to record_number in geovals")
                     # record_number_sorted = [ record_number[ksort] for ksort in id_recordnum_sort ]
@@ -787,7 +827,7 @@ class Conv(BaseGSI):
                     idx_id = idx_tuples[0]
                     idx_sorted = [idx_id[ksort] for ksort in id_recordnum_sort]
                     # another check if idx_sorted is correct to sort record_number
-                    # record_number_new = self.var('record_number')[idx_sorted]
+                    # record_number_new = self.var('Observation_Subtype')[idx_sorted]
                     # for isort in range(len(record_number_new)):
                     #     print('isort, idx, record_number, record_number_new',isort,\
                     #         record_number[isort], record_number_new[isort] )
@@ -876,6 +916,9 @@ class Conv(BaseGSI):
                 if (v == 'sst'):
                     outname = OutDir + '/' + v + '_obs_' + \
                         self.validtime.strftime("%Y%m%d%H") + '.nc4'
+                if (v == 'tcp'):
+                    outname = OutDir + '/' + v + '_obs_' + \
+                        self.validtime.strftime("%Y%m%d%H") + '.nc4'
                 if (p == 'windprof' or p == 'satwind' or p == 'scatwind' or p == 'vadwind' or p == 'pibal'):
                     outname = OutDir + '/' + p + '_obs_' + \
                         self.validtime.strftime("%Y%m%d%H") + '.nc4'
@@ -926,9 +969,9 @@ class Conv(BaseGSI):
 
                 if v == 'bend':
                     # sort record_number
-                    record_number = self.var('record_number')[idx]
+                    record_number = self.var('Observation_Subtype')[idx]
                     id_recordnum_sort = sorted(range(len(record_number)), key=record_number.__getitem__)
-                    print("Sorting ", v, " obs referring to record_number")
+                    # print("Sorting ", v, " obs referring to Observation_Subtype")
                     # record_number_sorted = [ record_number[ksort] for ksort in id_recordnum_sort ]
                     # print('record_number:', record_number)
                     # print('record_number.size:', record_number.size)
@@ -1092,6 +1135,10 @@ class Conv(BaseGSI):
                             #     hgt[hgt > 9998.] = self.FLOAT_FILL
                             #     tmp = hgt
                             outdata[(loc_mdata_name, 'MetaData')] = tmp
+                            varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'm'
+                        elif v == 'bend':
+                            loc_mdata_name = 'impactHeightRO'
+                            outdata[(loc_mdata_name, 'MetaData')] = self.var(lvar)[idx]
                             varAttrs[(loc_mdata_name, 'MetaData')]['units'] = 'm'
                         elif p == 'sondes' or p == 'aircraft' or p == 'satwind' or p == 'pibal':
                             tmp = self.var(lvar)[idx]

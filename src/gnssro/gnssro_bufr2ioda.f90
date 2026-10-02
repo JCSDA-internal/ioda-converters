@@ -187,7 +187,11 @@ program gnssro_bufr2ioda2
          geoid = bfr1ahdr(12)    ! Geoid undulation
          sclf = bfr1ahdr(13)     ! Satellite classification
          ogce = bfr1ahdr(14)     ! Identification of originating/generating centre
-         tinc = bfr1ahdr(15)     ! Time increment relative to the start of occultaion
+         if (bfr1ahdr(15) >= 1.e+9_real64) then
+            tinc = i_missing
+         else
+            tinc = bfr1ahdr(15)     ! Time increment relative to the start of occultation
+         end if
          call epochtimecalculator(idate5, epochtime)  ! calculate epochtime since January 1 1970
 
          if (addChecks) then

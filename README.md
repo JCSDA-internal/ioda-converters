@@ -1,7 +1,3 @@
-GNU:[![AWS-gnu](https://codebuild.us-east-1.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoieHZsZGhxZEo1a0diR0hCMVE5SCtpRlovVFJ3N1EyTi8wUkpneklzNjRiMWZyY01qNmxmRkZHMDZlWHAyNm1DSDdXTGJhaXVNM1IwK3c5b1B0ck5ib2VzPSIsIml2UGFyYW1ldGVyU3BlYyI6InBFd0NyeDdJN3Y5WTl0S0wiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=develop)](https://us-east-1.console.aws.amazon.com/codesuite/codebuild/projects/automated-testing-ioda-conventers-gnu/history)
-INTEL:[![AWS-intel](https://codebuild.us-east-1.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiNmUzcndiY2VIVGtYcC92S2luakNsVGUrdUV5WjhnSGpYWWp2U3JVVERWM0pjSzNHeUg4c1lUTEV6R2VldDdPcmtyZzZHUHYvaFFHek5WV3hxNlJWQ3A4PSIsIml2UGFyYW1ldGVyU3BlYyI6IjZyU21lWUtRTkVEdG9Ld2ciLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=develop)](https://us-east-1.console.aws.amazon.com/codesuite/codebuild/projects/automated-testing-ioda-conventers-intel/history)
-CLANG:[![AWS-clang](https://codebuild.us-east-1.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoicE8zR0dRZmo1NUV6TVVVSTJsY0RYejA0SlRIR1dGOXZBTDVQNVh5dy9vb0ViNXFEbENHZTFPN20wa3p6aHV2ZWhQOTRHUDNyYlc3TnJKdVloOGtqVTM0PSIsIml2UGFyYW1ldGVyU3BlYyI6IjBENU9vV00xRDI5L3MwRmYiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=develop)](https://console.aws.amazon.com/codesuite/codebuild/projects/automated-testing-ioda-conventers-clang/history?region=us-east-1)
-
 # ioda-converters
 
 The converters can be built and tested using ioda-bundle. In ioda-bundle the build of the converters is disabled by default (for now) so you must enable the build using the BUILD_IODA_CONVERTERS directive. Here is an example:
@@ -113,6 +109,30 @@ For method option (-m) of bias and uncertainty calculation (default/nesdis), dea
 
 The land converters include all converter scripts for snowpack, soil, vegeation, and the other surface related land variables.
 
+For OWP snow observations (snow_obs), the converter converts daily csv file to netcdf files with `owp_snow_obs.py`.
+```
+usage: owp_snow_obs.py [-h] -i INPUT [-o OUTPUT] [--thin_swe THIN_SWE]
+                       [--thin_depth THIN_DEPTH]
+                       [--thin_random_seed THIN_RANDOM_SEED] [--err_fn ERR_FN]
+optional arguments:
+  --thin_swe THIN_SWE   percentage of random thinning for SWE, from 0.0 to 1.0.
+                        Zero indicates no thinning is performed. (type: float,
+                        default: 0.0)
+  --thin_depth THIN_DEPTH
+                        percentage of random thinning for snow depth, from 0.0
+                        to 1.0. Zero indicates no thinning is performed. (type:
+                        float, default: 0.0)
+  --thin_random_seed THIN_RANDOM_SEED
+                        A random seed for reproducible random thinning. Default
+                        is total # seconds from 1970-01-01 to the day of the
+                        data provided. (type: int, default: None)
+  --err_fn ERR_FN       Name of error function to apply. The options are
+                        hardcoded in the module, currently:['dummy_error'].
+                        Default (none) uses ObsError column in the input file.
+                        (type: str, default: None)
+```
+
+
 For snow cover fraction(scf), IMS grib2 files are supported with `ims_scf2ioda.py`.
 ```
 Usage: ims_scf2ioda.py -i input_ims_file.grib2 -o output_ioda_file.nc -m maskout
@@ -120,6 +140,13 @@ Usage: ims_scf2ioda.py -i input_ims_file.grib2 -o output_ioda_file.nc -m maskout
 For -i you can specify an input file and the converter will write it to one output file. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values.
 
 
+For the processed imsfv3 snow depth and snow cover fraction, imsfv3 NetCDF file are supported with `imsfv3_scf2ioda.py.
+```
+Usage: imsfv3_scf2ioda.py -i input_imsfv3_file.nc -o output_ioda_file.nc
+```
+For -i you can specify an input file and the converter will write it to one output file when for -o you specify output ioda filename.
+
+ 
 For snow depth (snod), afwa grib1 files are supported with `afwa_snod2ioda.py`.
 ```
 Usage: afwa_snod2ioda.py -i input_afwa_file.grb -o output_ioda_file.nc -m maskout
@@ -131,22 +158,17 @@ It should be noted that both ims_scf2ioda.py and afwa_snod2ioda.py are depending
 
 For snow depth (snod), GHCN csv files are supported with `ghcn_snod2ioda.py`.
 ```
-Usage: ghcn_snod2ioda.py -i input_ghcn_file.csv -o output_ioda_file.nc -f ghcn_station.txt -d YYYYMMDD -m maskout
+Usage: ghcn_snod2ioda.py -i input_ghcn_file.csv -o output_ioda_file.nc -f ghcn_station.txt -d YYYYMMDD [ --warn_on_missing_stn]
 ````
-In the test case, YYYYMMDD is set 20200228. For -i you can specify an input file and the converter will write it to one output file. For fix file option (-f), you can specify fix station list file which includes station ID, latitude, longitude, and elevation. For maskout option (-m) default/maskout, default means to keep all missing values and maskout means to not write out missing values.
+In the test case, YYYYMMDD is set 20200228. For -i you can specify an input file and the converter will write it to one output file. For fix file option (-f), you can specify fix station list file which includes station ID, latitude, longitude, and elevation. If there are stations in the input file that are not in the fix file the code will report an error and exit; this can be over-written by adding the --warn_on_missing_stn flag.
 
 
-For surface volumetric soil moisture (ssm), SMAP NRT h5 files are supported with `smap_ssm2ioda.py`.
+For both SMAP surface volumetric soil moisture (ssm), both 9km and NRT h5 files are supported with `smap_ssm2ioda.py`.
 ```
 Usage: smap_ssm2ioda.py -i input_smap_file.h5 -o output_ioda_file.nc --maskMissing
 ```
 For -i you can specify an input file and the converter will write it to one output file. --maskMissing means to not write out missing values. It should be noted that SMAP NRT h5 filename contains date and time which has been transferred to the datetime in smap_ssm2ioda.py because the data in the file does not have date and time variables. The h5 file is read with the netCDF4 module rather than the h5py module generally used.
 
-For surface volumetric soil moisture (ssm), SMAP 9km h5 files are supported with `smap9km_ssm2ioda.py`.
-```
-Usage: smap9km_ssm2ioda.py -i input_smap9km_file.h5 -o output_ioda_file.nc --maskMissing
-```
-For -i you can specify an input file and the converter will write it to one output file. --maskMissin means to not write out missing values. The h5 file is read with the netCDF4 module rather than the h5py module generally used.
 
 For surface volumetric soil moisture (ssm), SMOS L2 NRT Netcdf files are supported with `smos_ssm2ioda.py`.
 ```

@@ -1,14 +1,16 @@
 list(APPEND programs
-  amv_ssec_ascii2ioda.py
   amdar_bufr2ioda.py
   amv_ssec_ascii2ioda.py
+  balloon_sonde_json2ioda.py
   buoy_bufr2ioda.py
   metar_csv2ioda.py
+  saber2ioda.py
+  saber_download.py
+  ship_bufr2ioda.py
   sonde_bufr2ioda.py
   sonde_tac2ioda.py
-  ship_bufr2ioda.py
-  sonde_tac2ioda.py
   synop_bufr2ioda.py
+  tcv_txt2ioda.py
 )
 
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )

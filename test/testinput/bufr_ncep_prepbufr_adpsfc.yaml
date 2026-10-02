@@ -24,6 +24,8 @@ observations:
             query: "*/XOB"
           latitude:
             query: "*/YOB"
+          invalidLongitude:  # make sure that path strings can't contain sequences
+            query: "*/HEADR/XOB"
           stationIdentification:
             query: "*/SID"
           stationElevation:

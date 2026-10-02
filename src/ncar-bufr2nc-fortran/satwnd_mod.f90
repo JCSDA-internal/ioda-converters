@@ -1,12 +1,12 @@
-module satwnd_mod
+module satwnd_mod_deprecated
 
    use iodaconv_kinds, only: r_kind, i_kind, r_double
-   use define_mod, only: nobtype, set_obtype_conv, obtype_list, xdata, &
-                         nvar_met, nvar_info, type_var_info, name_var_met, name_var_info, &
-                         missing_r, missing_i, vflag, itrue, ifalse, nstring, ndatetime, &
-                         dtime_min, dtime_max
-   use ufo_vars_mod, only: ufo_vars_getindex, var_prs, var_u, var_v
-   use utils_mod, only: get_julian_time, da_advance_time, da_get_time_slots
+   use define_mod_deprecated, only: nobtype, set_obtype_conv, obtype_list, xdata, &
+                                    nvar_met, nvar_info, type_var_info, name_var_met, name_var_info, &
+                                    missing_r, missing_i, vflag, itrue, ifalse, nstring, ndatetime, &
+                                    dtime_min, dtime_max
+   use ufo_vars_mod_deprecated, only: ufo_vars_getindex, var_prs, var_u, var_v
+   use utils_mod_deprecated, only: get_julian_time, da_advance_time, da_get_time_slots
    use netcdf, only: nf90_int, nf90_float, nf90_char
 
    implicit none
@@ -593,5 +593,4 @@ contains
       end select
    end subroutine set_rptype_satwnd
 
-end module satwnd_mod
-
+end module satwnd_mod_deprecated
