@@ -8,6 +8,7 @@ list(APPEND programs
   mls_o3_nc2ioda.py
   modis_aod2ioda.py
   mopitt_co_nc2ioda.py
+  musica_iasi_deltad2ioda.py
   omi_o3_nc2ioda.py
   ompsnm_o3_nc2ioda.py
   omps_o3_nm_h52ioda.py
