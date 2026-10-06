@@ -14,7 +14,7 @@
 #        -o: output file path
 
 import numpy as np
-import os, argparse
+import os, argparse, sys
 import pandas as pd
 from datetime import datetime
 from builtins import str
@@ -109,7 +109,7 @@ if __name__ == '__main__':
     f3 = add_data(infile)
 
     # Define AOD wavelengths, channels and frequencies
-    aod_wav = np.array([340., 380., 440., 500., 675, 870., 1020., 1640.], dtype=np.float32)
+    aod_wav = np.array([340., 380., 440., 500., 675., 870., 1020., 1640.], dtype=np.float32)
     aod_chan = np.array([1, 2, 3, 4, 5, 6, 7, 8], dtype=np.intc)
     speed_light = 2.99792458E8
     frequency = speed_light*1.0E9/aod_wav
@@ -137,10 +137,19 @@ if __name__ == '__main__':
             varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
         varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtypestr]
 
-    obsvars = {'aerosolOpticalDepth': ['aod_340nm', 'aod_380nm',
-                                       'aod_440nm', 'aod_675nm',
-                                       'aod_500nm', 'aod_870nm',
-                                       'aod_1020nm', 'aod_1640nm']}
+    # Derive the input column names from aod_wav rather than listing them
+    # again. aod_wav already fixes the channel order for sensorCentralFrequency
+    # and sensorChannelNumber, so a second hand-written list is a chance for the
+    # two to disagree -- which they did: 500 nm and 675 nm were transposed, so
+    # every file written by this converter carried AOD at 675 nm in the channel
+    # labelled 500 nm and vice versa.
+    aod_cols = [f'aod_{int(round(float(wav)))}nm' for wav in aod_wav]
+    absent = [col for col in aod_cols if col not in f3.columns]
+    if absent:
+        sys.exit(f'{infile} has no column(s) {absent}; check aod_wav against '
+                 f'the AOD columns the file actually carries')
+
+    obsvars = {'aerosolOpticalDepth': aod_cols}
 
     # A dictionary of global attributes.  More filled in further down.
     AttrData = {}
