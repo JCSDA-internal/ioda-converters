@@ -9,7 +9,7 @@
 #             "https://aeronet.gsfc.nasa.gov/cgi-bin/print_web_data_v3?year=2000&month=6&day=1&hour=9&year2=2000&month2=6&day2=1&hour2=15&AOD20=1&AVG=10&if_no_html=1"
 #
 # Usage:
-#        python aeronet_aod2ioda.py -i aeronet_aod.dat 6 -o aeronet_aod.nc
+#        python aeronet_aod2ioda.py -i aeronet_aod.dat -o aeronet_aod.nc
 #        -i: input AOD file path
 #        -o: output file path
 
