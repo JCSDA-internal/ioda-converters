@@ -186,6 +186,22 @@ class mls(object):
                 d[k].mask = False
         return d
 
+    def _nrt_profile_indices(self, d, file_index):
+        nprof = len(d['dateTime'])
+        start_drop = 2 if file_index == 0 else 7
+        end_drop = 3
+
+        if nprof <= (start_drop + end_drop):
+            return np.empty(0, dtype=int)
+
+        # NRT guidance: first file drops 2 start profiles; later files drop 7.
+        # All files drop 3 end profiles.
+        profile_mask = np.ones(nprof, dtype=bool)
+        profile_mask[:start_drop] = False
+        profile_mask[-end_drop:] = False
+
+        return np.where(profile_mask)[0].astype(int)
+
     def _calc_error(self, o3, o3_prec, lev):
         # For MLS NRT, use the reported precision directly as ObsError.
         if self.mls_version == 'nrt':
@@ -201,10 +217,17 @@ class mls(object):
         ooe = np.sqrt(max((0.5*ooe)**2+(o3_prec)**2, 1.e-18))
         return ooe
 
-    def _just_flatten(self, d):
+    def _just_flatten(self, d, profile_idx=None):
         # only output desired levels (lbot through ltop)
         dd = {}
-        idx, = np.where((np.asarray(d['dateTime']) >= self.startTAI) & (np.asarray(d['dateTime']) <= self.endTAI))
+        if profile_idx is None:
+            base_idx = np.arange(len(d['dateTime']), dtype=int)
+        else:
+            base_idx = np.asarray(profile_idx, dtype=int)
+
+        # Apply assimilation window uniformly for all MLS modes.
+        dt = np.asarray(d['dateTime'])
+        idx = base_idx[(dt[base_idx] >= self.startTAI) & (dt[base_idx] <= self.endTAI)]
         dd['valKey'] = d['valKey'][idx, self.lbot:self.ltop+1]
         dd['precision'] = d['precision'][idx, self.lbot:self.ltop+1]
         lvec = np.arange(self.lbot+1, self.ltop+2)
@@ -230,13 +253,12 @@ class mls(object):
 
         # loop through input filenames
         # Note: no QC-based rejection is done here (status/convergence/quality/
-        # precision thresholds). All profiles/levels within the window and
-        # level range are passed through, with status, convergence, quality,
-        # and precision written out as MetaData so that filtering can be
-        # performed downstream by UFO obs filters instead.
-        for f in self.filenames:
+        # precision thresholds). For NRT, fixed per-file profile trimming is
+        # applied to remove low-quality chunk edges and overlap region entries.
+        for ifile, f in enumerate(self.filenames):
             nc_data = self._read_nc(f)
-            d = self._just_flatten(nc_data)
+            idx = self._nrt_profile_indices(nc_data, ifile) if self.mls_version == 'nrt' else None
+            d = self._just_flatten(nc_data, idx)
             if (self.errorOn):
                 print("Calculating Error.")
                 d['errKey'] = []
