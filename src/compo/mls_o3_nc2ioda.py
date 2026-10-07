@@ -96,12 +96,11 @@ MLS_ERROR_TABLES = {
 
 
 class mls(object):
-    def __init__(self, filenames, lbot, ltop, sTAI, eTAI, errorOn, mls_version='v5', is_nrt=False):
+    def __init__(self, filenames, lbot, ltop, sTAI, eTAI, errorOn, mls_version='v5'):
         self.filenames = filenames
         self.errorOn = errorOn
         self.mls_version = mls_version
-        self.is_nrt = is_nrt
-        self.nrt_drop_metadata = {'status', 'convergence', 'quality'} if self.is_nrt else set()
+        self.nrt_drop_metadata = {'status', 'convergence', 'quality'} if self.mls_version == 'nrt' else set()
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
@@ -188,8 +187,8 @@ class mls(object):
         return d
 
     def _calc_error(self, o3, o3_prec, lev):
-        # For MLS NRT v5, use the reported precision directly as ObsError.
-        if self.mls_version == 'v5' and self.is_nrt:
+        # For MLS NRT, use the reported precision directly as ObsError.
+        if self.mls_version == 'nrt':
             return o3_prec
 
         # Otherwise use the current table+inflation+precision combination.
@@ -211,7 +210,7 @@ class mls(object):
         lvec = np.arange(self.lbot+1, self.ltop+2)
         dd['level'], dd['status'] = np.meshgrid(np.arange(self.lbot+1, self.ltop+2), d['status'][idx])
         dd['pressure'], dd['dateTime'] = np.meshgrid(d['pressure'][self.lbot:self.ltop+1], d['dateTime'][idx])
-        if not self.is_nrt:
+        if self.mls_version != 'nrt':
             dd['quality'] = np.tile(d['quality'][idx], (lvec.shape[0], 1)).T
             dd['convergence'] = np.tile(d['convergence'][idx], (lvec.shape[0], 1)).T
             dd['status'] = np.tile(d['status'][idx], (lvec.shape[0], 1)).T
@@ -324,13 +323,9 @@ def main():
     optional.add_argument('--no-error', dest='error', action='store_false')
     optional.add_argument(
         '--mls-version',
-        help="MLS product version, selects the observation-error table (default=v5)",
+        help="MLS product version, one of v5, v6, or nrt (default=v5)",
         type=str, required=False, default='v5',
-        choices=list(MLS_ERROR_TABLES.keys()), dest='mls_version')
-    optional.add_argument(
-        '--is-nrt',
-        help="treat input as NRT product (enables NRT-v5 ObsError=precision path)",
-        action='store_true', default=False, dest='is_nrt')
+        choices=list(MLS_ERROR_TABLES.keys()) + ['nrt'], dest='mls_version')
 
     args = parser.parse_args()
 
@@ -355,7 +350,7 @@ def main():
     # NRT granules are expected to be removed downstream by UFO's
     # DuplicateThinning filter.
     o3 = mls(rawFiles, args.lbot-1, args.ltop-1, startTAI, endTAI,
-             args.error, args.mls_version, args.is_nrt)
+             args.error, args.mls_version)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)

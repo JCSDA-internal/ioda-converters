@@ -935,7 +935,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mls_o3_nrt_v5
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/mls_o3_nc2ioda.py
                           -i testinput/mls_o3_nrt_v5_l2.he5
                           -o testrun/mls_o3_nrt_v5_l2.nc
-                          --mls-version v5
+                          --mls-version nrt
                           -t 43 
                           -b 7
                           --window-begin 2026-09-07T23:00:00Z
