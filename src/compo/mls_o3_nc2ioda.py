@@ -199,7 +199,7 @@ class mls(object):
         lev_clamped = min(max(lev, lvmin), lvmax)
         ooe = table['oe'][lev_clamped - lvmin]
         ooe = ooe + (table['inflation'].get(lev_clamped, 0.0) * abs(o3))
-        ooe = np.sqrt(max((0.5 * ooe) ** 2 + (o3_prec) ** 2, 1.e-15))
+        ooe = np.sqrt(max((0.5*ooe)**2+(o3_prec)**2, 1.e-18))
         return ooe
 
     def _just_flatten(self, d):
