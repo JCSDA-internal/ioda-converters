@@ -91,7 +91,10 @@ list( APPEND test_input
   testinput/modis_aqua_Rrs_OC_L2.nc
   testinput/mls_o3_res_v5_l2.he5
   testinput/mls_o3_res_v6_l2.he5
-  testinput/mls_o3_nrt_v5_l2.he5
+  testinput/MLS-Aura_L2GP-O3_v05-03-NRT-20-c01_2026d250t2340.he5
+  testinput/MLS-Aura_L2GP-O3_v05-03-NRT-20-c01_2026d250t2355.he5
+  testinput/MLS-Aura_L2GP-O3_v05-03-NRT-20-c01_2026d251t0010.he5
+  testinput/MLS-Aura_L2GP-O3_v05-03-NRT-20-c01_2026d251t0025.he5
   testinput/omi_o3_l2.he5
   testinput/ompsnm_o3_l2.he5
   testinput/sst_ostia.nc
@@ -933,7 +936,10 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mls_o3_nrt_v5
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/mls_o3_nc2ioda.py
-                          -i testinput/mls_o3_nrt_v5_l2.he5
+                          -i testinput/MLS-Aura_L2GP-O3_v05-03-NRT-20-c01_2026d250t2340.he5
+                             testinput/MLS-Aura_L2GP-O3_v05-03-NRT-20-c01_2026d250t2355.he5
+                             testinput/MLS-Aura_L2GP-O3_v05-03-NRT-20-c01_2026d251t0010.he5
+                             testinput/MLS-Aura_L2GP-O3_v05-03-NRT-20-c01_2026d251t0025.he5
                           -o testrun/mls_o3_nrt_v5_l2.nc
                           --mls-version nrt
                           -t 43 
