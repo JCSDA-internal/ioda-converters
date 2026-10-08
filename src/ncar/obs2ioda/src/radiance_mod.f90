@@ -708,7 +708,7 @@ subroutine read_iasi (filename, filedate)
          jstart = 1
          chan_loop: do i = 1, nchan
             ! keep the channel number even when radiance is missing,
-            ! this channel list is written to the output
+            ! the channel list is assumed the same for all reports and metaData in the output
             if ( data1b8(1,i) > r8bfms ) cycle chan_loop
             ichan = nint(data1b8(1,i))
             rlink % ch(i) = ichan
