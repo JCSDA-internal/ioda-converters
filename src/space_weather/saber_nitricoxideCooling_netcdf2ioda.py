@@ -15,6 +15,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
+from pyiodaconv.def_jedi_utils import iso8601_string
 
 import netCDF4
 import numpy
@@ -61,7 +62,7 @@ VAR_ATTRS['nitricoxideCooling', OBS_ERR_NAME]['coordinates'] = 'longitude latitu
 VAR_ATTRS['nitricoxideCooling', OBS_ERR_NAME]['units'] = 'W m-3'
 VAR_ATTRS['nitricoxideCooling', OBS_QC_NAME]['coordinates'] = 'longitude latitude'
 VAR_ATTRS['height', META_DATA_NAME]['units'] = 'm'
-VAR_ATTRS['dateTime', META_DATA_NAME]['units'] = 'seconds since 1970-01-01T00:00:00Z'
+VAR_ATTRS['dateTime', META_DATA_NAME]['units'] = iso8601_string
 
 # Missing values definitions
 MISSING_VALS = {
