@@ -18,6 +18,8 @@ list(APPEND programs
   ndbc_hfradar2ioda.py
   rads_adt2ioda.py
   smap_sss2ioda.py
+  smap2b_sss2ioda.py
+  smap2c_sss2ioda.py
   smos_sss2ioda.py
   swot_l2adt2ioda.py
   argoClim2ioda.py
