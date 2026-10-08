@@ -58,8 +58,8 @@ def get_aws_data(afile, band='v', skip=1):
 
     # Map letter band to index
     BAND_TO_INDEX = {
-        'v': 0,  #  50 GHz
-        'w': 1,  #  89 GHz
+        'v': 0,  # 50 GHz
+        'w': 1,  # 89 GHz
         'g': 2,  # 183 GHz
         'y': 3,  # 325 GHz
     }
