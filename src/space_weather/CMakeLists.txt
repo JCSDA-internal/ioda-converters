@@ -5,6 +5,7 @@ list(APPEND programs
   gnss_los_ground_tec_madrigal2ioda.py
   gnss_tec_spacebased_cdaac2ioda.py
   gnss_tec_ground_based.py
+  gold_tdisk2ioda.py
   ionosonde_ascii2ioda.py
   saber_nitricoxideCooling_netcdf2ioda.py
 )
