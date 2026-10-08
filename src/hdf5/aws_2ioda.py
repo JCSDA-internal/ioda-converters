@@ -54,7 +54,16 @@ locationKeyList = [
 ]
 
 
-def get_aws_data(afile, skip=1):
+def get_aws_data(afile, band='v', skip=1):
+
+    # Map letter band to index
+    BAND_TO_INDEX = {
+        'v': 0,  #  50 GHz
+        'w': 1,  #  89 GHz
+        'g': 2,  # 183 GHz
+        'y': 3,  # 325 GHz
+    }
+    iband = BAND_TO_INDEX.get(band.lower(), 0)
 
     obs_data = init_obs_loc()
     f = h5py.File(afile, 'r')
@@ -62,8 +71,6 @@ def get_aws_data(afile, skip=1):
 
     assign_dimension(obs_data, nchans, nscans, nbeam_pos)
 
-    # data is not remapped choose one to approximate all
-    iband = 0
     process_aws_metadata(f, obs_data, iband)
     sat_altitude = get_sat_altitude(f, repeat_count=nbeam_pos)
     obs_data[('sensorViewAngle', metaDataName)] = compute_scan_angle(
@@ -324,15 +331,20 @@ def main():
     required.add_argument(
         '-i', '--input',
         help="full path name of satellite observation input file",
-        type=str, required=True, default=None)
+        type=str, required=True)
     required.add_argument(
         '-o', '--output',
         help='name of the output netCDF IODA-compliant file',
-        type=str, required=True, default='output.nc')
+        type=str, required=True)
+    # optional arguments (parser default)
+    parser.add_argument(
+        '--band',
+        help='MWR frequency band key (v: 50GHz, w: 89GHz, g: 183GHz, y: 325GHz)',
+        type=str.lower, choices=['v', 'w', 'g', 'y'], default='v')
 
     args = parser.parse_args()
 
-    obs = get_aws_data(args.input)
+    obs = get_aws_data(args.input, band=args.band)
     VarDims, VarAttrs, DimDict = get_obs_properties(obs)
 
     # setup the IODA writer
