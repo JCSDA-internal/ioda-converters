@@ -986,7 +986,7 @@ subroutine sort_obs_radiance(filedate, nfgat)
    integer(i_kind), dimension(ninst,nfgat) :: nlocs
    integer(i_kind), dimension(ninst,nfgat) :: iloc
    integer(i_kind), dimension(ninst) :: nvars
-   integer(i_kind), dimension(ninst) :: nchan_conflict  ! reports whose channel numbers disagree
+   integer(i_kind), dimension(ninst) :: nchan_conflict  ! reports with missing channel numbers or numbers that disagree
    integer(i_kind)                   :: ich, nch, nmiss
    character(len=nstring)            :: satellite
    character(len=nstring)            :: sensor
