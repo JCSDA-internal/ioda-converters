@@ -160,7 +160,7 @@ integer(i_kind), dimension(nvar_info) :: type_var_info = &
       nf90_float, &
       nf90_float, &
       nf90_int64, &
-      nf90_char,  &
+      nf90_int64,  &
       nf90_char,  &
       nf90_char   &
    /)
