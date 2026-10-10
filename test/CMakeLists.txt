@@ -96,6 +96,7 @@ list( APPEND test_input
   testinput/2021081612_RAOB_small.txt
   testinput/tropomi_co.nc
   testinput/SABER_L2A_2016001_76232_02.0.nc
+  testinput/SABER_NO_PROFILE_FLUX_2010091_V1.0.nc
   testinput/TEMPO_NO2_L2_V04_no2.20251002T180000Z.0.nc
   testinput/TEMPO_NO2_L2_V04_no2.20251002T180000Z.1.nc
   testinput/gdas.t18z.abias_air
@@ -218,6 +219,7 @@ list( APPEND test_output
   testoutput/20240401T105230_PT1M_dpr_gpm.nc
   testoutput/Pandora57s1_BoulderCO_L2_rnvs3p1-8.nc
   testoutput/saber_timed.20160101T180000Z.nc4
+  testoutput/saber_nitricoxideCooling.20100401.nc4
   testoutput/obs.20241001T000000Z_PT15M_balloonsonde.nc4
   testoutput/obs.20201001T000000Z_PT1M_tec_groundbased.nc4
   testoutput/gnssro_tec_cosmic2_202010012304_output.nc4
@@ -2656,6 +2658,17 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_saber_timed_v2_0
                             -i testinput/SABER_L2A_2016001_76232_02.0.nc
                             -o testrun/saber_timed.20160101T180000Z.nc4"
                             saber_timed.20160101T180000Z.nc4 ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_saber_nitricoxideCooling
+                    TYPE    SCRIPT
+                    ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                    COMMAND bash
+                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                            netcdf
+                            "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/saber_nitricoxideCooling_netcdf2ioda.py
+                            -i testinput/SABER_NO_PROFILE_FLUX_2010091_V1.0.nc
+                            -o testrun/saber_nitricoxideCooling.20100401.nc4"
+                            saber_nitricoxideCooling.20100401.nc4 ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_smap_nrt_ssm
                     TYPE    SCRIPT
