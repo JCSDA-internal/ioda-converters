@@ -127,13 +127,13 @@ character(len=nstring), dimension(nvar_info) :: name_var_info = &
       'latitude         ', &
       'longitude        ', &
       'dateTime         ', &
-      'launchTime       ', &
+      'releaseTime      ', &
       'station_id       ', &
       'variable_names   '  &
    /)
 
 ! conv info flags for name_var_info
-! air_pressure, height, station_elevation, latitude, longitude, dateTime, launchTime, station_id, variable_names
+! air_pressure, height, station_elevation, latitude, longitude, dateTime, releaseTime, station_id, variable_names
 integer(i_kind), dimension(nvar_info,nobtype) :: iflag_conv = reshape ( &
    (/ &
       itrue, itrue,  itrue,  itrue,  itrue,  itrue,  itrue,   itrue,  itrue,  & ! sonde
@@ -146,7 +146,7 @@ integer(i_kind), dimension(nvar_info,nobtype) :: iflag_conv = reshape ( &
    /), (/nvar_info,nobtype/) )
 
 ! radiance info flags for name_var_info
-! air_pressure, height, station_elevation, latitude, longitude, dateTime, launchTime, station_id, variable_names
+! air_pressure, height, station_elevation, latitude, longitude, dateTime, releaseTime, station_id, variable_names
 integer(i_kind), dimension(nvar_info) :: iflag_radiance = &
    (/ &
       ifalse, ifalse, ifalse, itrue, itrue, itrue, ifalse, ifalse, ifalse &
@@ -160,7 +160,7 @@ integer(i_kind), dimension(nvar_info) :: type_var_info = &
       nf90_float, &
       nf90_float, &
       nf90_int64, &
-      nf90_char,  &
+      nf90_int64, &
       nf90_char,  &
       nf90_char   &
    /)
