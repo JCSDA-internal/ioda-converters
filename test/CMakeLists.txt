@@ -112,6 +112,8 @@ list( APPEND test_input
   testinput/tec_groundBased_TENET_20201001T00Z.tec
   testinput/gnssro_tec_cosmic2_202010012304.nc
   testinput/COWVR_TSDR.020421.20240430T215845.20240430T230345.V1001.sample.h5
+  testinput/nsidc_nasa_cice_input.nc
+  testinput/nsidc_nasa_grid_north.nc
   testinput/gfs.231010.t00z.syndata.tcvitals.txt
   testinput/caliop_l2_APro.hdf
   testinput/gold_tdisk_test.nc
@@ -126,6 +128,7 @@ list( APPEND test_output
   testoutput/icethk_coperl4.nc
   testoutput/nsidc_l4_icec.nc
   testoutput/amsr2_icec_l2p.nc
+  testoutput/nsidc_nasa_cice_ioda.nc4
   testoutput/20220216T00Z_PT1H_amsr2_sample.nc4
   testoutput/gds2_sst_l2p.nc
   testoutput/gds2_sst_l3u.nc
@@ -656,6 +659,18 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gmao_argo
                           -i testinput/gmao_argo.nc
                           -o testrun/gmao_argo.nc"
                           gmao_argo.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gmao_nsidc_nasa_cice
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/gmao_nsidc_cice2ioda.py
+                          -i testinput/nsidc_nasa_cice_input.nc
+                          -g testinput/nsidc_nasa_grid_north.nc
+                          -o testrun/nsidc_nasa_cice_ioda.nc4"
+                          nsidc_nasa_cice_ioda.nc4 ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_godae_prof
                   TYPE    SCRIPT
@@ -1451,7 +1466,6 @@ endforeach()
 
 foreach (coltype total troposphere)
   foreach (spec no2) #hcho not tested and o3 not out yet with real data
-    if (NOT (${spec} STREQUAL "hcho"))
        ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tempo_${spec}_${coltype}
                           TYPE    SCRIPT
                           ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
@@ -1459,13 +1473,13 @@ foreach (coltype total troposphere)
                           ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                                   netcdf
                                   "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tempo_nc2ioda.py
-				  -i testinput/TEMPO_NO2_L2_V04_${spec}.20251002T180000Z.0.nc
-				     testinput/TEMPO_NO2_L2_V04_${spec}.20251002T180000Z.1.nc
-				  -o testrun/tempo_${spec}_${coltype}.nc
-                                  -v ${spec}
-                                  -c ${coltype}"
+                                  -i testinput/TEMPO_NO2_L2_V04_${spec}.20251002T180000Z.0.nc
+                                  testinput/TEMPO_NO2_L2_V04_${spec}.20251002T180000Z.1.nc
+                                  -o testrun/tempo_${spec}_${coltype}.nc
+                                  --variable ${spec}
+                                  --column ${coltype}
+                                  --save_grid_indices"
                                   tempo_${spec}_${coltype}.nc ${IODA_CONV_COMP_TOL})
-    endif()
   endforeach()
 endforeach()
 
