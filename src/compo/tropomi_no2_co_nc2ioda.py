@@ -145,7 +145,8 @@ class tropomi(object):
                     groups['DETAILED_RESULTS'].variables['surface_albedo_2325'][:].ravel()
                 albedo2 = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].\
                     groups['DETAILED_RESULTS'].variables['surface_albedo_2335'][:].ravel()
-                albedo = 0.5 * (albedo1 + albedo2)
+                # Scalar ops widen the dtype, so cast back.
+                albedo = (0.5 * (albedo1 + albedo2)).astype(albedo1.dtype)
 
             # get angles
             sza = ncd.groups['PRODUCT'].groups['SUPPORT_DATA'].\

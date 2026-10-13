@@ -23,7 +23,6 @@ import numpy as np
 
 import pyiodaconv.ioda_conv_engines as iconv
 from pyiodaconv.orddicts import DefaultOrderedDict
-from pyiodaconv.def_jedi_utils import compute_scan_angle
 from pyiodaconv.def_jedi_utils import ioda_int_type, ioda_float_type, epoch, iso8601_string
 from pyiodaconv.def_jedi_utils import concat_obs_dict
 

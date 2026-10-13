@@ -135,11 +135,12 @@ def read_input(input_args):
 
     if global_config['output_poc']:
         obs_data[output_var_names[0], obsValName] = data_in['poc']
-        obs_data[output_var_names[0], obsErrName] = data_in['poc']*0.0
+        # Scalar ops widen the dtype, so cast back.
+        obs_data[output_var_names[0], obsErrName] = (data_in['poc']*0.0).astype(data_in['poc'].dtype)
         obs_data[output_var_names[0], qcName] = data_in['l2_flags']
     if global_config['output_chl']:
         obs_data[output_var_names[1], obsValName] = data_in['chlor_a']
-        obs_data[output_var_names[1], obsErrName] = data_in['chlor_a']*0.0
+        obs_data[output_var_names[1], obsErrName] = (data_in['chlor_a']*0.0).astype(data_in['chlor_a'].dtype)
         obs_data[output_var_names[1], qcName] = data_in['l2_flags']
 
     return (obs_data, GlobalAttrs, time_units)

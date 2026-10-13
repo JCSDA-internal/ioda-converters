@@ -3,10 +3,12 @@
 # Macro to copy list of files from source to destination
 macro( copy_files filelist source destination )
   foreach(FILENAME ${filelist})
-    execute_process( COMMAND ${CMAKE_COMMAND} -E copy
-      ${source}/${FILENAME}
-      ${destination}/${FILENAME}
-    )
+    # file(COPY_FILE) does not create the destination directory, and FILENAME may
+    # carry a subdirectory.
+    get_filename_component(_cf_subdir ${FILENAME} DIRECTORY)
+    file( MAKE_DIRECTORY ${destination}/${_cf_subdir} )
+    file( COPY_FILE ${source}/${FILENAME}
+          ${destination}/${FILENAME} ONLY_IF_DIFFERENT )
   endforeach()
 endmacro()
 

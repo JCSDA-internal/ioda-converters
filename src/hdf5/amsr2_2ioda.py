@@ -169,8 +169,8 @@ def get_data(f, obs_data):
     # compute view angle
     sat_altitude = np.empty_like(instr_scan_ang)
     sat_altitude[:] = f.attrs['SatelliteAltitude'].item().strip('km')
+    sat_altitude *= 1000.
     obs_data[('sensorViewAngle', metaDataName)] = compute_scan_angle(
-        instr_scan_ang,
         sat_altitude,
         instr_scan_ang)
 
