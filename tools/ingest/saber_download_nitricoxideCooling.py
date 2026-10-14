@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import re
 import requests
 import argparse
 from urllib.parse import urljoin
@@ -26,7 +27,13 @@ def download_nc_files_by_date(date: datetime, save_dir: str):
 
     os.makedirs(save_dir, exist_ok=True)
 
-    fname = 'SABER_NO_PROFILE_FLUX_'+str(date.year)+jday_str+'_V1.0.nc'
+    # get filename for latest version of file for this date
+    fname = rf"SABER_NO_PROFILE_FLUX_{date.year}{jday_str}_(V[\d\.]+)\.nc"
+    response = requests.get(url)
+    matches = re.findall(fname, response.text)
+    version = sorted(matches)[-1]
+    fname = f"SABER_NO_PROFILE_FLUX_{date.year}{jday_str}_{version}.nc"
+
     file_url = urljoin(url, fname)
     local_path = os.path.join(save_dir, fname)
     if not os.path.exists(local_path):
