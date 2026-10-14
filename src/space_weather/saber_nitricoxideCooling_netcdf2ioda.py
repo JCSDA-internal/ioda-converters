@@ -51,16 +51,16 @@ LOCATION_KEYS = [
 
 # Assign dimensions to the obs values
 VAR_DIMS = {
-    'nitricoxideCooling': ['Location'],
+    'nitricoxideCoolingProfile': ['Location'],
 }
 
 # Variable attributes
 VAR_ATTRS = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-VAR_ATTRS['nitricoxideCooling', OBS_VAL_NAME]['coordinates'] = 'longitude latitude'
-VAR_ATTRS['nitricoxideCooling', OBS_VAL_NAME]['units'] = 'W m-3'
-VAR_ATTRS['nitricoxideCooling', OBS_ERR_NAME]['coordinates'] = 'longitude latitude'
-VAR_ATTRS['nitricoxideCooling', OBS_ERR_NAME]['units'] = 'W m-3'
-VAR_ATTRS['nitricoxideCooling', OBS_QC_NAME]['coordinates'] = 'longitude latitude'
+VAR_ATTRS['nitricoxideCoolingProfile', OBS_VAL_NAME]['coordinates'] = 'longitude latitude'
+VAR_ATTRS['nitricoxideCoolingProfile', OBS_VAL_NAME]['units'] = 'W m-3'
+VAR_ATTRS['nitricoxideCoolingProfile', OBS_ERR_NAME]['coordinates'] = 'longitude latitude'
+VAR_ATTRS['nitricoxideCoolingProfile', OBS_ERR_NAME]['units'] = 'W m-3'
+VAR_ATTRS['nitricoxideCoolingProfile', OBS_QC_NAME]['coordinates'] = 'longitude latitude'
 VAR_ATTRS['height', META_DATA_NAME]['units'] = 'm'
 VAR_ATTRS['dateTime', META_DATA_NAME]['units'] = iso8601_string
 
@@ -179,15 +179,15 @@ def get_data_from_file(obs_file_handle):
         ('latitude', META_DATA_NAME): read_variable(obs_file_handle, 'tplatitude', dtype=numpy.float32),
         ('longitude', META_DATA_NAME): read_variable(obs_file_handle, 'tplongitude', dtype=numpy.float32),
         ('height', META_DATA_NAME): height,
-        ('nitricoxideCooling', OBS_VAL_NAME): read_variable(obs_file_handle, 'NOcool', dtype=numpy.float32),
+        ('nitricoxideCoolingProfile', OBS_VAL_NAME): read_variable(obs_file_handle, 'NOcool', dtype=numpy.float32),
     }
 
     # Change height units from km to m
     obs_data[('height', META_DATA_NAME)] *= 1000.0
 
-    # Change NO Cooling to W/m3. Note that units in netCDF file are
+    # Change NO Cooling to W m-3. Note that units in netCDF file are
     # incorrect and should be erg/cm3/s not W/m3
-    obs_data[('nitricoxideCooling', OBS_VAL_NAME)] /= 10.0
+    obs_data[('nitricoxideCoolingProfile', OBS_VAL_NAME)] /= 10.0
 
     # Handle longitudes to be within [-180, 180)
     obs_data[('longitude', META_DATA_NAME)] = numpy.ma.where(
@@ -205,9 +205,9 @@ def get_data_from_file(obs_file_handle):
     # Add error and QC values
     nlocs = len(obs_data[('latitude', META_DATA_NAME)])
     # Obs error: 15% of the observation value
-    obs_val = obs_data[('nitricoxideCooling', OBS_VAL_NAME)]
-    obs_data[('nitricoxideCooling', OBS_ERR_NAME)] = (0.15 * numpy.ma.abs(obs_val)).astype(numpy.float32)
-    obs_data[('nitricoxideCooling', OBS_QC_NAME)] = numpy.zeros(nlocs, dtype=numpy.int32)
+    obs_val = obs_data[('nitricoxideCoolingProfile', OBS_VAL_NAME)]
+    obs_data[('nitricoxideCoolingProfile', OBS_ERR_NAME)] = (0.15 * numpy.ma.abs(obs_val)).astype(numpy.float32)
+    obs_data[('nitricoxideCoolingProfile', OBS_QC_NAME)] = numpy.zeros(nlocs, dtype=numpy.int32)
 
     logging.debug("Extracted %d observations from file.", nlocs)
 
@@ -266,7 +266,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Read SABER NO Cooling netCDF files and convert into IODA output file"
+        description="Read SABER NO cooling profile netCDF files and convert into IODA output file"
     )
 
     required = parser.add_argument_group(title='Required Arguments')
