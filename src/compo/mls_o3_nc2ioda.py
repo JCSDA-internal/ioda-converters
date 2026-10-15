@@ -7,13 +7,10 @@
 #
 # Standard Python library imports.
 import os
-import sys
 import argparse
-import glob
 import netCDF4 as nc
 import numpy as np
-from datetime import datetime, timedelta
-from pathlib import Path
+from datetime import datetime
 from collections import defaultdict, OrderedDict, Counter
 
 from pyiodaconv.orddicts import DefaultOrderedDict
@@ -62,29 +59,64 @@ obsValName = iconv.OvalName()
 obsErrName = iconv.OerrName()
 qcName = iconv.OqcName()
 
+# Observation error tables, taken directly from the NASA-provided Fortran
+# ingest programs for each MLS O3 product version to the unit requested by ioda convention
+# mol mol-1. 'lvmin' is the 0-based level index (matching self.lbot) at which
+# the 'oe' list begins. 'inflation' maps 0-based level index to the extra
+# |O3|-scaled term added at that level.
+
+MLS_ERROR_TABLES = {
+    # v5 table (shared between res-v5 and nrt-v5 definitions)
+    'v5': {
+        'lvmin': 7,
+        'oe': [
+            2.0e-08, 2.0e-08, 2.0e-08, 2.0e-08, 3.5e-08, 5.0e-08, 5.0e-08, 5.0e-08,
+            1.25e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.25e-07, 2.5e-07,
+            2.75e-07, 3.0e-07, 3.0e-07, 3.0e-07, 3.0e-07, 3.0e-07, 2.75e-07, 2.5e-07,
+            2.25e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.0e-07, 2.0e-07, 1.5e-07, 1.0e-07,
+            1.0e-07, 1.0e-07, 1.5e-07, 2.0e-07, 2.0e-07, 2.0e-07, 3.0e-07, 3.0e-07,
+            3.0e-07, 3.0e-07,
+        ],
+        'inflation': {7: 0.30, 8: 0.20, 9: 0.125, 10: 0.05, 11: 0.05, 12: 0.05},
+    },
+    # res/write_mls_netcdf_v6.f90 (v6.03), lvmin=8 lvmax=49 (1-based)
+    'v6': {
+        'lvmin': 7,
+        'oe': [
+            2.00e-08, 1.01e-08, 7.40e-09, 5.00e-09, 5.00e-09, 5.00e-09, 5.23e-08,
+            9.95e-08, 1.486e-07, 1.977e-07, 2.00e-07, 2.00e-07, 2.00e-07, 2.00e-07,
+            2.448e-07, 2.966e-07, 3.483e-07, 4.00e-07, 3.753e-07, 3.506e-07, 3.259e-07,
+            3.012e-07, 2.780e-07, 2.550e-07, 2.320e-07, 2.089e-07, 2.00e-07, 2.00e-07,
+            2.00e-07, 2.00e-07, 1.506e-07, 1.012e-07, 8.57e-08, 7.10e-08, 7.97e-08,
+            9.00e-08, 8.57e-08, 1.443e-07, 1.00e-07, 3.081e-07, 3.919e-07, 9.00e-07,
+        ],
+        'inflation': {7: 0.10, 8: 0.10, 9: 0.10, 10: 0.07, 11: 0.07, 12: 0.07},
+    },
+}
+
 
 class mls(object):
-    def __init__(self, filenames, lvmin, lvmax, sTAI, eTAI, nrt, qcOn, errorOn):
+    def __init__(self, filenames, lbot, ltop, sTAI, eTAI, errorOn, mls_version='v5'):
         self.filenames = filenames
-        self.qcOn = qcOn
         self.errorOn = errorOn
+        self.mls_version = mls_version
+        self.nrt_drop_metadata = {'status', 'convergence', 'quality'} if self.mls_version == 'nrt' else set()
         self.varDict = defaultdict(lambda: defaultdict(dict))
         self.outdata = defaultdict(lambda: DefaultOrderedDict(OrderedDict))
         self.varAttrs = DefaultOrderedDict(lambda: DefaultOrderedDict(dict))
-        self.lmin = lvmin
-        self.lmax = lvmax
+        self.lbot = lbot
+        self.ltop = ltop
         self.startTAI = sTAI
         self.endTAI = eTAI
-        self.nrt = nrt
         for v in list(ioda2nc.keys()):
-            if (v == 'status' or v == 'precision' or v == 'convergence' or v == 'quality'):
-                pass
-            elif (v != 'valKey' and v != 'errKey'):
+            if (v != 'valKey' and v != 'errKey'):
+                if v in self.nrt_drop_metadata:
+                    continue
                 self.outdata[(v, 'MetaData')] = []
         self.outdata[('referenceLevel', 'MetaData')] = []
         self._setVarDict(varname_ozone)
         self.outdata[self.varDict[varname_ozone]['valKey']] = []
-        if (self.qcOn):
+        if (self.errorOn):
             self.outdata[self.varDict[varname_ozone]['errKey']] = []
 
         self._read()
@@ -92,7 +124,7 @@ class mls(object):
     # set ioda variable keys
     def _setVarDict(self, iodavar):
         self.varDict[iodavar]['valKey'] = iodavar, obsValName
-        if (self.qcOn):
+        if (self.errorOn):
             self.varDict[iodavar]['errKey'] = iodavar, obsErrName
         self.varDict[iodavar]['qcKey'] = iodavar, qcName
 
@@ -101,12 +133,14 @@ class mls(object):
         self.varAttrs[iodavar, obsValName]['coordinates'] = 'longitude latitude'
         self.varAttrs[iodavar, obsErrName]['coordinates'] = 'longitude latitude'
         self.varAttrs[iodavar, qcName]['coordinates'] = 'longitude latitude'
-        self.varAttrs[iodavar, obsValName]['units'] = 'ppmv'
-        self.varAttrs[iodavar, obsErrName]['units'] = 'ppmv'
+        self.varAttrs[iodavar, obsValName]['units'] = 'mol mol-1'
+        self.varAttrs[iodavar, obsErrName]['units'] = 'mol mol-1'
 
         varsToAddUnits = list(ioda2nc.keys())
         for v in varsToAddUnits:
             if (v != 'valKey' and v != 'errKey'):
+                if v in self.nrt_drop_metadata:
+                    continue
                 vkey = (v, 'MetaData')
                 if ('pressure' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'Pa'
@@ -119,25 +153,28 @@ class mls(object):
                 elif ('angle' in v.lower()):
                     self.varAttrs[vkey]['units'] = 'degree'
                 elif ('prior' in v.lower()):
-                    self.varAttrs[vkey]['units'] = 'ppmv'
+                    self.varAttrs[vkey]['units'] = 'mol mol-1'
+                elif (v == 'precision'):
+                    self.varAttrs[vkey]['units'] = 'mol mol-1'
+                elif (v == 'status'):
+                    self.varAttrs[vkey]['units'] = '1'
+                    self.varAttrs[vkey]['long_name'] = 'MLS Status flag'
+                elif (v == 'convergence'):
+                    self.varAttrs[vkey]['units'] = '1'
+                    self.varAttrs[vkey]['long_name'] = 'MLS Convergence'
+                elif (v == 'quality'):
+                    self.varAttrs[vkey]['units'] = '1'
+                    self.varAttrs[vkey]['long_name'] = 'MLS Quality'
 
-    # Read data needed from raw MLS file.
-    def _read_nc(self, filename, ifile, maxfile):
+    # Read data needed from raw MLS file. All records are returned as-is;
+    # records outside the assimilation window are dropped later by
+    # _just_flatten's time slice, so no per-version (NRT vs res) record
+    # trimming is needed here. Duplicate profiles that may occur where
+    # consecutive NRT granules overlap are left for UFO's DuplicateThinning
+    # filter to handle downstream.
+    def _read_nc(self, filename):
         print("Reading: {}".format(filename))
         ncd = nc.Dataset(filename, 'r')
-        end_of_file = len(ncd[ioda2nc['latitude']][:])
-        # unles nrt, use all profiles in file.
-        start = 0
-        end = end_of_file
-        # if it is nrt, and the last file use all but first two and last 3 profiles
-        if (ifile == maxfile and self.nrt):
-            print("last file:{}".format(filename))
-            start = 2
-            end = end_of_file - 3
-        # otherwise if nrt skip first 2 and last 8 profiles to avoid duplicates.
-        elif (self.nrt):
-            start = 2
-            end = end_of_file - 8
 
         d = {}
         for k in list(ioda2nc.keys()):
@@ -145,46 +182,63 @@ class mls(object):
                 d[k] = ncd[ioda2nc[k]][...]*100.  # convert to Pa
                 d[k].mask = False
             else:
-                d[k] = ncd[ioda2nc[k]][start:end, ...]
+                d[k] = ncd[ioda2nc[k]][...]
                 d[k].mask = False
-
-            if (k == 'valKey' or k == 'precision'):
-                d[k] = d[k]*1e6  # convert mol/mol to PPMV
         return d
 
-    def _calc_error(self, o3, o3_prec, lev):
-        # Observation error estimates from MLS.
-        oe = ['na', 'na', 'na', 'na', 'na', 'na', 'na', 0.02, 0.02, 0.02, 0.02, 0.035, 0.05, 0.05, 0.05,
-              0.125, 0.2, 0.2, 0.2, 0.2, 0.2, 0.225, 0.25, 0.275,
-              0.3, 0.3, 0.3, 0.3, 0.3, 0.275, 0.25, 0.225, 0.2, 0.2,
-              0.2, 0.2, 0.2, 0.15, 0.1, 0.1, 0.1, 0.15, 0.2, 0.2, 0.2,
-              0.3, 0.3, 0.3, 0.3]
-        ooe = oe[lev]
-        # inflate errors for specific levels. (note zero based index)
-        if (lev == 7):  # 261 hPa
-            ooe = ooe + (0.30 * abs(o3))  # 0.3 is my conservative guess
-        elif (lev == 8):  # 215 hPa
-            ooe = ooe + (0.20 * abs(o3))
-        elif (lev == 9):  # 177 hPa
-            ooe = ooe + (0.125 * abs(o3))
-        elif (lev == 10 or lev == 11 or lev == 12):  # 150-100 hPa
-            ooe = ooe + (0.05 * abs(o3))
+    def _nrt_profile_indices(self, d, file_index):
+        nprof = len(d['dateTime'])
+        start_drop = 2 if file_index == 0 else 7
+        end_drop = 3
 
-        ooe = np.sqrt(max((0.5*ooe)**2+(o3_prec)**2, 1.e-6))
+        if nprof <= (start_drop + end_drop):
+            return np.empty(0, dtype=int)
+
+        # NRT guidance: first file drops 2 start profiles; later files drop 7.
+        # All files drop 3 end profiles.
+        profile_mask = np.ones(nprof, dtype=bool)
+        profile_mask[:start_drop] = False
+        profile_mask[-end_drop:] = False
+
+        return np.where(profile_mask)[0].astype(int)
+
+    def _calc_error(self, o3, o3_prec, lev):
+        # For MLS NRT, use the reported precision directly as ObsError.
+        if self.mls_version == 'nrt':
+            return o3_prec
+
+        # Otherwise use the current table+inflation+precision combination.
+        table = MLS_ERROR_TABLES[self.mls_version]
+        lvmin = table['lvmin']
+        lvmax = lvmin + len(table['oe']) - 1
+        lev_clamped = min(max(lev, lvmin), lvmax)
+        ooe = table['oe'][lev_clamped - lvmin]
+        ooe = ooe + (table['inflation'].get(lev_clamped, 0.0) * abs(o3))
+        ooe = np.sqrt(max((0.5*ooe)**2+(o3_prec)**2, 1.e-18))
         return ooe
 
-    def _just_flatten(self, d):
-        # only output desired levels (lmin through lmax)
+    def _just_flatten(self, d, profile_idx=None):
+        # only output desired levels (lbot through ltop)
         dd = {}
-        idx, = np.where((np.asarray(d['dateTime']) >= self.startTAI) & (np.asarray(d['dateTime']) <= self.endTAI))
-        dd['valKey'] = d['valKey'][idx, self.lmin:self.lmax+1]
-        dd['precision'] = d['precision'][idx, self.lmin:self.lmax+1]
-        lvec = np.arange(self.lmin+1, self.lmax+2)
-        dd['level'], dd['status'] = np.meshgrid(np.arange(self.lmin+1, self.lmax+2), d['status'][idx])
-        dd['pressure'], dd['dateTime'] = np.meshgrid(d['pressure'][self.lmin:self.lmax+1], d['dateTime'][idx])
-        dd['quality'] = np.tile(d['quality'][idx], (lvec.shape[0], 1)).T
-        dd['convergence'] = np.tile(d['convergence'][idx], (lvec.shape[0], 1)).T
-        dd['status'] = np.tile(d['status'][idx], (lvec.shape[0], 1)).T
+        if profile_idx is None:
+            base_idx = np.arange(len(d['dateTime']), dtype=int)
+        else:
+            base_idx = np.asarray(profile_idx, dtype=int)
+
+        # Apply assimilation window uniformly for all MLS modes.
+        dt = np.asarray(d['dateTime'])
+        idx = base_idx[(dt[base_idx] >= self.startTAI) & (dt[base_idx] <= self.endTAI)]
+        dd['valKey'] = d['valKey'][idx, self.lbot:self.ltop+1]
+        dd['precision'] = d['precision'][idx, self.lbot:self.ltop+1]
+        lvec = np.arange(self.lbot+1, self.ltop+2)
+        dd['level'], dd['status'] = np.meshgrid(np.arange(self.lbot+1, self.ltop+2), d['status'][idx])
+        dd['pressure'], dd['dateTime'] = np.meshgrid(d['pressure'][self.lbot:self.ltop+1], d['dateTime'][idx])
+        if self.mls_version != 'nrt':
+            dd['quality'] = np.tile(d['quality'][idx], (lvec.shape[0], 1)).T
+            dd['convergence'] = np.tile(d['convergence'][idx], (lvec.shape[0], 1)).T
+            dd['status'] = np.tile(d['status'][idx], (lvec.shape[0], 1)).T
+        else:
+            dd.pop('status', None)
         dd['latitude'] = np.tile(d['latitude'][idx], (lvec.shape[0], 1)).T
         dd['longitude'] = np.tile(d['longitude'][idx], (lvec.shape[0], 1)).T
         dd['solarZenithAngle'] = np.tile(d['solarZenithAngle'][idx], (lvec.shape[0], 1)).T
@@ -193,46 +247,18 @@ class mls(object):
             dd[k] = dd[k].flatten().tolist()
         return dd
 
-    def _do_qc(self, d):
-        dd = {}
-        for k in list(d.keys()):
-            dd[k] = []
-        dd['errKey'] = []
-        dd['level'] = []
-        nrec = d['latitude'].shape[0]
-        cnt = 0
-        for irec in range(nrec):
-            if (d['status'][irec] % 2 != 0 or d['convergence'][irec] >= 1.03 or d['quality'][irec] <= 1.0):
-                continue
-            for ilev in range(self.lmin, self.lmax+1):
-                if (d['precision'][irec, ilev] < 0.0):
-                    continue
-                # if outside the window, don't inculde data
-                if (d['dateTime'][irec] < self.startTAI or d['dateTime'][irec] > self.endTAI):
-                    continue
-                for k in list(d.keys()):
-                    if (len(d[k].shape) == 1 and k != 'pressure'):
-                        dd[k].append(d[k][irec])
-                    elif (k == 'pressure'):
-                        dd[k].append(d[k][ilev])
-                    elif k != 'errKey':
-                        dd[k].append(d[k][irec, ilev])
-                dd['level'].append(ilev+1)
-        return dd
-
     def _read(self):
         # set up variable names for IODA
         self._setVarAttr(varname_ozone)
 
         # loop through input filenames
-        for i, f in enumerate(self.filenames):
-            nc_data = self._read_nc(f, i, len(self.filenames)-1)
-            if (self.qcOn):
-                print("Performing QC.")
-                d = self._do_qc(nc_data)
-            else:
-                print("Not Performing QC.")
-                d = self._just_flatten(nc_data)
+        # Note: no QC-based rejection is done here (status/convergence/quality/
+        # precision thresholds). For NRT, fixed per-file profile trimming is
+        # applied to remove low-quality chunk edges and overlap region entries.
+        for ifile, f in enumerate(self.filenames):
+            nc_data = self._read_nc(f)
+            idx = self._nrt_profile_indices(nc_data, ifile) if self.mls_version == 'nrt' else None
+            d = self._just_flatten(nc_data, idx)
             if (self.errorOn):
                 print("Calculating Error.")
                 d['errKey'] = []
@@ -240,9 +266,7 @@ class mls(object):
                     d['errKey'].append(self._calc_error(
                         val, d['precision'][ival], d['level'][ival]-1))
             for v in list(d.keys()):
-                if (v == 'status' or v == 'precision' or v == 'convergence' or v == 'quality'):
-                    pass
-                elif (v == 'level'):
+                if (v == 'level'):
                     self.outdata[('referenceLevel', 'MetaData')].extend(d[v])
                 elif (v != 'valKey' and v != 'errKey'):
                     self.outdata[(v, 'MetaData')].extend(d[v])
@@ -266,6 +290,10 @@ class mls(object):
 # end mls object.
 
 
+def _parse_window_bound(value):
+    return datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
+
+
 def main():
 
     # get command line arguments
@@ -279,24 +307,12 @@ def main():
     required = parser.add_argument_group(title='required arguments')
     required.add_argument(
         '-i', '--input',
-        help="path of MLS input file(s)",
-        type=str, required=True)
-    required.add_argument(
-        '-y', '--year',
-        help="syn. time year",
-        type=int, required=True)
-    required.add_argument(
-        '-m', '--month',
-        help="syn. time month",
-        type=int, required=True)
-    required.add_argument(
-        '-d', '--day',
-        help="syn. time day",
-        type=int, required=True)
-    required.add_argument(
-        '-z', '--hour',
-        help="syn. time hour.",
-        type=int, required=True)
+        help=(
+            "path(s) of one or more MLS input file(s) covering the desired "
+            "assimilation window. File discovery for a DA window (e.g. "
+            "selecting the daily 'res' file(s) or NRT granules that overlap "
+            "it) is expected to be done by the calling ingest workflow."),
+        type=str, nargs='+', required=True)
     required.add_argument(
         '-o', '--output',
         help="path of IODA output file",
@@ -304,91 +320,59 @@ def main():
 
     optional = parser.add_argument_group(title='optional arguments')
     optional.add_argument(
-        '-s', '--level-start',
+        '--window-begin',
+        help=(
+            "assimilation window start time, ISO8601 format "
+            "(e.g. 2026-09-07T09:00:00Z). If omitted, no lower time bound "
+            "is applied."),
+        type=_parse_window_bound, required=False, default=None, dest='window_begin')
+    optional.add_argument(
+        '--window-end',
+        help=(
+            "assimilation window end time, ISO8601 format "
+            "(e.g. 2026-09-07T15:00:00Z). If omitted, no upper time bound "
+            "is applied."),
+        type=_parse_window_bound, required=False, default=None, dest='window_end')
+    optional.add_argument(
+        '-b', '--level-bottom',
         help="mls level to start 1 based index (default=8)",
-        type=int, required=False, default=8, dest='lmin')
+        type=int, required=False, default=8, dest='lbot')
     optional.add_argument(
-        '-e', '--level-end',
+        '-t', '--level-top',
         help="mls level to end 1 based index (default=49)",
-        type=int, required=False, default=49, dest='lmax')
-    optional.add_argument(
-        '-p', '--prefix',
-        help="mls filename prefix (default=MLS-Aura_L2GP-O3_v05-01)",
-        type=str, required=False, default="MLS-Aura_L2GP-O3_v05-01", dest='prefix')
-    optional.add_argument('--qc', dest='qc', action='store_true', default=True)
-    optional.add_argument('--no-qc', dest='qc', action='store_false')
+        type=int, required=False, default=49, dest='ltop')
     optional.add_argument('--error', dest='error', action='store_true', default=True)
     optional.add_argument('--no-error', dest='error', action='store_false')
     optional.add_argument(
-        '-w', '--window',
-        help="assimilation window size in hours",
-        type=int, required=False, default=6, dest='window')
+        '--mls-version',
+        help="MLS product version, one of v5, v6, or nrt (default=v5)",
+        type=str, required=False, default='v5',
+        choices=list(MLS_ERROR_TABLES.keys()) + ['nrt'], dest='mls_version')
 
     args = parser.parse_args()
 
-    # check for option to modify levels output
-    if (args.lmin < 8):
-        print("Sorry, level 8 is low as I go! Setting lmin=8.")
-        lmin = 8
-    else:
-        lmin = args.lmin
-    if (args.lmax > 49):
-        print("Sorry, level 49 is high as I go! Setting lmax=49.")
-        lmax = 49
-    else:
-        lmax = args.lmax
-    if ('NRT' in args.prefix):
-        nrt = True
-    else:
-        nrt = False
-    # get current cycle time and start/end of the window
-    cycle_time = datetime(args.year, args.month, args.day, args.hour)
-    if (os.path.isfile(args.input)):
-        print('Reading Single File:{}'.format(args.input))
-        rawFiles = []
-        rawFiles.append(args.input)
-    elif (os.path.isdir(args.input)):
-        startDateWindow = cycle_time - timedelta(hours=args.window/2)
-        endDateWindow = cycle_time + timedelta(hours=args.window/2)
-        # effectively round off so we get the number of days between
-        startDayWindow = datetime(startDateWindow.year, startDateWindow.month, startDateWindow.day)
-        endDayWindow = datetime(endDateWindow.year, endDateWindow.month, endDateWindow.day)
-        dT = endDayWindow - startDayWindow
-        daysToGo = [startDayWindow + timedelta(days=i) for i in range(dT.days + 1)]
-        # iterate over the number of days in window
-        rawFiles = []
-        for now in daysToGo:
-            year = now.year
-            doy = now.strftime('%j')
-            rawFiles.extend(glob.glob(os.path.join(args.input, args.prefix+"*{}d".format(year)+doy+"*.he5")))
-        rawFiles.sort()
-        if (nrt):
-            # limit files only between start and end of window.
-            rawFilesOut = []
-            startDateWindow = cycle_time - timedelta(hours=3)
-            endDateWindow = cycle_time + timedelta(hours=3)
-            for f in rawFiles:
-                ftime = datetime.strptime(f[-17::], "%Yd%jt%H%M.he5")
-                if (startDateWindow <= ftime <= endDateWindow):
-                    rawFilesOut.append(f)
-            rawFiles = rawFilesOut
-        if (len(rawFiles) == 0):
-            print("No Raw Files Found in:{}".format(args.input))
-            sys.exit(os.EX_OSFILE)
-    else:
-        print("Could not find input file or directory:{}".format(args.input))
-        sys.exit(os.EX_OSFILE)
+    rawFiles = sorted(args.input)
 
-    # get start and end times for qc/cropping data in MLS native time format (TAI seconds since Jan 1, 1993.)
-    startTAI = ((cycle_time - timedelta(hours=args.window/2)) - datetime(1993, 1, 1, 0)).total_seconds()
-    endTAI = ((cycle_time + timedelta(hours=args.window/2)) - datetime(1993, 1, 1, 0)).total_seconds()
+    # Observation-error tables are version-specific and may not span the full
+    # user-requested level range; out-of-range levels are handled by clamping
+    # to nearest supported table level in _calc_error so level selection can
+    # be left to downstream UFO filtering.
 
-    # Read in the O3 data in window over selected levels (if not default 8-49)
-    # if nrt is set, assumes near real-time and will skip first two and last 8 profiles for most files
-    # (last 3 profiles skipped if it is the last file in window)
-    # RTM regarding Near Real time (NRT) in
-    # https://discnrt1.gesdisc.eosdis.nasa.gov/data/Aura_NRT/ML2SO2_NRT.005/doc/NRT-user-guide-v5.pdf
-    o3 = mls(rawFiles, lmin-1, lmax-1, startTAI, endTAI, nrt, args.qc, args.error)
+    # get start and end times for cropping data in MLS native time format
+    # (TAI seconds since Jan 1, 1993.). Unbounded on either side if not given.
+    startTAI = ((args.window_begin - datetime(1993, 1, 1, 0)).total_seconds()
+                if args.window_begin is not None else -np.inf)
+    endTAI = ((args.window_end - datetime(1993, 1, 1, 0)).total_seconds()
+              if args.window_end is not None else np.inf)
+
+    # Read in the O3 data over selected levels (if not default 8-49), sliced
+    # down to the requested time window. All records from all input files are
+    # read in full and then time-sliced uniformly, whether the files are NRT
+    # granules or daily 'res' files; any duplicate profiles from overlapping
+    # NRT granules are expected to be removed downstream by UFO's
+    # DuplicateThinning filter.
+    o3 = mls(rawFiles, args.lbot-1, args.ltop-1, startTAI, endTAI,
+             args.error, args.mls_version)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
