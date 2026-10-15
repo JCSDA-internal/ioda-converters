@@ -117,8 +117,11 @@ list( APPEND test_input
   testinput/tec_groundBased_TENET_20201001T00Z.tec
   testinput/gnssro_tec_cosmic2_202010012304.nc
   testinput/COWVR_TSDR.020421.20240430T215845.20240430T230345.V1001.sample.h5
+  testinput/nsidc_nasa_cice_input.nc
+  testinput/nsidc_nasa_grid_north.nc
   testinput/gfs.231010.t00z.syndata.tcvitals.txt
   testinput/caliop_l2_APro.hdf
+  testinput/gold_tdisk_test.nc
 )
 
 list( APPEND test_output
@@ -130,6 +133,7 @@ list( APPEND test_output
   testoutput/icethk_coperl4.nc
   testoutput/nsidc_l4_icec.nc
   testoutput/amsr2_icec_l2p.nc
+  testoutput/nsidc_nasa_cice_ioda.nc4
   testoutput/20220216T00Z_PT1H_amsr2_sample.nc4
   testoutput/gds2_sst_l2p.nc
   testoutput/gds2_sst_l3u.nc
@@ -227,6 +231,7 @@ list( APPEND test_output
   testoutput/obs.20240430T220600Z_PT2M_cowvr_iss.nc4
   testoutput/tcp_obs_2023101000.nc4
   testoutput/caliop_l2_APro.nc4
+  testoutput/gold_tdisk_test.nc4
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -303,6 +308,7 @@ if( iodaconv_bufr_query_ENABLED )
     testinput/bufr_ncep_sevcsr.yaml
     testinput/bufr_ncep_mtiasi.yaml
     testinput/bufr_ncep_atms.yaml
+    testinput/bufr_ncep_atms_split.yaml
     testinput/bufr_ncep_atms_remap.yaml
     testinput/bufr_ncep_atms_ta_remap.yaml
     testinput/bufr_simple_groupby.yaml
@@ -660,6 +666,18 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gmao_argo
                           -i testinput/gmao_argo.nc
                           -o testrun/gmao_argo.nc"
                           gmao_argo.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gmao_nsidc_nasa_cice
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/gmao_nsidc_cice2ioda.py
+                          -i testinput/nsidc_nasa_cice_input.nc
+                          -g testinput/nsidc_nasa_grid_north.nc
+                          -o testrun/nsidc_nasa_cice_ioda.nc4"
+                          nsidc_nasa_cice_ioda.nc4 ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_godae_prof
                   TYPE    SCRIPT
@@ -1489,7 +1507,6 @@ endforeach()
 
 foreach (coltype total troposphere)
   foreach (spec no2) #hcho not tested and o3 not out yet with real data
-    if (NOT (${spec} STREQUAL "hcho"))
        ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tempo_${spec}_${coltype}
                           TYPE    SCRIPT
                           ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
@@ -1497,13 +1514,13 @@ foreach (coltype total troposphere)
                           ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                                   netcdf
                                   "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tempo_nc2ioda.py
-				  -i testinput/TEMPO_NO2_L2_V04_${spec}.20251002T180000Z.0.nc
-				     testinput/TEMPO_NO2_L2_V04_${spec}.20251002T180000Z.1.nc
-				  -o testrun/tempo_${spec}_${coltype}.nc
-                                  -v ${spec}
-                                  -c ${coltype}"
+                                  -i testinput/TEMPO_NO2_L2_V04_${spec}.20251002T180000Z.0.nc
+                                  testinput/TEMPO_NO2_L2_V04_${spec}.20251002T180000Z.1.nc
+                                  -o testrun/tempo_${spec}_${coltype}.nc
+                                  --variable ${spec}
+                                  --column ${coltype}
+                                  --save_grid_indices"
                                   tempo_${spec}_${coltype}.nc ${IODA_CONV_COMP_TOL})
-    endif()
   endforeach()
 endforeach()
 
@@ -1910,6 +1927,34 @@ if(iodaconv_bufr_query_ENABLED)
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_atms.yaml"
                             gdas.t00z.atms_n20.tm00.nc ${IODA_CONV_COMP_TOL}
                     DEPENDS bufr2ioda.x )
+
+  # ATMS split by satellite (split_atms_by_sat.py needs the ncepbufr python module)
+  execute_process( COMMAND ${Python3_EXECUTABLE} -c "import ncepbufr"
+                   RESULT_VARIABLE _iodaconv_ncepbufr_rc OUTPUT_QUIET ERROR_QUIET )
+  if( _iodaconv_ncepbufr_rc EQUAL 0 )
+    # split the NPP+N20 test dump; -c checks every subset (no mixed-satellite messages)
+    ecbuild_add_test( TARGET  test_iodaconv_split_atms_by_sat
+                      TYPE    SCRIPT
+                      COMMAND ${Python3_EXECUTABLE}
+                      ARGS    ${PROJECT_SOURCE_DIR}/src/ncepbufr/split_atms_by_sat.py -c
+                              testinput/gdas.t00z.atms.tm00.bufr_d
+                              testrun/gdas.t00z.atms_split n20 )
+
+    # converting the N20-only file must give exactly the existing N20 reference
+    ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_atms_split_n20
+                      TYPE    SCRIPT
+                      COMMAND bash
+                      ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                              netcdf
+                              "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_atms_split.yaml"
+                              gdas.t00z.atms_n20.tm00.nc ${IODA_CONV_COMP_TOL}
+                      DEPENDS bufr2ioda.x
+                      TEST_DEPENDS test_iodaconv_split_atms_by_sat )
+
+    # both ATMS tests write testrun/gdas.t00z.atms_n20.tm00.nc; don't run them at the same time
+    set_tests_properties( test_iodaconv_bufr_ncep_atms test_iodaconv_bufr_ncep_atms_split_n20
+                          PROPERTIES RESOURCE_LOCK atms_n20_output )
+  endif()
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_simple_groupby
                     TYPE    SCRIPT
@@ -2744,6 +2789,21 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_madis_snod
                             -i testinput/madis_2021010100.nc
                             -o testrun/madis_snod_2021010100.nc"
                             madis_snod_2021010100.nc ${IODA_CONV_COMP_TOL})
+
+# =============================================================================
+# SWx product converters
+#==============================================================================
+
+ecbuild_add_test( TARGET test_${PROJECT_NAME}_gold_tdisk
+                  TYPE SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                       netcdf
+                       "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/gold_tdisk2ioda.py
+                       -i testinput/gold_tdisk_test.nc
+                       -o testrun/gold_tdisk_test.nc4"
+                       gold_tdisk_test.nc4 ${IODA_CONV_COMP_TOL})
 
 #######################################################
 # Auto-generated tests for ioda file validation
