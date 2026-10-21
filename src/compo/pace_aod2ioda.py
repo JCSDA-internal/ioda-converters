@@ -35,7 +35,8 @@ locationKeyList = [
     ("solarAzimuthAngle", "float", "degree"),
 ]
 
-obsvars = ["aerosolOpticalDepth"]
+obsvars = ["aerosolOpticalDepth", "singleScatteringAlbedo", "absorptionAerosolOpticalDepth",
+           "fineAerosolOpticalDepth", "coarseAerosolOpticalDepth", "angstromExponent"]
 # A dictionary of global attributes.  More filled in further down.
 AttrData = {}
 AttrData['ioda_object_type'] = 'AOD'
@@ -46,6 +47,11 @@ DimDict = {}
 # A dictionary of variable names and their dimensions.
 VarDims = {
     "aerosolOpticalDepth": ['Location', 'Channel'],
+    "singleScatteringAlbedo": ['Location', 'Channel'],
+    "absorptionAerosolOpticalDepth": ['Location', 'Channel'],
+    "fineAerosolOpticalDepth": ['Location', 'Channel'],
+    "coarseAerosolOpticalDepth": ['Location', 'Channel'],
+    "angstromExponent": ['Location'],
     "sensorCentralFrequency": ['Channel'],
     "sensorCentralWavelength": ['Channel'],
     "surfaceQualifier": ['Location'],
@@ -76,6 +82,20 @@ missing_vals = {'string': string_missing_value,
                 'double': double_missing_value}
 
 speed_light = 2.99792458E8
+
+
+def get_chan_var(ncvars, name):
+    # Reshape a (line, pixel, wavelength) variable to (location, channel)
+    var = ncvars[name][:]
+    return var.reshape(-1, var.shape[2])
+
+
+def masked_chan(nlocs, nchans):
+    return np.ma.masked_all((nlocs, nchans), dtype=np.float32)
+
+
+def filled_int(arr):
+    return np.where(np.ma.getmaskarray(arr), int_missing_value, np.ma.getdata(arr)).astype(np.int32)
 
 
 class AOD(object):
@@ -166,25 +186,67 @@ class AOD(object):
         solazm = self.ncd.groups['geolocation_data'].variables['solar_azimuth_angle']
         solazm.set_auto_mask(False)
         self.solazm = np.ma.masked_where(np.ma.getmaskarray(self.solzen), solazm[:].ravel())
-        vals = self.ncd.groups['geophysical_data'].variables['Aerosol_Optical_Depth'][:]
-        self.vals = vals.reshape(-1, vals.shape[2])
-        qcflags = self.ncd.groups['geophysical_data'].variables['Quality_flag_Aerosol_Optical_Depth'][:].ravel()
-        self.qcflags = np.repeat(qcflags[:, np.newaxis], self.channels.size, axis=1)
+        geo = self.ncd.groups['geophysical_data'].variables
+        aod = get_chan_var(geo, 'Aerosol_Optical_Depth')
+        nlocs, nchans = aod.shape
+        aod_qc = geo['Quality_flag_Aerosol_Optical_Depth'][:].ravel()
+        ssa_qc = geo['Quality_flag_SingleScattAlbedo'][:].ravel()
+
+        # Dark Target SSA (ocean only) and AAOD are at 0.354, 0.388, 0.55 micron;
+        # the other channels are left missing
+        uv_chans = [0, 1, 3]
+        ssa = masked_chan(nlocs, nchans)
+        ssa[:, uv_chans] = get_chan_var(geo, 'DT_AerosolSingleScattAlbedo')
+        aaod = masked_chan(nlocs, nchans)
+        if 'AAOD' in geo:
+            aaod[:, uv_chans] = get_chan_var(geo, 'AAOD')
+        else:
+            aaod[:, uv_chans] = aod[:, uv_chans] * (1.0 - ssa[:, uv_chans])
+
+        # Fine and coarse mode AOD at 0.55 micron (ocean only) from the fine mode fraction
+        # used for the UV retrieval; the other channels are left missing
+        fmf = geo['Optical_Depth_Ratio_Small_Ocean_used'][:].ravel()
+        fine = masked_chan(nlocs, nchans)
+        fine[:, 3] = fmf * aod[:, 3]
+        coarse = masked_chan(nlocs, nchans)
+        coarse[:, 3] = (1.0 - fmf) * aod[:, 3]
+
+        # UAA has no Angstrom exponent product, derive it from AOD at 0.48 and 0.87 micron
+        ae = np.ma.log(aod[:, 2] / aod[:, 5]) / np.log(0.87 / 0.48)
+        self.varAttrs[('angstromExponent', iconv.OvalName())]['wavelengthRange'] = '480-870 nm'
+
+        self.vals = {'aerosolOpticalDepth': aod,
+                     'singleScatteringAlbedo': ssa,
+                     'absorptionAerosolOpticalDepth': aaod,
+                     'fineAerosolOpticalDepth': fine,
+                     'coarseAerosolOpticalDepth': coarse,
+                     'angstromExponent': ae}
+        self.qcflags = {'aerosolOpticalDepth': np.repeat(aod_qc[:, np.newaxis], nchans, axis=1),
+                        'singleScatteringAlbedo': np.repeat(ssa_qc[:, np.newaxis], nchans, axis=1),
+                        'absorptionAerosolOpticalDepth': np.repeat(ssa_qc[:, np.newaxis], nchans, axis=1),
+                        'fineAerosolOpticalDepth': np.repeat(aod_qc[:, np.newaxis], nchans, axis=1),
+                        'coarseAerosolOpticalDepth': np.repeat(aod_qc[:, np.newaxis], nchans, axis=1),
+                        'angstromExponent': aod_qc}
 
         # Temporarily use expected error (EE) of Dark Target ATBD (March 2024)
         # https://darktarget.gsfc.nasa.gov/sites/default/files/users/user9/ATBD_DarkTarget_April3.pdf
         AttrData['errorMethod'] = 'Expected Error (EE)'
         land_pts = (self.landseaflags == 1)
-        self.errs = np.zeros_like(self.vals)
-        for n in range(self.channels.size):
-            self.errs[:, n] = np.where(land_pts, np.add(0.05, np.multiply(0.2, self.vals[:, n])),
-                                       np.add(0.05, np.multiply(0.15, self.vals[:, n])))
+        aod_err = np.zeros_like(aod)
+        for n in range(nchans):
+            aod_err[:, n] = np.where(land_pts, np.add(0.05, np.multiply(0.2, aod[:, n])),
+                                     np.add(0.05, np.multiply(0.15, aod[:, n])))
 
         if self.error_method == "pue":
             raise Exception("Pixel-level Uncertainty Estimates (PUE) is not ready for PACE UAA")
 
+        # No uncertainty is provided for the other variables
+        self.errs = {iodavar: masked_chan(nlocs, nchans) for iodavar in obsvars}
+        self.errs['aerosolOpticalDepth'] = aod_err
+        self.errs['angstromExponent'] = np.ma.masked_all(nlocs, dtype=np.float32)
+
         # Keep valid data points only
-        valid_pts = np.any(~self.vals.mask, axis=1)
+        valid_pts = np.any(~aod.mask, axis=1)
         self.lons = self.lons[valid_pts]
         self.lats = self.lats[valid_pts]
         self.landseaflags = self.landseaflags[valid_pts]
@@ -193,9 +255,7 @@ class AOD(object):
         self.senazm = self.senazm[valid_pts]
         self.solzen = self.solzen[valid_pts]
         self.solazm = self.solazm[valid_pts]
-        self.vals = self.vals[valid_pts, :]
-        self.errs = self.errs[valid_pts, :]
-        self.qcflags = self.qcflags[valid_pts, :]
+        self.subset_obs(valid_pts)
 
     def get_remotap_data(self):
         AttrData['retrievalMethod'] = 'Remote Sensing of Trace Gases and Aerosol Products (RemoTAP)'
@@ -212,10 +272,20 @@ class AOD(object):
             self.landseaflags = np.zeros_like(self.lats, dtype=np.int32)
         elif 'LAND' in self.ncd.product_name or 'RTAP_LD' in self.ncd.product_name:
             self.landseaflags = np.ones_like(self.lats, dtype=np.int32)
-        vals = self.ncd.groups['geophysical_data'].variables['aot'][:]
-        self.vals = vals.reshape(-1, vals.shape[2])
+        geo = self.ncd.groups['geophysical_data'].variables
+        aod = get_chan_var(geo, 'aot')
+        ssa = get_chan_var(geo, 'ssa')
+        self.vals = {'aerosolOpticalDepth': aod,
+                     'singleScatteringAlbedo': ssa,
+                     'absorptionAerosolOpticalDepth': aod * (1.0 - ssa),
+                     'fineAerosolOpticalDepth': get_chan_var(geo, 'aot_fine'),
+                     'coarseAerosolOpticalDepth': get_chan_var(geo, 'aot_coarse'),
+                     'angstromExponent': geo['angstrom_440_870'][:].ravel()}
+        self.varAttrs[('angstromExponent', iconv.OvalName())]['wavelengthRange'] = '440-870 nm'
         qcflags = self.ncd.groups['diagnostic_data'].variables['quality_flag'][:].ravel()
-        self.qcflags = np.repeat(qcflags[:, np.newaxis], self.channels.size, axis=1)
+        self.qcflags = {iodavar: np.repeat(qcflags[:, np.newaxis], self.channels.size, axis=1)
+                        for iodavar in obsvars}
+        self.qcflags['angstromExponent'] = qcflags
 
         # Setup observation time with utc_date and fracday
         datet = self.ncd.groups['geolocation_data'].variables['utc_date'][:].ravel()
@@ -228,18 +298,24 @@ class AOD(object):
         # Uncertainty is determined during inversion procedure, Section 2.1.7 from
         # RemoTAP ATBD (June 2024) https://www.earthdata.nasa.gov/apt/documents/remotap/v1.0#references
         AttrData['errorMethod'] = 'Uncertainty Estimates'
-        errs = self.ncd.groups['geophysical_data'].variables['aot_uncertainty'][:]
-        self.errs = errs.reshape(-1, errs.shape[2])
+        aod_err = get_chan_var(geo, 'aot_uncertainty')
+        ssa_err = get_chan_var(geo, 'ssa_uncertainty')
+        # AAOD = AOD * (1 - SSA), assume AOD and SSA errors are uncorrelated
+        aaod_err = np.ma.sqrt(((1.0 - ssa) * aod_err)**2 + (aod * ssa_err)**2)
+        self.errs = {'aerosolOpticalDepth': aod_err,
+                     'singleScatteringAlbedo': ssa_err,
+                     'absorptionAerosolOpticalDepth': aaod_err,
+                     'fineAerosolOpticalDepth': get_chan_var(geo, 'aot_fine_uncertainty'),
+                     'coarseAerosolOpticalDepth': get_chan_var(geo, 'aot_coarse_uncertainty'),
+                     'angstromExponent': geo['angstrom_440_870_uncertainty'][:].ravel()}
 
         # Keep valid data points only, using mask of fracday to ensure no unreasonable observation time
-        valid_pts = np.any(~self.vals.mask, axis=1) & ~fracd.mask
+        valid_pts = np.any(~aod.mask, axis=1) & ~fracd.mask
         self.lons = self.lons[valid_pts]
         self.lats = self.lats[valid_pts]
         self.obs_time = self.obs_time[valid_pts]
         self.landseaflags = self.landseaflags[valid_pts]
-        self.vals = self.vals[valid_pts, :]
-        self.errs = self.errs[valid_pts, :]
-        self.qcflags = self.qcflags[valid_pts, :]
+        self.subset_obs(valid_pts)
 
     def get_fmapol_data(self):
         AttrData['retrievalMethod'] = 'Fast Multi-Angular Polarimetric Ocean coLor (FastMAPOL)'
@@ -257,24 +333,49 @@ class AOD(object):
             self.landseaflags = np.ones_like(self.lats, dtype=np.int32)
         else:
             raise Exception(f"Unable to determine surface type of FastMAPOL product: {product_name}")
-        vals = self.ncd.groups['geophysical_data'].variables['aot'][:]
-        self.vals = vals.reshape(-1, vals.shape[2])
+        geo = self.ncd.groups['geophysical_data'].variables
+        aod = get_chan_var(geo, 'aot')
+        ssa = get_chan_var(geo, 'ssa')
+        nlocs, nchans = aod.shape
+        # SPEXone bands end at 748.5 nm, so use the 440-670 nm Angstrom exponent for SPEXone
+        if self.glb_attrs["instrument"] == 'SPEXone':
+            ae_name, ae_range = 'angstrom_440_670', '440-670 nm'
+        else:
+            ae_name, ae_range = 'angstrom_440_870', '440-870 nm'
+        ae = geo[ae_name][:].ravel()
+        self.vals = {'aerosolOpticalDepth': aod,
+                     'singleScatteringAlbedo': ssa,
+                     'absorptionAerosolOpticalDepth': aod * (1.0 - ssa),
+                     'fineAerosolOpticalDepth': get_chan_var(geo, 'aot_fine'),
+                     'coarseAerosolOpticalDepth': get_chan_var(geo, 'aot_coarse'),
+                     'angstromExponent': ae}
+        self.varAttrs[('angstromExponent', iconv.OvalName())]['wavelengthRange'] = ae_range
         qcflags = self.ncd.groups['diagnostic_data'].variables['quality_flag'][:].ravel()
-        self.qcflags = np.repeat(qcflags[:, np.newaxis], self.channels.size, axis=1)
+        self.qcflags = {iodavar: np.repeat(qcflags[:, np.newaxis], nchans, axis=1)
+                        for iodavar in obsvars}
+        self.qcflags['angstromExponent'] = qcflags
 
         # Uncertainty
         # FastMAPOL AMT paper: https://doi.org/10.5194/amt-16-5863-2023
         # Fig. 9. Figure 9a1 shows that both the theoretical (red lines) and the true (blue lines)
         # absolute uncertainties of AOD increase from 0.002–0.004 to 0.015 as AOD increases from 0.01 to 0.45.
-        self.errs = 0.00375 + 0.025 * self.vals
+        # No uncertainty is provided for the other variables
+        self.errs = {iodavar: masked_chan(nlocs, nchans) for iodavar in obsvars}
+        self.errs['aerosolOpticalDepth'] = 0.00375 + 0.025 * aod
+        self.errs['angstromExponent'] = np.ma.masked_all(nlocs, dtype=np.float32)
 
-        valid_pts = np.any(~self.vals.mask, axis=1)
+        valid_pts = np.any(~aod.mask, axis=1)
         self.lons = self.lons[valid_pts]
         self.lats = self.lats[valid_pts]
         self.landseaflags = self.landseaflags[valid_pts]
-        self.vals = self.vals[valid_pts, :]
-        self.errs = self.errs[valid_pts, :]
-        self.qcflags = self.qcflags[valid_pts, :]
+        self.subset_obs(valid_pts)
+
+    def subset_obs(self, mask):
+        # Apply a location mask to the values, errors and QC flags of all obs variables
+        for iodavar in obsvars:
+            self.vals[iodavar] = self.vals[iodavar][mask]
+            self.errs[iodavar] = self.errs[iodavar][mask]
+            self.qcflags[iodavar] = self.qcflags[iodavar][mask]
 
     def read(self):
         # Make empty lists for the output vars
@@ -332,9 +433,7 @@ class AOD(object):
                 self.lons = self.lons[mask_thin]
                 self.lats = self.lats[mask_thin]
                 self.landseaflags = self.landseaflags[mask_thin]
-                self.vals = self.vals[mask_thin]
-                self.errs = self.errs[mask_thin]
-                self.qcflags = self.qcflags[mask_thin]
+                self.subset_obs(mask_thin)
                 self.obs_time = self.obs_time[mask_thin]
                 if self.retrieval_method == 'uaa':
                     self.cldfrac = self.cldfrac[mask_thin]
@@ -373,11 +472,13 @@ class AOD(object):
 
             for iodavar in obsvars:
                 self.outdata[self.varDict[iodavar]['valKey']] = np.append(
-                    self.outdata[self.varDict[iodavar]['valKey']], np.array(self.vals[winmsk, :], dtype=np.float32))
+                    self.outdata[self.varDict[iodavar]['valKey']],
+                    np.ma.filled(self.vals[iodavar][winmsk].astype(np.float32), float_missing_value))
                 self.outdata[self.varDict[iodavar]['errKey']] = np.append(
-                    self.outdata[self.varDict[iodavar]['errKey']], np.array(self.errs[winmsk, :], dtype=np.float32))
+                    self.outdata[self.varDict[iodavar]['errKey']],
+                    np.ma.filled(self.errs[iodavar][winmsk].astype(np.float32), float_missing_value))
                 self.outdata[self.varDict[iodavar]['qcKey']] = np.append(
-                    self.outdata[self.varDict[iodavar]['qcKey']], np.array(self.qcflags[winmsk, :], dtype=np.int32))
+                    self.outdata[self.varDict[iodavar]['qcKey']], filled_int(self.qcflags[iodavar][winmsk]))
 
             self.ncd.close()
 
