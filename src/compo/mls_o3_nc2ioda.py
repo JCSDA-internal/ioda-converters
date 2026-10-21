@@ -11,7 +11,7 @@ import argparse
 import netCDF4 as nc
 import numpy as np
 from datetime import datetime
-from collections import defaultdict, OrderedDict, Counter
+from collections import defaultdict, OrderedDict
 
 from pyiodaconv.orddicts import DefaultOrderedDict
 import pyiodaconv.ioda_conv_engines as iconv
@@ -66,7 +66,7 @@ qcName = iconv.OqcName()
 # |O3|-scaled term added at that level.
 
 MLS_ERROR_TABLES = {
-    # v5 table (shared between res-v5 and nrt-v5 definitions)
+    # v5 table (for res-v5 definitions)
     'v5': {
         'lvmin': 7,
         'oe': [
@@ -79,7 +79,7 @@ MLS_ERROR_TABLES = {
         ],
         'inflation': {7: 0.30, 8: 0.20, 9: 0.125, 10: 0.05, 11: 0.05, 12: 0.05},
     },
-    # res/write_mls_netcdf_v6.f90 (v6.03), lvmin=8 lvmax=49 (1-based)
+    # v6 table (for res-v6 definitions)
     'v6': {
         'lvmin': 7,
         'oe': [
@@ -96,9 +96,8 @@ MLS_ERROR_TABLES = {
 
 
 class mls(object):
-    def __init__(self, filenames, lbot, ltop, sTAI, eTAI, errorOn, mls_version='v5'):
+    def __init__(self, filenames, lbot, ltop, sTAI, eTAI, mls_version='v5'):
         self.filenames = filenames
-        self.errorOn = errorOn
         self.mls_version = mls_version
         self.nrt_drop_metadata = {'status', 'convergence', 'quality'} if self.mls_version == 'nrt' else set()
         self.varDict = defaultdict(lambda: defaultdict(dict))
@@ -109,23 +108,21 @@ class mls(object):
         self.startTAI = sTAI
         self.endTAI = eTAI
         for v in list(ioda2nc.keys()):
-            if (v != 'valKey' and v != 'errKey'):
+            if (v != 'valKey'):
                 if v in self.nrt_drop_metadata:
                     continue
                 self.outdata[(v, 'MetaData')] = []
         self.outdata[('referenceLevel', 'MetaData')] = []
         self._setVarDict(varname_ozone)
         self.outdata[self.varDict[varname_ozone]['valKey']] = []
-        if (self.errorOn):
-            self.outdata[self.varDict[varname_ozone]['errKey']] = []
+        self.outdata[self.varDict[varname_ozone]['errKey']] = []
 
         self._read()
 
     # set ioda variable keys
     def _setVarDict(self, iodavar):
         self.varDict[iodavar]['valKey'] = iodavar, obsValName
-        if (self.errorOn):
-            self.varDict[iodavar]['errKey'] = iodavar, obsErrName
+        self.varDict[iodavar]['errKey'] = iodavar, obsErrName
         self.varDict[iodavar]['qcKey'] = iodavar, qcName
 
     # set variable attributes for IODA
@@ -138,7 +135,7 @@ class mls(object):
 
         varsToAddUnits = list(ioda2nc.keys())
         for v in varsToAddUnits:
-            if (v != 'valKey' and v != 'errKey'):
+            if (v != 'valKey'):
                 if v in self.nrt_drop_metadata:
                     continue
                 vkey = (v, 'MetaData')
@@ -179,11 +176,11 @@ class mls(object):
         d = {}
         for k in list(ioda2nc.keys()):
             if (k == 'pressure'):
-                d[k] = ncd[ioda2nc[k]][...]*100.  # convert to Pa
-                d[k].mask = False
+                raw = ncd[ioda2nc[k]][...]*100.  # convert to Pa
             else:
-                d[k] = ncd[ioda2nc[k]][...]
-                d[k].mask = False
+                raw = ncd[ioda2nc[k]][...]
+            fillval = iconv.get_default_fill_val(raw.dtype)
+            d[k] = np.ma.filled(raw, fillval)
         return d
 
     def _nrt_profile_indices(self, d, file_index):
@@ -259,12 +256,11 @@ class mls(object):
             nc_data = self._read_nc(f)
             idx = self._nrt_profile_indices(nc_data, ifile) if self.mls_version == 'nrt' else None
             d = self._just_flatten(nc_data, idx)
-            if (self.errorOn):
-                print("Calculating Error.")
-                d['errKey'] = []
-                for ival, val in enumerate(d['valKey']):
-                    d['errKey'].append(self._calc_error(
-                        val, d['precision'][ival], d['level'][ival]-1))
+            print("Calculating Error.")
+            d['errKey'] = []
+            for ival, val in enumerate(d['valKey']):
+                d['errKey'].append(self._calc_error(
+                    val, d['precision'][ival], d['level'][ival]-1))
             for v in list(d.keys()):
                 if (v == 'level'):
                     self.outdata[('referenceLevel', 'MetaData')].extend(d[v])
@@ -273,15 +269,14 @@ class mls(object):
             for ncvar, iodavar in obsvars.items():
                 self.outdata[self.varDict[iodavar]
                              ['valKey']].extend(d['valKey'])
-                if (self.errorOn):
-                    self.outdata[self.varDict[iodavar]['errKey']].extend(d['errKey'])
+                self.outdata[self.varDict[iodavar]['errKey']].extend(d['errKey'])
 
         nlocs = len(self.outdata[('dateTime', 'MetaData')])
         DimDict['Location'] = nlocs
 
         for k in self.outdata.keys():
             self.outdata[k] = np.asarray(self.outdata[k])
-            if (self.outdata[k].dtype == 'float64'):
+            if (self.outdata[k].dtype == 'float64' and k != ('dateTime', 'MetaData')):
                 self.outdata[k] = self.outdata[k].astype('float32')
             elif (self.outdata[k].dtype == 'int64' and k != ('dateTime', 'MetaData')):
                 self.outdata[k] = self.outdata[k].astype('int32')
@@ -341,8 +336,6 @@ def main():
         '-t', '--level-top',
         help="mls level to end 1 based index (default=49)",
         type=int, required=False, default=49, dest='ltop')
-    optional.add_argument('--error', dest='error', action='store_true', default=True)
-    optional.add_argument('--no-error', dest='error', action='store_false')
     optional.add_argument(
         '--mls-version',
         help="MLS product version, one of v5, v6, or nrt (default=v5)",
@@ -372,7 +365,7 @@ def main():
     # NRT granules are expected to be removed downstream by UFO's
     # DuplicateThinning filter.
     o3 = mls(rawFiles, args.lbot-1, args.ltop-1, startTAI, endTAI,
-             args.error, args.mls_version)
+             args.mls_version)
 
     # setup the IODA writer
     writer = iconv.IodaWriter(args.output, locationKeyList, DimDict)
