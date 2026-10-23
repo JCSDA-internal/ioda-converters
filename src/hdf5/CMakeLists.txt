@@ -4,6 +4,7 @@ list(APPEND scripts
   cloudsat_netcdf_to_ioda.py
   cowvr_hdf5_2ioda.py
   gmi_2ioda.py
+  hyms_spire_2ioda.py
   osw_2ioda.py
   ozone_product_2ioda.py
   read_cloudsat.py
