@@ -17,7 +17,7 @@
 #
 
 import argparse
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import os.path
 
 import h5py
@@ -69,11 +69,21 @@ def main(args):
 
     dtg = None
     if args.date:
-        dtg = datetime.strptime(args.date, '%Y%m%d%H')
+        dtg = datetime.strptime(args.date, '%Y%m%dT%H%M%SZ' if 'T' in args.date else '%Y%m%d%H')
+
+    # optional time window (at this time symmetrically centered, begin <= dateTime < end)
+    window = None
+    if args.window_minutes:
+        if not dtg:
+            raise ValueError("--window_minutes requires -d/--date for the center of the window")
+        center = dtg.replace(tzinfo=timezone.utc)
+        half = timedelta(minutes=args.window_minutes / 2.)
+        window = (int((center - half).timestamp()), int((center + half).timestamp()))
+        print(f"keeping data from {center - half:%Y-%m-%dT%H:%M:%SZ} up to {center + half:%Y-%m-%dT%H:%M:%SZ}")
 
     obs_data = {}
     for afile in args.input:
-        file_obs_data = get_hyms_data(afile, skip=args.skip)
+        file_obs_data = get_hyms_data(afile, skip=args.skip, window=window)
         if not file_obs_data:
             print(f"INFO: no valid data in {afile} skipping")
             continue
@@ -97,7 +107,7 @@ def main(args):
     writer.BuildIoda(obs_data, VarDims, VarAttrs, GlobalAttrs)
 
 
-def get_hyms_data(afile, skip=1):
+def get_hyms_data(afile, skip=1, window=None):
 
     obs_data = init_obs_loc()
     with h5py.File(afile, 'r') as f:
@@ -111,7 +121,7 @@ def get_hyms_data(afile, skip=1):
         chk_geolocation = apply_gross_qc(obs_data)
 
         # set PreQC from the pixel level flags and remove unusable locations
-        set_flagged_value(f, obs_data, chk_geolocation, skip=skip)
+        set_flagged_value(f, obs_data, chk_geolocation, skip=skip, window=window)
 
     if len(obs_data[('latitude', metaDataName)]) == 0:
         return {}
@@ -240,11 +250,12 @@ def apply_gross_qc(obs_data):
     return chk_geolocation
 
 
-def set_flagged_value(f, obs_data, chk_geolocation, skip=1):
+def set_flagged_value(f, obs_data, chk_geolocation, skip=1, window=None):
     """
     PreQC is set to 1 for pixels with ground processing error bits ('err_bits')
     or calibration / attitude flags raised, the data are retained.
-    Locations with bad geolocation or no valid Tb in any channel are removed.
+    Locations with bad geolocation or no valid Tb in any channel are removed,
+    as are locations outside the optional (begin, end) time window.
     """
     tb_key = 'brightnessTemperature'
     obs_key = (tb_key, obsValName)
@@ -263,6 +274,9 @@ def set_flagged_value(f, obs_data, chk_geolocation, skip=1):
     if skip > 1:
         mask_skip = (np.arange(len(good)) % skip == 0)
         good = good & mask_skip
+    if window:
+        date_time = obs_data[('dateTime', metaDataName)]
+        good = good & (date_time >= window[0]) & (date_time < window[1])
 
     obs_data[(tb_key, "PreQC")][obs_data[obs_key] == float_missing_value] = int_missing_value
 
@@ -343,9 +357,13 @@ if __name__ == "__main__":
         type=str, default=os.path.join(os.getcwd(), 'output.nc4'))
     optional.add_argument(
         '-d', '--date',
-        metavar="YYYYMMDDHH",
+        metavar="YYYYMMDDHH|YYYYMMDDTHHMMSSZ",
         help="base date for the center of the window",
         type=str, default=None)
+    optional.add_argument(
+        '--window_minutes',
+        help="keep only data within +/- half this many minutes of the date (default: keep all)",
+        type=float, default=None)
     optional.add_argument(
         '--skip',
         help="default pixel skip factor to be applied",
