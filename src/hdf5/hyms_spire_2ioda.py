@@ -138,7 +138,7 @@ def assign_channels(f, obs_data):
     nchans = len(freq_ghz)
     obs_data[('sensorChannelNumber', metaDataName)] = np.arange(1, nchans+1, dtype='int32')
     # IODA convention is Hz
-    obs_data[('sensorCentralFrequency', metaDataName)] = np.array(freq_ghz * 1.e9, dtype='float64')
+    obs_data[('sensorCentralFrequency', metaDataName)] = np.array(freq_ghz * 1.e9, dtype='float32')
 
 
 def process_hyms_metadata(f, obs_data):
