@@ -927,7 +927,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mls_o3_res_v5
                           -i testinput/mls_o3_res_v5_l2.he5
                           -o testrun/mls_o3_res_v5_l2.nc
                           --mls-version v5
-                          -b 7
+                          --level-bottom 7
                           --window-begin 2026-09-07T06:00:00Z
                           --window-end 2026-09-07T07:00:00Z"
                           mls_o3_res_v5_l2.nc ${IODA_CONV_COMP_TOL})
@@ -942,7 +942,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mls_o3_res_v6
                           -i testinput/mls_o3_res_v6_l2.he5
                           -o testrun/mls_o3_res_v6_l2.nc
                           --mls-version v6
-                          -b 7
+                          -level-bottom 7
                           --window-begin 2026-09-07T06:00:00Z
                           --window-end 2026-09-07T07:00:00Z"
                           mls_o3_res_v6_l2.nc ${IODA_CONV_COMP_TOL})
@@ -960,8 +960,8 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mls_o3_nrt_v5
                              testinput/MLS-Aura_L2GP-O3_v05-03-NRT-20-c01_2026d251t0025.he5
                           -o testrun/mls_o3_nrt_v5_l2.nc
                           --mls-version nrt
-                          -t 43 
-                          -b 7
+                          --level-top 43 
+                          --level-bottom 7
                           --window-begin 2026-09-07T23:00:00Z
                           --window-end 2026-09-08T01:00:00Z"
                           mls_o3_nrt_v5_l2.nc ${IODA_CONV_COMP_TOL})

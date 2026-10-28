@@ -329,11 +329,11 @@ def main():
             "is applied."),
         type=_parse_window_bound, required=False, default=None, dest='window_end')
     optional.add_argument(
-        '-b', '--level-bottom',
+        '--level-bottom',
         help="mls level to start 1 based index (default=8)",
         type=int, required=False, default=8, dest='lbot')
     optional.add_argument(
-        '-t', '--level-top',
+        '--level-top',
         help="mls level to end 1 based index (default=49)",
         type=int, required=False, default=49, dest='ltop')
     optional.add_argument(
