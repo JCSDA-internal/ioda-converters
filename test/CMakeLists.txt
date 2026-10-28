@@ -942,7 +942,7 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mls_o3_res_v6
                           -i testinput/mls_o3_res_v6_l2.he5
                           -o testrun/mls_o3_res_v6_l2.nc
                           --mls-version v6
-                          -level-bottom 7
+                          --level-bottom 7
                           --window-begin 2026-09-07T06:00:00Z
                           --window-end 2026-09-07T07:00:00Z"
                           mls_o3_res_v6_l2.nc ${IODA_CONV_COMP_TOL})
