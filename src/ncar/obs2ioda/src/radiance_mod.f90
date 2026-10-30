@@ -707,8 +707,12 @@ subroutine read_iasi (filename, filedate)
 
          jstart = 1
          chan_loop: do i = 1, nchan
-            if ( data1b8(1,i) > r8bfms .or. data1b8(2,i) > r8bfms ) cycle chan_loop
+            ! keep the channel number even when radiance is missing,
+            ! the channel list is assumed the same for all reports and metaData in the output
+            if ( data1b8(1,i) > r8bfms ) cycle chan_loop
             ichan = nint(data1b8(1,i))
+            rlink % ch(i) = ichan
+            if ( data1b8(2,i) > r8bfms ) cycle chan_loop
             radiance = data1b8(2,i)
             ! scale factors are stored in 10 channel groups
             iscale = 0  ! initialize
@@ -724,7 +728,6 @@ subroutine read_iasi (filename, filedate)
             if ( iscale /= 0 ) iscale = -1*(iscale-5)
             radiance = radiance * 10.0**iscale
             rlink % tb(i) = radiance
-            rlink % ch(i) = ichan
          end do chan_loop
 
          allocate ( rlink%next )
@@ -945,8 +948,11 @@ subroutine read_cris (filename, filedate)
          if ( infodat(10) < r8bfms ) rlink % elv = infodat(10)           ! HMSL height or altitude (eg. 836410.0 m)
 
          chan_loop: do i = 1, nchan
-            if ( data1b8(1,i) > r8bfms .or. data1b8(2,i) > r8bfms ) cycle chan_loop
+            ! keep channel number when the radiance is missing,
+            ! channel list is needed in final output file
+            if ( data1b8(1,i) > r8bfms ) cycle chan_loop
             rlink % ch(i) = nint(data1b8(1,i))
+            if ( data1b8(2,i) > r8bfms ) cycle chan_loop
             rlink % tb(i) = data1b8(2,i) * 1000.0  ! radiance for now
          end do chan_loop
 
@@ -980,6 +986,8 @@ subroutine sort_obs_radiance(filedate, nfgat)
    integer(i_kind), dimension(ninst,nfgat) :: nlocs
    integer(i_kind), dimension(ninst,nfgat) :: iloc
    integer(i_kind), dimension(ninst) :: nvars
+   integer(i_kind), dimension(ninst) :: nchan_conflict  ! reports with missing channel numbers or numbers that disagree
+   integer(i_kind)                   :: ich, nch, nmiss
    character(len=nstring)            :: satellite
    character(len=nstring)            :: sensor
    character(len=14) :: cdate_min, cdate_max
@@ -992,6 +1000,7 @@ subroutine sort_obs_radiance(filedate, nfgat)
    nrecs(:,:) = 0
    nlocs(:,:) = 0
    nvars(:) = 0
+   nchan_conflict(:) = 0
 
    write(*,*) '--- sorting radiance obs...'
 
@@ -1025,7 +1034,8 @@ subroutine sort_obs_radiance(filedate, nfgat)
          ! obtype assigned, advance ob counts
          nrecs(rlink%inst_idx,rlink%ifgat) = nrecs(rlink%inst_idx,rlink%ifgat) + 1
          nlocs(rlink%inst_idx,rlink%ifgat) = nlocs(rlink%inst_idx,rlink%ifgat) + 1
-         nvars(rlink%inst_idx) = rlink % nchan
+         ! size by the largest report, not the last one (AIRS nchan varies by report)
+         nvars(rlink%inst_idx) = max(nvars(rlink%inst_idx), rlink % nchan)
       end if
 
       rlink => rlink%next
@@ -1153,10 +1163,21 @@ subroutine sort_obs_radiance(filedate, nfgat)
          end if
       end do
 
+      ! The channel list is shared by all locations.
+      ! Check every report to assert assumption of a uniform channel list
+      nch = min(rlink%nchan, nvars(ityp))
       iv = ufo_vars_getindex(name_sen_info, 'sensor_channel')
-      xdata(ityp,itim)%xseninfo_int(:,iv) = rlink%ch(:)
+      do i = 1, nch
+         ich = nint(rlink%ch(i))
+         if ( ich == missing_i ) cycle
+         if ( xdata(ityp,itim)%xseninfo_int(i,iv) == missing_i ) then
+            xdata(ityp,itim)%xseninfo_int(i,iv) = ich
+         else if ( xdata(ityp,itim)%xseninfo_int(i,iv) /= ich ) then
+            nchan_conflict(ityp) = nchan_conflict(ityp) + 1
+         end if
+      end do
 
-      do i = 1, nvars(ityp)
+      do i = 1, nch
          xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%val = rlink%tb(i)
          ! tb errors set in subroutine write_obs of ncio_mod.f90
          !xdata(ityp,itim)%xfield(iloc(ityp,itim),i)%err = 1.0
@@ -1164,6 +1185,24 @@ subroutine sort_obs_radiance(filedate, nfgat)
       end do
       rlink => rlink%next
    end do reports
+
+   ! warning if any channel numbers are not reported for a specific index
+   !         or if for any index different channel numbers were assigned
+   iv = ufo_vars_getindex(name_sen_info, 'sensor_channel')
+   do i = 1, ninst
+      if ( nchan_conflict(i) > 0 ) then
+         write(*,'(1x,a,a,a,i10,a)') 'Warning: ', trim(inst_list(i)), ': ', nchan_conflict(i), &
+            ' channel numbers disagree with the channel list of earlier reports'
+      end if
+      do ii = 1, nfgat
+         if ( xdata(i,ii)%nlocs <= 0 .or. xdata(i,ii)%nvars <= 0 ) cycle
+         nmiss = count(xdata(i,ii)%xseninfo_int(:,iv) == missing_i)
+         if ( nmiss > 0 ) then
+            write(*,'(1x,a,a,a,i6,a)') 'Warning: ', trim(inst_list(i)), ': ', nmiss, &
+               ' channel numbers missing in all reports'
+         end if
+      end do
+   end do
 
    ! done with rlink
    ! release the linked list
