@@ -163,6 +163,14 @@ def process_hyms_metadata(f, obs_data):
     azi = obs_data[('sensorAzimuthAngle', metaDataName)]
     azi[azi != float_missing_value] %= 360.
 
+    # designate look angle negative before nadir
+    pixel = np.asarray(f['pixel_id'][:])
+    look = obs_data[('sensorViewAngle', metaDataName)]
+    valid = look != float_missing_value
+    if valid.any():
+        nadir = pixel[valid][np.argmin(look[valid])]
+        look[valid & (pixel < nadir)] *= -1.
+
     # 'observation time in seconds since 1970-01-01' which is the IODA epoch
     obs_time = f['time'][:]
     date_time = np.full(obs_time.shape, int_missing_value, dtype='int64')
