@@ -24,10 +24,7 @@ endif()
 
 if(iodaconv_bufr_query_ENABLED)
   add_subdirectory(bufr)
-endif()
-
-if(iodaconv_pbfortran_ENABLED)
-    add_subdirectory(ncar-bufr2nc-fortran)
+  add_subdirectory(ncepbufr)
 endif()
 
 if(iodaconv_gsi_varbc_ENABLED)

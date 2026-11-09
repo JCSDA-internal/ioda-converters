@@ -89,7 +89,12 @@ list( APPEND test_input
   testinput/pace_spexone_fmapol_aod.2024110106.nc
   testinput/pace_spexone_remotap_aod.2024110106.nc
   testinput/modis_aqua_Rrs_OC_L2.nc
-  testinput/mls_o3_l2.he5
+  testinput/mls_o3_res_v5_l2.he5
+  testinput/mls_o3_res_v6_l2.he5
+  testinput/MLS-Aura_L2GP-O3_v05-03-NRT-20-c01_2026d250t2340.he5
+  testinput/MLS-Aura_L2GP-O3_v05-03-NRT-20-c01_2026d250t2355.he5
+  testinput/MLS-Aura_L2GP-O3_v05-03-NRT-20-c01_2026d251t0010.he5
+  testinput/MLS-Aura_L2GP-O3_v05-03-NRT-20-c01_2026d251t0025.he5
   testinput/omi_o3_l2.he5
   testinput/ompsnm_o3_l2.he5
   testinput/sst_ostia.nc
@@ -113,6 +118,8 @@ list( APPEND test_input
   testinput/tec_groundBased_TENET_20201001T00Z.tec
   testinput/gnssro_tec_cosmic2_202010012304.nc
   testinput/COWVR_TSDR.020421.20240430T215845.20240430T230345.V1001.sample.h5
+  testinput/nsidc_nasa_cice_input.nc
+  testinput/nsidc_nasa_grid_north.nc
   testinput/gfs.231010.t00z.syndata.tcvitals.txt
   testinput/caliop_l2_APro.hdf
   testinput/gold_tdisk_test.nc
@@ -127,6 +134,7 @@ list( APPEND test_output
   testoutput/icethk_coperl4.nc
   testoutput/nsidc_l4_icec.nc
   testoutput/amsr2_icec_l2p.nc
+  testoutput/nsidc_nasa_cice_ioda.nc4
   testoutput/20220216T00Z_PT1H_amsr2_sample.nc4
   testoutput/gds2_sst_l2p.nc
   testoutput/gds2_sst_l3u.nc
@@ -201,7 +209,9 @@ list( APPEND test_output
   testoutput/pace_spexone_fmapol_aod.2024110106.nc
   testoutput/pace_spexone_remotap_aod.2024110106.nc
   testoutput/modis_water_leaving_radiance_L2.nc
-  testoutput/mls_o3_l2.nc
+  testoutput/mls_o3_res_v5_l2.nc
+  testoutput/mls_o3_res_v6_l2.nc
+  testoutput/mls_o3_nrt_v5_l2.nc
   testoutput/omi_o3_l2.nc
   testoutput/ompsnm_o3_l2.nc
   testoutput/sst_ostia.nc
@@ -300,6 +310,7 @@ if( iodaconv_bufr_query_ENABLED )
     testinput/bufr_ncep_sevcsr.yaml
     testinput/bufr_ncep_mtiasi.yaml
     testinput/bufr_ncep_atms.yaml
+    testinput/bufr_ncep_atms_split.yaml
     testinput/bufr_ncep_atms_remap.yaml
     testinput/bufr_ncep_atms_ta_remap.yaml
     testinput/bufr_simple_groupby.yaml
@@ -475,16 +486,10 @@ if( iodaconv_pbfortran_ENABLED )
 
   list( APPEND test_output
     testoutput/gnssro_obs_2018041500.nc4
-    testoutput/radiosonde_obs_2020093018.nc4
     testoutput/sondes_obs_2020093018.nc4
     testoutput/mhs_metop-b_obs_2020101215.nc4
-    testoutput/mhs_metop-b_obs_2020101215_v1.nc4
     testoutput/mhs_metop-b_obs_2020110112.nc4
-    testoutput/mhs_n19_obs_2020110112.nc4
     testoutput/amsua_metop-b_obs_2020110112.nc4
-    testoutput/amsua_metop-b_obs_2020110112_v1.nc4
-    testoutput/amsua_n18_obs_2020110112.nc4
-    testoutput/iasi_metop-b_obs_2022021912.nc4
   )
 endif()
 
@@ -657,6 +662,18 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gmao_argo
                           -i testinput/gmao_argo.nc
                           -o testrun/gmao_argo.nc"
                           gmao_argo.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_gmao_nsidc_nasa_cice
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/gmao_nsidc_cice2ioda.py
+                          -i testinput/nsidc_nasa_cice_input.nc
+                          -g testinput/nsidc_nasa_grid_north.nc
+                          -o testrun/nsidc_nasa_cice_ioda.nc4"
+                          nsidc_nasa_cice_ioda.nc4 ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_godae_prof
                   TYPE    SCRIPT
@@ -896,20 +913,54 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_modis_water_leaving_radiance_L2
                           -d 2021080112"
                           modis_water_leaving_radiance_L2.nc ${IODA_CONV_COMP_TOL})
 
-ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mls_o3_l2
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mls_o3_res_v5
                   TYPE    SCRIPT
                   ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
                   COMMAND bash
                   ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                           netcdf
                           "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/mls_o3_nc2ioda.py
-                          -i testinput/mls_o3_l2.he5
-                          -o testrun/mls_o3_l2.nc
-                          -y 2022
-                          -m 06
-                          -d 21
-                          -z 12"
-                          mls_o3_l2.nc ${IODA_CONV_COMP_TOL})
+                          -i testinput/mls_o3_res_v5_l2.he5
+                          -o testrun/mls_o3_res_v5_l2.nc
+                          --mls-version v5
+                          --level-bottom 7
+                          --window-begin 2026-09-07T06:00:00Z
+                          --window-end 2026-09-07T07:00:00Z"
+                          mls_o3_res_v5_l2.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mls_o3_res_v6
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/mls_o3_nc2ioda.py
+                          -i testinput/mls_o3_res_v6_l2.he5
+                          -o testrun/mls_o3_res_v6_l2.nc
+                          --mls-version v6
+                          --level-bottom 7
+                          --window-begin 2026-09-07T06:00:00Z
+                          --window-end 2026-09-07T07:00:00Z"
+                          mls_o3_res_v6_l2.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mls_o3_nrt_v5
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/mls_o3_nc2ioda.py
+                          -i testinput/MLS-Aura_L2GP-O3_v05-03-NRT-20-c01_2026d250t2340.he5
+                             testinput/MLS-Aura_L2GP-O3_v05-03-NRT-20-c01_2026d250t2355.he5
+                             testinput/MLS-Aura_L2GP-O3_v05-03-NRT-20-c01_2026d251t0010.he5
+                             testinput/MLS-Aura_L2GP-O3_v05-03-NRT-20-c01_2026d251t0025.he5
+                          -o testrun/mls_o3_nrt_v5_l2.nc
+                          --mls-version nrt
+                          --level-top 43 
+                          --level-bottom 7
+                          --window-begin 2026-09-07T23:00:00Z
+                          --window-end 2026-09-08T01:00:00Z"
+                          mls_o3_nrt_v5_l2.nc ${IODA_CONV_COMP_TOL})
 
 ecbuild_add_test( TARGET  test_${PROJECT_NAME}_omi_o3_l2
                   TYPE    SCRIPT
@@ -1452,7 +1503,6 @@ endforeach()
 
 foreach (coltype total troposphere)
   foreach (spec no2) #hcho not tested and o3 not out yet with real data
-    if (NOT (${spec} STREQUAL "hcho"))
        ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tempo_${spec}_${coltype}
                           TYPE    SCRIPT
                           ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
@@ -1460,13 +1510,13 @@ foreach (coltype total troposphere)
                           ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
                                   netcdf
                                   "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/tempo_nc2ioda.py
-				  -i testinput/TEMPO_NO2_L2_V04_${spec}.20251002T180000Z.0.nc
-				     testinput/TEMPO_NO2_L2_V04_${spec}.20251002T180000Z.1.nc
-				  -o testrun/tempo_${spec}_${coltype}.nc
-                                  -v ${spec}
-                                  -c ${coltype}"
+                                  -i testinput/TEMPO_NO2_L2_V04_${spec}.20251002T180000Z.0.nc
+                                  testinput/TEMPO_NO2_L2_V04_${spec}.20251002T180000Z.1.nc
+                                  -o testrun/tempo_${spec}_${coltype}.nc
+                                  --variable ${spec}
+                                  --column ${coltype}
+                                  --save_grid_indices"
                                   tempo_${spec}_${coltype}.nc ${IODA_CONV_COMP_TOL})
-    endif()
   endforeach()
 endforeach()
 
@@ -1873,6 +1923,34 @@ if(iodaconv_bufr_query_ENABLED)
                             "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_atms.yaml"
                             gdas.t00z.atms_n20.tm00.nc ${IODA_CONV_COMP_TOL}
                     DEPENDS bufr2ioda.x )
+
+  # ATMS split by satellite (split_atms_by_sat.py needs the ncepbufr python module)
+  execute_process( COMMAND ${Python3_EXECUTABLE} -c "import ncepbufr"
+                   RESULT_VARIABLE _iodaconv_ncepbufr_rc OUTPUT_QUIET ERROR_QUIET )
+  if( _iodaconv_ncepbufr_rc EQUAL 0 )
+    # split the NPP+N20 test dump; -c checks every subset (no mixed-satellite messages)
+    ecbuild_add_test( TARGET  test_iodaconv_split_atms_by_sat
+                      TYPE    SCRIPT
+                      COMMAND ${Python3_EXECUTABLE}
+                      ARGS    ${PROJECT_SOURCE_DIR}/src/ncepbufr/split_atms_by_sat.py -c
+                              testinput/gdas.t00z.atms.tm00.bufr_d
+                              testrun/gdas.t00z.atms_split n20 )
+
+    # converting the N20-only file must give exactly the existing N20 reference
+    ecbuild_add_test( TARGET  test_iodaconv_bufr_ncep_atms_split_n20
+                      TYPE    SCRIPT
+                      COMMAND bash
+                      ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                              netcdf
+                              "${CMAKE_BINARY_DIR}/bin/bufr2ioda.x testinput/bufr_ncep_atms_split.yaml"
+                              gdas.t00z.atms_n20.tm00.nc ${IODA_CONV_COMP_TOL}
+                      DEPENDS bufr2ioda.x
+                      TEST_DEPENDS test_iodaconv_split_atms_by_sat )
+
+    # both ATMS tests write testrun/gdas.t00z.atms_n20.tm00.nc; don't run them at the same time
+    set_tests_properties( test_iodaconv_bufr_ncep_atms test_iodaconv_bufr_ncep_atms_split_n20
+                          PROPERTIES RESOURCE_LOCK atms_n20_output )
+  endif()
 
   ecbuild_add_test( TARGET  test_iodaconv_bufr_simple_groupby
                     TYPE    SCRIPT
@@ -2426,51 +2504,6 @@ if( iodaconv_pbfortran_ENABLED )
                             mhs_metop-b_obs_2020101215.nc4 ${IODA_CONV_COMP_TOL}
                     DEPENDS obs2ioda)
 
-  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_prepbufr_conv
-                    TYPE    SCRIPT
-                    COMMAND bash
-                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-                            netcdf
-                            "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
-                            -i testinput -o testrun prepbufr.bufr"
-                            radiosonde_obs_2020093018.nc4 ${IODA_CONV_COMP_TOL}
-                    DEPENDS bufr2nc_fortran.x)
-
-  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_mhs_conv
-                    TYPE    SCRIPT
-                    COMMAND bash
-                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_v1comp.sh
-                            netcdf
-                            "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
-                            -i testinput -o testrun gdas.t18z.1bmhs.tm00.bufr_d"
-                            mhs_metop-b_obs_2020101215.nc4
-                            mhs_metop-b_obs_2020101215_v1.nc4 ${IODA_CONV_COMP_TOL}
-                    DEPENDS bufr2nc_fortran.x
-                    TEST_DEPENDS test_${PROJECT_NAME}_mhs_conv_ncar_obs2ioda)
-
-#  FIXME: Emily Liu
-#  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ears_mhs_conv
-#                    TYPE    SCRIPT
-#                    COMMAND bash
-#                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-#                            netcdf
-#                            "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
-#                            -i testinput -o testrun gdas.t12z.esmhs.tm00.bufr_d"
-#                            mhs_n19_obs_2020110112.nc4 ${IODA_CONV_COMP_TOL}
-#                    DEPENDS bufr2nc_fortran.x)
-
-  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_amsua_conv
-                    TYPE    SCRIPT
-                    COMMAND bash
-                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_v1comp.sh
-                            netcdf
-                            "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
-                            -i testinput -o testrun gdas.t12z.1bamua.tm00.bufr_d"
-                            amsua_metop-b_obs_2020110112.nc4
-                            amsua_metop-b_obs_2020110112_v1.nc4 ${IODA_CONV_COMP_TOL}
-                    DEPENDS bufr2nc_fortran.x
-                    TEST_DEPENDS test_${PROJECT_NAME}_amsua_conv_ncar_obs2ioda)
-
   ecbuild_add_test( TARGET  test_${PROJECT_NAME}_amsua_conv_ncar_obs2ioda
                     TYPE    SCRIPT
                     COMMAND bash
@@ -2480,27 +2513,6 @@ if( iodaconv_pbfortran_ENABLED )
                             -i testinput -o testrun gdas.t12z.1bamua.tm00.bufr_d -e nc4"
                             amsua_metop-b_obs_2020110112.nc4 ${IODA_CONV_COMP_TOL}
                     DEPENDS obs2ioda)
-
-#  FIXME: Emily Liu
-#  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ears_amsua_conv
-#                    TYPE    SCRIPT
-#                    COMMAND bash
-#                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-#                            netcdf
-#                            "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
-#                            -i testinput -o testrun gdas.t12z.esamua.tm00.bufr_d"
-#                            amsua_n18_obs_2020110112.nc4 ${IODA_CONV_COMP_TOL}
-#                    DEPENDS bufr2nc_fortran.x)
-
-#  ecbuild_add_test( TARGET  test_${PROJECT_NAME}_iasi_conv
-#                    TYPE    SCRIPT
-#                    COMMAND bash
-#                    ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
-#                            netcdf
-#                            "${CMAKE_BINARY_DIR}/bin/bufr2nc_fortran.x
-#                            -i testinput -o testrun gdas.t12z.mtiasi.tm00.bufr_d"
-#                            iasi_metop-b_obs_2022021912.nc4 ${IODA_CONV_COMP_TOL}
-#                    DEPENDS bufr2nc_fortran.x)
 
 endif()
 

@@ -127,14 +127,12 @@ def readMatrix(f, method, subset):
         idx = np.asarray(subset) - 1
         RRop = RRop[:, idx]
         M = M[idx]
-        min_idx_plus_1 = idx.min() + 1
         max_idx_plus_1 = idx.max() + 1
-        # all subset channels in first set of PCs
+        # all subset channels in first set of PCs: drop the trailing MWIR components.
+        # An MWIR-only subset keeps all components, since UFO reads scores 1..N and
+        # the MWIR scores are 151..300 in the IODA file.
         if max_idx_plus_1 <= nchan1:
             RRop = RRop[0:npcs1, :]
-        # all subset channels in second set of PCs
-        elif min_idx_plus_1 > nchan1:
-            RRop = RRop[npcs1:npcs2, :]
     return RRop, M
 
 

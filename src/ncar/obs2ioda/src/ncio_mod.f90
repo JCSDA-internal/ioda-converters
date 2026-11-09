@@ -217,7 +217,7 @@ subroutine write_obs (filedate, write_opt, outdir, itim, fileExt)
          idim = ufo_vars_getindex(name_ncdim, dim_var_info(1,i))
          dim1 = ncid_ncdim(idim)
          dim1_name = get_dim_name(dim1, nchans_nvars_flag)
-         if (ncname == 'dateTime' .or. ncname == 'launchTime') then
+         if (ncname == 'dateTime' .or. ncname == 'releaseTime') then
             status = netcdfAddVar(netcdfID, ncname, type_var_info(i), 1, &
                [dim1_name], "MetaData")
             status = netcdfPutAtt(netcdfID, "units", "seconds since 1970-01-01T00:00:00Z", varName = trim(ncname), &
