@@ -113,6 +113,10 @@ list( APPEND test_input
   testinput/gpm_dpr_20240401-S105223-E122536.sample.hdf5
   testinput/Pandora57s1_BoulderCO_L2_rnvs3p1-8.txt
   testinput/pandora_site_classification.csv
+  testinput/woudc_ozonesonde_stn076_20250101_form1.csv
+  testinput/woudc_ozonesonde_stn316_20251230_form2.csv
+  testinput/woudc_ozonesonde_stn174_20260422_form2.csv
+  testinput/woudc_ozonesonde_range_check.py
   testinput/balloonsonde_sample_20241001T00Z_PT15M.json
   testinput/tec_groundBased_TENET_20201001T00Z.tec
   testinput/gnssro_tec_cosmic2_202010012304.nc
@@ -224,6 +228,7 @@ list( APPEND test_output
   testoutput/madis_snod_2021010100.nc
   testoutput/20240401T105230_PT1M_dpr_gpm.nc
   testoutput/Pandora57s1_BoulderCO_L2_rnvs3p1-8.nc
+  testoutput/woudc_ozonesonde.nc
   testoutput/saber_timed.20160101T180000Z.nc4
   testoutput/obs.20241001T000000Z_PT15M_balloonsonde.nc4
   testoutput/obs.20201001T000000Z_PT1M_tec_groundbased.nc4
@@ -1483,6 +1488,30 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_pandora
                           --date_range 2023080115 2023080121
                           --site_classification testinput/pandora_site_classification.csv"
                           Pandora57s1_BoulderCO_L2_rnvs3p1-8.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_woudc_ozonesonde
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/woudc_ozonesonde2ioda.py
+                          -i testinput/woudc_ozonesonde_stn076_20250101_form1.csv
+                             testinput/woudc_ozonesonde_stn316_20251230_form2.csv
+                             testinput/woudc_ozonesonde_stn174_20260422_form2.csv
+                          -o testrun/woudc_ozonesonde.nc
+                          --window-begin 2025-01-01T00:00:00Z
+                          --window-end 2026-12-31T00:00:00Z"
+                          woudc_ozonesonde.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_woudc_ozonesonde_range_check
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND "${Python3_EXECUTABLE}"
+                  ARGS    testinput/woudc_ozonesonde_range_check.py
+                          ${CMAKE_BINARY_DIR}/bin/woudc_ozonesonde2ioda.py
+                          testinput
+                          testrun )
 
 foreach (coltype total troposphere)
         ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2_${coltype}
