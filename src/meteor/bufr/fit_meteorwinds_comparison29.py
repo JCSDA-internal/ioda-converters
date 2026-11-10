@@ -27,6 +27,12 @@ def fit_meteorwinds_comparison(data1, data2, data3, begin_day, bmin, bmax, binsi
     vererr = np.full([ntimes, nheights], 9999.9, dtype=float)
     pts = np.full([ntimes, nheights], np.nan)
 
+    npheight = np.full([ntimes, nheights], 9999.9, dtype=float)
+    npyear   = np.full([ntimes, nheights], 9999, dtype=int)
+    npmonth  = np.full([ntimes, nheights], 9999, dtype=int)
+    npday    = np.full([ntimes, nheights], 9999, dtype=int)
+    nphour   = np.full([ntimes, nheights], 9999, dtype=int)
+
     newd = []
     yr,mo,da=ddt.year,ddt.month,ddt.day
     for line in data1:
@@ -87,6 +93,11 @@ def fit_meteorwinds_comparison(data1, data2, data3, begin_day, bmin, bmax, binsi
             if index_good==0.: continue
 
             for j in range(nheights):
+                npheight[i,j] = bmin+j*binsize + binsize/2
+                npyear[i,j]  = yr
+                npmonth[i,j] = mo
+                npday[i,j]   = da
+                nphour[i,j]  = i
                 cell = [x for x in thishour if (x[2]>=bmin+j*binsize)&(x[2]<=bmin+(j+1)*binsize)]
                 if len(cell)<=3: continue
 
@@ -242,8 +253,14 @@ def fit_meteorwinds_comparison(data1, data2, data3, begin_day, bmin, bmax, binsi
     allzon[np.where(np.abs(allzon)>250.)]=np.nan
     allmer[np.where(np.abs(allmer)>250.)]=np.nan
     allver[np.where(np.abs(allver)>100.)]=np.nan 
+
+    zonerr[np.where(np.abs(zonerr)>250.)]=np.nan
+    mererr[np.where(np.abs(mererr)>250.)]=np.nan
+    vererr[np.where(np.abs(vererr)>100.)]=np.nan 
+
+    npheight[np.where(np.abs(npheight)>9999.0)]=np.nan
     #exit()
     #print('---->',allzon[1,15],zonerr[1,15],np.shape(zonerr))
-    return allzon, allmer, allver, zonerr, mererr, vererr, pts
+    return allzon, allmer, allver, zonerr, mererr, vererr, npheight, npyear, npmonth, npday, nphour, pts
 
 

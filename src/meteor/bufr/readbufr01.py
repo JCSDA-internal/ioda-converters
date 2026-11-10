@@ -3,6 +3,7 @@
 import numpy as np
 import datetime,os,sys
 from fit_meteorwinds_comparison29 import fit_meteorwinds_comparison
+from write_meteorwinds_text import write_winds_text
 from eccodes import *
 from eccodes import CodesInternalError, codes_is_missing
 os.environ["ECCODES_DEFINITION_PATH"]='/p/app/projects/NEPTUNE/spack-stack/spack-stack-2.1.0/envs/ue-oneapi-2025.3.0/install/intel-oneapi-compilers/2025.3.0/eccodes-2.33.0-masumg3/share/eccodes/definitions'
@@ -313,9 +314,10 @@ while dt<=dt1:
     dat3 = filtering(data3,ThetaMax)
 
     #u, v, w, pts = fit_meteorwinds_comparison(dat1,dat2,dat3,begin_day,bmin,bmax,binsize,dt)
-    u, v, w, u_err, v_err, w_err, pts = fit_meteorwinds_comparison(dat1,dat2,dat3,begin_day,bmin,bmax,binsize,dt)
+    u, v, w, u_err, v_err, w_err, height, yr, mo, da, hr, pts = fit_meteorwinds_comparison(dat1,dat2,dat3,begin_day,bmin,bmax,binsize,dt)
     if u is not None:
         print('Saving data for '+dt.strftime("%Y%m%d"))
         #np.save('../data/meteor/'+sta+'/'+sta[:3]+dt.strftime("%Y%m%d"),(u,v,u_err,v_err,pts))
-        np.save('data/meteor/'+sta+'/'+sta[:3]+dt.strftime("%Y%m%d"),(u,v,pts))
+#       np.save('data/meteor/'+sta+'/'+sta[:3]+dt.strftime("%Y%m%d"),(u,v,pts))
+        write_winds_text(sta[:3]+dt.strftime("%Y%m%d")+".txt", yr, mo, da, hr, height, u, v, u_err, v_err)
     dt+=datetime.timedelta(days=1)
