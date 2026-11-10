@@ -5,7 +5,7 @@ import datetime,os,sys
 from fit_meteorwinds_comparison29 import fit_meteorwinds_comparison
 from eccodes import *
 from eccodes import CodesInternalError, codes_is_missing
-os.environ["ECCODES_DEFINITION_PATH"]='/mnt/md0/anaconda3/share/eccodes/definitions'
+os.environ["ECCODES_DEFINITION_PATH"]='/p/app/projects/NEPTUNE/spack-stack/spack-stack-2.1.0/envs/ue-oneapi-2025.3.0/install/intel-oneapi-compilers/2025.3.0/eccodes-2.33.0-masumg3/share/eccodes/definitions'
 
 def read_radar_bufr(bufr_file_path: str, bufr_tables_path: str):
     """
@@ -243,7 +243,7 @@ sta = 'riogrande'
 #sta = 'bearlake'
 #sta = 'trelew'
 #sta = 'santamaria'
-bufr_tables = "/mnt/md0/Meteor/metechodefs-nobm"
+bufr_tables = "mnt/md0/Meteor/metechodefs-nobm"
 
 while dt<=dt1:
     """
@@ -270,7 +270,7 @@ while dt<=dt1:
                 '.'+sta+'.mpd',verbose=0)
     """
     data1 = []
-    radar_file = "/mnt/md0/data/skiymet/riogrande/bufr/metecho_riogrande_"+ \
+    radar_file = "mnt/md0/data/skiymet/riogrande/bufr/metecho_riogrande_"+ \
         (dt-datetime.timedelta(days=1)).strftime("%Y%m%d")+"_23.bufr"
     dat = read_radar_bufr(radar_file, bufr_tables)
     if dat!=None:
@@ -281,7 +281,7 @@ while dt<=dt1:
 
     data2 = []
     for i in range(24):
-        radar_file = "/mnt/md0/data/skiymet/riogrande/bufr/metecho_riogrande_"+dt.strftime("%Y%m%d") \
+        radar_file = "mnt/md0/data/skiymet/riogrande/bufr/metecho_riogrande_"+dt.strftime("%Y%m%d") \
             +"_"+str(i).zfill(2)+".bufr"
         dat=read_radar_bufr(radar_file, bufr_tables)
         if dat!=None:
@@ -299,7 +299,7 @@ while dt<=dt1:
     print('Total counts: ',len(data2))
 
     data3 = []
-    radar_file = "/mnt/md0/data/skiymet/riogrande/bufr/metecho_riogrande_"+ \
+    radar_file = "mnt/md0/data/skiymet/riogrande/bufr/metecho_riogrande_"+ \
         (dt+datetime.timedelta(days=1)).strftime("%Y%m%d")+"_00.bufr"
     dat = read_radar_bufr(radar_file, bufr_tables)
     if dat!=None:
@@ -317,5 +317,5 @@ while dt<=dt1:
     if u is not None:
         print('Saving data for '+dt.strftime("%Y%m%d"))
         #np.save('../data/meteor/'+sta+'/'+sta[:3]+dt.strftime("%Y%m%d"),(u,v,u_err,v_err,pts))
-        np.save('/data/meteor/'+sta+'/'+sta[:3]+dt.strftime("%Y%m%d"),(u,v,pts))
+        np.save('data/meteor/'+sta+'/'+sta[:3]+dt.strftime("%Y%m%d"),(u,v,pts))
     dt+=datetime.timedelta(days=1)
