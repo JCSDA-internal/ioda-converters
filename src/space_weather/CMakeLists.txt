@@ -5,8 +5,9 @@ list(APPEND programs
   gnss_los_ground_tec_madrigal2ioda.py
   gnss_tec_spacebased_cdaac2ioda.py
   gnss_tec_ground_based.py
-  ionosonde_ascii2ioda.py
   gold_tdisk2ioda.py
+  ionosonde_ascii2ioda.py
+  saber_nitricoxideCooling_netcdf2ioda.py
 )
 
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )
