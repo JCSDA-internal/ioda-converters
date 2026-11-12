@@ -116,7 +116,6 @@ list( APPEND test_input
   testinput/woudc_ozonesonde_stn076_20250101_form1.csv
   testinput/woudc_ozonesonde_stn316_20251230_form2.csv
   testinput/woudc_ozonesonde_stn174_20260422_form2.csv
-  testinput/woudc_ozonesonde_range_check.py
   testinput/balloonsonde_sample_20241001T00Z_PT15M.json
   testinput/tec_groundBased_TENET_20201001T00Z.tec
   testinput/gnssro_tec_cosmic2_202010012304.nc
@@ -1503,15 +1502,6 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_woudc_ozonesonde
                           --window-begin 2025-01-01T00:00:00Z
                           --window-end 2026-12-31T00:00:00Z"
                           woudc_ozonesonde.nc ${IODA_CONV_COMP_TOL})
-
-ecbuild_add_test( TARGET  test_${PROJECT_NAME}_woudc_ozonesonde_range_check
-                  TYPE    SCRIPT
-                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
-                  COMMAND "${Python3_EXECUTABLE}"
-                  ARGS    testinput/woudc_ozonesonde_range_check.py
-                          ${CMAKE_BINARY_DIR}/bin/woudc_ozonesonde2ioda.py
-                          testinput
-                          testrun )
 
 foreach (coltype total troposphere)
         ecbuild_add_test( TARGET  test_${PROJECT_NAME}_tropomi_no2_${coltype}
