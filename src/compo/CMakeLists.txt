@@ -19,6 +19,7 @@ list(APPEND programs
   viirs_aod2ioda.py
   viirs_biaswriter.py
   viirs_l1bnc2ioda.py
+  woudc_ozonesonde2ioda.py
 )
 
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )
