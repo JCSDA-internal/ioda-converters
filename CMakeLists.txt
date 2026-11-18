@@ -44,7 +44,7 @@ set(Python3_FIND_FRAMEWORK "LAST")
 find_package( Python3 REQUIRED COMPONENTS Interpreter Development)
 
 set(pyver python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR})
-set(PYDIR ${pyver}/pyiodaconv)
+set(PYDIR ${pyver}/site-packages/pyiodaconv)
 
 # Location of installed python iodaconv libraries
 set( PYIODACONV_BUILD_LIBDIR   ${CMAKE_BINARY_DIR}/lib/${PYDIR} )
