@@ -268,7 +268,7 @@ def set_flagged_value(f, obs_data, chk_geolocation, skip=1, window=None):
     tb_key = 'brightnessTemperature'
     obs_key = (tb_key, obsValName)
 
-    pixel_flag = (f['err_bits'][:] != 0).any(axis=1)
+    pixel_flag = err_bits_flag(f)
     for key in PIXEL_FLAG_KEYS:
         if key in f:
             pixel_flag |= (f[key][:] != 0)
@@ -295,6 +295,28 @@ def set_flagged_value(f, obs_data, chk_geolocation, skip=1, window=None):
             obs_data[k] = obs_data[k][good]
         elif tb_key in k[0]:
             obs_data[k] = obs_data[k][good, :]
+
+
+def err_bits_flag(f):
+    """
+    True for pixels with a processing error raised in 'err_bits'.
+    A bit only counts where the same bit is set in 'set_bits'.
+    Bits marked bit_informational report a state and are ignored.
+    """
+    var = f['err_bits']
+    err = np.asarray(var[:], dtype='uint64')
+    if 'set_bits' in f:
+        err = err & np.asarray(f['set_bits'][:], dtype='uint64')
+
+    attrs = var.attrs
+    if all(k in attrs for k in ('bit_informational', 'bit_word', 'bit_index')):
+        ignore = np.zeros(err.shape[1], dtype='uint64')
+        for word, index, info in zip(attrs['bit_word'], attrs['bit_index'], attrs['bit_informational']):
+            if info:
+                ignore[int(word)] |= np.uint64(1) << np.uint64(index)
+        err = err & ~ignore
+
+    return (err != 0).any(axis=1)
 
 
 def channel_keys():
