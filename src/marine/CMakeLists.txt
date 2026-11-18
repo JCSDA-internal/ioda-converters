@@ -29,6 +29,7 @@ list(APPEND programs
   pace_radiance2ioda.py
   ostia_l4sst2ioda.py
   oc_l2_radiance2ioda.py
+  swotk_l3adt2ioda.py
 )
 
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )

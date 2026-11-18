@@ -113,6 +113,7 @@ list( APPEND test_input
   testinput/gnssro_tec_cosmic2_202010012304.nc
   testinput/COWVR_TSDR.020421.20240430T215845.20240430T230345.V1001.sample.h5
   testinput/gfs.231010.t00z.syndata.tcvitals.txt
+  testinput/swotk_l3adt.nc
 )
 
 list( APPEND test_output
@@ -218,6 +219,7 @@ list( APPEND test_output
   testoutput/gnssro_tec_cosmic2_202010012304_output.nc4
   testoutput/obs.20240430T220600Z_PT2M_cowvr_iss.nc4
   testoutput/tcp_obs_2023101000.nc4
+  testoutput/swotk_l3adt.nc
 )
 
 if( iodaconv_gnssro_ENABLED )
@@ -934,6 +936,17 @@ ecbuild_add_test( TARGET  test_${PROJECT_NAME}_ompsnm_o3_l2
                           -d 15
                           -z 12"
                           ompsnm_o3_l2.nc ${IODA_CONV_COMP_TOL})
+
+ecbuild_add_test( TARGET  test_${PROJECT_NAME}_swotk_l3adt
+                  TYPE    SCRIPT
+                  ENVIRONMENT "PYTHONPATH=${IODACONV_PYTHONPATH}"
+                  COMMAND bash
+                  ARGS    ${CMAKE_BINARY_DIR}/bin/iodaconv_comp.sh
+                          netcdf
+                          "${Python3_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/swotk_l3adt2ioda.py
+                          -i testinput/swotk_l3adt.nc
+                          -o testrun/swotk_l3adt.nc"
+                          swotk_l3adt.nc ${IODA_CONV_COMP_TOL})
 
 #===============================================================================
 # Conventional data, Sat-winds atmospheric motion vectors NESDIS ftp server
