@@ -192,7 +192,7 @@ def get_data_from_file(obs_file_handle):
     # Handle longitudes to be within [-180, 180)
     obs_data[('longitude', META_DATA_NAME)] = numpy.ma.where(
         obs_data[('longitude', META_DATA_NAME)] > 180,
-        obs_data[('longitude', META_DATA_NAME)] - 360,
+        obs_data[('longitude', META_DATA_NAME)] - numpy.float32(360),
         obs_data[('longitude', META_DATA_NAME)]
     )
 
