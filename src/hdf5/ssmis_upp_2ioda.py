@@ -167,7 +167,7 @@ def get_ssmis_data(afile, add_qc=False):
 def populate_obsValue(line, local_data, WMO_sat_ID=int_missing_value, ssmis_uas=False, add_qc=True):
 
     # this is specifically for SSMIS UPP files
-    sensor_altitude = 850.  # SSMIS satelite altitude approximate
+    sensor_altitude = 850000.  # SSMIS satelite altitude approximate
     sensor_zenith = 45.0  # SSMIS zenith
 
     # read data lines beginning at fourth line
@@ -213,7 +213,6 @@ def populate_obsValue(line, local_data, WMO_sat_ID=int_missing_value, ssmis_uas=
     # 60 km                          52.62
     local_data[('sensorViewAngle', metaDataName)].append(sensor_zenith)
 #   local_data[('sensorViewAngle', metaDataName)] = compute_scan_angle(
-#       sensor_zenith,
 #       sensor_altitude,
 #       sensor_zenith,
 #       qc_flag=[[int(irej)]])

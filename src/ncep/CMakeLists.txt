@@ -14,7 +14,7 @@ set_targets_deps( "${libs}"
                    ncep_scripts_deps)
 
 file(MAKE_DIRECTORY ${PYIODACONV_BUILD_LIBDIR})
-execute_process(COMMAND cmake -E create_symlink ${CMAKE_CURRENT_SOURCE_DIR}/config ${PYIODACONV_BUILD_LIBDIR}/config)
+file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/config ${PYIODACONV_BUILD_LIBDIR}/config SYMBOLIC)
 
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )
 conf_targets_deps( "${programs}"

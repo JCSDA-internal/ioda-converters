@@ -37,9 +37,9 @@ file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bufr_obs_samples)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bufr_table_samples)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/fix)
 foreach(FILENAME ${bufr_obs_samples} ${bufr_table_samples} ${fix})
-    execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink
-           ${CMAKE_CURRENT_SOURCE_DIR}/${FILENAME}
-           ${CMAKE_CURRENT_BINARY_DIR}/${FILENAME} )
+    file( CREATE_LINK
+          ${CMAKE_CURRENT_SOURCE_DIR}/${FILENAME}
+          ${CMAKE_CURRENT_BINARY_DIR}/${FILENAME} SYMBOLIC )
 endforeach(FILENAME)
 
 install( DIRECTORY fix bufr_obs_samples bufr_table_samples DESTINATION doc )

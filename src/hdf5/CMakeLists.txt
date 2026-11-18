@@ -1,6 +1,7 @@
 list(APPEND scripts
   atms_netcdf_hdf5_2ioda.py
   amsr2_2ioda.py
+  aws_2ioda.py
   cloudsat_netcdf_to_ioda.py
   cowvr_hdf5_2ioda.py
   gmi_2ioda.py

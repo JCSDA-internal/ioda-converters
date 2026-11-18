@@ -80,8 +80,8 @@ conv_bufrtypes = {
     "rass": [126],
     "sfcship": [180, 183],
     "sfc": [181, 187],
-    "gps": [3, 4, 5, 41, 42, 43, 44, 66, 265, 266, 267, 268, 269, 421, 440, \
-            722, 723, 740, 741, 742, 743, 744, 745, \
+    "gps": [3, 4, 5, 41, 42, 43, 44, 66, 265, 266, 267, 268, 269, 421, 440,
+            722, 723, 740, 741, 742, 743, 744, 745,
             750, 751, 752, 753, 754, 755, 786, 803, 804, 820, 821, 825],
     "sst": [181, 182, 183, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202],
     "tcp": [112],
@@ -1204,7 +1204,7 @@ def grabobsidx(obsdata, platform, var):
         codes = uv_bufrtypes[platform]
     else:
         codes = conv_bufrtypes[platform]
-    idx = np.logical_and(np.in1d(code, codes), idx2)
+    idx = np.logical_and(np.isin(code, codes), idx2)
 
     return idx
 

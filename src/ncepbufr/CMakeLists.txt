@@ -2,6 +2,7 @@ list(APPEND scripts
   bufr_ncep_prepbufr_adpupa.py
   prepbufr_adpsfc_api.py
   prepbufr_sfcshp_api.py
+  split_atms_by_sat.py
 )
 
 file( RELATIVE_PATH SCRIPT_LIB_PATH ${CMAKE_BINARY_DIR}/bin ${PYIODACONV_BUILD_LIBDIR} )

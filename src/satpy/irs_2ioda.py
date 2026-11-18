@@ -308,7 +308,6 @@ def get_data_from_files(
 
     # compute_scan angle is kind of odd. Only 2nd and 3rd args do anything.
     obs_data[('sensorViewAngle', metaDataName)] = compute_scan_angle(
-        obs_data[('sensorZenithAngle', metaDataName)].flatten(),
         sat_alt*np.ones(cnt_nx*cnt_ny),
         obs_data[('sensorZenithAngle', metaDataName)].flatten()).reshape(cnt_nx, cnt_ny).astype('float32')
 

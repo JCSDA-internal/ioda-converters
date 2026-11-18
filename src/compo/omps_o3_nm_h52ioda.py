@@ -152,11 +152,12 @@ class omps_nm(object):
             apriori_layers = anc.variables['APrioriLayerO3'][:]  # shape (da, dc, 11)
             apriori_layers = apriori_layers.reshape(da * dc, -1)  # shape (nlocs, 11)
 
-            # calculate the apriori term which is (I-A)*xa
-            # xa is already in DU so this is straightforward,
-            # and we can convert to mol.m-2 at the end to match conventions
-            apriori_total = np.zeros(len(obs))
-            apriori_total = ((1.0 - averaging_kernel) * apriori_layers).sum(axis=1) * DU2molsqm
+            # calculate the apriori term which is (I-A)*xa xa is already in DU so
+            # this is straightforward, and we can convert to mol.m-2 at the end to
+            # match conventions. Note we must coerce the scalar dtype to prevent
+            # float64 arithmetic errors.
+            _dt = averaging_kernel.dtype.type
+            apriori_total = ((_dt(1.0) - averaging_kernel) * apriori_layers).sum(axis=1) * _dt(DU2molsqm)
 
             # we want to make sure we adjust the pressure grid if terrain is less than any
             # of the standard pressure levels, as this would cause issues

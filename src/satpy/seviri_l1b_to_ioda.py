@@ -23,7 +23,6 @@ from satpy.readers import seviri_l1b_native
 import pyiodaconv.ioda_conv_engines as iconv
 from pyiodaconv.orddicts import DefaultOrderedDict
 from pyiodaconv.def_jedi_utils import (
-    compute_scan_angle,
     concat_obs_dict,
     epoch,
     ioda_float_type,
@@ -126,7 +125,8 @@ def get_seviri_scene(args, resample=True, ref_dataset='IR_108'):
         return scn, ancillary_data
 
     # Create a target area with the default degree resolution
-    target_area = create_latlon_area(resolution_deg=resolution)
+    sat_lon = scn[ref_dataset].attrs['area'].proj_dict.get('lon_0', 0.0)
+    target_area = create_latlon_area(resolution_deg=resolution, area_extent=(sat_lon - 81, -81, sat_lon + 81, 81))
     # print(f"target area shape: {target_area.shape}")
 
     resampled_satellite_zenith = resample_ancillary_data(scn, satellite_zenith_angle, target_area)
