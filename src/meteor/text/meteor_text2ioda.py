@@ -7,7 +7,7 @@ import pandas as pd
 from datetime import datetime
 import dateutil.parser
 from builtins import str
-#from pyioda import ioda_obs_space as ioda_ospace
+from pyioda import ioda_obs_space as ioda_ospace
 import os
 import glob
 
@@ -18,14 +18,17 @@ def read_file(filename,time_window):
     colspecs = [(0, 4), (5, 8), (9, 18), (19, 32), (33, 36), (36, 37),
                 (38, 42), (42, 43), (44, 47), (48, 51), (52, 56)]
 #                   lon      lonew      dir       spd       pres
-    ## TIME WINDOW to YYYYMO format
+    ## TIME WINDOW to YYYYMODD format
     start_date = time_window[0]
     end_date = time_window[1]
     #print(time_window)
     YYYYMOs = start_date[0:4]+start_date[5:7]
+    print(YYYYMOs)
     YYYYMOe = end_date[0:4]+end_date[5:7]
+    print(YYYYMOe)
     # load station file information
-    station_filename = (filename+'\\Station_LatLon.txt')
+    station_filename = (filename+'/Station_LatLon.txt')
+#   station_filename = ('Station_LatLon.txt')
     stnInfo = pd.read_table(station_filename,skiprows=1,delimiter=',',names=['StationID','lat','lon'])
 
     
@@ -35,16 +38,18 @@ def read_file(filename,time_window):
 
     # Loop through everything inside the base directory
     for station_folder_name in os.listdir(filename):
+        print(f"station_folder_name = {station_folder_name}") 
         # Construct the full path to the station folder (e.g., ...\Step1_complete_winds\ALO)
         station_path = os.path.join(filename, station_folder_name)
-       
+        print(f"station_path = {station_path}") 
         # Check to make sure it is actually a folder before proceeding
         if os.path.isdir(station_path):
            
             # Now search for your specific file pattern INSIDE this station folder
-            file_pattern = os.path.join(station_path, f'*_{YYYYMOs}.txt')
+            file_pattern = os.path.join(station_path, f'*_{YYYYMOs}*.txt')
+            print(f"file_pattern = {file_pattern}")
             matching_files = glob.glob(file_pattern)
-            #print(matching_files)
+            print(matching_files)
             if matching_files:
                 #read that file as table
                 tempdata = pd.read_table(matching_files[0], skiprows=1, header=None, names=custom_names)
@@ -56,6 +61,9 @@ def read_file(filename,time_window):
                 "hour": tempdata.Hour})
 
                 # make a table with start stop times
+                print(f"start_date = {start_date}")
+                print(f"obdate = {obdate}")
+                print(f"end_date = {end_date}")
                 tempdata_tw = tempdata[(obdate > start_date) & (obdate < end_date)].copy()
                 #tempdata_tw['StationID']= pd.Series(dtype='string')
                 # add station ID, LAT, LON as columns
@@ -75,14 +83,17 @@ def read_file(filename,time_window):
                 lonarr = lon.repeat(nobs)    # give a name
                 latarr = lat.repeat(nobs)
 
+                print(tempdata_tw)
                 # append the three columns to the existing table
                 tempdata_tw['StationID'] = station_id
                 tempdata_tw['Latitude'] = latarr
                 tempdata_tw['Longitude'] = lonarr
-                #print(tempdata_tw)
+                print(tempdata_tw)
                 data_list.append(tempdata_tw)
                 # increase the counter by 1 for each station folder
                 ct = ct+1
+            else:
+                raise("Error no file found")
     master_df = pd.concat(data_list, ignore_index=True)
     print(master_df)
     return master_df
@@ -95,9 +106,13 @@ def create_output(data, output_name): # maynot need file
     # Use start date to
    
 # add to the masterlist
-    lonarr   = data["longitude"]
-    latarr   = data["latitude"]
-    stid_arr = data["Station_ID"]
+    lonarr   = data["Longitude"]
+    latarr   = data["Latitude"]
+    stid_arr = data["StationID"]
+    stid_arr = stid_arr.astype(str)
+#   print(stid_arr.dtype)
+#   print(latarr)
+#   print(stid_arr)
 
 
     zw = data.Zonal_wind
@@ -107,6 +122,11 @@ def create_output(data, output_name): # maynot need file
     mw_err = data.mw_error
 
     alt = data.Altitude
+
+    nlocs=len(alt)
+    if nlocs > 0:
+        dims = {'Location': nlocs}
+
     # KEEP
     epoch = datetime.fromisoformat("1970-01-01T00:00:00Z")
     # Select the columns and convert them to datetime all at once
@@ -142,7 +162,7 @@ def create_output(data, output_name): # maynot need file
         .write_attr('long_name', 'Longitude') \
         .write_data(lonarr) # should this be array?
    
-    obsspace.create_var('MetaData/stationIdentification') \
+    obsspace.create_var('MetaData/stationIdentification',dtype=stid_arr.dtype) \
         .write_attr('long_name', 'stationIdentification') \
         .write_data(stid_arr)
    
@@ -205,6 +225,7 @@ def main():
     end_date = args.end_input
     time_window = [start_date,end_date]
 
+    print(f"data_input = {args.data_input}")
     data = read_file(args.data_input,time_window)
 
     #stn_info = args.station_input
