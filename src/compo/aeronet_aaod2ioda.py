@@ -24,6 +24,7 @@
 import numpy as np
 import netCDF4 as nc
 import argparse
+import sys
 import pandas as pd
 from datetime import datetime
 from builtins import str
@@ -128,17 +129,29 @@ if __name__ == '__main__':
     print('Read and extract AERONET inversion data: CAD, TAB')
     f3_cad_all = add_data(incad)
     f3_tab_all = add_data(intab)
+    # Define wavelengths, channels and frequencies of AERONET inversion data.
+    # The column names are derived from this one array rather than listed again
+    # per variable: the wavelength order has to agree with
+    # sensorCentralFrequency and sensorChannelNumber, and restating it by hand
+    # is how the sibling AOD converter came to transpose 500 and 675 nm.
+    aeronetinv_wav = np.array([440., 675., 870., 1020.], dtype=np.float32)
+    inv_nm = [int(round(float(wav))) for wav in aeronetinv_wav]
+    aod_cols = [f'aod_coincident_input[{nm}nm]' for nm in inv_nm]
+    aaod_cols = [f'absorption_aod[{nm}nm]' for nm in inv_nm]
+
+    for frame, name, cols in ((f3_cad_all, incad, aod_cols),
+                              (f3_tab_all, intab, aaod_cols)):
+        absent = [col for col in cols if col not in frame.columns]
+        if absent:
+            sys.exit(f'{name} has no column(s) {absent}; check aeronetinv_wav '
+                     f'against the columns the file actually carries')
+
     f3_cad = f3_cad_all[['time', 'siteid', 'longitude', 'latitude', 'elevation',
                          'if_retrieval_is_l2(without_l2_0.4_aod_440_threshold)',
-                         'if_aod_is_l2', 'inversion_data_quality_level',
-                         'aod_coincident_input[440nm]', 'aod_coincident_input[675nm]',
-                         'aod_coincident_input[870nm]', 'aod_coincident_input[1020nm]']]
-    f3_tab = f3_tab_all[['absorption_aod[440nm]', 'absorption_aod[675nm]',
-                         'absorption_aod[870nm]', 'absorption_aod[1020nm]']]
+                         'if_aod_is_l2', 'inversion_data_quality_level']
+                        + aod_cols]
+    f3_tab = f3_tab_all[aaod_cols]
     f3 = pd.concat([f3_cad, f3_tab], axis=1, join='inner')
-
-    # Define wavelengths, channels and frequencies of AERONET inversion data
-    aeronetinv_wav = np.array([440., 675, 870., 1020.], dtype=np.float32)
     aeronetinv_chan = np.array([3, 5, 6, 7], dtype=np.intc)
     speed_light = 2.99792458E8
     frequency = speed_light*1.0E9/aeronetinv_wav
@@ -165,10 +178,8 @@ if __name__ == '__main__':
             varAttrs[(key, metaDataName)]['units'] = locationKeyList[meta_keys.index(key)][2]
         varAttrs[(key, metaDataName)]['_FillValue'] = missing_vals[dtypestr]
 
-    obsvars = {'aerosolOpticalDepth': ['aod_coincident_input[440nm]', 'aod_coincident_input[675nm]',
-                                       'aod_coincident_input[870nm]', 'aod_coincident_input[1020nm]'],
-               'absorptionAerosolOpticalDepth': ['absorption_aod[440nm]', 'absorption_aod[675nm]',
-                                                 'absorption_aod[870nm]', 'absorption_aod[1020nm]']}
+    obsvars = {'aerosolOpticalDepth': aod_cols,
+               'absorptionAerosolOpticalDepth': aaod_cols}
 
     # A dictionary of global attributes.  More filled in further down.
     AttrData = {}

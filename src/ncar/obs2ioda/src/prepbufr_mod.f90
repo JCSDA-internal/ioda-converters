@@ -844,8 +844,8 @@ subroutine sort_obs_conv(filedate, nfgat)
                      xdata(ityp,itim)%xinfo_int64(iloc(ityp,itim),i) = plink%epochtime
                   end if
                end if
-               if ( trim(name_var_info(i)) == 'launchTime' ) then
-                  xdata(ityp,itim)%xinfo_int64(iloc(ityp,itim),i) =plink%epochtime
+               if ( trim(name_var_info(i)) == 'releaseTime' ) then
+                  xdata(ityp,itim)%xinfo_int64(iloc(ityp,itim),i) = plink%epochtime
                end if
             end if ! type_var_info
          end do

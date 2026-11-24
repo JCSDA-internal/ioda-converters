@@ -296,8 +296,8 @@ subroutine get_julian_time(year,month,day,hour,minute,second,gstime,epoch)
    gstime = ndays*1440.0 + hour*60.0 + minute*1.0
 
    if ( present(epoch) ) then
-     ! since 1978-01-01
-     epoch = (ndays*1440 + hour*60 + minute)*60 + second
+     ! since 1978-01-01 (64-bit arithmetic to avoid overflow after ~2046)
+     epoch = (int(ndays, i_llong)*1440 + hour*60 + minute)*60 + second
      ! since 1970-01-01
      epoch = epoch + 252460800
    end if
