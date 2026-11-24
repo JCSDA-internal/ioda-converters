@@ -71,19 +71,41 @@ def main(args):
 #           else:
 #               obs_data = file_obs_data
 
+    # sensorChannelNumber is Channel-dimension metadata (not per-Location).
+    # concat_obs_dict appends every key, which would duplicate the channel list
+    # and leave DimDict['Channel'] inconsistent with brightnessTemperature.
+    channel_key = ('sensorChannelNumber', metaDataName)
+
     for afile in input_files:
         file_obs_data = get_data_from_files(afile)
         if not file_obs_data:
             print("INFO: non-nominal file skipping")
             continue
         if obs_data:
+            if not np.array_equal(obs_data[channel_key], file_obs_data[channel_key]):
+                raise ValueError(
+                    'Inconsistent sensorChannelNumber across AMSR2 input files: '
+                    f'{obs_data[channel_key]} vs {file_obs_data[channel_key]}')
+            # Keep channel metadata out of concat_obs_dict (same idea as irs_2ioda).
+            channels = obs_data.pop(channel_key)
+            file_obs_data.pop(channel_key)
             concat_obs_dict(obs_data, file_obs_data)
+            obs_data[channel_key] = channels
         else:
             obs_data = file_obs_data
 
     nlocs_int = np.array(len(obs_data[('latitude', metaDataName)]), dtype='int64')
     nlocs = nlocs_int.item()
-    nchans = len(obs_data[('sensorChannelNumber', metaDataName)])
+    nchans = len(obs_data[channel_key])
+
+    # concat_obs_dict uses np.append without an axis, which flattens the
+    # (Location, Channel) brightnessTemperature arrays. Restore that shape so
+    # the IODA writer receives Location-major (nlocs, nchans) data.
+    for tb_key in (('brightnessTemperature', 'ObsValue'),
+                   ('brightnessTemperature', 'ObsError'),
+                   ('brightnessTemperature', 'PreQC')):
+        if tb_key in obs_data and np.size(obs_data[tb_key]) == nlocs * nchans:
+            obs_data[tb_key] = np.reshape(obs_data[tb_key], (nlocs, nchans))
 
     # prepare global attributes we want to output in the file,
     # in addition to the ones already loaded in from the input file
