@@ -314,6 +314,9 @@ def populate_obsValue(line, local_data):
     dateTime = convert_string_to_dateTime(yymmdd, hhmmss)
     PRN, latitudeIPP = parse_station_and_latitude(PRNlatitudeIPP)
 
+    # Convert IPP longitude from degrees West to degrees East
+    longitudeIPP = -longitudeIPP
+
     xECEFPositionGNSS = convert_ECEF_string(xECEFPositionGNSS)
     yECEFPositionGNSS = convert_ECEF_string(yECEFPositionGNSS)
     zECEFPositionGNSS = convert_ECEF_string(zECEFPositionGNSS)
